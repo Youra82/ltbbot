@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime, timezone
 import logging
 import time # Hinzugefügt für fetch_recent_ohlcv
+from typing import Optional, Dict, List, Any # <--- HINZUGEFÜGT
 
 logger = logging.getLogger(__name__)
 
@@ -342,7 +343,7 @@ class Exchange:
              amount = position['contracts'] # Menge in Kontrakten
 
              logger.info(f"Schließe {position['side']} Position für {symbol} mit Market Order (Menge: {amount}).")
-             return self.place_market_order(symbol, close_side, amount, reduce=True)
+             return self.place_market_order(symbol, close_side, float(amount), reduce=True) # Stelle sicher, dass amount float ist
 
         except Exception as e:
             logger.error(f"Fehler beim Schließen der Position für {symbol}: {e}")
@@ -448,7 +449,7 @@ class Exchange:
             params = {
                 'stopPrice': trigger_price_str, # Der Auslösepreis
                 'triggerType': 'market_price', # oder 'fill_price', je nach gewünschtem Trigger
-                'planType': 'normal_plan', # Für einfache SL/TP
+                #'planType': 'normal_plan', # Für einfache SL/TP - oft nicht nötig bei direkter Order
                 'reduceOnly': reduce,
                 # 'tradeSide': 'close' # wird oft impliziert durch reduceOnly
             }
@@ -482,7 +483,7 @@ class Exchange:
             params = {
                 'stopPrice': trigger_price_str,
                 'triggerType': 'market_price', # oder 'fill_price'
-                'planType': 'normal_plan',
+                #'planType': 'normal_plan', # oft nicht nötig bei direkter Order
                 'reduceOnly': reduce,
             }
 
