@@ -1,0 +1,15 @@
+ccxt==4.3.5
+numpy
+optuna
+pandas==2.1.3 # Version aus Envelope-Beispiel
+pydantic==2.9.2 # Version aus Envelope-Beispiel
+requests==2.31.0 # Version aus Envelope-Beispiel
+scipy
+ta==0.11.0 # Hinzugefügt für Envelope
+tqdm
+joblib
+pytest
+aiofiles==24.1.0 # Version aus Envelope-Beispiel
+seaborn==0.13.2 # Version aus Envelope-Beispiel (für Analyse/Notebooks)
+# tensorflow-cpu==2.16.1 # Entfernt
+scikit-learn # Behalten für StandardScaler im Optimizer/Backtester, falls noch genutzt
