@@ -21,7 +21,8 @@ echo -e "${GREEN}✔ Virtuelle Umgebung wurde erfolgreich aktiviert.${NC}"
 echo -e "\n${YELLOW}Möchtest du alle alten, generierten Konfigurationen vor dem Start löschen?${NC}"
 read -p "Dies wird für einen kompletten Neustart empfohlen. (j/n) [Standard: n]: " CLEANUP_CHOICE; CLEANUP_CHOICE=${CLEANUP_CHOICE:-n}
 if [[ "$CLEANUP_CHOICE" == "j" || "$CLEANUP_CHOICE" == "J" ]]; then
-    echo -e "${YELLOW}Lösche alte Konfigurationen...${NC}"; rm -f src/ltbbot/strategy/configs/config_*.json; echo -e "${GREEN}✔ Aufräumen abgeschlossen.${NC}"
+    # Lösche nur Envelope Configs (oder alle?)
+    echo -e "${YELLOW}Lösche alte Konfigurationen (config_*_envelope.json)...${NC}"; rm -f src/ltbbot/strategy/configs/config_*_envelope.json; echo -e "${GREEN}✔ Aufräumen abgeschlossen.${NC}"
 else
     echo -e "${GREEN}✔ Alte Konfigurationen werden beibehalten.${NC}"
 fi
@@ -37,19 +38,19 @@ read -p "Enddatum (JJJJ-MM-TT) [Standard: Heute]: " END_DATE; END_DATE=${END_DAT
 read -p "Startkapital in USDT [Standard: 1000]: " START_CAPITAL; START_CAPITAL=${START_CAPITAL:-1000}
 read -p "CPU-Kerne für Optimierung [Standard: -1 für alle]: " N_CORES; N_CORES=${N_CORES:--1}
 read -p "Anzahl Optimierungs-Trials [Standard: 200]: " N_TRIALS; N_TRIALS=${N_TRIALS:-200}
-# MACD Filter nicht mehr relevant für diese Strategie
-# read -p "Mindest-Genauigkeit in % eingeben [Standard: 55]: " MIN_ACCURACY; MIN_ACCURACY=${MIN_ACCURACY:-55} # Nicht relevant
 
-echo -e "\n${YELLOW}Wähle einen Optimierungs-Modus:${NC}"; echo "  1) Strenger Modus (Profit mit Constraints)"; echo "  2) 'Finde das Beste' (Max Profit, nur DD Constraint)"
+echo -e "\n${YELLOW}Wähle einen Optimierungs-Modus:${NC}"; echo "  1) Strenger Modus (Profit mit Constraints)"; echo "  2) 'Finde das Beste' (Max Score, nur DD Constraint)"
 read -p "Auswahl (1-2) [Standard: 1]: " OPTIM_MODE_CHOICE; OPTIM_MODE_CHOICE=${OPTIM_MODE_CHOICE:-1}
 if [ "$OPTIM_MODE_CHOICE" == "1" ]; then
     OPTIM_MODE_ARG="strict"
     read -p "Max Drawdown % [Standard: 30]: " MAX_DD; MAX_DD=${MAX_DD:-30}
-    read -p "Min Win-Rate % [Standard: 0 (Ignorieren)]: " MIN_WR; MIN_WR=${MIN_WR:-0} # WinRate ist für Envelope weniger kritisch
+    # WinRate ist für Envelope weniger kritisch, Standard 0
+    read -p "Min Win-Rate % [Standard: 0 (Ignorieren)]: " MIN_WR; MIN_WR=${MIN_WR:-0}
     read -p "Min PnL % [Standard: 0]: " MIN_PNL; MIN_PNL=${MIN_PNL:-0}
 else
     OPTIM_MODE_ARG="best_profit"
-    read -p "Max Drawdown % [Standard: 50]: " MAX_DD; MAX_DD=${MAX_DD:-50} # Evtl. höheres DD erlauben
+    # Evtl. höheres DD erlauben im Best Profit Modus
+    read -p "Max Drawdown % [Standard: 50]: " MAX_DD; MAX_DD=${MAX_DD:-50}
     MIN_WR=0 # Keine Win-Rate-Beschränkung
     MIN_PNL=-99999 # Negativer PnL erlaubt
 fi
@@ -63,6 +64,7 @@ for symbol in $SYMBOLS; do
         # Automatisches Startdatum berechnen
         if [ "$START_DATE_INPUT" == "a" ]; then
              lookback_days=365 # Standard
+             # Lookback basierend auf Zeitfenster anpassen
              case "$timeframe" in
                  5m|15m) lookback_days=60 ;;
                  30m|1h) lookback_days=180 ;;
@@ -71,6 +73,7 @@ for symbol in $SYMBOLS; do
              esac
              CURRENT_START_DATE=$(date -d "$lookback_days days ago" +%F)
              CURRENT_END_DATE="$END_DATE" # Enddatum bleibt wie eingegeben
+             echo -e "${BLUE}  Automatischer Lookback: $lookback_days Tage${NC}"
         else
             CURRENT_START_DATE="$START_DATE_INPUT"
             CURRENT_END_DATE="$END_DATE"
@@ -78,8 +81,9 @@ for symbol in $SYMBOLS; do
         echo -e "${BLUE}  Datenzeitraum: $CURRENT_START_DATE bis $CURRENT_END_DATE${NC}"
         echo -e "${BLUE}=======================================================${NC}"
 
-        # --- Nur noch Stufe 3: Optimierung ---
+        # --- Nur noch Stufe: Optimierung ---
         echo -e "\n${GREEN}>>> Starte Optimierung für $symbol ($timeframe)...${NC}"
+        # Führe den Optimizer aus
         python3 "$OPTIMIZER" \
             --symbols "$symbol" \
             --timeframes "$timeframe" \
@@ -92,10 +96,13 @@ for symbol in $SYMBOLS; do
             --trials "$N_TRIALS" \
             --min_pnl "$MIN_PNL" \
             --mode "$OPTIM_MODE_ARG" \
-            --config_suffix "_envelope" # Suffix hinzufügen
+            --config_suffix "_envelope" # Wichtig: Suffix für Config-Dateien
 
+        # Fehlerprüfung
         if [ $? -ne 0 ]; then
             echo -e "${RED}Fehler im Optimierer für $symbol ($timeframe). Überspringe...${NC}"
+        else
+            echo -e "${GREEN}✔ Optimierung für $symbol ($timeframe) abgeschlossen.${NC}"
         fi
     done
 done
