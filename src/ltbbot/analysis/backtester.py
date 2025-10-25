@@ -113,7 +113,8 @@ def run_envelope_backtest(data, params, start_capital=1000):
         logger.warning("Leeres DataFrame an Backtester übergeben.")
         return {"total_pnl_pct": 0, "trades_count": 0, "win_rate": 0, "max_drawdown_pct": 100, "end_capital": start_capital}
 
-    logger.debug(f"Starte Envelope Backtest mit Params: {params}")
+    # Setze Logger-Level für diesen Lauf (wird von Optimizer gesteuert)
+    # logger.debug(f"Starte Envelope Backtest mit Params: {params}")
 
     # --- Parameter extrahieren ---
     strategy_params = params['strategy']
@@ -137,8 +138,10 @@ def run_envelope_backtest(data, params, start_capital=1000):
          if df.empty:
              raise ValueError("Indikatorberechnung ergab leeres DataFrame.")
     except Exception as e:
-        logger.error(f"Fehler bei der Indikatorberechnung im Backtester: {e}")
-        return {"total_pnl_pct": -100, "trades_count": 0, "win_rate": 0, "max_drawdown_pct": 100, "end_capital": 0}
+        # Gib einen negativen Score zurück, damit Optuna diesen Trial verwirft
+        logger.warning(f"Fehler bei Indikatorberechnung im Backtest: {e}")
+        # raise optuna.exceptions.TrialPruned() # Alternative
+        return {"total_pnl_pct": -1000, "trades_count": 0, "win_rate": 0, "max_drawdown_pct": 100, "end_capital": 0}
 
 
     # --- Initialisierung für den Backtest-Loop ---
@@ -149,14 +152,14 @@ def run_envelope_backtest(data, params, start_capital=1000):
     positions = [] # Liste für aktive Positions-Layer [{entry_price, amount, side, sl_price, tp_price}, ...]
     closed_trades = [] # Liste für abgeschlossene Trades [{pnl, side}, ...]
 
-    logger.info("Starte Backtest-Loop...")
-    # tqdm für Fortschrittsanzeige
-    for i in tqdm(range(len(df)), desc="Backtesting Envelope", leave=False):
+    # logger.info("Starte Backtest-Loop...") # Zu laut für Optuna
+    # tqdm für Fortschrittsanzeige in Optuna ist extern
+    for i in range(len(df)): # Gehe durch jede Kerze des **indikatorberechneten** DataFrames
         current_candle = df.iloc[i]
-        next_open = df['open'].iloc[i+1] if i + 1 < len(df) else current_candle['close'] # Nächster Preis für Ausführung
+        # Nächster Preis für Ausführung nicht benötigt, da wir auf Kerzenbasis simulieren
 
-        # *** KORREKTUR HIER ***
-        current_capital_snapshot = capital # Kapital zu Beginn der Kerze für DD-Berechnung
+        # *** HIER wird capital_snapshot VOR allen Änderungen in der Kerze gespeichert ***
+        capital_snapshot_start_of_candle = capital
 
         # --- Ausstiege prüfen (TP und SL) ---
         remaining_positions = []
@@ -167,28 +170,30 @@ def run_envelope_backtest(data, params, start_capital=1000):
             exit_price = None
             pnl = 0.0
 
-            # 1. Stop Loss prüfen
+            # Logik: Prüfe SL zuerst (worst case), dann TP
+            # SL Prüfung
             if pos['side'] == 'long' and current_candle['low'] <= pos['sl_price']:
-                exit_price = pos['sl_price'] # SL getroffen
+                exit_price = pos['sl_price']
                 exited = True
             elif pos['side'] == 'short' and current_candle['high'] >= pos['sl_price']:
-                exit_price = pos['sl_price'] # SL getroffen
+                exit_price = pos['sl_price']
                 exited = True
 
-            # 2. Take Profit prüfen (wenn kein SL getroffen)
+            # TP Prüfung (nur wenn SL nicht getroffen)
             if not exited:
                 if pos['side'] == 'long' and current_candle['high'] >= pos['tp_price']:
-                    # Prüfen, ob Average zuerst berührt wurde oder Open darüber lag
+                    # Prüfe, ob TP (Average) in der Kerze erreicht wurde
                     if current_candle['open'] >= pos['tp_price'] or current_candle['low'] <= pos['tp_price']:
-                         exit_price = pos['tp_price'] # TP getroffen (Average)
+                         exit_price = pos['tp_price']
                          exited = True
                 elif pos['side'] == 'short' and current_candle['low'] <= pos['tp_price']:
                      if current_candle['open'] <= pos['tp_price'] or current_candle['high'] >= pos['tp_price']:
-                         exit_price = pos['tp_price'] # TP getroffen (Average)
+                         exit_price = pos['tp_price']
                          exited = True
 
             # Wenn Ausstieg, PnL berechnen und Position entfernen
             if exited and exit_price is not None:
+                # Berechne PnL basierend auf Menge in Coins und Hebel
                 if pos['side'] == 'long':
                     pnl = (exit_price - pos['entry_price']) * pos['amount'] * leverage
                 else: # short
@@ -210,22 +215,23 @@ def run_envelope_backtest(data, params, start_capital=1000):
         capital += exit_pnl_current_candle # Kapital nach Ausstiegen aktualisieren
 
         # --- Einstiege prüfen ---
-        # Berechne verfügbares Kapital pro neuer Order
+        # Berechne verfügbares Kapital pro neuer Order basierend auf aktuellem Kapital
         balance_for_trades = capital * balance_fraction
         capital_per_order = balance_for_trades / num_envelopes if num_envelopes > 0 else 0
 
         # Long Entries
-        if use_longs:
+        if use_longs and capital_per_order > 0: # Nur wenn Kapital verfügbar
             for k in range(1, num_envelopes + 1):
                 low_band_col = f'band_low_{k}'
-                entry_trigger_price = current_candle[low_band_col] # Einstieg, wenn Tief die Bande berührt/unterschreitet
+                # Prüfe, ob die Spalte existiert (Sicherheitscheck)
+                if low_band_col not in current_candle: continue
+
+                entry_trigger_price = current_candle[low_band_col]
 
                 if current_candle['low'] <= entry_trigger_price:
-                    # Prüfe, ob schon eine Long-Position auf diesem Level existiert (optional, verhindert Doppeleinstieg auf gleicher Kerze/Level)
-                    # if any(p['side'] == 'long' and abs(p['entry_price'] - entry_trigger_price) < 1e-6 for p in positions): continue
-
-                    entry_price = min(current_candle['open'], entry_trigger_price) # Einstieg zum Open oder Trigger, je nachdem was niedriger ist
-                    if capital_per_order > 0 and entry_price > 0:
+                    # Vereinfachte Annahme: Einstieg erfolgt zum Triggerpreis, wenn berührt
+                    entry_price = entry_trigger_price
+                    if entry_price > 0:
                         amount = capital_per_order / entry_price # Menge in Coins (ohne Hebel hier)
                         sl_price = entry_price * (1 - stop_loss_pct)
                         tp_price = current_candle['average'] # TP ist der aktuelle Durchschnitt
@@ -237,20 +243,20 @@ def run_envelope_backtest(data, params, start_capital=1000):
                             'sl_price': sl_price,
                             'tp_price': tp_price
                         })
-                        # logger.debug(f"Long Entry @ {entry_price:.4f}, Amount: {amount:.4f}, SL: {sl_price:.4f}, TP: {tp_price:.4f}")
-                        # Kein Kapitalabzug hier, PnL wird beim Schließen realisiert
+                        # logger.debug(f"Long Entry @ {entry_price:.4f}...") # Zu laut
 
         # Short Entries
-        if use_shorts:
+        if use_shorts and capital_per_order > 0: # Nur wenn Kapital verfügbar
             for k in range(1, num_envelopes + 1):
                 high_band_col = f'band_high_{k}'
+                 # Prüfe, ob die Spalte existiert
+                if high_band_col not in current_candle: continue
+
                 entry_trigger_price = current_candle[high_band_col]
 
                 if current_candle['high'] >= entry_trigger_price:
-                    # if any(p['side'] == 'short' and abs(p['entry_price'] - entry_trigger_price) < 1e-6 for p in positions): continue
-
-                    entry_price = max(current_candle['open'], entry_trigger_price)
-                    if capital_per_order > 0 and entry_price > 0:
+                    entry_price = entry_trigger_price
+                    if entry_price > 0:
                         amount = capital_per_order / entry_price
                         sl_price = entry_price * (1 + stop_loss_pct)
                         tp_price = current_candle['average']
@@ -262,25 +268,27 @@ def run_envelope_backtest(data, params, start_capital=1000):
                             'sl_price': sl_price,
                             'tp_price': tp_price
                         })
-                        # logger.debug(f"Short Entry @ {entry_price:.4f}, Amount: {amount:.4f}, SL: {sl_price:.4f}, TP: {tp_price:.4f}")
+                        # logger.debug(f"Short Entry @ {entry_price:.4f}...") # Zu laut
 
         # --- Drawdown berechnen (basierend auf Kapital zu Beginn der Kerze) ---
-        # *** KORREKTUR HIER *** - Verwende die Variable, die am Anfang des Loops definiert wurde
-        if current_capital_snapshot > 0: # Verhindere Division durch Null
-             current_drawdown = (peak_capital - current_capital_snapshot) / peak_capital
+        # Verwende die Variable, die am Anfang des Loops definiert wurde
+        if capital_snapshot_start_of_candle > 0: # Verhindere Division durch Null
+             # Drawdown wird vom Peak berechnet, nicht vom Startkapital
+             current_drawdown = (peak_capital - capital_snapshot_start_of_candle) / peak_capital if peak_capital > 0 else 0
              max_drawdown_pct = max(max_drawdown_pct, current_drawdown * 100)
-        peak_capital = max(peak_capital, capital) # Peak nach der Kerze aktualisieren
+
+        # Peak nach allen Aktionen in der Kerze aktualisieren
+        peak_capital = max(peak_capital, capital)
 
         # --- Abbruch bei Totalverlust ---
         if capital <= 0:
-            logger.warning("Kapital auf 0 gefallen. Backtest abgebrochen.")
-            capital = 0 # Sicherstellen, dass es nicht negativ ist
-            break
+            logger.warning("Kapital auf 0 oder weniger gefallen. Backtest abgebrochen.")
+            capital = 0 # Sicherstellen, dass es nicht negativ ist für Endergebnis
+            break # Loop beenden
 
     # --- Endauswertung ---
     end_capital = capital
-    # Berücksichtige PnL offener Positionen am Ende (optional, hier nicht implementiert für Einfachheit)
-    # final_equity = capital + calculate_open_pnl(positions, df.iloc[-1]['close'], leverage, fee_pct)
+    # Berücksichtige PnL offener Positionen am Ende NICHT, da dies die Optimierung verzerren kann
     final_equity = capital # Verwende nur realisiertes Kapital
 
     total_pnl = final_equity - start_capital
@@ -289,15 +297,16 @@ def run_envelope_backtest(data, params, start_capital=1000):
     wins_count = sum(1 for trade in closed_trades if trade['pnl'] > 0)
     win_rate = (wins_count / trades_count) * 100 if trades_count > 0 else 0
 
-    logger.info("Backtest-Loop beendet.")
+    # logger.info("Backtest-Loop beendet.") # Zu laut für Optuna
 
     results = {
         "total_pnl_pct": round(total_pnl_pct, 2),
         "trades_count": trades_count,
         "win_rate": round(win_rate, 2),
+        # Max Drawdown wird als positiver %-Wert zurückgegeben
         "max_drawdown_pct": round(max_drawdown_pct, 2),
         "end_capital": round(final_equity, 2),
         "start_capital": start_capital
     }
-    logger.debug(f"Backtest Ergebnisse: {results}")
+    # logger.debug(f"Backtest Ergebnisse: {results}") # Zu laut für Optuna
     return results
