@@ -1,0 +1,17 @@
+{
+    "live_trading_settings": {
+        "use_auto_optimizer_results": false,
+        "active_strategies": [
+            {
+                "symbol": "BTC/USDT:USDT",
+                "timeframe": "1h",
+                "active": false
+            },
+            {
+                "symbol": "ETH/USDT:USDT",
+                "timeframe": "4h",
+                "active": false
+            }
+        ]
+    }
+}
