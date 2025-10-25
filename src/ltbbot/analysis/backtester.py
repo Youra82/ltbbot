@@ -155,6 +155,7 @@ def run_envelope_backtest(data, params, start_capital=1000):
         current_candle = df.iloc[i]
         next_open = df['open'].iloc[i+1] if i + 1 < len(df) else current_candle['close'] # Nächster Preis für Ausführung
 
+        # *** KORREKTUR HIER ***
         current_capital_snapshot = capital # Kapital zu Beginn der Kerze für DD-Berechnung
 
         # --- Ausstiege prüfen (TP und SL) ---
@@ -264,8 +265,9 @@ def run_envelope_backtest(data, params, start_capital=1000):
                         # logger.debug(f"Short Entry @ {entry_price:.4f}, Amount: {amount:.4f}, SL: {sl_price:.4f}, TP: {tp_price:.4f}")
 
         # --- Drawdown berechnen (basierend auf Kapital zu Beginn der Kerze) ---
-        if capital_snapshot > 0: # Verhindere Division durch Null
-             current_drawdown = (peak_capital - capital_snapshot) / peak_capital
+        # *** KORREKTUR HIER *** - Verwende die Variable, die am Anfang des Loops definiert wurde
+        if current_capital_snapshot > 0: # Verhindere Division durch Null
+             current_drawdown = (peak_capital - current_capital_snapshot) / peak_capital
              max_drawdown_pct = max(max_drawdown_pct, current_drawdown * 100)
         peak_capital = max(peak_capital, capital) # Peak nach der Kerze aktualisieren
 
@@ -277,7 +279,11 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
     # --- Endauswertung ---
     end_capital = capital
-    total_pnl = end_capital - start_capital
+    # Berücksichtige PnL offener Positionen am Ende (optional, hier nicht implementiert für Einfachheit)
+    # final_equity = capital + calculate_open_pnl(positions, df.iloc[-1]['close'], leverage, fee_pct)
+    final_equity = capital # Verwende nur realisiertes Kapital
+
+    total_pnl = final_equity - start_capital
     total_pnl_pct = (total_pnl / start_capital) * 100 if start_capital > 0 else 0
     trades_count = len(closed_trades)
     wins_count = sum(1 for trade in closed_trades if trade['pnl'] > 0)
@@ -290,12 +296,8 @@ def run_envelope_backtest(data, params, start_capital=1000):
         "trades_count": trades_count,
         "win_rate": round(win_rate, 2),
         "max_drawdown_pct": round(max_drawdown_pct, 2),
-        "end_capital": round(end_capital, 2),
+        "end_capital": round(final_equity, 2),
         "start_capital": start_capital
     }
     logger.debug(f"Backtest Ergebnisse: {results}")
     return results
-
-# --- Alte ANN Backtest Funktion (kann entfernt oder auskommentiert werden) ---
-# def run_ann_backtest(...):
-#    ... (alter Code)
