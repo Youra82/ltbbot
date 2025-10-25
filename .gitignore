@@ -1,0 +1,41 @@
+# ===============================================
+# ltbbot Spezifische Ausschlüsse (Angepasst)
+# ===============================================
+artifacts/ # Ergebnisse, DBs, Tracker etc.
+data/ # Insbesondere der Cache
+logs/ # Log-Dateien
+secret.json # SEHR WICHTIG!
+secret.json.bak # Backup der Secrets
+/.venv/ # Virtuelle Umgebung (war schon korrekt)
+*.csv # Generierte Ergebnis-CSVs ignorieren
+*.png # Generierte Chart-Bilder ignorieren
+*.db # Optuna Datenbank ignorieren (alternativ zu artifacts/)
+
+# ===============================================
+# Allgemeine Python-Vorlage (Diese ist gut)
+# ===============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+# ... (Rest der allgemeinen Vorlage bleibt unverändert) ...
+*.sage.py
+.env
+# env/ # oft nicht nötig, wenn .venv genutzt wird
+# venv/ # oft nicht nötig, wenn .venv genutzt wird
+ENV/
+env.bak/
+venv.bak/
+.spyderproject
+.spyproject
+.ropeproject
+/site
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+# .idea/ # Kann man drin lassen, wenn man VS Code nutzt und kein PyCharm etc.
+#*.db # Wird oben schon ignoriert
+#*.csv # Wird oben schon ignoriert
