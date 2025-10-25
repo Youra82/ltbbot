@@ -6,7 +6,8 @@ from datetime import timedelta
 import json
 import sys
 import logging
-from tqdm import tqdm # Für Fortschrittsanzeige
+# tqdm hier entfernt, da es nur noch von Optuna gesteuert wird
+# from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -110,11 +111,12 @@ def run_envelope_backtest(data, params, start_capital=1000):
         dict: Ergebnisse des Backtests.
     """
     if data.empty:
+        # Verwende logger.warning statt print
         logger.warning("Leeres DataFrame an Backtester übergeben.")
         return {"total_pnl_pct": 0, "trades_count": 0, "win_rate": 0, "max_drawdown_pct": 100, "end_capital": start_capital}
 
     # Setze Logger-Level für diesen Lauf (wird von Optimizer gesteuert)
-    # logger.debug(f"Starte Envelope Backtest mit Params: {params}")
+    # logger.debug(f"Starte Envelope Backtest mit Params: {params}") # Zu detailreich für Optuna
 
     # --- Parameter extrahieren ---
     strategy_params = params['strategy']
@@ -140,7 +142,7 @@ def run_envelope_backtest(data, params, start_capital=1000):
     except Exception as e:
         # Gib einen negativen Score zurück, damit Optuna diesen Trial verwirft
         logger.warning(f"Fehler bei Indikatorberechnung im Backtest: {e}")
-        # raise optuna.exceptions.TrialPruned() # Alternative
+        # raise optuna.exceptions.TrialPruned() # Alternative wäre, Fehler in Optuna zu werfen
         return {"total_pnl_pct": -1000, "trades_count": 0, "win_rate": 0, "max_drawdown_pct": 100, "end_capital": 0}
 
 
@@ -153,10 +155,10 @@ def run_envelope_backtest(data, params, start_capital=1000):
     closed_trades = [] # Liste für abgeschlossene Trades [{pnl, side}, ...]
 
     # logger.info("Starte Backtest-Loop...") # Zu laut für Optuna
-    # tqdm für Fortschrittsanzeige in Optuna ist extern
+
+    # *** KORREKTUR HIER: tqdm entfernt ***
     for i in range(len(df)): # Gehe durch jede Kerze des **indikatorberechneten** DataFrames
         current_candle = df.iloc[i]
-        # Nächster Preis für Ausführung nicht benötigt, da wir auf Kerzenbasis simulieren
 
         # *** HIER wird capital_snapshot VOR allen Änderungen in der Kerze gespeichert ***
         capital_snapshot_start_of_candle = capital
@@ -181,14 +183,16 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
             # TP Prüfung (nur wenn SL nicht getroffen)
             if not exited:
-                if pos['side'] == 'long' and current_candle['high'] >= pos['tp_price']:
+                 # TP ist der Average *dieser* Kerze
+                tp_price_current = current_candle['average']
+                if pos['side'] == 'long' and current_candle['high'] >= tp_price_current:
                     # Prüfe, ob TP (Average) in der Kerze erreicht wurde
-                    if current_candle['open'] >= pos['tp_price'] or current_candle['low'] <= pos['tp_price']:
-                         exit_price = pos['tp_price']
+                    if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
+                         exit_price = tp_price_current
                          exited = True
-                elif pos['side'] == 'short' and current_candle['low'] <= pos['tp_price']:
-                     if current_candle['open'] <= pos['tp_price'] or current_candle['high'] >= pos['tp_price']:
-                         exit_price = pos['tp_price']
+                elif pos['side'] == 'short' and current_candle['low'] <= tp_price_current:
+                     if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
+                         exit_price = tp_price_current
                          exited = True
 
             # Wenn Ausstieg, PnL berechnen und Position entfernen
@@ -247,28 +251,28 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
         # Short Entries
         if use_shorts and capital_per_order > 0: # Nur wenn Kapital verfügbar
-            for k in range(1, num_envelopes + 1):
-                high_band_col = f'band_high_{k}'
+             for k in range(1, num_envelopes + 1):
+                 high_band_col = f'band_high_{k}'
                  # Prüfe, ob die Spalte existiert
-                if high_band_col not in current_candle: continue
+                 if high_band_col not in current_candle: continue
 
-                entry_trigger_price = current_candle[high_band_col]
+                 entry_trigger_price = current_candle[high_band_col]
 
-                if current_candle['high'] >= entry_trigger_price:
-                    entry_price = entry_trigger_price
-                    if entry_price > 0:
-                        amount = capital_per_order / entry_price
-                        sl_price = entry_price * (1 + stop_loss_pct)
-                        tp_price = current_candle['average']
+                 if current_candle['high'] >= entry_trigger_price:
+                     entry_price = entry_trigger_price
+                     if entry_price > 0:
+                         amount = capital_per_order / entry_price
+                         sl_price = entry_price * (1 + stop_loss_pct)
+                         tp_price = current_candle['average']
 
-                        positions.append({
+                         positions.append({
                             'entry_price': entry_price,
                             'amount': amount,
                             'side': 'short',
                             'sl_price': sl_price,
                             'tp_price': tp_price
                         })
-                        # logger.debug(f"Short Entry @ {entry_price:.4f}...") # Zu laut
+                         # logger.debug(f"Short Entry @ {entry_price:.4f}...") # Zu laut
 
         # --- Drawdown berechnen (basierend auf Kapital zu Beginn der Kerze) ---
         # Verwende die Variable, die am Anfang des Loops definiert wurde
@@ -282,6 +286,7 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
         # --- Abbruch bei Totalverlust ---
         if capital <= 0:
+            # Verwende logger.warning statt print
             logger.warning("Kapital auf 0 oder weniger gefallen. Backtest abgebrochen.")
             capital = 0 # Sicherstellen, dass es nicht negativ ist für Endergebnis
             break # Loop beenden
