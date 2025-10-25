@@ -57,7 +57,7 @@ Führe die folgenden Schritte auf einem frischen Ubuntu-Server aus.
 
 ```bash
 # Ersetze <REPOSITORY_URL> durch deine tatsächliche Git-URL
-git clone <REPOSITORY_URL> ltbbot
+git clone https://github.com/Youra82/ltbbot.git
 ````
 
 #### 2\. Installations-Skript ausführen
