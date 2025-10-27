@@ -8,13 +8,19 @@ import argparse
 import logging
 import warnings
 from joblib import Parallel, delayed # Für Parallelisierung
-# NEU: Importiere tqdm direkt
-import tqdm
-# NEU: Importiere Optuna Callback Basisklasse
-from optuna.trial import TrialState
-from optuna.study import Study
 
-# Logging konfigurieren (Optuna Logs auf WARNING reduzieren)
+# Versuche den ÄLTEREN Importpfad für TqdmCallback
+try:
+    from optuna.integration.tqdm import TqdmCallback
+    TQDM_AVAILABLE = True
+    logging.info("TqdmCallback erfolgreich importiert (älterer Pfad).")
+except ImportError:
+    TQDM_AVAILABLE = False
+    logging.warning("TqdmCallback konnte unter optuna.integration.tqdm nicht importiert werden. Ladebalken wird nicht angezeigt.")
+    # Setze TqdmCallback auf None, um spätere Prüfungen zu vereinfachen
+    TqdmCallback = None
+
+# Logging konfigurieren (Optuna Logs auf WARNING reduzieren, um Balken nicht zu stören)
 logging.getLogger('optuna').setLevel(logging.WARNING)
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
@@ -41,46 +47,6 @@ MIN_PNL_CONSTRAINT = 0.0
 START_CAPITAL = 1000
 OPTIM_MODE = "strict"
 MIN_TRADES_FOR_VALID = 20
-
-# --- NEU: Eigene Tqdm Callback Klasse ---
-class SimpleTqdmCallback:
-    """
-    Ein einfacher Optuna Callback, der einen einzigen tqdm Fortschrittsbalken anzeigt.
-    """
-    def __init__(self, total_trials):
-        self.pbar = None
-        self.total_trials = total_trials
-        self.completed_trials = 0
-
-    def __call__(self, study: Study, trial: optuna.trial.FrozenTrial) -> None:
-        # Initialisiere den Balken beim ersten Aufruf
-        if self.pbar is None:
-            self.pbar = tqdm.tqdm(total=self.total_trials, desc="Optimierungsfortschritt", unit="trial")
-
-        # Aktualisiere den Balken nur, wenn ein Trial *abgeschlossen* wurde (egal ob success, fail, prune)
-        if trial.state in [TrialState.COMPLETE, TrialState.FAIL, TrialState.PRUNED]:
-            self.completed_trials += 1
-            # Aktualisiere den Balken, aber nur bis maximal total_trials
-            update_amount = min(1, self.total_trials - self.pbar.n)
-            if update_amount > 0:
-                 self.pbar.update(update_amount)
-
-        # Schließe den Balken, wenn alle Trials durch sind (oder fast durch)
-        if self.completed_trials >= self.total_trials and self.pbar and self.pbar.n < self.total_trials:
-             self.pbar.update(self.total_trials - self.pbar.n) # Fülle den Rest auf
-             self.pbar.close()
-             self.pbar = None # Verhindere weiteres Schließen
-
-    # Methode zum expliziten Schließen am Ende, falls nötig
-    def close_pbar(self):
-         if self.pbar:
-              # Fülle den Balken auf, falls er noch nicht voll ist
-              if self.pbar.n < self.total_trials:
-                   self.pbar.update(self.total_trials - self.pbar.n)
-              self.pbar.close()
-              self.pbar = None
-# --- Ende Callback Klasse ---
-
 
 def create_safe_filename(symbol, timeframe):
     """Erstellt einen sicheren Dateinamen aus Symbol und Zeitrahmen."""
@@ -152,6 +118,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Parameter-Optimierung für ltbbot (Envelope-Strategie)")
     parser.add_argument('--symbols', required=True, type=str)
+    # ... (alle anderen Argumente wie gehabt) ...
     parser.add_argument('--timeframes', required=True, type=str)
     parser.add_argument('--start_date', required=True, type=str)
     parser.add_argument('--end_date', required=True, type=str)
@@ -216,34 +183,36 @@ def main():
         safe_filename = create_safe_filename(symbol, timeframe)
         study_name = f"{safe_filename}{CONFIG_SUFFIX}_{OPTIM_MODE}"
 
-        # *** NEU: Erstelle Instanz des Callbacks ***
-        simple_tqdm_callback = SimpleTqdmCallback(total_trials=N_TRIALS)
+        # *** NEU: Erstelle TqdmCallback (falls importiert) ***
+        callbacks_list = []
+        if TQDM_AVAILABLE and TqdmCallback: # Prüfe, ob Import erfolgreich war
+            logger.info("Verwende TqdmCallback für Fortschrittsanzeige.")
+            tqdm_callback = TqdmCallback(metric_name="value")
+            callbacks_list.append(tqdm_callback)
+            show_progress = False # Deaktiviere Standardbalken, wenn Callback aktiv ist
+        else:
+            logger.info("TqdmCallback nicht verfügbar oder Import fehlgeschlagen. Verwende Standard-Logging.")
+            show_progress = False # Auch hier deaktivieren, Logging reicht
 
         try:
             study = optuna.create_study(storage=STORAGE_URL, study_name=study_name, direction="maximize", load_if_exists=True)
 
             n_jobs = args.jobs
-            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)... (Mit manuellem Tqdm Callback)")
+            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)...")
 
-            # *** OPTIMIZE-AUFRUF MIT EIGENEM CALLBACK ***
-            # show_progress_bar auf False setzen, da wir unseren eigenen Callback nutzen
+            # *** OPTIMIZE-AUFRUF MIT CALLBACKS und show_progress_bar ***
             study.optimize(
                 objective,
                 n_trials=N_TRIALS,
                 n_jobs=n_jobs,
-                callbacks=[simple_tqdm_callback], # Eigener Callback
-                show_progress_bar=False # Wichtig: Standard-Balken deaktivieren
+                callbacks=callbacks_list,
+                show_progress_bar=show_progress # Wird False sein, wenn Callback aktiv
             )
-            # *****************************************
+            # **********************************************************
 
         except Exception as e:
             logger.error(f"Schwerwiegender Fehler während der Optuna-Studie für {symbol} ({timeframe}): {e}", exc_info=True)
-            # Stelle sicher, dass der Balken geschlossen wird, auch bei Fehlern
-            simple_tqdm_callback.close_pbar()
-            continue # Nächste Task versuchen
-        finally:
-             # Stelle sicher, dass der Balken am Ende immer geschlossen wird
-             simple_tqdm_callback.close_pbar()
+            continue
 
 
         # --- Bestes Ergebnis ---
