@@ -8,19 +8,10 @@ import argparse
 import logging
 import warnings
 from joblib import Parallel, delayed # Für Parallelisierung
+# KEINE Tqdm Imports
 
-# Versuche den ÄLTEREN Importpfad für TqdmCallback
-try:
-    from optuna.integration.tqdm import TqdmCallback
-    TQDM_AVAILABLE = True
-    logging.info("TqdmCallback erfolgreich importiert (älterer Pfad).")
-except ImportError:
-    TQDM_AVAILABLE = False
-    logging.warning("TqdmCallback konnte unter optuna.integration.tqdm nicht importiert werden. Ladebalken wird nicht angezeigt.")
-    # Setze TqdmCallback auf None, um spätere Prüfungen zu vereinfachen
-    TqdmCallback = None
-
-# Logging konfigurieren (Optuna Logs auf WARNING reduzieren, um Balken nicht zu stören)
+# Logging konfigurieren
+# Optuna Logs auf WARNING reduzieren, um Balken nicht zu stören
 logging.getLogger('optuna').setLevel(logging.WARNING)
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
@@ -83,7 +74,8 @@ def objective(trial):
 
     # --- Backtest ---
     if HISTORICAL_DATA is None or START_CAPITAL <= 0:
-        logger.error("HISTORICAL_DATA oder START_CAPITAL nicht korrekt initialisiert in Objective.")
+        # Verwende logger statt print im Objective
+        # logger.error("...") # Wird durch backtester_logger unterdrückt, wenn auf ERROR gesetzt
         raise ValueError("HISTORICAL_DATA oder START_CAPITAL nicht korrekt initialisiert.")
 
     result = run_envelope_backtest(HISTORICAL_DATA.copy(), params, START_CAPITAL)
@@ -183,36 +175,36 @@ def main():
         safe_filename = create_safe_filename(symbol, timeframe)
         study_name = f"{safe_filename}{CONFIG_SUFFIX}_{OPTIM_MODE}"
 
-        # *** NEU: Erstelle TqdmCallback (falls importiert) ***
-        callbacks_list = []
-        if TQDM_AVAILABLE and TqdmCallback: # Prüfe, ob Import erfolgreich war
-            logger.info("Verwende TqdmCallback für Fortschrittsanzeige.")
-            tqdm_callback = TqdmCallback(metric_name="value")
-            callbacks_list.append(tqdm_callback)
-            show_progress = False # Deaktiviere Standardbalken, wenn Callback aktiv ist
-        else:
-            logger.info("TqdmCallback nicht verfügbar oder Import fehlgeschlagen. Verwende Standard-Logging.")
-            show_progress = False # Auch hier deaktivieren, Logging reicht
+        # Vor dem Optimize-Aufruf Logger holen und Level merken/setzen
+        backtester_logger = logging.getLogger('ltbbot.analysis.backtester')
+        original_level = backtester_logger.level
+        backtester_logger.setLevel(logging.ERROR) # Warnings unterdrücken
 
         try:
             study = optuna.create_study(storage=STORAGE_URL, study_name=study_name, direction="maximize", load_if_exists=True)
 
             n_jobs = args.jobs
-            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)...")
+            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)... (Mit Standard show_progress_bar)")
 
-            # *** OPTIMIZE-AUFRUF MIT CALLBACKS und show_progress_bar ***
+            # *** ZURÜCK ZUM STANDARD-AUFRUF (wie bei JaegerBot/TitanBot) ***
             study.optimize(
                 objective,
                 n_trials=N_TRIALS,
                 n_jobs=n_jobs,
-                callbacks=callbacks_list,
-                show_progress_bar=show_progress # Wird False sein, wenn Callback aktiv
+                show_progress_bar=True # Standard-Balken aktivieren
+                # Keine callbacks-Liste
             )
-            # **********************************************************
+            # ***************************************************************
 
         except Exception as e:
             logger.error(f"Schwerwiegender Fehler während der Optuna-Studie für {symbol} ({timeframe}): {e}", exc_info=True)
-            continue
+            # Level trotzdem zurücksetzen
+            backtester_logger.setLevel(original_level)
+            continue # Nächsten Task versuchen
+        finally:
+             # Stelle sicher, dass Level immer zurückgesetzt wird
+             backtester_logger.setLevel(original_level)
+             logger.info("Backtester-Logging-Level wiederhergestellt.")
 
 
         # --- Bestes Ergebnis ---
