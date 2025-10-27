@@ -11,7 +11,10 @@ from joblib import Parallel, delayed # Für Parallelisierung
 
 # Logging und Warnungen konfigurieren
 logging.getLogger('optuna').setLevel(logging.WARNING)
-optuna.logging.set_verbosity(optuna.logging.WARNING)
+optuna.logging.set_verbosity(optuna.logging.WARNING) # Optuna Logs reduzieren
+
+# Standard-Logger für dieses Skript (wird in main() weiter konfiguriert)
+logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
@@ -32,6 +35,7 @@ MIN_WIN_RATE_CONSTRAINT = 0.0 # Standardmäßig keine Win-Rate-Beschränkung
 MIN_PNL_CONSTRAINT = 0.0
 START_CAPITAL = 1000
 OPTIM_MODE = "strict" # Oder "best_profit"
+MIN_TRADES_FOR_VALID = 20 # Mindestanzahl Trades, damit ein Ergebnis als gültig betrachtet wird
 
 def create_safe_filename(symbol, timeframe):
     """Erstellt einen sicheren Dateinamen aus Symbol und Zeitrahmen."""
@@ -39,7 +43,7 @@ def create_safe_filename(symbol, timeframe):
 
 def objective(trial):
     """Optuna Objective-Funktion zur Optimierung der Envelope-Parameter."""
-    global HISTORICAL_DATA, START_CAPITAL, CURRENT_TIMEFRAME, OPTIM_MODE, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT
+    global HISTORICAL_DATA, START_CAPITAL, CURRENT_TIMEFRAME, OPTIM_MODE, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, MIN_TRADES_FOR_VALID
 
     # --- Parameter für die Envelope-Strategie vorschlagen ---
     avg_type = trial.suggest_categorical('average_type', ['SMA', 'EMA', 'WMA', 'DCM'])
@@ -56,9 +60,8 @@ def objective(trial):
 
     # --- Risikoparameter vorschlagen ---
     leverage = trial.suggest_int('leverage', 1, 15) # Hebel begrenzt (z.B. max 15x)
-    # NEU: Risiko pro Entry Layer statt Balance Fraction
     risk_per_entry_pct = trial.suggest_float('risk_per_entry_pct', 0.1, 1.0) # z.B. 0.1% bis 1% Risiko pro Layer
-    stop_loss_pct = trial.suggest_float('stop_loss_pct', 0.5, 5.0) # z.B. 0.5% bis 5.0% SL (Minimum erhöht)
+    stop_loss_pct = trial.suggest_float('stop_loss_pct', 0.5, 5.0) # z.B. 0.5% bis 5.0% SL
 
     # --- Parameter-Dict für den Backtester zusammenstellen ---
     params = {
@@ -70,8 +73,7 @@ def objective(trial):
         },
         'risk': {
             'margin_mode': 'isolated', # Fest?
-            'risk_per_entry_pct': round(risk_per_entry_pct, 2), # NEU
-            # 'balance_fraction_pct': 100, # ALT/ENTFERNT
+            'risk_per_entry_pct': round(risk_per_entry_pct, 2), # Risiko pro Entry (basierend auf Startkapital im Backtester)
             'leverage': leverage,
             'stop_loss_pct': round(stop_loss_pct, 2)
         },
@@ -83,34 +85,40 @@ def objective(trial):
 
     # --- Backtest ausführen ---
     if HISTORICAL_DATA is None or START_CAPITAL <= 0:
+        logger.error("HISTORICAL_DATA oder START_CAPITAL nicht korrekt initialisiert in Objective.")
         raise ValueError("HISTORICAL_DATA oder START_CAPITAL nicht korrekt initialisiert.")
 
     result = run_envelope_backtest(HISTORICAL_DATA.copy(), params, START_CAPITAL)
 
     # --- Ergebnisse extrahieren und bewerten ---
     pnl = result.get('total_pnl_pct', -1000.0)
-    drawdown = result.get('max_drawdown_pct', 100.0) / 100.0 # Umwandlung in Dezimal für Vergleich
+    # Drawdown wird jetzt aus der Equity Curve im Backtester berechnet, hier nur für Pruning holen
+    drawdown_pct_for_pruning = result.get('max_drawdown_pct', 100.0)
+    drawdown_decimal_for_pruning = drawdown_pct_for_pruning / 100.0
     trades = result.get('trades_count', 0)
-    win_rate = result.get('win_rate', 0.0)
+    win_rate = result.get('win_rate', 0.0) # Nur für 'strict' mode relevant
 
     # --- Constraints prüfen (Pruning) ---
     if OPTIM_MODE == "strict":
-        if drawdown > MAX_DRAWDOWN_CONSTRAINT or win_rate < MIN_WIN_RATE_CONSTRAINT or pnl < MIN_PNL_CONSTRAINT or trades < 20: # Mindestanzahl Trades
+        if drawdown_decimal_for_pruning > MAX_DRAWDOWN_CONSTRAINT or win_rate < MIN_WIN_RATE_CONSTRAINT or pnl < MIN_PNL_CONSTRAINT or trades < MIN_TRADES_FOR_VALID:
+            logger.debug(f"Trial pruned (strict): DD={drawdown_pct_for_pruning:.1f}% WinRate={win_rate:.1f}% PnL={pnl:.1f}% Trades={trades}")
             raise optuna.exceptions.TrialPruned()
     elif OPTIM_MODE == "best_profit":
         # Im "best_profit" Modus nur auf Drawdown und Mindest-Trades prüfen
-        if drawdown > MAX_DRAWDOWN_CONSTRAINT or trades < 20:
+        if drawdown_decimal_for_pruning > MAX_DRAWDOWN_CONSTRAINT or trades < MIN_TRADES_FOR_VALID:
+            logger.debug(f"Trial pruned (best_profit): DD={drawdown_pct_for_pruning:.1f}% (Constraint {MAX_DRAWDOWN_CONSTRAINT*100:.1f}%) or Trades={trades} (<{MIN_TRADES_FOR_VALID})")
             raise optuna.exceptions.TrialPruned()
 
-    # --- Zielwert zurückgeben (z.B. PnL oder Calmar Ratio) ---
-    # Hier verwenden wir Calmar Ratio (vereinfacht)
-    score = pnl / (drawdown * 100) if drawdown > 0.01 else pnl if pnl > 0 else -1000
+    # --- Zielwert zurückgeben (JETZT NUR PNL) ---
+    # score = pnl / (drawdown_decimal_for_pruning * 100) if drawdown_decimal_for_pruning > 0.001 else pnl if pnl > 0 else -1000 # ALT (Vermeide Division durch ~0)
+    score = pnl # NEU: Optimiere direkt auf PnL%
+    logger.debug(f"Trial finished: PnL={pnl:.2f}%, DD={drawdown_pct_for_pruning:.2f}%, Trades={trades} -> Score={score:.2f}")
     return score
 
 
-# --- Main Funktion (angepasst von JaegerBot) ---
+# --- Main Funktion ---
 def main():
-    global HISTORICAL_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE
+    global HISTORICAL_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID
 
     parser = argparse.ArgumentParser(description="Parameter-Optimierung für ltbbot (Envelope-Strategie)")
     parser.add_argument('--symbols', required=True, type=str, help="Symbole, getrennt durch Leerzeichen (z.B. BTC ETH)")
@@ -120,24 +128,27 @@ def main():
     parser.add_argument('--jobs', required=True, type=int, help="Anzahl paralleler Jobs (-1 für alle CPU-Kerne)")
     parser.add_argument('--max_drawdown', required=True, type=float, help="Maximal erlaubter Drawdown in % (z.B. 30)")
     parser.add_argument('--start_capital', required=True, type=float, help="Startkapital für Backtests (z.B. 1000)")
-    parser.add_argument('--min_win_rate', required=True, type=float, help="Minimale Win-Rate in % (z.B. 55)")
+    parser.add_argument('--min_win_rate', required=True, type=float, help="Minimale Win-Rate in % (z.B. 0)") # Nur für strict mode
     parser.add_argument('--trials', required=True, type=int, help="Anzahl der Optuna Trials (z.B. 200)")
-    parser.add_argument('--min_pnl', required=True, type=float, help="Minimaler Gesamt-PnL in % (z.B. 0)")
+    parser.add_argument('--min_pnl', required=True, type=float, help="Minimaler Gesamt-PnL in % (z.B. 0)") # Nur für strict mode
     parser.add_argument('--mode', required=True, type=str, choices=['strict', 'best_profit'], help="Optimierungsmodus")
     parser.add_argument('--config_suffix', type=str, default="_envelope", help="Suffix für Config-Dateinamen")
+    parser.add_argument('--min_trades', type=int, default=20, help="Mindestanzahl Trades für gültiges Ergebnis") # Optional: Mindest-Trades per Arg
     args = parser.parse_args()
 
     # Globale Variablen setzen
     CONFIG_SUFFIX = args.config_suffix
     MAX_DRAWDOWN_CONSTRAINT = args.max_drawdown / 100.0
-    MIN_WIN_RATE_CONSTRAINT = args.min_win_rate
-    MIN_PNL_CONSTRAINT = args.min_pnl
+    MIN_WIN_RATE_CONSTRAINT = args.min_win_rate # Wird nur im strict mode verwendet
+    MIN_PNL_CONSTRAINT = args.min_pnl # Wird nur im strict mode verwendet
     START_CAPITAL = args.start_capital
     OPTIM_MODE = args.mode
     N_TRIALS = args.trials
+    MIN_TRADES_FOR_VALID = args.min_trades # Setze Mindest-Trades
 
     symbols, timeframes = args.symbols.split(), args.timeframes.split()
-    TASKS = [{'symbol': f"{s}/USDT:USDT", 'timeframe': tf} for s in symbols for tf in timeframes]
+    # Erstelle die vollständigen Symbolnamen für ccxt
+    TASKS = [{'symbol': f"{s.upper()}/USDT:USDT", 'timeframe': tf} for s in symbols for tf in timeframes]
 
     optuna_results = [] # Sammelt die besten Ergebnisse für jede Task
 
@@ -147,51 +158,61 @@ def main():
         CURRENT_SYMBOL = symbol
         CURRENT_TIMEFRAME = timeframe
 
-        print(f"\n===== Optimiere: {symbol} ({timeframe}) {CONFIG_SUFFIX} =====")
+        logger.info(f"\n===== Optimiere: {symbol} ({timeframe}) {CONFIG_SUFFIX} =====")
 
         # --- Daten laden ---
-        HISTORICAL_DATA = load_data(symbol, timeframe, args.start_date, args.end_date)
-        if HISTORICAL_DATA is None or HISTORICAL_DATA.empty:
-            logging.warning(f"Keine Daten für {symbol} ({timeframe}) geladen. Überspringe.")
-            continue
+        try:
+            HISTORICAL_DATA = load_data(symbol, timeframe, args.start_date, args.end_date)
+            if HISTORICAL_DATA is None or HISTORICAL_DATA.empty:
+                logger.warning(f"Keine Daten für {symbol} ({timeframe}) geladen. Überspringe.")
+                continue
+        except Exception as e:
+            logger.error(f"Fehler beim Laden der Daten für {symbol} ({timeframe}): {e}", exc_info=True)
+            continue # Nächste Task versuchen
 
         # --- Datenqualität bewerten (optional aber empfohlen) ---
-        print("\n--- Bewertung der Datensatz-Qualität ---")
-        evaluation = evaluate_dataset(HISTORICAL_DATA.copy(), timeframe)
-        print(f"Note: {evaluation['score']} / 10\n" + "\n".join(evaluation['justification']) + "\n----------------------------------------")
-        if evaluation['score'] < 4:
-            logging.warning(f"Datensatzqualität zu gering ({evaluation['score']}/10). Überspringe Optimierung.")
-            # continue # Oder trotzdem optimieren?
+        try:
+            logger.info("\n--- Bewertung der Datensatz-Qualität ---")
+            evaluation = evaluate_dataset(HISTORICAL_DATA.copy(), timeframe)
+            logger.info(f"Note: {evaluation['score']} / 10\n" + "\n".join(evaluation['justification']) + "\n----------------------------------------")
+            if evaluation['score'] < 4:
+                logger.warning(f"Datensatzqualität möglicherweise gering ({evaluation['score']}/10). Optimierung wird trotzdem versucht.")
+                # continue # Oder hier abbrechen? Besser versuchen.
+        except Exception as e:
+            logger.warning(f"Fehler bei der Datensatzbewertung: {e}. Optimierung wird trotzdem versucht.")
+
 
         # --- Optuna Studie erstellen/laden ---
         DB_FILE = os.path.join(PROJECT_ROOT, 'artifacts', 'db', 'optuna_studies_ltbbot.db')
         os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
-        STORAGE_URL = f"sqlite:///{DB_FILE}?timeout=60"
+        STORAGE_URL = f"sqlite:///{DB_FILE}?timeout=60" # Timeout erhöht
 
         safe_filename = create_safe_filename(symbol, timeframe)
-        study_name = f"env_{safe_filename}_{OPTIM_MODE}"
+        # Suffix (z.B. _envelope) und Modus in den Studiennamen aufnehmen
+        study_name = f"{safe_filename}{CONFIG_SUFFIX}_{OPTIM_MODE}"
 
         try:
-            study = optuna.create_study(storage=STORAGE_URL, study_name=study_name, direction="maximize", load_if_exists=True)
+            # Pruner hinzufügen (optional, kann bei schwierigen Suchen helfen)
+            # pruner = optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=30, interval_steps=10)
+            study = optuna.create_study(storage=STORAGE_URL, study_name=study_name, direction="maximize", load_if_exists=True)#, pruner=pruner)
 
             # --- Optimierung starten ---
             n_jobs = args.jobs
-            if n_jobs == 1:
-                study.optimize(objective, n_trials=N_TRIALS, show_progress_bar=True)
-            else:
-                study.optimize(objective, n_trials=N_TRIALS, n_jobs=n_jobs, show_progress_bar=True)
+            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)...")
+            study.optimize(objective, n_trials=N_TRIALS, n_jobs=n_jobs, show_progress_bar=True)
 
             # --- Bestes Ergebnis extrahieren ---
             valid_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
             if not valid_trials:
-                print(f"\n❌ FEHLER: Für {symbol} ({timeframe}) konnte keine gültige Konfiguration gefunden werden (alle Trials pruned?).")
+                logger.error(f"\n❌ FEHLER: Für {symbol} ({timeframe}) konnte keine gültige Konfiguration gefunden werden (alle Trials pruned?).")
                 continue
 
             best_trial = study.best_trial
             best_params_optuna = best_trial.params
-            best_score = best_trial.value
+            best_score = best_trial.value # Das ist jetzt der beste PnL%
 
             # Führe den Backtest mit den besten Parametern erneut aus, um alle Metriken zu bekommen
+            # (stellt sicher, dass die finalen Metriken konsistent sind)
             final_params_dict = {
                 'strategy': {
                     'average_type': best_params_optuna['average_type'],
@@ -201,32 +222,51 @@ def main():
                 },
                 'risk': {
                     'margin_mode': 'isolated',
-                    'risk_per_entry_pct': round(best_params_optuna['risk_per_entry_pct'], 2), # NEU
+                    'risk_per_entry_pct': round(best_params_optuna['risk_per_entry_pct'], 2),
                     'leverage': best_params_optuna['leverage'],
                     'stop_loss_pct': round(best_params_optuna['stop_loss_pct'], 2)
                 },
                 'behavior': {'use_longs': True, 'use_shorts': True}
+                # Optional: Initial capital for live trading config
+                #'initial_capital_live': START_CAPITAL # Speichere Startkapital in Config
             }
             final_result = run_envelope_backtest(HISTORICAL_DATA.copy(), final_params_dict, START_CAPITAL)
 
-            print("\n--- Bestes Ergebnis ---")
-            print(f"  Score (Calmar o.ä.): {best_score:.4f}")
-            print(f"  PnL: {final_result.get('total_pnl_pct'):.2f}%")
-            print(f"  Max Drawdown: {final_result.get('max_drawdown_pct'):.2f}%")
-            print(f"  Trades: {final_result.get('trades_count')}")
-            print(f"  Win Rate: {final_result.get('win_rate'):.2f}%")
-            print(f"  Beste Parameter: {best_params_optuna}")
+            # Extrahiere finale Metriken aus dem letzten Backtest-Lauf
+            final_pnl = final_result.get('total_pnl_pct', -1000)
+            final_dd = final_result.get('max_drawdown_pct', 100)
+            final_trades = final_result.get('trades_count', 0)
+            final_win_rate = final_result.get('win_rate', 0)
+
+            logger.info("\n--- Bestes Ergebnis ---")
+            # Zeige PnL als Score (da wir danach optimiert haben)
+            logger.info(f"  Score (PnL%): {best_score:.2f}%") # Sollte ~ final_pnl sein
+            logger.info(f"  Finaler PnL: {final_pnl:.2f}%")
+            logger.info(f"  Finaler Max Drawdown: {final_dd:.2f}%")
+            logger.info(f"  Trades: {final_trades}")
+            logger.info(f"  Win Rate: {final_win_rate:.2f}%")
+            logger.info(f"  Beste Parameter: {best_params_optuna}")
+
+            # Überprüfe, ob das finale Ergebnis immer noch die Constraints erfüllt (Sicherheitscheck)
+            if final_dd > (args.max_drawdown) or final_trades < MIN_TRADES_FOR_VALID:
+                 logger.warning(f"ACHTUNG: Das finale Ergebnis ({final_pnl:.1f}% PnL, {final_dd:.1f}% DD, {final_trades} Trades) "
+                                f"erfüllt die Constraints (DD<{args.max_drawdown}%, Trades>={MIN_TRADES_FOR_VALID}) nicht mehr exakt. "
+                                f"Optuna fand evtl. ein grenzwertiges Optimum.")
+                 # Optional: Hier entscheiden, ob die Config trotzdem gespeichert werden soll
+                 # save_config_anyway = False
+                 # if not save_config_anyway: continue
+
 
             optuna_results.append({
-                 'symbol': symbol,
-                 'timeframe': timeframe,
-                 'score': best_score,
-                 'pnl_pct': final_result.get('total_pnl_pct'),
-                 'max_drawdown_pct': final_result.get('max_drawdown_pct'),
-                 'win_rate': final_result.get('win_rate'),
-                 'trades': final_result.get('trades_count'),
-                 'params': best_params_optuna,
-                 'config_dict': final_params_dict # Speichere das vollständige Dict
+                    'symbol': symbol,
+                    'timeframe': timeframe,
+                    'score': best_score, # Der optimierte Wert (PnL)
+                    'pnl_pct': final_pnl,
+                    'max_drawdown_pct': final_dd,
+                    'win_rate': final_win_rate,
+                    'trades': final_trades,
+                    'params': best_params_optuna,
+                    'config_dict': final_params_dict # Speichere das vollständige Dict
             })
 
             # --- Konfigurationsdatei speichern ---
@@ -235,28 +275,38 @@ def main():
             config_filename = f'config_{safe_filename}{CONFIG_SUFFIX}.json'
             config_output_path = os.path.join(config_dir, config_filename)
 
-            # Erstelle das finale JSON-Objekt
+            # Erstelle das finale JSON-Objekt für die Config-Datei
             config_output = {
                 "market": {"symbol": symbol, "timeframe": timeframe},
                 "strategy": final_params_dict['strategy'],
                 "risk": final_params_dict['risk'],
                 "behavior": final_params_dict['behavior']
+                # Optional: Füge initial_capital_live hinzu, wenn verwendet
+                #"initial_capital_live": START_CAPITAL
             }
 
             with open(config_output_path, 'w') as f:
                 json.dump(config_output, f, indent=4)
-            print(f"\n✔ Beste Konfiguration wurde in '{config_output_path}' gespeichert.")
+            logger.info(f"✔ Beste Konfiguration wurde in '{config_output_path}' gespeichert.")
 
         except Exception as e:
-            logging.error(f"Schwerwiegender Fehler während der Optimierung für {symbol} ({timeframe}): {e}", exc_info=True)
+            logger.error(f"Schwerwiegender Fehler während der Optimierung für {symbol} ({timeframe}): {e}", exc_info=True)
+            # Springe zur nächsten Task, anstatt abzubrechen
+            continue
 
     # --- Nach allen Tasks: Zusammenfassung (optional) ---
     if optuna_results:
-        print("\n===== Optimierungs-Zusammenfassung =====")
+        logger.info("\n===== Optimierungs-Zusammenfassung =====")
+        # Sortiere nach bestem Score (PnL)
         sorted_results = sorted(optuna_results, key=lambda x: x['score'], reverse=True)
         for res in sorted_results:
-             print(f"- {res['symbol']} ({res['timeframe']}): Score={res['score']:.2f}, PnL={res['pnl_pct']:.2f}%, DD={res['max_drawdown_pct']:.2f}%, WR={res['win_rate']:.2f}%, Trades={res['trades']}")
+            logger.info(f"- {res['symbol']} ({res['timeframe']}): "
+                        f"Score={res['score']:.2f}%, PnL={res['pnl_pct']:.2f}%, DD={res['max_drawdown_pct']:.2f}%, "
+                        f"WR={res['win_rate']:.2f}%, Trades={res['trades']}")
+    else:
+        logger.warning("Keine erfolgreichen Optimierungsergebnisse zum Zusammenfassen.")
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    # Konfiguriere das Root-Logging, damit auch Logs aus importierten Modulen angezeigt werden
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', handlers=[logging.StreamHandler(sys.stdout)])
     main()
