@@ -1,4 +1,4 @@
-# src/ltbbot/analysis/portfolio_simulator.py
+# src/ltbbp/analysis/portfolio_simulator.py
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -17,15 +17,16 @@ from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
 def run_portfolio_simulation(start_capital, strategies_data, start_date, end_date):
     """
     Führt eine chronologische Portfolio-Simulation mit mehreren Envelope-Strategien durch.
-    VERWENDET JETZT RISIKOBASIERTE POSITIONSGRÖSSENBERECHNUNG.
+    VERWENDET JETZT RISIKOBASIERTE POSITIONSGRÖSSENBERECHNUNG (BASIEREND AUF STARTKAPITAL)
+    UND MARGIN TRACKING.
     """
-    logger.info("\n--- Starte Portfolio-Simulation (RISIKOBASIERT)... ---") # Hinweis hinzugefügt
+    logger.info("\n--- Starte Portfolio-Simulation (RISIKOBASIERT + MARGIN TRACKING)... ---")
 
     if not strategies_data:
         logger.error("Keine Strategie-Daten für die Simulation übergeben.")
         return None
 
-    # --- Daten vorbereiten: Indikatoren berechnen & globalen Zeitindex erstellen ---
+    # --- Daten vorbereiten ---
     all_timestamps = set()
     strategy_dfs = {}
     processed_data_count = 0
@@ -37,7 +38,6 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
             if df_with_indicators.empty:
                 logger.warning(f"Keine Indikatordaten für Strategie {strategy_id}. Wird ignoriert.")
                 continue
-
             strategy_dfs[strategy_id] = df_with_indicators
             all_timestamps.update(df_with_indicators.index)
             processed_data_count += 1
@@ -46,8 +46,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
             continue
 
     if processed_data_count == 0:
-            logger.error("Konnte für keine Strategie Indikatoren berechnen. Breche Simulation ab.")
-            return None
+        logger.error("Konnte für keine Strategie Indikatoren berechnen. Breche Simulation ab.")
+        return None
 
     sorted_timestamps = sorted(list(all_timestamps))
     sim_start_ts = pd.to_datetime(start_date + " 00:00:00+00:00", utc=True)
@@ -62,14 +62,14 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     logger.info("2/4: Starte chronologische Simulation...")
 
     # --- Simulationsvariablen initialisieren ---
-    equity = start_capital
-    peak_equity = start_capital
+    equity = start_capital # Aktuelles Kapital (realisiert)
+    peak_equity_curve = start_capital # Höchststand der Equity Curve (inkl. unreal. PnL)
     min_equity_during_sim = start_capital
     max_drawdown_pct = 0.0
     max_drawdown_date = None
     liquidation_date = None
+    total_margin_used = 0.0 # NEU: Verfolgt die gesamte verwendete Margin
 
-    # Portfolio-Positionen: {strategy_id: [list of open layers {..., 'amount_coins': ...}]}
     open_portfolio_positions = {strategy_id: [] for strategy_id in strategy_dfs.keys()}
     closed_trades_portfolio = []
     equity_curve = []
@@ -79,14 +79,14 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     for ts in tqdm(simulation_timestamps, desc="Simuliere Portfolio"):
         if liquidation_date: break
 
-        current_equity_snapshot = equity # Eigenkapital zu Beginn des Zeitstempels
+        current_equity_realized = equity # Realisiertes Kapital zu Beginn des Zeitstempels
         total_exit_pnl_this_step = 0.0
+        margin_freed_this_step = 0.0 # NEU: Verfolgt freigegebene Margin
 
         # --- 1. Ausstiege (SL & TP) für alle offenen Positionen prüfen ---
         for strategy_id, open_layers in open_portfolio_positions.items():
             if strategy_id not in strategy_dfs: continue
             strat_df = strategy_dfs[strategy_id]
-
             if ts not in strat_df.index: continue
 
             current_candle = strat_df.loc[ts]
@@ -100,7 +100,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 pos_side = layer['side']
                 pos_entry = layer['entry_price']
                 pos_sl = layer['sl_price']
-                pos_amount_coins = layer['amount_coins'] # <<< KORRIGIERT: Verwende 'amount_coins'
+                pos_amount_coins = layer['amount_coins']
 
                 # SL Prüfung
                 if pos_side == 'long' and current_candle['low'] <= pos_sl:
@@ -118,32 +118,35 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                          if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
                             exit_price = tp_price_current; exited = True
 
-                # PnL berechnen
+                # PnL berechnen und Margin freigeben
                 if exited and exit_price is not None:
                     if pos_side == 'long':
-                        pnl = (exit_price - pos_entry) * pos_amount_coins * leverage # <<< KORRIGIERT
+                        pnl = (exit_price - pos_entry) * pos_amount_coins * leverage
                     else: # short
-                        pnl = (pos_entry - exit_price) * pos_amount_coins * leverage # <<< KORRIGIERT
+                        pnl = (pos_entry - exit_price) * pos_amount_coins * leverage
 
-                    entry_value = pos_entry * pos_amount_coins * leverage # <<< KORRIGIERT
-                    exit_value = exit_price * pos_amount_coins * leverage # <<< KORRIGIERT
+                    entry_value = pos_entry * pos_amount_coins * leverage
+                    exit_value = exit_price * pos_amount_coins * leverage
                     fees = (entry_value * fee_pct) + (exit_value * fee_pct)
                     pnl -= fees
 
                     total_exit_pnl_this_step += pnl
                     closed_trades_portfolio.append({'pnl': pnl, 'side': pos_side, 'strategy_id': strategy_id})
+
+                    # NEU: Margin dieses Layers freigeben
+                    margin_freed = (pos_entry * pos_amount_coins) / leverage
+                    margin_freed_this_step += margin_freed
                 else:
-                    remaining_layers.append(layer)
+                    remaining_layers.append(layer) # Position bleibt offen
 
             open_portfolio_positions[strategy_id] = remaining_layers
 
-        equity += total_exit_pnl_this_step # Equity nach allen Ausstiegen aktualisieren
+        # Realisiertes Kapital und verwendete Margin nach allen Ausstiegen aktualisieren
+        equity += total_exit_pnl_this_step
+        total_margin_used -= margin_freed_this_step
+        total_margin_used = max(0, total_margin_used) # Sicherstellen, dass Margin nicht negativ wird
 
         # --- 2. Einstiege für alle Strategien prüfen ---
-        # Keine pauschale Kapitalaufteilung mehr!
-        # available_capital_for_new_entries = equity ... ENTFERNT
-        # capital_per_strategy = ... ENTFERNT
-
         if equity > 0: # Nur wenn Kapital verfügbar
             for strategy_id, strat_df in strategy_dfs.items():
                 if ts not in strat_df.index: continue
@@ -156,10 +159,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 leverage = risk_params['leverage']
                 num_envelopes = len(strategy_params['envelopes'])
                 stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0
-                # NEU: Hole risk_per_entry_pct
                 risk_per_entry_pct = risk_params.get('risk_per_entry_pct', 0.5)
-
-                # capital_per_order = ... ENTFERNT
 
                 # Long Entries
                 if behavior_params.get('use_longs', True):
@@ -172,31 +172,36 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         if current_candle['low'] <= entry_trigger_price:
                             entry_price = entry_trigger_price
                             if entry_price > 0:
-                                # *** KORRIGIERTE POSITIONSGRÖSSENBERECHNUNG ***
-                                risk_amount_usd = equity * (risk_per_entry_pct / 100.0)
+                                # *** KORRIGIERTE POSITIONSGRÖSSENBERECHNUNG (BASIEREND AUF STARTKAPITAL) ***
+                                risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0) # <--- BASIERT AUF STARTKAPITAL
                                 if risk_amount_usd <= 0: continue
+
                                 sl_price = entry_price * (1 - stop_loss_pct_param)
                                 sl_distance_price = abs(entry_price - sl_price)
                                 if sl_distance_price <= 0: continue
+
                                 amount_coins = risk_amount_usd / sl_distance_price
                                 margin_required = (amount_coins * entry_price) / leverage
-                                # Vereinfachter Check: Genug Equity für *diese* Margin?
-                                # (Ignoriert Margin anderer offener Positionen - könnte zu aggressiv sein!)
-                                if margin_required > equity:
-                                     # logger.warning(f"Sim: Insufficient equity ({equity:.2f}) for required margin ({margin_required:.2f}) on long layer {k}. Skipping.")
-                                     continue # Nächsten Layer prüfen
-                                # *** ENDE KORREKTUR ***
+
+                                # *** NEUE MARGIN-PRÜFUNG ***
+                                available_equity = equity - total_margin_used # Verfügbares Equity = Realisiert - Gebundene Margin
+                                if margin_required > available_equity:
+                                     # logger.warning(f"Sim: Insufficient AVAILABLE equity ({available_equity:.2f}) for required margin ({margin_required:.2f}) on long layer {k}. Skipping.")
+                                     continue # Diesen Layer überspringen
+                                # *** ENDE MARGIN-PRÜFUNG ***
 
                                 tp_price = current_candle['average']
 
+                                # Position hinzufügen und Margin binden
                                 open_portfolio_positions[strategy_id].append({
                                     'entry_price': entry_price,
-                                    'amount_coins': amount_coins, # <<< KORRIGIERT: amount_coins speichern
+                                    'amount_coins': amount_coins,
                                     'side': side,
                                     'sl_price': sl_price,
-                                    'tp_price': tp_price, # TP Preis ist hier nur informativ, da er sich ändert
+                                    'tp_price': tp_price,
                                     'leverage': leverage
                                 })
+                                total_margin_used += margin_required # NEU: Margin hinzufügen
 
                 # Short Entries
                 if behavior_params.get('use_shorts', True):
@@ -209,74 +214,92 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         if current_candle['high'] >= entry_trigger_price:
                             entry_price = entry_trigger_price
                             if entry_price > 0:
-                                # *** KORRIGIERTE POSITIONSGRÖSSENBERECHNUNG ***
-                                risk_amount_usd = equity * (risk_per_entry_pct / 100.0)
+                                # *** KORRIGIERTE POSITIONSGRÖSSENBERECHNUNG (BASIEREND AUF STARTKAPITAL) ***
+                                risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0) # <--- BASIERT AUF STARTKAPITAL
                                 if risk_amount_usd <= 0: continue
+
                                 sl_price = entry_price * (1 + stop_loss_pct_param)
                                 sl_distance_price = abs(entry_price - sl_price)
                                 if sl_distance_price <= 0: continue
+
                                 amount_coins = risk_amount_usd / sl_distance_price
                                 margin_required = (amount_coins * entry_price) / leverage
-                                if margin_required > equity:
-                                     # logger.warning(f"Sim: Insufficient equity ({equity:.2f}) for required margin ({margin_required:.2f}) on short layer {k}. Skipping.")
+
+                                # *** NEUE MARGIN-PRÜFUNG ***
+                                available_equity = equity - total_margin_used
+                                if margin_required > available_equity:
+                                     # logger.warning(f"Sim: Insufficient AVAILABLE equity ({available_equity:.2f}) for required margin ({margin_required:.2f}) on short layer {k}. Skipping.")
                                      continue
-                                # *** ENDE KORREKTUR ***
+                                # *** ENDE MARGIN-PRÜFUNG ***
 
                                 tp_price = current_candle['average']
 
+                                # Position hinzufügen und Margin binden
                                 open_portfolio_positions[strategy_id].append({
                                     'entry_price': entry_price,
-                                    'amount_coins': amount_coins, # <<< KORRIGIERT: amount_coins speichern
+                                    'amount_coins': amount_coins,
                                     'side': side,
                                     'sl_price': sl_price,
                                     'tp_price': tp_price,
                                     'leverage': leverage
                                 })
+                                total_margin_used += margin_required # NEU: Margin hinzufügen
 
         # --- 3. Unrealisierten PnL und Equity Curve berechnen ---
         unrealized_pnl = 0.0
+        # Aktuellen Wert aller offenen Positionen berechnen
+        current_portfolio_value = 0.0
         for strategy_id, open_layers in open_portfolio_positions.items():
             if strategy_id not in strategy_dfs or ts not in strategy_dfs[strategy_id].index: continue
-            current_price = strategy_dfs[strategy_id].loc[ts]['close']
+            current_price = strategy_dfs[strategy_id].loc[ts]['close'] # Aktueller Schlusskurs
             for layer in open_layers:
                 leverage_layer = layer.get('leverage', 1)
-                layer_amount_coins = layer['amount_coins'] # <<< KORRIGIERT: Verwende 'amount_coins'
+                layer_amount_coins = layer['amount_coins']
+                entry_price_layer = layer['entry_price']
+                layer_pnl = 0
                 if layer['side'] == 'long':
-                    unrealized_pnl += (current_price - layer['entry_price']) * layer_amount_coins * leverage_layer
+                    layer_pnl = (current_price - entry_price_layer) * layer_amount_coins * leverage_layer
                 else: # short
-                    unrealized_pnl += (layer['entry_price'] - current_price) * layer_amount_coins * leverage_layer
+                    layer_pnl = (entry_price_layer - current_price) * layer_amount_coins * leverage_layer
+                unrealized_pnl += layer_pnl
+                # Wert der Margin dieser Position + PnL = Aktueller Wert
+                # margin_this_layer = (entry_price_layer * layer_amount_coins) / leverage_layer
+                # current_portfolio_value += margin_this_layer + layer_pnl # Alternative Berechnungsmethode
 
-        current_total_equity = equity + unrealized_pnl
-        equity_curve.append({'timestamp': ts, 'equity': current_total_equity})
+        # Equity Curve basiert auf realisiertem Kapital + unrealisiertem PnL
+        current_total_equity_curve = equity + unrealized_pnl
+        equity_curve.append({'timestamp': ts, 'equity': current_total_equity_curve})
 
-        # --- 4. Drawdown und Liquidation prüfen ---
-        peak_equity = max(peak_equity, current_total_equity)
-        drawdown = (peak_equity - current_total_equity) / peak_equity if peak_equity > 0 else 0
-        current_dd_pct = drawdown * 100 # Drawdown als Prozent
-        if current_dd_pct > max_drawdown_pct: # Vergleiche Prozentwerte
-            max_drawdown_pct = current_dd_pct
+        # --- 4. Drawdown und Liquidation prüfen (basierend auf Equity Curve) ---
+        peak_equity_curve = max(peak_equity_curve, current_total_equity_curve)
+        drawdown_curve = (peak_equity_curve - current_total_equity_curve) / peak_equity_curve if peak_equity_curve > 0 else 0
+        current_dd_pct_curve = drawdown_curve * 100
+        if current_dd_pct_curve > max_drawdown_pct:
+            max_drawdown_pct = current_dd_pct_curve
             max_drawdown_date = ts
 
-        min_equity_during_sim = min(min_equity_during_sim, current_total_equity)
+        min_equity_during_sim = min(min_equity_during_sim, current_total_equity_curve)
 
-        if current_total_equity <= 0 and not liquidation_date:
+        # Liquidation prüfen (wenn das *realisierte* Kapital die verwendete Margin nicht mehr deckt - vereinfacht!)
+        # Eine präzisere Prüfung würde die Maintenance Margin Rate benötigen.
+        # Hier prüfen wir, ob das *theoretische* Gesamt-Equity (inkl. unreal. Verluste) unter 0 fällt.
+        if current_total_equity_curve <= 0 and not liquidation_date:
             liquidation_date = ts
-            logger.warning(f"PORTFOLIO LIQUIDIERT am {ts.strftime('%Y-%m-%d')}!")
-            # Equity auf 0 setzen für den Rest der Kurve (optional, aber sinnvoll)
-            equity = 0
+            logger.warning(f"PORTFOLIO LIQUIDIERT (Equity <= 0) am {ts.strftime('%Y-%m-%d')}!")
+            equity = 0 # Realisiertes Kapital ist weg
             # Fülle den Rest der Equity Curve mit 0
             remaining_timestamps = [t for t in simulation_timestamps if t > ts]
             for rem_ts in remaining_timestamps:
                  equity_curve.append({'timestamp': rem_ts, 'equity': 0.0})
             break # Simulation beenden
 
-    # --- Rest des Codes (Ergebnisauswertung) bleibt gleich ---
+    # --- Endauswertung ---
     logger.info("3/4: Bereite Analyse-Ergebnisse vor...")
-    final_equity = equity_curve[-1]['equity'] if equity_curve else start_capital
-    # Stelle sicher, dass final_equity nicht negativ ist (kann durch Rundung passieren)
-    final_equity = max(0, final_equity)
+    # Finales Equity ist der letzte Wert der Equity Curve
+    final_equity_curve = equity_curve[-1]['equity'] if equity_curve else start_capital
+    final_equity_curve = max(0, final_equity_curve) # Sicherstellen, dass nicht negativ
 
-    total_pnl_pct = (final_equity / start_capital - 1) * 100 if start_capital > 0 else 0
+    total_pnl_pct = (final_equity_curve / start_capital - 1) * 100 if start_capital > 0 else 0
     trade_count = len(closed_trades_portfolio)
     wins = sum(1 for t in closed_trades_portfolio if t['pnl'] > 0)
     win_rate = (wins / trade_count * 100) if trade_count > 0 else 0
@@ -285,34 +308,44 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     trades_per_strategy_df = pd.DataFrame(closed_trades_portfolio).groupby('strategy_id').size().reset_index(name='trades') if closed_trades_portfolio else pd.DataFrame(columns=['strategy_id', 'trades'])
 
     equity_df = pd.DataFrame(equity_curve)
+    calculated_max_dd_pct = 0.0
+    calculated_max_dd_date = None
     if not equity_df.empty:
         equity_df['peak'] = equity_df['equity'].cummax()
         # Drawdown als positiven Prozentwert berechnen
         equity_df['drawdown_pct'] = ((equity_df['peak'] - equity_df['equity']) / equity_df['peak'].replace(0, np.nan)).fillna(0) * 100
-        # Finde das Datum des maximalen Drawdowns erneut aus dem DataFrame
+        # Finde den maximalen Drawdown erneut aus dem DataFrame
         if not equity_df['drawdown_pct'].empty:
-             max_drawdown_row_idx = equity_df['drawdown_pct'].idxmax()
-             max_drawdown_row = equity_df.loc[max_drawdown_row_idx]
-             max_drawdown_date = max_drawdown_row['timestamp']
-             max_drawdown_pct = max_drawdown_row['drawdown_pct'] # Max DD aus DataFrame holen
-        else: # Falls nur eine Zeile oder alle DDs 0 sind
-             max_drawdown_date = equity_df['timestamp'].iloc[0] if not equity_df.empty else None
-             max_drawdown_pct = 0.0
+             max_dd_idx = equity_df['drawdown_pct'].idxmax()
+             if pd.notna(max_dd_idx): # Sicherstellen, dass der Index gültig ist
+                  max_dd_row = equity_df.loc[max_dd_idx]
+                  calculated_max_dd_date = max_dd_row['timestamp']
+                  calculated_max_dd_pct = max_dd_row['drawdown_pct']
+             else: # Fallback, wenn kein Max DD gefunden wird (z.B. alles 0)
+                  calculated_max_dd_date = equity_df['timestamp'].iloc[0] if not equity_df.empty else None
+                  calculated_max_dd_pct = 0.0
+        else:
+             calculated_max_dd_date = equity_df['timestamp'].iloc[0] if not equity_df.empty else None
+             calculated_max_dd_pct = 0.0
     else: # Falls equity_df leer ist
-         max_drawdown_date = None
-         max_drawdown_pct = 0.0 # Oder 100.0 je nach Definition
+         calculated_max_dd_date = None
+         calculated_max_dd_pct = 0.0 # Oder 100.0 je nach Definition
 
 
     logger.info("4/4: Portfolio-Simulation abgeschlossen.")
 
+    # Verwende den aus dem DataFrame berechneten Max Drawdown
+    final_max_drawdown_pct = calculated_max_dd_pct
+    final_max_drawdown_date = calculated_max_dd_date
+
     return {
         "start_capital": start_capital,
-        "end_capital": final_equity,
+        "end_capital": final_equity_curve, # Verwende Equity-Curve-Endwert
         "total_pnl_pct": total_pnl_pct,
         "trade_count": trade_count,
         "win_rate": win_rate,
-        "max_drawdown_pct": max_drawdown_pct, # Wird jetzt korrekt als % aus equity_df geholt
-        "max_drawdown_date": max_drawdown_date,
+        "max_drawdown_pct": final_max_drawdown_pct, # Korrigierter Wert
+        "max_drawdown_date": final_max_drawdown_date, # Korrigierter Wert
         "min_equity": min_equity_during_sim,
         "liquidation_date": liquidation_date,
         "pnl_per_strategy": pnl_per_strategy_df,
