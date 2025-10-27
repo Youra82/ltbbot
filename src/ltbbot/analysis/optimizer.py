@@ -8,10 +8,13 @@ import argparse
 import logging
 import warnings
 from joblib import Parallel, delayed # Für Parallelisierung
-# KEINE TqdmCallback Imports mehr
+# NEU: Importiere tqdm direkt
+import tqdm
+# NEU: Importiere Optuna Callback Basisklasse
+from optuna.trial import TrialState
+from optuna.study import Study
 
-# Logging und Warnungen konfigurieren
-# Setze Optuna-Log-Level auf WARNING, um Störungen des Ladebalkens zu minimieren
+# Logging konfigurieren (Optuna Logs auf WARNING reduzieren)
 logging.getLogger('optuna').setLevel(logging.WARNING)
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
@@ -38,6 +41,46 @@ MIN_PNL_CONSTRAINT = 0.0
 START_CAPITAL = 1000
 OPTIM_MODE = "strict"
 MIN_TRADES_FOR_VALID = 20
+
+# --- NEU: Eigene Tqdm Callback Klasse ---
+class SimpleTqdmCallback:
+    """
+    Ein einfacher Optuna Callback, der einen einzigen tqdm Fortschrittsbalken anzeigt.
+    """
+    def __init__(self, total_trials):
+        self.pbar = None
+        self.total_trials = total_trials
+        self.completed_trials = 0
+
+    def __call__(self, study: Study, trial: optuna.trial.FrozenTrial) -> None:
+        # Initialisiere den Balken beim ersten Aufruf
+        if self.pbar is None:
+            self.pbar = tqdm.tqdm(total=self.total_trials, desc="Optimierungsfortschritt", unit="trial")
+
+        # Aktualisiere den Balken nur, wenn ein Trial *abgeschlossen* wurde (egal ob success, fail, prune)
+        if trial.state in [TrialState.COMPLETE, TrialState.FAIL, TrialState.PRUNED]:
+            self.completed_trials += 1
+            # Aktualisiere den Balken, aber nur bis maximal total_trials
+            update_amount = min(1, self.total_trials - self.pbar.n)
+            if update_amount > 0:
+                 self.pbar.update(update_amount)
+
+        # Schließe den Balken, wenn alle Trials durch sind (oder fast durch)
+        if self.completed_trials >= self.total_trials and self.pbar and self.pbar.n < self.total_trials:
+             self.pbar.update(self.total_trials - self.pbar.n) # Fülle den Rest auf
+             self.pbar.close()
+             self.pbar = None # Verhindere weiteres Schließen
+
+    # Methode zum expliziten Schließen am Ende, falls nötig
+    def close_pbar(self):
+         if self.pbar:
+              # Fülle den Balken auf, falls er noch nicht voll ist
+              if self.pbar.n < self.total_trials:
+                   self.pbar.update(self.total_trials - self.pbar.n)
+              self.pbar.close()
+              self.pbar = None
+# --- Ende Callback Klasse ---
+
 
 def create_safe_filename(symbol, timeframe):
     """Erstellt einen sicheren Dateinamen aus Symbol und Zeitrahmen."""
@@ -70,12 +113,10 @@ def objective(trial):
             'leverage': leverage, 'stop_loss_pct': round(stop_loss_pct, 2)
         },
         'behavior': {'use_longs': True, 'use_shorts': True}
-        # Optional: 'initial_capital_live': START_CAPITAL
     }
 
     # --- Backtest ---
     if HISTORICAL_DATA is None or START_CAPITAL <= 0:
-        # Verwende Logger statt print im Objective
         logger.error("HISTORICAL_DATA oder START_CAPITAL nicht korrekt initialisiert in Objective.")
         raise ValueError("HISTORICAL_DATA oder START_CAPITAL nicht korrekt initialisiert.")
 
@@ -93,18 +134,15 @@ def objective(trial):
     if OPTIM_MODE == "strict":
         if drawdown_decimal_for_pruning > MAX_DRAWDOWN_CONSTRAINT or win_rate < MIN_WIN_RATE_CONSTRAINT or pnl < MIN_PNL_CONSTRAINT or trades < MIN_TRADES_FOR_VALID:
             prune = True
-            # logger.debug(f"Trial pruned (strict): ...") # Logging nur bei Bedarf
     elif OPTIM_MODE == "best_profit":
         if drawdown_decimal_for_pruning > MAX_DRAWDOWN_CONSTRAINT or trades < MIN_TRADES_FOR_VALID:
             prune = True
-            # logger.debug(f"Trial pruned (best_profit): ...") # Logging nur bei Bedarf
 
     if prune:
         raise optuna.exceptions.TrialPruned()
 
     # --- Zielwert (Score = PnL) ---
     score = pnl
-    # logger.debug(f"Trial finished: ... -> Score={score:.2f}") # Logging nur bei Bedarf
     return score
 
 
@@ -178,84 +216,99 @@ def main():
         safe_filename = create_safe_filename(symbol, timeframe)
         study_name = f"{safe_filename}{CONFIG_SUFFIX}_{OPTIM_MODE}"
 
+        # *** NEU: Erstelle Instanz des Callbacks ***
+        simple_tqdm_callback = SimpleTqdmCallback(total_trials=N_TRIALS)
+
         try:
             study = optuna.create_study(storage=STORAGE_URL, study_name=study_name, direction="maximize", load_if_exists=True)
 
             n_jobs = args.jobs
-            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)... (Mit show_progress_bar)")
+            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)... (Mit manuellem Tqdm Callback)")
 
-            # *** OPTIMIZE-AUFRUF WIE BEI TITANBOT/JAEGERBOT ***
-            study.optimize(objective, n_trials=N_TRIALS, n_jobs=n_jobs, show_progress_bar=True)
-            # ************************************************
-
-            # --- Bestes Ergebnis ---
-            valid_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
-            if not valid_trials:
-                logger.error(f"\n❌ FEHLER: Für {symbol} ({timeframe}) konnte keine gültige Konfiguration gefunden werden.")
-                continue
-
-            best_trial = study.best_trial
-            best_params_optuna = best_trial.params
-            best_score = best_trial.value # PnL
-
-            # Finaler Backtest mit besten Parametern
-            final_params_dict = {
-                'strategy': {
-                    'average_type': best_params_optuna['average_type'], 'average_period': best_params_optuna['average_period'],
-                    'envelopes': sorted([best_params_optuna['env1'], best_params_optuna['env2'], best_params_optuna['env3']]),
-                    'trigger_price_delta_pct': round(best_params_optuna['trigger_price_delta_pct'], 4)
-                },
-                'risk': {
-                    'margin_mode': 'isolated', 'risk_per_entry_pct': round(best_params_optuna['risk_per_entry_pct'], 2),
-                    'leverage': best_params_optuna['leverage'], 'stop_loss_pct': round(best_params_optuna['stop_loss_pct'], 2)
-                },
-                'behavior': {'use_longs': True, 'use_shorts': True}
-                # Optional: 'initial_capital_live': START_CAPITAL
-            }
-            final_result = run_envelope_backtest(HISTORICAL_DATA.copy(), final_params_dict, START_CAPITAL)
-
-            final_pnl = final_result.get('total_pnl_pct', -1000)
-            final_dd = final_result.get('max_drawdown_pct', 100)
-            final_trades = final_result.get('trades_count', 0)
-            final_win_rate = final_result.get('win_rate', 0)
-
-            logger.info("\n--- Bestes Ergebnis ---")
-            logger.info(f"  Score (PnL%): {best_score:.2f}%")
-            logger.info(f"  Finaler PnL: {final_pnl:.2f}%")
-            logger.info(f"  Finaler Max Drawdown: {final_dd:.2f}%")
-            logger.info(f"  Trades: {final_trades}")
-            logger.info(f"  Win Rate: {final_win_rate:.2f}%")
-            logger.info(f"  Beste Parameter: {best_params_optuna}")
-
-            # Sicherheitscheck
-            if final_dd > (args.max_drawdown) or final_trades < MIN_TRADES_FOR_VALID:
-                 logger.warning(f"ACHTUNG: Das finale Ergebnis ({final_pnl:.1f}% PnL, {final_dd:.1f}% DD, {final_trades} Trades) "
-                                f"erfüllt die Constraints (DD<{args.max_drawdown}%, Trades>={MIN_TRADES_FOR_VALID}) nicht mehr exakt.")
-
-            optuna_results.append({
-                    'symbol': symbol, 'timeframe': timeframe, 'score': best_score,
-                    'pnl_pct': final_pnl, 'max_drawdown_pct': final_dd, 'win_rate': final_win_rate,
-                    'trades': final_trades, 'params': best_params_optuna, 'config_dict': final_params_dict
-            })
-
-            # --- Konfig speichern ---
-            config_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
-            os.makedirs(config_dir, exist_ok=True)
-            config_filename = f'config_{safe_filename}{CONFIG_SUFFIX}.json'
-            config_output_path = os.path.join(config_dir, config_filename)
-            config_output = {
-                "market": {"symbol": symbol, "timeframe": timeframe},
-                "strategy": final_params_dict['strategy'],
-                "risk": final_params_dict['risk'],
-                "behavior": final_params_dict['behavior']
-                # Optional: "initial_capital_live": START_CAPITAL
-            }
-            with open(config_output_path, 'w') as f: json.dump(config_output, f, indent=4)
-            logger.info(f"✔ Beste Konfiguration wurde in '{config_output_path}' gespeichert.")
+            # *** OPTIMIZE-AUFRUF MIT EIGENEM CALLBACK ***
+            # show_progress_bar auf False setzen, da wir unseren eigenen Callback nutzen
+            study.optimize(
+                objective,
+                n_trials=N_TRIALS,
+                n_jobs=n_jobs,
+                callbacks=[simple_tqdm_callback], # Eigener Callback
+                show_progress_bar=False # Wichtig: Standard-Balken deaktivieren
+            )
+            # *****************************************
 
         except Exception as e:
             logger.error(f"Schwerwiegender Fehler während der Optuna-Studie für {symbol} ({timeframe}): {e}", exc_info=True)
+            # Stelle sicher, dass der Balken geschlossen wird, auch bei Fehlern
+            simple_tqdm_callback.close_pbar()
+            continue # Nächste Task versuchen
+        finally:
+             # Stelle sicher, dass der Balken am Ende immer geschlossen wird
+             simple_tqdm_callback.close_pbar()
+
+
+        # --- Bestes Ergebnis ---
+        valid_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
+        if not valid_trials:
+            logger.error(f"\n❌ FEHLER: Für {symbol} ({timeframe}) konnte keine gültige Konfiguration gefunden werden.")
             continue
+
+        best_trial = study.best_trial
+        best_params_optuna = best_trial.params
+        best_score = best_trial.value # PnL
+
+        # Finaler Backtest mit besten Parametern
+        final_params_dict = {
+            'strategy': {
+                'average_type': best_params_optuna['average_type'], 'average_period': best_params_optuna['average_period'],
+                'envelopes': sorted([best_params_optuna['env1'], best_params_optuna['env2'], best_params_optuna['env3']]),
+                'trigger_price_delta_pct': round(best_params_optuna['trigger_price_delta_pct'], 4)
+            },
+            'risk': {
+                'margin_mode': 'isolated', 'risk_per_entry_pct': round(best_params_optuna['risk_per_entry_pct'], 2),
+                'leverage': best_params_optuna['leverage'], 'stop_loss_pct': round(best_params_optuna['stop_loss_pct'], 2)
+            },
+            'behavior': {'use_longs': True, 'use_shorts': True}
+        }
+        final_result = run_envelope_backtest(HISTORICAL_DATA.copy(), final_params_dict, START_CAPITAL)
+
+        final_pnl = final_result.get('total_pnl_pct', -1000)
+        final_dd = final_result.get('max_drawdown_pct', 100)
+        final_trades = final_result.get('trades_count', 0)
+        final_win_rate = final_result.get('win_rate', 0)
+
+        logger.info("\n--- Bestes Ergebnis ---")
+        logger.info(f"  Score (PnL%): {best_score:.2f}%")
+        logger.info(f"  Finaler PnL: {final_pnl:.2f}%")
+        logger.info(f"  Finaler Max Drawdown: {final_dd:.2f}%")
+        logger.info(f"  Trades: {final_trades}")
+        logger.info(f"  Win Rate: {final_win_rate:.2f}%")
+        logger.info(f"  Beste Parameter: {best_params_optuna}")
+
+        # Sicherheitscheck
+        if final_dd > (args.max_drawdown) or final_trades < MIN_TRADES_FOR_VALID:
+             logger.warning(f"ACHTUNG: Das finale Ergebnis ({final_pnl:.1f}% PnL, {final_dd:.1f}% DD, {final_trades} Trades) "
+                            f"erfüllt die Constraints (DD<{args.max_drawdown}%, Trades>={MIN_TRADES_FOR_VALID}) nicht mehr exakt.")
+
+        optuna_results.append({
+                'symbol': symbol, 'timeframe': timeframe, 'score': best_score,
+                'pnl_pct': final_pnl, 'max_drawdown_pct': final_dd, 'win_rate': final_win_rate,
+                'trades': final_trades, 'params': best_params_optuna, 'config_dict': final_params_dict
+        })
+
+        # --- Konfig speichern ---
+        config_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
+        os.makedirs(config_dir, exist_ok=True)
+        config_filename = f'config_{safe_filename}{CONFIG_SUFFIX}.json'
+        config_output_path = os.path.join(config_dir, config_filename)
+        config_output = {
+            "market": {"symbol": symbol, "timeframe": timeframe},
+            "strategy": final_params_dict['strategy'],
+            "risk": final_params_dict['risk'],
+            "behavior": final_params_dict['behavior']
+        }
+        with open(config_output_path, 'w') as f: json.dump(config_output, f, indent=4)
+        logger.info(f"✔ Beste Konfiguration wurde in '{config_output_path}' gespeichert.")
+
 
     # --- Zusammenfassung ---
     if optuna_results:
