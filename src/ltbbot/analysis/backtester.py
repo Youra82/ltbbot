@@ -59,7 +59,10 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
             secret_path = os.path.join(PROJECT_ROOT, 'secret.json')
             with open(secret_path, "r") as f:
                 secrets = json.load(f)
-            api_setup = secrets.get('ltbbot')[0]
+            # Prüfe, ob 'ltbbot' Key existiert und eine Liste ist
+            if 'ltbbot' not in secrets or not isinstance(secrets['ltbbot'], list) or not secrets['ltbbot']:
+                 raise ValueError("Kein gültiger 'ltbbot'-Eintrag in secret.json gefunden.")
+            api_setup = secrets['ltbbot'][0]
             exchange = Exchange(api_setup)
 
             full_data = exchange.fetch_historical_ohlcv(symbol, timeframe, start_date_str, end_date_str)
@@ -81,8 +84,8 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
         except FileNotFoundError:
             logger.error(f"secret.json nicht gefunden unter {secret_path}. Download nicht möglich.")
             return pd.DataFrame()
-        except IndexError:
-            logger.error(f"Kein Account in secret.json unter dem Key 'ltbbot' gefunden.")
+        except (IndexError, KeyError, ValueError) as e: # Fängt Fehler bei ungültigem secret.json Format ab
+            logger.error(f"Fehlerhafter oder fehlender Account-Eintrag ('ltbbot') in secret.json: {e}")
             return pd.DataFrame()
         except Exception as e:
             logger.error(f"Fehler beim Daten-Download für {symbol} ({timeframe}): {e}", exc_info=True)
@@ -103,16 +106,22 @@ def run_envelope_backtest(data, params, start_capital=1000):
         return {"total_pnl_pct": -100, "trades_count": 0, "win_rate": 0, "max_drawdown_pct": 100, "end_capital": 0, "start_capital": start_capital}
 
     # --- Parameter extrahieren ---
-    strategy_params = params['strategy']
-    risk_params = params['risk']
-    behavior_params = params['behavior']
+    # Fange potenzielle KeyError ab, falls Config unvollständig ist
+    try:
+        strategy_params = params['strategy']
+        risk_params = params['risk']
+        behavior_params = params['behavior']
 
-    leverage = risk_params['leverage']
-    risk_per_entry_pct = risk_params.get('risk_per_entry_pct', 0.5) # Risiko pro Layer
-    num_envelopes = len(strategy_params['envelopes'])
-    stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0 # Als Dezimalzahl
-    use_longs = behavior_params.get('use_longs', True)
-    use_shorts = behavior_params.get('use_shorts', True)
+        leverage = risk_params['leverage']
+        risk_per_entry_pct = risk_params.get('risk_per_entry_pct', 0.5) # Risiko pro Layer
+        num_envelopes = len(strategy_params['envelopes'])
+        stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0 # Als Dezimalzahl
+        use_longs = behavior_params.get('use_longs', True)
+        use_shorts = behavior_params.get('use_shorts', True)
+    except KeyError as e:
+         logger.error(f"Fehlender Schlüssel in Parameter-Dict: {e}. Backtest abgebrochen.")
+         return {"total_pnl_pct": -1000, "trades_count": 0, "win_rate": 0, "max_drawdown_pct": 100, "end_capital": 0, "start_capital": start_capital}
+
 
     fee_pct = 0.0006 # Beispiel: 0.06% Maker/Taker Fee
 
@@ -128,8 +137,8 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
     # --- Initialisierung für den Backtest-Loop ---
     capital = start_capital # Aktuelles REALISIERTES Kapital
-    peak_capital = start_capital # Höchststand inkl. unreal. PnL
-    max_drawdown_pct = 0.0
+    # peak_capital = start_capital # Höchststand inkl. unreal. PnL (wird jetzt aus equity_curve berechnet)
+    # max_drawdown_pct = 0.0 # (wird jetzt aus equity_curve berechnet)
 
     positions = [] # [{entry_price, amount_coins, side, sl_price, tp_price, leverage}, ...]
     closed_trades = [] # [{pnl, side}, ...]
@@ -141,9 +150,14 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
         # --- Unrealisierten PnL zu Beginn der Kerze berechnen ---
         unrealized_pnl_start = 0.0
-        current_portfolio_value_usd = 0.0 # Gehebelter Wert aller offenen Positionen
+        # current_portfolio_value_usd = 0.0 # Gehebelter Wert aller offenen Positionen (nicht unbedingt nötig)
         for pos in positions:
             current_price_for_pnl = current_candle['open'] # PnL zu Beginn der Kerze
+            # Sicherstellen, dass Preis gültig ist
+            if pd.isna(current_price_for_pnl) or current_price_for_pnl <= 0:
+                 logger.warning(f"Ungültiger Open-Preis ({current_price_for_pnl}) bei Kerze {i}. PnL-Berechnung könnte ungenau sein.")
+                 current_price_for_pnl = pos['entry_price'] # Fallback auf Entry-Preis
+
             pos_lev = pos.get('leverage', 1)
             pos_amount = pos['amount_coins']
             pos_entry = pos['entry_price']
@@ -153,10 +167,18 @@ def run_envelope_backtest(data, params, start_capital=1000):
             else: # short
                 layer_pnl = (pos_entry - current_price_for_pnl) * pos_amount * pos_lev
             unrealized_pnl_start += layer_pnl
-            current_portfolio_value_usd += pos_amount * current_price_for_pnl * pos_lev
+            # current_portfolio_value_usd += pos_amount * current_price_for_pnl * pos_lev
 
         equity_at_candle_start = capital + unrealized_pnl_start
-        equity_curve_data.append({'timestamp': timestamp, 'equity': equity_at_candle_start})
+        # Nur gültige Equity-Werte hinzufügen
+        if not pd.isna(equity_at_candle_start):
+             equity_curve_data.append({'timestamp': timestamp, 'equity': equity_at_candle_start})
+        else:
+             # Versuche, den letzten gültigen Wert zu nehmen oder start_capital
+             last_valid_equity = equity_curve_data[-1]['equity'] if equity_curve_data else start_capital
+             equity_curve_data.append({'timestamp': timestamp, 'equity': last_valid_equity})
+             logger.warning(f"Ungültiger Equity-Wert (NaN) bei Kerze {i}. Verwende letzten gültigen Wert: {last_valid_equity}")
+
 
         # --- Ausstiege prüfen (TP und SL) ---
         remaining_positions = []
@@ -181,15 +203,19 @@ def run_envelope_backtest(data, params, start_capital=1000):
             # TP Prüfung (nur wenn SL nicht getroffen)
             if not exited:
                 tp_price_current = current_candle['average']
-                if pos_side == 'long' and current_candle['high'] >= tp_price_current:
-                    if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
-                        exit_price = tp_price_current; exited = True
-                elif pos_side == 'short' and current_candle['low'] <= tp_price_current:
-                    if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
-                        exit_price = tp_price_current; exited = True
+                # Stelle sicher, dass TP Preis gültig ist
+                if not pd.isna(tp_price_current) and tp_price_current > 0:
+                    if pos_side == 'long' and current_candle['high'] >= tp_price_current:
+                        # Prüfe, ob TP innerhalb der Kerze erreicht wurde ODER Gap darüber
+                        if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
+                            exit_price = tp_price_current; exited = True
+                    elif pos_side == 'short' and current_candle['low'] <= tp_price_current:
+                        # Prüfe, ob TP innerhalb der Kerze erreicht wurde ODER Gap darunter
+                        if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
+                            exit_price = tp_price_current; exited = True
 
             # Wenn Ausstieg, PnL berechnen und Position entfernen
-            if exited and exit_price is not None:
+            if exited and exit_price is not None and exit_price > 0: # Stelle sicher, dass Exit-Preis gültig ist
                 if pos_side == 'long':
                     pnl = (exit_price - pos_entry) * pos_amount * pos_lev
                 else: # short
@@ -201,7 +227,7 @@ def run_envelope_backtest(data, params, start_capital=1000):
                 fees = (entry_notional_value * fee_pct) + (exit_notional_value * fee_pct)
                 pnl -= fees
 
-                # *** NEU: Slippage hinzufügen (simuliert für Market Order TP/SL) ***
+                # *** Slippage hinzufügen (simuliert für Market Order TP/SL) ***
                 slippage_cost = abs(exit_notional_value * SLIPPAGE_PCT_PER_TRADE)
                 pnl -= slippage_cost
 
@@ -214,102 +240,121 @@ def run_envelope_backtest(data, params, start_capital=1000):
         capital += exit_pnl_current_candle # Realisiertes Kapital nach Ausstiegen aktualisieren
 
         # --- Einstiege prüfen ---
-        if capital > 0: # Nur wenn Kapital verfügbar
-            # *** NEU: Aktuellen Gesamtwert der offenen Positionen berechnen für Limit-Check ***
+        if capital > 0: # Nur wenn Kapital verfügbar (realisiert)
+            # Aktuellen Gesamtwert der offenen Positionen berechnen für Limit-Check
             current_total_pos_value_usd = 0.0
-            current_price_for_limit = current_candle['close'] # Aktueller Preis für Limit-Check
-            for existing_pos in positions:
-                 pos_lev_limit = existing_pos.get('leverage', 1)
-                 current_total_pos_value_usd += existing_pos['amount_coins'] * current_price_for_limit * pos_lev_limit
+            current_price_for_limit = current_candle['close']
+            if pd.isna(current_price_for_limit) or current_price_for_limit <= 0:
+                # logger.warning(f"Ungültiger Close-Preis ({current_price_for_limit}) bei Kerze {i} für Limit-Check. Verwende Open.")
+                current_price_for_limit = current_candle['open'] # Fallback
+            # Prüfe nochmal, falls Open auch ungültig ist
+            if pd.isna(current_price_for_limit) or current_price_for_limit <= 0:
+                 # logger.warning(f"Auch Open-Preis ungültig. Verwende letzten gültigen Close (Approximation).")
+                 # Finde letzten gültigen Close (ineffizient, aber selten nötig)
+                 prev_closes = df['close'].iloc[:i+1].dropna()
+                 current_price_for_limit = prev_closes.iloc[-1] if not prev_closes.empty else 0
+
+            # Nur fortfahren, wenn wir einen gültigen Preis haben
+            if current_price_for_limit > 0:
+                for existing_pos in positions:
+                     pos_lev_limit = existing_pos.get('leverage', 1)
+                     current_total_pos_value_usd += existing_pos['amount_coins'] * current_price_for_limit * pos_lev_limit
+            else:
+                 # logger.error(f"Konnte keinen gültigen Preis für Positionslimit-Check bei Kerze {i} finden. Überspringe Entries.")
+                 current_total_pos_value_usd = MAX_TOTAL_POSITION_SIZE_USD + 1 # Verhindert Entries
 
             # Long Entries
             if use_longs:
                 side = 'long'
                 for k in range(1, num_envelopes + 1):
                     low_band_col = f'band_low_{k}'
-                    if low_band_col not in current_candle: continue
+                    # Sicherstellen, dass Spalte existiert und Wert gültig ist
+                    if low_band_col not in current_candle or pd.isna(current_candle[low_band_col]) or current_candle[low_band_col] <= 0: continue
                     entry_trigger_price = current_candle[low_band_col]
 
-                    if current_candle['low'] <= entry_trigger_price:
+                    # Trigger-Bedingung: Kerzen-Low berührt/unterschreitet das Band
+                    if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
                         entry_price = entry_trigger_price # Vereinfacht: Einstieg zum Triggerpreis
-                        if entry_price > 0:
-                            # *** KORRIGIERTE POSITIONSGRÖSSENBERECHNUNG ***
-                            risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0) # <--- BASIERT AUF STARTKAPITAL
-                            if risk_amount_usd <= 0: continue
 
-                            sl_price = entry_price * (1 - stop_loss_pct_param)
-                            sl_distance_price = abs(entry_price - sl_price)
-                            if sl_distance_price <= 0: continue
+                        # KORRIGIERTE POSITIONSGRÖSSENBERECHNUNG
+                        risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0) # <--- BASIERT AUF STARTKAPITAL
+                        if risk_amount_usd <= 0: continue
 
-                            amount_coins = risk_amount_usd / sl_distance_price
-                            # Mindestmenge prüfen (vereinfacht, echter Check wäre besser)
-                            # if amount_coins < MIN_TRADE_AMOUNT_FROM_CONFIG: continue
+                        sl_price = entry_price * (1 - stop_loss_pct_param)
+                        if sl_price <= 0: continue # Ungültiger SL-Preis
+                        sl_distance_price = abs(entry_price - sl_price)
+                        if sl_distance_price <= 0: continue
 
-                            # *** NEU: Max Position Size Check ***
-                            new_layer_value_usd = amount_coins * entry_price * leverage
-                            if (current_total_pos_value_usd + new_layer_value_usd) > MAX_TOTAL_POSITION_SIZE_USD:
-                                # logger.debug(f"Sim Long Layer {k}: Überspringt wg Max Pos Size ({current_total_pos_value_usd + new_layer_value_usd:.0f} > {MAX_TOTAL_POSITION_SIZE_USD:.0f})")
-                                continue # Diesen Layer überspringen
+                        amount_coins = risk_amount_usd / sl_distance_price
+                        # Mindestmenge prüfen (vereinfacht) - Optional, da live geprüft
+                        # if amount_coins < MIN_TRADE_AMOUNT_FROM_CONFIG: continue
 
-                            tp_price = current_candle['average']
+                        # Max Position Size Check
+                        new_layer_value_usd = amount_coins * entry_price * leverage
+                        if (current_total_pos_value_usd + new_layer_value_usd) > MAX_TOTAL_POSITION_SIZE_USD:
+                            # logger.debug(f"Sim Long Layer {k}: Überspringt wg Max Pos Size")
+                            continue
 
-                            positions.append({
-                                'entry_price': entry_price,
-                                'amount_coins': amount_coins,
-                                'side': side,
-                                'sl_price': sl_price,
-                                'tp_price': tp_price, # TP Ziel speichern (obwohl es sich ändert)
-                                'leverage': leverage # Hebel speichern
-                            })
-                            # Aktualisiere den Gesamtwert für nachfolgende Layer in dieser Kerze
-                            current_total_pos_value_usd += new_layer_value_usd
+                        tp_price_target = current_candle['average'] # Ziel-TP
+
+                        positions.append({
+                            'entry_price': entry_price,
+                            'amount_coins': amount_coins,
+                            'side': side,
+                            'sl_price': sl_price,
+                            'tp_price': tp_price_target, # Speichere Ziel-TP
+                            'leverage': leverage
+                        })
+                        # Aktualisiere den Gesamtwert für nachfolgende Layer in dieser Kerze
+                        current_total_pos_value_usd += new_layer_value_usd
 
             # Short Entries
             if use_shorts:
                 side = 'short'
                 for k in range(1, num_envelopes + 1):
                     high_band_col = f'band_high_{k}'
-                    if high_band_col not in current_candle: continue
+                    if high_band_col not in current_candle or pd.isna(current_candle[high_band_col]) or current_candle[high_band_col] <= 0: continue
                     entry_trigger_price = current_candle[high_band_col]
 
-                    if current_candle['high'] >= entry_trigger_price:
+                    if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
                         entry_price = entry_trigger_price
-                        if entry_price > 0:
-                            # *** KORRIGIERTE POSITIONSGRÖSSENBERECHNUNG ***
-                            risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0) # <--- BASIERT AUF STARTKAPITAL
-                            if risk_amount_usd <= 0: continue
 
-                            sl_price = entry_price * (1 + stop_loss_pct_param)
-                            sl_distance_price = abs(entry_price - sl_price)
-                            if sl_distance_price <= 0: continue
+                        # KORRIGIERTE POSITIONSGRÖSSENBERECHNUNG
+                        risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0) # <--- BASIERT AUF STARTKAPITAL
+                        if risk_amount_usd <= 0: continue
 
-                            amount_coins = risk_amount_usd / sl_distance_price
-                            # if amount_coins < MIN_TRADE_AMOUNT_FROM_CONFIG: continue
+                        sl_price = entry_price * (1 + stop_loss_pct_param)
+                        if sl_price <= 0: continue
+                        sl_distance_price = abs(entry_price - sl_price)
+                        if sl_distance_price <= 0: continue
 
-                            # *** NEU: Max Position Size Check ***
-                            new_layer_value_usd = amount_coins * entry_price * leverage
-                            if (current_total_pos_value_usd + new_layer_value_usd) > MAX_TOTAL_POSITION_SIZE_USD:
-                                # logger.debug(f"Sim Short Layer {k}: Überspringt wg Max Pos Size ({current_total_pos_value_usd + new_layer_value_usd:.0f} > {MAX_TOTAL_POSITION_SIZE_USD:.0f})")
-                                continue
+                        amount_coins = risk_amount_usd / sl_distance_price
+                        # if amount_coins < MIN_TRADE_AMOUNT_FROM_CONFIG: continue
 
-                            tp_price = current_candle['average']
+                        # Max Position Size Check
+                        new_layer_value_usd = amount_coins * entry_price * leverage
+                        if (current_total_pos_value_usd + new_layer_value_usd) > MAX_TOTAL_POSITION_SIZE_USD:
+                            # logger.debug(f"Sim Short Layer {k}: Überspringt wg Max Pos Size")
+                            continue
 
-                            positions.append({
-                                'entry_price': entry_price,
-                                'amount_coins': amount_coins,
-                                'side': side,
-                                'sl_price': sl_price,
-                                'tp_price': tp_price,
-                                'leverage': leverage
-                            })
-                            current_total_pos_value_usd += new_layer_value_usd
+                        tp_price_target = current_candle['average']
 
+                        positions.append({
+                            'entry_price': entry_price,
+                            'amount_coins': amount_coins,
+                            'side': side,
+                            'sl_price': sl_price,
+                            'tp_price': tp_price_target,
+                            'leverage': leverage
+                        })
+                        current_total_pos_value_usd += new_layer_value_usd
 
-        # --- Drawdown basierend auf Equity Curve (wird am Ende berechnet) ---
 
         # --- Abbruch bei Totalverlust (basierend auf Equity Curve Start) ---
-        if equity_at_candle_start <= 0:
-            logger.warning(f"Simuliertes Equity <= 0 ({equity_at_candle_start:.2f}). Backtest abgebrochen bei Kerze {i}.")
+        # Verwende den letzten Equity-Wert, falls vorhanden, sonst start_capital
+        equity_check_value = equity_curve_data[-1]['equity'] if equity_curve_data else start_capital
+        if equity_check_value <= 0:
+            logger.warning(f"Simuliertes Equity <= 0 ({equity_check_value:.2f}). Backtest abgebrochen bei Kerze {i}.")
             capital = 0
             # Fülle Rest der Equity Curve mit 0
             remaining_indices = range(i + 1, len(df))
@@ -318,24 +363,35 @@ def run_envelope_backtest(data, params, start_capital=1000):
             break
 
     # --- Endauswertung ---
-    final_equity = equity # Realisiertes Kapital am Ende
+    final_equity = capital # KORREKTUR: Verwende die Variable 'capital'
     final_unrealized_pnl = 0.0
     if not df.empty and positions: # Nur wenn Positionen am Ende noch offen sind
-        last_close_price = df.iloc[-1]['close']
-        for pos in positions:
-            pos_lev_final = pos.get('leverage', 1)
-            pos_amount_final = pos['amount_coins']
-            pos_entry_final = pos['entry_price']
-            if pos['side'] == 'long':
-                final_unrealized_pnl += (last_close_price - pos_entry_final) * pos_amount_final * pos_lev_final
-            else: # short
-                final_unrealized_pnl += (pos_entry_final - last_close_price) * pos_amount_final * pos_lev_final
+        last_close_price = df['close'].iloc[-1]
+        # Sicherstellen, dass der letzte Preis gültig ist
+        if pd.isna(last_close_price) or last_close_price <= 0:
+             logger.warning("Letzter Schlusspreis ungültig. Unrealisierter PnL am Ende könnte 0 sein.")
+             # Fallback: Versuche letzten gültigen Close zu finden
+             valid_closes = df['close'].dropna()
+             last_close_price = valid_closes.iloc[-1] if not valid_closes.empty else 0
+
+        if last_close_price > 0:
+            for pos in positions:
+                pos_lev_final = pos.get('leverage', 1)
+                pos_amount_final = pos['amount_coins']
+                pos_entry_final = pos['entry_price']
+                if pos['side'] == 'long':
+                    final_unrealized_pnl += (last_close_price - pos_entry_final) * pos_amount_final * pos_lev_final
+                else: # short
+                    final_unrealized_pnl += (pos_entry_final - last_close_price) * pos_amount_final * pos_lev_final
 
     final_total_equity = max(0, final_equity + final_unrealized_pnl) # Endgültiges Gesamtkapital
 
-    # Füge den letzten Equity-Punkt hinzu (basierend auf Schlusskurs)
+    # Füge den letzten Equity-Punkt hinzu (basierend auf Schlusskurs), falls Daten vorhanden
     if not df.empty:
-         equity_curve_data.append({'timestamp': df.index[-1], 'equity': final_total_equity})
+         last_timestamp = df.index[-1]
+         # Nur hinzufügen, wenn der Zeitstempel noch nicht existiert (verhindert Duplikate bei Abbruch)
+         if not equity_curve_data or equity_curve_data[-1]['timestamp'] != last_timestamp:
+              equity_curve_data.append({'timestamp': last_timestamp, 'equity': final_total_equity})
 
     total_pnl = final_total_equity - start_capital
     total_pnl_pct = (total_pnl / start_capital) * 100 if start_capital != 0 else 0
@@ -347,10 +403,30 @@ def run_envelope_backtest(data, params, start_capital=1000):
     equity_df = pd.DataFrame(equity_curve_data)
     calculated_max_dd_pct = 0.0
     if not equity_df.empty:
-        equity_df.set_index('timestamp', inplace=True)
-        equity_df['peak'] = equity_df['equity'].cummax()
-        equity_df['drawdown_pct'] = ((equity_df['peak'] - equity_df['equity']) / equity_df['peak'].replace(0, np.nan)).fillna(0) * 100
-        calculated_max_dd_pct = equity_df['drawdown_pct'].max() if not equity_df['drawdown_pct'].empty else 0.0
+        # Nur wenn Timestamp nicht bereits Index ist und Spalte existiert
+        if 'timestamp' in equity_df.columns:
+            # Duplikate im Timestamp entfernen, bevor Index gesetzt wird
+            equity_df = equity_df.drop_duplicates(subset=['timestamp'], keep='last')
+            equity_df.set_index('timestamp', inplace=True)
+        # Überprüfe, ob 'equity' Spalte existiert
+        if 'equity' in equity_df.columns:
+            # Stelle sicher, dass Equity numerisch ist und fülle NaNs evtl. mit ffill
+            equity_df['equity'] = pd.to_numeric(equity_df['equity'], errors='coerce')
+            equity_df['equity'] = equity_df['equity'].ffill().fillna(start_capital) # Vorwärts füllen, dann mit Startkapital
+
+            equity_df['peak'] = equity_df['equity'].cummax()
+            # Vermeide Division durch Null oder NaNs im Peak
+            peak_for_calc = equity_df['peak'].replace(0, np.nan)
+            equity_df['drawdown_pct'] = ((peak_for_calc - equity_df['equity']) / peak_for_calc).fillna(0) * 100
+            # Stelle sicher, dass DD nicht negativ wird (kann durch ffill passieren)
+            equity_df['drawdown_pct'] = equity_df['drawdown_pct'].clip(lower=0)
+
+            calculated_max_dd_pct = equity_df['drawdown_pct'].max() if not equity_df['drawdown_pct'].empty else 0.0
+        else:
+             logger.warning("Spalte 'equity' nicht im Equity DataFrame gefunden für Drawdown-Berechnung.")
+    else:
+        logger.warning("Equity Curve DataFrame ist leer. Drawdown kann nicht berechnet werden.")
+
 
     results = {
         "total_pnl_pct": round(total_pnl_pct, 2),
