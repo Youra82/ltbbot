@@ -8,12 +8,12 @@ import argparse
 import logging
 import warnings
 from joblib import Parallel, delayed # Für Parallelisierung
-# KEINE TqdmCallback/tqdm Imports mehr nötig
+# NEU: Importiere den TqdmCallback an der Standardstelle
+from optuna.integration import TqdmCallback
 
-# Logging und Warnungen konfigurieren
-# Setze Optuna-Log-Level auf INFO, um abgeschlossene Trials zu sehen
-logging.getLogger('optuna').setLevel(logging.INFO)
-optuna.logging.set_verbosity(optuna.logging.INFO)
+# Logging konfigurieren (Optuna Logs auf WARNING reduzieren, damit sie den Balken nicht stören)
+logging.getLogger('optuna').setLevel(logging.WARNING)
+optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 # Standard-Logger für dieses Skript
 logger = logging.getLogger(__name__)
@@ -92,18 +92,20 @@ def objective(trial):
     if OPTIM_MODE == "strict":
         if drawdown_decimal_for_pruning > MAX_DRAWDOWN_CONSTRAINT or win_rate < MIN_WIN_RATE_CONSTRAINT or pnl < MIN_PNL_CONSTRAINT or trades < MIN_TRADES_FOR_VALID:
             prune = True
-            logger.debug(f"Trial pruned (strict): DD={drawdown_pct_for_pruning:.1f}% WinRate={win_rate:.1f}% PnL={pnl:.1f}% Trades={trades}")
+            # Logge Pruning nur auf DEBUG-Level, um Konsole sauber zu halten
+            # logger.debug(f"Trial pruned (strict): DD={drawdown_pct_for_pruning:.1f}% WinRate={win_rate:.1f}% PnL={pnl:.1f}% Trades={trades}")
     elif OPTIM_MODE == "best_profit":
         if drawdown_decimal_for_pruning > MAX_DRAWDOWN_CONSTRAINT or trades < MIN_TRADES_FOR_VALID:
             prune = True
-            logger.debug(f"Trial pruned (best_profit): DD={drawdown_pct_for_pruning:.1f}% (Constraint {MAX_DRAWDOWN_CONSTRAINT*100:.1f}%) or Trades={trades} (<{MIN_TRADES_FOR_VALID})")
+            # logger.debug(f"Trial pruned (best_profit): DD={drawdown_pct_for_pruning:.1f}% (Constraint {MAX_DRAWDOWN_CONSTRAINT*100:.1f}%) or Trades={trades} (<{MIN_TRADES_FOR_VALID})")
 
     if prune:
         raise optuna.exceptions.TrialPruned()
 
     # --- Zielwert (Score = PnL) ---
     score = pnl
-    logger.debug(f"Trial finished: PnL={pnl:.2f}%, DD={drawdown_pct_for_pruning:.2f}%, Trades={trades} -> Score={score:.2f}")
+    # Logge abgeschlossene Trials nur auf DEBUG, um Konsole sauber zu halten
+    # logger.debug(f"Trial finished: PnL={pnl:.2f}%, DD={drawdown_pct_for_pruning:.2f}%, Trades={trades} -> Score={score:.2f}")
     return score
 
 
@@ -181,12 +183,13 @@ def main():
             study = optuna.create_study(storage=STORAGE_URL, study_name=study_name, direction="maximize", load_if_exists=True)
 
             n_jobs = args.jobs
-            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)... (Logging pro Trial)")
+            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)... (Mit TqdmCallback)")
 
-            # *** OPTIMIZE-AUFRUF MIT CALLBACKS=[] ***
-            # Deaktiviert den TQDM-Balken, Optuna loggt abgeschlossene Trials
-            study.optimize(objective, n_trials=N_TRIALS, n_jobs=n_jobs, callbacks=[])
-            # *****************************************
+            # *** NEU: Erstelle und verwende TqdmCallback ***
+            tqdm_callback = TqdmCallback()
+            # Übergebe den Callback an study.optimize und entferne show_progress_bar
+            study.optimize(objective, n_trials=N_TRIALS, n_jobs=n_jobs, callbacks=[tqdm_callback])
+            # **********************************************
 
             # --- Bestes Ergebnis ---
             valid_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
