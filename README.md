@@ -210,7 +210,7 @@ Füge die folgende **eine Zeile** am Ende der Datei ein. **Passe den Pfad `/home
 
 ```crontab
 # Starte den ltbbot Master-Runner alle 5 Minuten (oder anderes Intervall)
-*/5 * * * * /usr/bin/flock -n /home/ubuntu/ltbbot/ltbbot.lock /bin/sh -c "cd /home/ubuntu/ltbbot && /home/ubuntu/ltbbot/.venv/bin/python3 /home/ubuntu/ltbbot/master_runner.py >> /home/ubuntu/ltbbot/logs/master_runner.log 2>&1"
+*/15 * * * * /usr/bin/flock -n /home/ubuntu/ltbbot/ltbbot.lock /bin/sh -c "cd /home/ubuntu/ltbbot && /home/ubuntu/ltbbot/.venv/bin/python3 /home/ubuntu/ltbbot/master_runner.py >> /home/ubuntu/ltbbot/logs/master_runner.log 2>&1"
 ```
 
   * `*/5 * * * *`: Führt den Befehl alle 5 Minuten aus. Anpassen nach Bedarf (z.B. `*/1 * * * *` für jede Minute, `*/15 * * * *` für alle 15 Minuten).
