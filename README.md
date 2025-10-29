@@ -280,6 +280,11 @@ Um den `master_runner` sofort auszuführen (z.B. nach einer Konfigurationsänder
 # Pfade anpassen!
 cd /home/ubuntu/ltbbot && /home/ubuntu/ltbbot/.venv/bin/python3 /home/ubuntu/ltbbot/master_runner.py
 ```
+Logverzeichnis anlegen:
+
+```
+mkdir -p /home/ubuntu/jaegerbot/logs
+```
 
 *(Die Ausgabe erscheint direkt im Terminal. Mit `Strg + C` beenden, wenn er im Loop läuft.)*
 
