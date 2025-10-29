@@ -278,7 +278,7 @@ Um den `master_runner` sofort auszuführen (z.B. nach einer Konfigurationsänder
 
 ```bash
 # Pfade anpassen!
-cd /home/ubuntu/ltbbot && /home/ubuntu/ltbbot/.venv/bin/python3 /home/ubuntu/ltbbot/master_runner.py
+/root/ltbbot/.venv/bin/python3 /root/ltbbot/master_runner.py
 ```
 Logverzeichnis anlegen:
 
