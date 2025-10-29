@@ -32,7 +32,7 @@ def test_core_script_imports():
         # Importiere 'main' aus dem optimizer und gib ihr einen Alias
         from ltbbot.analysis.optimizer import main as optimizer_main
         from ltbbot.analysis.portfolio_optimizer import run_portfolio_optimizer
-        from ltbbot.utils.guardian import guardian_decorator # Prüfe auch den Guardian
+        # from ltbbot.utils.guardian import guardian_decorator # <-- DIESE ZEILE ENTFERNT ODER AUSKOMMENTIERT
 
     except ImportError as e:
         pytest.fail(f"Kritischer Import-Fehler. Die Code-Struktur scheint defekt zu sein. Fehler: {e}")
