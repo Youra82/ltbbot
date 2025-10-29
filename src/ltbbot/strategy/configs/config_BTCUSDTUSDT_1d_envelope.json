@@ -1,0 +1,26 @@
+{
+    "market": {
+        "symbol": "BTC/USDT:USDT",
+        "timeframe": "1d"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 5,
+        "envelopes": [
+            0.026827890926104724,
+            0.033255878901660554,
+            0.07612854602064871
+        ],
+        "trigger_price_delta_pct": 0.1907
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.25,
+        "leverage": 6,
+        "stop_loss_pct": 0.5
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}
