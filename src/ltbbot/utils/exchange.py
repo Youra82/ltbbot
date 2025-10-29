@@ -1,12 +1,13 @@
 # src/ltbbot/utils/exchange.py
+# KORRIGIERTE VERSION (BASIEREND AUF JAEGERBOT/TITANBOT-LOGIK)
 import ccxt
 import pandas as pd
 from datetime import datetime, timezone
 import logging
 import time # Hinzugefügt für fetch_recent_ohlcv
-from typing import Optional, Dict, List, Any # <--- HINZUGEFÜGT
-import os # Hinzugefügt für Pfad
-import sys # Hinzugefügt für Pfad
+from typing import Optional, Dict, List, Any 
+import os 
+import sys 
 
 # Pfad Setup für utils Import (ggf. anpassen)
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
@@ -17,15 +18,14 @@ logger = logging.getLogger(__name__)
 class Exchange:
     def __init__(self, account_config):
         self.account = account_config
-        # Wichtig: defaultType auf 'swap' setzen für Perpetual Futures bei Bitget
         self.exchange = getattr(ccxt, 'bitget')({
             'apiKey': self.account.get('apiKey'),
             'secret': self.account.get('secret'),
             'password': self.account.get('password'),
             'options': {
-                'defaultType': 'swap', # Korrekt für Perpetual Futures
+                'defaultType': 'swap', 
             },
-            'enableRateLimit': True, # Wichtig für API-Limits
+            'enableRateLimit': True, 
         })
 
         try:
@@ -33,18 +33,18 @@ class Exchange:
             logger.info("Märkte erfolgreich geladen.")
         except Exception as e:
             logger.critical(f"Konnte Märkte nicht laden! API-Keys oder Verbindung prüfen. Fehler: {e}")
-            self.markets = {} # Leeres Dict, um spätere Fehler zu vermeiden
+            self.markets = {} 
 
-    # --- OHLCV Methoden (angepasst aus deinem bitget_futures.py) ---
+    # --- OHLCV Methoden ---
     def fetch_recent_ohlcv(self, symbol, timeframe, limit=1000):
-        if not self.markets: return pd.DataFrame() # Füge Check hinzu
+        if not self.markets: return pd.DataFrame() 
         if not self.exchange.has['fetchOHLCV']:
             raise ccxt.NotSupported("fetchOHLCV not supported by the exchange.")
 
         timeframe_duration_in_ms = self.exchange.parse_timeframe(timeframe) * 1000
         since = self.exchange.milliseconds() - timeframe_duration_in_ms * limit
         all_ohlcv = []
-        fetch_limit = 200 # Typisches Limit pro Bitget API Call
+        fetch_limit = 200 
 
         while since < self.exchange.milliseconds():
             try:
@@ -52,7 +52,7 @@ class Exchange:
                 if not ohlcv: break
                 all_ohlcv.extend(ohlcv)
                 since = ohlcv[-1][0] + timeframe_duration_in_ms
-                time.sleep(self.exchange.rateLimit / 1000) # Respektiere Rate Limit
+                time.sleep(self.exchange.rateLimit / 1000) 
             except ccxt.RateLimitExceeded as e:
                 logger.warning(f"Rate limit exceeded: {e}. Waiting...")
                 time.sleep(5)
@@ -78,7 +78,7 @@ class Exchange:
 
 
     def fetch_historical_ohlcv(self, symbol, timeframe, start_date_str, end_date_str):
-        if not self.markets: return pd.DataFrame() # Füge Check hinzu
+        if not self.markets: return pd.DataFrame() 
         if not self.exchange.has['fetchOHLCV']:
             raise ccxt.NotSupported("fetchOHLCV not supported by the exchange.")
 
@@ -124,7 +124,7 @@ class Exchange:
 
     # --- Getter Methoden ---
     def fetch_ticker(self, symbol):
-        if not self.markets: return None # Füge Check hinzu
+        if not self.markets: return None 
         try:
             return self.exchange.fetch_ticker(symbol)
         except Exception as e:
@@ -132,7 +132,7 @@ class Exchange:
             raise e
 
     def fetch_min_amount_tradable(self, symbol: str) -> float:
-        if not self.markets: return 0.0 # Füge Check hinzu
+        if not self.markets: return 0.0 
         try:
             if symbol not in self.markets:
                 logger.warning(f"Markt {symbol} nicht gefunden. Lade erneut...")
@@ -152,7 +152,7 @@ class Exchange:
 
 
     def amount_to_precision(self, symbol: str, amount: float) -> str:
-        if not self.markets: return str(amount) # Füge Check hinzu
+        if not self.markets: return str(amount) 
         try:
             return self.exchange.amount_to_precision(symbol, amount)
         except Exception as e:
@@ -161,7 +161,7 @@ class Exchange:
 
 
     def price_to_precision(self, symbol: str, price: float) -> str:
-        if not self.markets: return str(price) # Füge Check hinzu
+        if not self.markets: return str(price) 
         try:
             return self.exchange.price_to_precision(symbol, price)
         except Exception as e:
@@ -169,15 +169,15 @@ class Exchange:
             return str(price)
 
     def fetch_balance_usdt(self):
-        if not self.markets: return 0.0 # Füge Check hinzu
+        if not self.markets: return 0.0
         try:
-            params = {'marginCoin': 'USDT'}
+            params = {'marginCoin': 'USDT', 'productType': 'USDT-FUTURES'} # productType hinzugefügt
             balance = self.exchange.fetch_balance(params=params)
             usdt_balance = 0.0
 
             # Verschiedene Strukturen prüfen
-            if 'USDT' in balance and 'free' in balance['USDT']:
-                 usdt_balance = float(balance['USDT'].get('free', 0.0))
+            if 'USDT' in balance and 'free' in balance['USDT'] and balance['USDT']['free'] is not None:
+                 usdt_balance = float(balance['USDT']['free'])
             elif 'info' in balance and isinstance(balance['info'], list):
                 for asset_info in balance['info']:
                     if asset_info.get('marginCoin') == 'USDT':
@@ -185,9 +185,19 @@ class Exchange:
                         break
             elif 'info' in balance and isinstance(balance['info'], dict) and 'USDT' in balance['info']:
                  usdt_balance = float(balance['info']['USDT'].get('available', 0.0))
+            
+            # Fallback auf 'equity' wenn 'available' fehlt (kann bei Unified Accounts vorkommen)
+            if usdt_balance == 0.0 and 'info' in balance and isinstance(balance['info'], list):
+                 for asset_info in balance['info']:
+                    if asset_info.get('marginCoin') == 'USDT' and 'equity' in asset_info:
+                        usdt_balance = float(asset_info.get('equity', 0.0))
+                        logger.debug("Verwende 'equity' als Fallback für Kontostand.")
+                        break
 
+            # Fallback auf total, wenn free/available/equity nicht gefunden
             if usdt_balance == 0.0 and 'total' in balance and 'USDT' in balance['total']:
                 usdt_balance = float(balance['total']['USDT'])
+                logger.debug("Verwende 'total' als Fallback für Kontostand.")
 
             logger.info(f"Verfügbares USDT-Guthaben: {usdt_balance:.2f}")
             return usdt_balance
@@ -235,16 +245,12 @@ class Exchange:
         if not self.markets: return []
         try:
             closed_triggers = []
-            params = {'stop': True, 'productType': 'USDT-FUTURES'} # Bitget braucht stop:True auch hier
-            if self.exchange.has['fetchClosedOrders']:
-                closed_triggers = self.exchange.fetchClosedOrders(symbol, limit=limit, params=params)
-                # Filtern, da Bitget hier auch normale Orders zurückgeben kann
-                closed_triggers = [o for o in closed_triggers if o.get('stopPrice') is not None]
-            elif self.exchange.has['fetchOrders']: # Fallback
-                all_orders = self.exchange.fetchOrders(symbol, limit=limit*2, params=params)
-                closed_triggers = [o for o in all_orders if o.get('stopPrice') is not None and o['status'] in ['closed', 'canceled']]
+            params = {'stop': True, 'productType': 'USDT-FUTURES'} 
+            if self.exchange.has['fetchOrders']:
+                all_orders = self.exchange.fetchOrders(symbol, limit=limit*3, params=params)
+                closed_triggers = [o for o in all_orders if o.get('stopPrice') is not None and o.get('status') in ['closed', 'canceled']]
             else:
-                 logger.warning("Weder fetchClosedOrders noch fetchOrders wird unterstützt.")
+                 logger.warning("fetchOrders wird nicht unterstützt, um geschlossene Trigger zu prüfen.")
                  return []
 
             closed_triggers.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
@@ -257,10 +263,10 @@ class Exchange:
     def cancel_order(self, id: str, symbol: str):
         if not self.markets: return None
         try:
-            params = {'stop': False}
+            params = {'stop': False, 'productType': 'USDT-FUTURES'}
             return self.exchange.cancel_order(id, symbol, params=params)
         except ccxt.OrderNotFound:
-            logger.warning(f"Normale Order {id} für {symbol} beim Stornieren nicht gefunden.")
+            logger.debug(f"Normale Order {id} für {symbol} beim Stornieren nicht gefunden.")
             return None
         except Exception as e:
             logger.error(f"Fehler beim Stornieren der normalen Order {id} für {symbol}: {e}")
@@ -270,14 +276,50 @@ class Exchange:
     def cancel_trigger_order(self, id: str, symbol: str):
         if not self.markets: return None
         try:
-            params = {'stop': True}
+            params = {'stop': True, 'productType': 'USDT-FUTURES'}
             return self.exchange.cancel_order(id, symbol, params=params)
         except ccxt.OrderNotFound:
-            logger.warning(f"Trigger Order {id} für {symbol} beim Stornieren nicht gefunden.")
+            logger.debug(f"Trigger Order {id} für {symbol} beim Stornieren nicht gefunden.")
             return None
         except Exception as e:
             logger.error(f"Fehler beim Stornieren der Trigger Order {id} für {symbol}: {e}")
             raise e
+            
+    def cancel_all_orders_for_symbol(self, symbol):
+        """Storniert alle offenen Orders (normal und trigger) für ein Symbol."""
+        if not self.markets: return 0
+        cancelled_count = 0
+
+        # 1. Normale Orders stornieren (stop: False)
+        try:
+            logger.info(f"Sende Befehl 'cancelAllOrders' (Normal) für {symbol}...")
+            self.exchange.cancel_all_orders(symbol, params={'productType': 'USDT-FUTURES', 'stop': False})
+            cancelled_count += 1
+            time.sleep(0.5) 
+        except ccxt.ExchangeError as e:
+            if 'Order not found' in str(e) or 'no order to cancel' in str(e).lower() or '22001' in str(e):
+                logger.info("Keine normalen Orders zum Stornieren gefunden.")
+            else:
+                logger.error(f"Fehler beim Stornieren normaler Orders: {e}")
+        except Exception as e:
+            logger.error(f"Unerwarteter Fehler beim Stornieren normaler Orders: {e}")
+
+        # 2. Trigger Orders stornieren (stop: True)
+        try:
+            logger.info(f"Sende Befehl 'cancelAllOrders' (Trigger/Stop) für {symbol}...")
+            self.exchange.cancel_all_orders(symbol, params={'productType': 'USDT-FUTURES', 'stop': True})
+            cancelled_count += 1
+            time.sleep(0.5)
+        except ccxt.ExchangeError as e:
+            if 'Order not found' in str(e) or 'no order to cancel' in str(e).lower() or '22001' in str(e):
+                logger.info("Keine Trigger-Orders zum Stornieren gefunden.")
+            else:
+                logger.error(f"Fehler beim Stornieren von Trigger-Orders: {e}")
+        except Exception as e:
+            logger.error(f"Unerwarteter Fehler beim Stornieren von Trigger-Orders: {e}")
+
+        return cancelled_count
+
 
     def fetch_open_positions(self, symbol):
         if not self.markets: return []
@@ -287,11 +329,17 @@ class Exchange:
             open_positions = []
             for p in positions:
                  try:
-                     contracts_str = p.get('contracts')
-                     if contracts_str is not None and abs(float(contracts_str)) > 1e-9: # Prüfe auf > 0
+                     size_key = 'contracts' if 'contracts' in p else 'contractSize'
+                     contracts_str = p.get(size_key)
+                     if contracts_str is not None and abs(float(contracts_str)) > 1e-9:
                           open_positions.append(p)
-                 except (ValueError, TypeError):
-                     continue # Ignoriere ungültige Werte
+                     elif p.get('initialMargin', 0) > 0 or p.get('maintMargin', 0) > 0:
+                         if contracts_str is None or abs(float(contracts_str)) <= 1e-9 :
+                              logger.warning(f"Position für {symbol} hat Margin > 0 aber Size ≈ 0. Betrachte sie als offen. Details: {p}")
+                         open_positions.append(p)
+                 except (ValueError, TypeError, KeyError) as e:
+                     logger.warning(f"Konnte Positionsgröße nicht prüfen: {e}. Positionsdaten: {p}")
+                     continue
             return open_positions
         except Exception as e:
             logger.error(f"Fehler beim Abrufen offener Positionen für {symbol}: {e}", exc_info=True)
@@ -299,44 +347,38 @@ class Exchange:
 
 
     def close_position(self, symbol: str, side: Optional[str] = None):
-        """Schließt eine Position über eine Market Order."""
         if not self.markets: return None
         try:
-            position = self.fetch_open_positions(symbol)
-            if not position:
+            position_list = self.fetch_open_positions(symbol)
+            if not position_list:
                 logger.warning(f"Keine offene Position zum Schließen für {symbol} gefunden.")
                 return None
-            position = position[0]
-
+            position = position_list[0]
             close_side = 'sell' if position['side'] == 'long' else 'buy'
-            amount = position['contracts']
+            size_key = 'contracts' if 'contracts' in position else 'contractSize'
+            amount = position.get(size_key)
             if amount is None:
-                 logger.error(f"Konnte Positionsgröße ('contracts') nicht aus Positionsdaten lesen: {position}")
+                 logger.error(f"Konnte Positionsgröße ('{size_key}') nicht aus Positionsdaten lesen: {position}")
                  return None
-
             logger.info(f"Schließe {position['side']} Position für {symbol} mit Market Order (Menge: {amount}).")
             return self.place_market_order(symbol, close_side, float(amount), reduce=True)
-
         except Exception as e:
             logger.error(f"Fehler beim Schließen der Position für {symbol}: {e}")
             raise e
 
 
     def set_margin_mode(self, symbol, margin_mode='isolated'):
-        if not self.markets: return # Füge Check hinzu
+        if not self.markets: return
         margin_mode_lower = margin_mode.lower()
         if margin_mode_lower not in ['isolated', 'cross']:
             logger.error(f"Ungültiger Margin-Modus: {margin_mode}.")
             return
-
         try:
             params={'productType': 'USDT-FUTURES', 'marginCoin': 'USDT'}
             self.exchange.set_margin_mode(margin_mode_lower, symbol, params=params)
             logger.info(f"Margin-Modus für {symbol} auf '{margin_mode_lower}' gesetzt.")
-        except ccxt.NotSupported as e:
-            logger.warning(f"Setzen des Margin-Modus wird von ccxt für Bitget möglicherweise nicht direkt unterstützt: {e}")
         except ccxt.ExchangeError as e:
-            if 'Margin mode is the same' in str(e) or 'margin mode is not changed' in str(e).lower():
+            if 'Margin mode is the same' in str(e) or 'margin mode is not changed' in str(e).lower() or '40051' in str(e):
                 logger.debug(f"Margin-Modus für {symbol} ist bereits '{margin_mode_lower}'.")
             else:
                 logger.error(f"Fehler beim Setzen des Margin-Modus für {symbol}: {e}")
@@ -344,7 +386,7 @@ class Exchange:
             logger.error(f"Unerwarteter Fehler beim Setzen des Margin-Modus für {symbol}: {e}")
 
     def set_leverage(self, symbol, leverage, margin_mode='isolated'):
-        if not self.markets: return # Füge Check hinzu
+        if not self.markets: return
         try:
             leverage = int(leverage)
             params = {'productType': 'USDT-FUTURES', 'marginCoin': 'USDT'}
@@ -353,17 +395,16 @@ class Exchange:
                 params_long = {**params, 'holdSide': 'long'}
                 self.exchange.set_leverage(leverage, symbol, params=params_long)
                 logger.debug(f"Isolated Leverage für {symbol} (Long) auf {leverage}x gesetzt.")
+                time.sleep(0.2)
                 params_short = {**params, 'holdSide': 'short'}
                 self.exchange.set_leverage(leverage, symbol, params=params_short)
                 logger.debug(f"Isolated Leverage für {symbol} (Short) auf {leverage}x gesetzt.")
-            else: # Cross
+            else: 
                 self.exchange.set_leverage(leverage, symbol, params=params)
                 logger.debug(f"Cross Leverage für {symbol} auf {leverage}x gesetzt.")
-
             logger.info(f"Hebel für {symbol} ({margin_mode}) auf {leverage}x gesetzt.")
-
         except ccxt.ExchangeError as e:
-            if 'Leverage not changed' in str(e) or 'leverage is not modified' in str(e).lower():
+            if 'Leverage not changed' in str(e) or 'leverage is not modified' in str(e).lower() or '40052' in str(e):
                 logger.debug(f"Hebel für {symbol} ist bereits {leverage}x.")
             else:
                 logger.error(f"Fehler beim Setzen des Hebels für {symbol}: {e}")
@@ -372,11 +413,12 @@ class Exchange:
 
     # --- Order Platzierungs Methoden ---
 
-    def place_market_order(self, symbol: str, side: str, amount: float, reduce: bool = False, params={}): # params hinzugefügt
-        """Platziert eine Market Order."""
+    def place_market_order(self, symbol: str, side: str, amount: float, reduce: bool = False, params={}):
         if not self.markets: return None
         try:
-            order_params = {'reduceOnly': reduce, **params} # Füge übergebene params hinzu
+            order_params = {'reduceOnly': reduce, **params} 
+            if 'productType' not in order_params: # Sicherstellen, dass productType gesetzt ist
+                order_params['productType'] = 'USDT-FUTURES'
             amount_str = self.amount_to_precision(symbol, amount)
             logger.info(f"Platziere Market Order: {side.upper()} {amount_str} {symbol} (Params: {order_params})")
             return self.exchange.create_order(symbol, 'market', side, float(amount_str), params=order_params)
@@ -387,11 +429,12 @@ class Exchange:
             logger.error(f"Fehler beim Platzieren der Market Order für {symbol}: {e}", exc_info=True)
             raise e
 
-    def place_limit_order(self, symbol: str, side: str, amount: float, price: float, reduce: bool = False, params={}): # params hinzugefügt
-        """Platziert eine Limit Order."""
+    def place_limit_order(self, symbol: str, side: str, amount: float, price: float, reduce: bool = False, params={}):
         if not self.markets: return None
         try:
             order_params = {'reduceOnly': reduce, **params}
+            if 'productType' not in order_params:
+                order_params['productType'] = 'USDT-FUTURES'
             amount_str = self.amount_to_precision(symbol, amount)
             price_str = self.price_to_precision(symbol, price)
             logger.info(f"Platziere Limit Order: {side.upper()} {amount_str} {symbol} @ {price_str} (Params: {order_params})")
@@ -400,7 +443,10 @@ class Exchange:
             logger.error(f"Fehler beim Platzieren der Limit Order für {symbol}: {e}", exc_info=True)
             raise e
 
-
+    # =========================================================================
+    # HIER IST DIE KORREKTUR FÜR TRIGGER MARKET ORDERS (TP/SL)
+    # WIR KOPIEREN DIE LOGIK VON JAEGERBOT/TITANBOT
+    # =========================================================================
     def place_trigger_market_order(self, symbol: str, side: str, amount: float, trigger_price: float, reduce: bool = False, params={}):
         """Platziert eine Trigger-Market Order (Stop Market oder Take Profit Market)."""
         if not self.markets: return None
@@ -408,22 +454,21 @@ class Exchange:
             amount_str = self.amount_to_precision(symbol, amount)
             trigger_price_str = self.price_to_precision(symbol, trigger_price)
 
-            # Bitget spezifische Parameter für Trigger Orders
-            # *** KORREKTUR: planType hinzugefügt ***
+            # *** KORREKTUR: Vereinfachte Params, basierend auf JaegerBot/TitanBot ***
+            # Wir übergeben NUR 'triggerPrice' und 'reduceOnly'. 
+            # ccxt wandelt 'triggerPrice' intern in 'stopPrice' um.
+            # KEIN 'planType' oder 'triggerType' hier!
             order_params = {
-                'stopPrice': trigger_price_str, # Der Auslösepreis
-                'triggerType': params.get('triggerType','market_price'), # Behalte market_price bei oder übernehme aus params
-                'planType': params.get('planType', 'normal_plan'), # Füge planType hinzu!
+                'triggerPrice': trigger_price_str,
                 'reduceOnly': reduce,
-                # Füge original params hinzu (falls vorhanden, überschreibt obiges)
-                **params
+                **params # Fügt zusätzliche Params hinzu, z.B. productType falls nötig
             }
-            # Entferne 'stopPrice' falls es in original params war, um Dopplung zu vermeiden
-            if 'stopPrice' in params:
-                 del order_params['stopPrice']
+            
+            # Stelle sicher, dass productType für Bitget vorhanden ist
+            if 'productType' not in order_params:
+                 order_params['productType'] = 'USDT-FUTURES'
 
             logger.info(f"Platziere Trigger Market Order: {side.upper()} {amount_str} {symbol}, Params: {order_params}")
-            # Der 'type' bleibt 'market', da es nach dem Trigger eine Market Order wird.
             order = self.exchange.create_order(symbol, 'market', side, float(amount_str), params=order_params)
             return order
 
@@ -434,7 +479,9 @@ class Exchange:
             logger.error(f"Allgemeiner Fehler beim Platzieren der Trigger Market Order für {symbol}: {e}", exc_info=True)
             raise e
 
-
+    # =========================================================================
+    # HIER IST DIE KORREKTUR FÜR TRIGGER LIMIT ORDERS (ENTRY)
+    # =========================================================================
     def place_trigger_limit_order(self, symbol: str, side: str, amount: float, trigger_price: float, price: float, reduce: bool = False, params={}):
         """Platziert eine Trigger-Limit Order."""
         if not self.markets: return None
@@ -443,72 +490,58 @@ class Exchange:
             trigger_price_str = self.price_to_precision(symbol, trigger_price)
             price_str = self.price_to_precision(symbol, price) # Limit Preis nach Trigger
 
-            # Bitget spezifische Parameter
-            # *** KORREKTUR: planType hinzugefügt ***
+            # *** KORREKTUR: Dieselbe vereinfachte Logik ***
+            # Wir übergeben NUR 'triggerPrice' und 'reduceOnly'.
+            # Der Unterschied ist, dass der 'type' in create_order 'limit' ist.
             order_params = {
-                'stopPrice': trigger_price_str,
-                'triggerType': params.get('triggerType','market_price'),
-                'planType': params.get('planType', 'normal_plan'), # Füge planType hinzu!
+                'triggerPrice': trigger_price_str,
                 'reduceOnly': reduce,
-                 # Füge original params hinzu (falls vorhanden, überschreibt obiges)
                 **params
             }
-            if 'stopPrice' in params:
-                 del order_params['stopPrice']
+            
+            if 'productType' not in order_params:
+                 order_params['productType'] = 'USDT-FUTURES'
 
             logger.info(f"Platziere Trigger Limit Order: {side.upper()} {amount_str} {symbol}, Params: {order_params}, Limit: {price_str}")
-            # Wichtig: type ist 'limit', stopPrice im params dict
             order = self.exchange.create_order(symbol, 'limit', side, float(amount_str), float(price_str), params=order_params)
             return order
         except Exception as e:
             logger.error(f"Fehler beim Platzieren der Trigger Limit Order für {symbol}: {e}", exc_info=True)
             raise e
 
-    # --- Implizite Methoden (falls Trailing Stop benötigt wird) ---
-    # Beachte: Diese sind nicht Teil des Standard-CCXT und können sich ändern!
+    # --- Implizite Methoden (Trailing Stop) ---
+    # Diese Funktion wird vom ltbtbot nicht verwendet, aber wir lassen sie drin,
+    # da sie im Original-Code war (und von Jaeger/Titan kopiert wurde).
     def place_trailing_stop_order(self, symbol, side, amount, activation_price, callback_rate_decimal, params={}):
-        """
-        Platziert eine Trailing Stop Market Order über die implizite API-Methode von Bitget.
-        :param callback_rate_decimal: Die Callback-Rate als Dezimalzahl (z.B. 0.01 für 1%)
-        """
         if not self.markets: return None
         try:
             market_id = self.exchange.market(symbol)['id']
             margin_coin = 'USDT'
 
-            if side.lower() == 'sell':
-                api_side = 'close_long'
-            elif side.lower() == 'buy':
-                api_side = 'close_short'
-            else:
-                raise ValueError(f"Ungültiger 'side' für Trailing Stop: {side}")
+            if side.lower() == 'sell': api_side = 'close_long'
+            elif side.lower() == 'buy': api_side = 'close_short'
+            else: raise ValueError(f"Ungültiger 'side' für Trailing Stop: {side}")
 
             api_callback_rate_str = str(callback_rate_decimal * 100.0)
 
+            # Diese Params SIND korrekt für TSL (planType='trailing_stop')
             api_params = {
                 'symbol': market_id,
                 'marginCoin': margin_coin,
-                'planType': 'trailing_stop',
+                'planType': 'trailing_stop', 
                 'side': api_side,
                 'size': str(self.amount_to_precision(symbol, amount)),
-                'triggerPrice': str(self.price_to_precision(symbol, activation_price)),
-                'rangeRate': api_callback_rate_str,
-                # 'reduceOnly': params.get('reduceOnly', True) # Versuch, dies mitzusenden
+                'triggerPrice': str(self.price_to_precision(symbol, activation_price)), 
+                'rangeRate': api_callback_rate_str, 
+                **params
             }
-            # Füge zusätzliche Params hinzu, falls vorhanden
-            api_params.update({k:v for k,v in params.items() if k not in ['reduceOnly']}) # Vermeide Dopplung von reduceOnly, falls es in params ist
-
 
             logger.info(f"Sende impliziten TSL-Aufruf: private_mix_post_plan_place_plan mit Params: {api_params}")
-
-            # Der genaue Methodenname kann sich ändern, prüfe ggf. ccxt Code
             response = self.exchange.private_mix_post_plan_place_plan(api_params)
-
             logger.info(f"TSL-Antwort von Bitget API: {response}")
             return response
-
-        except AttributeError:
-            logger.error("Implizite Methode für Trailing Stop nicht gefunden.")
+        except AttributeError as e:
+            logger.error(f"Implizite Methode für Trailing Stop nicht gefunden: {e}")
             raise ccxt.NotSupported("Trailing Stop via impliziter Methode nicht verfügbar.")
         except Exception as e:
             logger.error(f"Kritischer Fehler beim Aufruf der impliziten TSL-Methode: {e}", exc_info=True)
