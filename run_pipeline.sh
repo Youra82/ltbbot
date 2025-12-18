@@ -107,5 +107,112 @@ for symbol in $SYMBOLS; do
     done
 done
 
+echo -e "\n${BLUE}=======================================================${NC}"
+echo -e "${BLUE}✔ Alle Optimierungen abgeschlossen!${NC}"
+echo -e "${BLUE}=======================================================${NC}"
+
+# --- INTERAKTIVE ABFRAGE: SETTINGS AKTUALISIEREN ---
+echo -e "\n${YELLOW}Möchtest du die optimierten Strategien automatisch in settings.json übernehmen?${NC}"
+echo -e "${YELLOW}(Dies ersetzt die aktuellen active_strategies mit den neu optimierten)${NC}"
+read -p "Settings aktualisieren? (j/n) [Standard: n]: " UPDATE_SETTINGS_CHOICE
+UPDATE_SETTINGS_CHOICE=${UPDATE_SETTINGS_CHOICE:-n}
+
+if [[ "$UPDATE_SETTINGS_CHOICE" == "j" || "$UPDATE_SETTINGS_CHOICE" == "J" ]]; then
+    echo -e "\n${GREEN}>>> Aktualisiere settings.json mit optimierten Strategien...${NC}"
+    
+    # Erstelle temporäres Python-Skript zum Aktualisieren
+    python3 << 'PYTHON_SCRIPT'
+import json
+import os
+import glob
+
+# Pfade
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+SETTINGS_FILE = os.path.join(PROJECT_ROOT, 'settings.json')
+CONFIGS_DIR = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
+
+# Lade aktuelle settings.json
+try:
+    with open(SETTINGS_FILE, 'r') as f:
+        settings = json.load(f)
+except Exception as e:
+    print(f"❌ Fehler beim Laden von settings.json: {e}")
+    exit(1)
+
+# Finde alle optimierten Config-Dateien (envelope)
+config_files = glob.glob(os.path.join(CONFIGS_DIR, 'config_*_envelope.json'))
+
+if not config_files:
+    print("⚠️  Keine optimierten Config-Dateien gefunden.")
+    exit(0)
+
+print(f"✓ Gefundene optimierte Configs: {len(config_files)}")
+
+# Erstelle neue active_strategies Liste
+new_strategies = []
+
+for config_file in sorted(config_files):
+    try:
+        # Lade Config um Symbol und Timeframe zu extrahieren
+        with open(config_file, 'r') as f:
+            config = json.load(f)
+        
+        symbol = config.get('market', {}).get('symbol')
+        timeframe = config.get('market', {}).get('timeframe')
+        
+        if symbol and timeframe:
+            # Prüfe ob bereits in Liste (Duplikate vermeiden)
+            exists = any(s.get('symbol') == symbol and s.get('timeframe') == timeframe 
+                        for s in new_strategies)
+            
+            if not exists:
+                new_strategies.append({
+                    "symbol": symbol,
+                    "timeframe": timeframe,
+                    "active": False,  # Standardmäßig deaktiviert (Sicherheit)
+                    "_comment": "Optimiert am " + os.path.basename(config_file)
+                })
+                print(f"  ✓ Hinzugefügt: {symbol} ({timeframe})")
+    except Exception as e:
+        print(f"  ⚠️  Fehler beim Lesen von {os.path.basename(config_file)}: {e}")
+        continue
+
+# Aktualisiere settings.json
+if new_strategies:
+    settings['live_trading_settings']['active_strategies'] = new_strategies
+    settings['live_trading_settings']['use_auto_optimizer_results'] = True
+    settings['live_trading_settings']['_last_update'] = str(__import__('datetime').datetime.now())
+    
+    # Speichere
+    with open(SETTINGS_FILE, 'w') as f:
+        json.dump(settings, f, indent=4)
+    
+    print(f"\n✅ settings.json erfolgreich aktualisiert!")
+    print(f"   Total Strategien: {len(new_strategies)}")
+    print(f"   Status: ALLE DEAKTIVIERT (active: false)")
+    print(f"\n⚠️  WICHTIG: Aktiviere Strategien manuell in settings.json!")
+    print(f"   Ändere 'active: false' auf 'active: true' für gewünschte Strategien.")
+else:
+    print("⚠️  Keine Strategien zum Aktualisieren gefunden.")
+
+PYTHON_SCRIPT
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✔ settings.json wurde erfolgreich aktualisiert!${NC}"
+        echo -e "\n${YELLOW}📝 Nächste Schritte:${NC}"
+        echo -e "   1. Öffne settings.json"
+        echo -e "   2. Setze 'active: true' für die Strategien, die du aktivieren möchtest"
+        echo -e "   3. Starte den Bot mit: python master_runner.py"
+    else
+        echo -e "${RED}❌ Fehler beim Aktualisieren der settings.json${NC}"
+    fi
+else
+    echo -e "${GREEN}✔ settings.json wurde NICHT verändert.${NC}"
+    echo -e "${YELLOW}Tipp: Du kannst die optimierten Configs manuell aktivieren in:${NC}"
+    echo -e "      src/ltbbot/strategy/configs/config_*_envelope.json"
+fi
+
 deactivate
-echo -e "\n${BLUE}✔ Alle Pipeline-Aufgaben abgeschlossen!${NC}"
+echo -e "\n${BLUE}=======================================================${NC}"
+echo -e "${BLUE}✔ Pipeline abgeschlossen!${NC}"
+echo -e "${BLUE}=======================================================${NC}"
