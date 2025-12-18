@@ -4,20 +4,20 @@
         "timeframe": "6h"
     },
     "strategy": {
-        "average_type": "EMA",
+        "average_type": "WMA",
         "average_period": 5,
         "envelopes": [
-            0.040184880265511924,
-            0.05586895938688188,
-            0.132269877093709
+            0.02565151996029289,
+            0.09351126515973801,
+            0.09971361650740047
         ],
-        "trigger_price_delta_pct": 0.0751
+        "trigger_price_delta_pct": 0.1892
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.45,
-        "leverage": 9,
-        "stop_loss_pct": 0.5
+        "risk_per_entry_pct": 0.95,
+        "leverage": 15,
+        "stop_loss_pct": 1.03
     },
     "behavior": {
         "use_longs": true,
