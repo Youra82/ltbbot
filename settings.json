@@ -1,0 +1,32 @@
+{
+    "live_trading_settings": {
+        "use_auto_optimizer_results": false,
+        "active_strategies": [
+            {
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "1d",
+                "active": false,
+                "_comment": "DEAKTIVIERT - Win-Rate 6.4% in Live-Tests"
+            },
+            {
+                "symbol": "AAVE/USDT:USDT",
+                "timeframe": "6h",
+                "active": false,
+                "_comment": "VORSICHT - Teste mit Regime-Filter erst"
+            },
+            {
+                "symbol": "SOL/USDT:USDT",
+                "timeframe": "30m",
+                "active": false,
+                "_comment": "VORSICHT - Teste mit Regime-Filter erst"
+            },
+            {
+                "symbol": "BTC/USDT:USDT",
+                "timeframe": "4h",
+                "active": true,
+                "_comment": "Beste Live-Performance (45.1% WR) - Starte hier"
+            }
+        ],
+        "_instructions": "Nach erfolgreichen Tests mit BTC andere Coins schrittweise reaktivieren"
+    }
+}

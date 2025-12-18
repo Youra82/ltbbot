@@ -1,0 +1,26 @@
+{
+    "market": {
+        "symbol": "ADA/USDT:USDT",
+        "timeframe": "1d"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 5,
+        "envelopes": [
+            0.04186193568339205,
+            0.07240153243372274,
+            0.13964093758279977
+        ],
+        "trigger_price_delta_pct": 0.0205
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.92,
+        "leverage": 15,
+        "stop_loss_pct": 0.71
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

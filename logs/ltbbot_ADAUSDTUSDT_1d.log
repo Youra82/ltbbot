@@ -1,0 +1,1871 @@
+2025-11-01 22:00:03,207 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-01 22:00:03,208 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-01 22:00:05,721 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-01 22:00:06,108 - INFO - Aktueller Status: Preis=0.6133, Average=0.6154
+2025-11-01 22:00:06,684 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-01 22:00:06,980 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-01 22:00:09,326 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-01 22:00:09,327 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-01 22:00:09,327 - INFO - Prüfe Long Entry Bands: [0.589644552367536, 0.5708502809300708, 0.5294707027386277]
+2025-11-01 22:00:09,621 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.0438, Trigger@0.5898, Limit@0.5896
+2025-11-01 22:00:10,813 - INFO - ✅ Long Entry 2/3 platziert: Amount=117.7985, Trigger@0.5710, Limit@0.5709
+2025-11-01 22:00:12,003 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.0048, Trigger@0.5296, Limit@0.5295
+2025-11-01 22:00:12,860 - INFO - Prüfe Short Entry Bands: [0.6422943514989204, 0.6634407970523039, 0.7152905031739496]
+2025-11-01 22:00:13,165 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.6955, Trigger@0.6422, Limit@0.6423
+2025-11-01 22:00:14,395 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.3585, Trigger@0.6633, Limit@0.6634
+2025-11-01 22:00:15,591 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.0112, Trigger@0.7151, Limit@0.7153
+2025-11-01 22:00:16,490 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-01 22:00:16,490 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-01 22:00:16,510 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-01 22:15:03,922 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-01 22:15:03,923 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-01 22:15:06,131 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-01 22:15:06,504 - INFO - Aktueller Status: Preis=0.6120, Average=0.6150
+2025-11-01 22:15:07,954 - INFO - Trigger Order 1368621900285677569 (buy 114.0 @ Trigger 0.5898) storniert.
+2025-11-01 22:15:08,336 - INFO - Trigger Order 1368621901893087232 (buy 114.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:15:08,768 - INFO - Trigger Order 1368621903531556864 (buy 114.0 @ Trigger 0.5855) storniert.
+2025-11-01 22:15:09,147 - INFO - Trigger Order 1368621905225326592 (buy 117.0 @ Trigger 0.571) storniert.
+2025-11-01 22:15:09,526 - INFO - Trigger Order 1368621906845569025 (buy 117.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:15:09,907 - INFO - Trigger Order 1368621908543750144 (buy 117.0 @ Trigger 0.5668) storniert.
+2025-11-01 22:15:10,287 - INFO - Trigger Order 1368621910187917312 (buy 127.0 @ Trigger 0.5296) storniert.
+2025-11-01 22:15:10,692 - INFO - Trigger Order 1368621911857246208 (buy 127.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:15:11,075 - INFO - Trigger Order 1368621913446887425 (buy 127.0 @ Trigger 0.5257) storniert.
+2025-11-01 22:15:11,471 - INFO - Trigger Order 1368621915081940992 (sell 104.0 @ Trigger 0.6422) storniert.
+2025-11-01 22:15:11,849 - INFO - Trigger Order 1368621916787060736 (sell 104.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:15:12,249 - INFO - Trigger Order 1368621918517800960 (sell 104.0 @ Trigger 0.6469) storniert.
+2025-11-01 22:15:12,640 - INFO - Trigger Order 1368621920237465600 (sell 101.0 @ Trigger 0.6633) storniert.
+2025-11-01 22:15:13,027 - INFO - Trigger Order 1368621921925083136 (sell 101.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:15:13,442 - INFO - Trigger Order 1368621923634851840 (sell 101.0 @ Trigger 0.6682) storniert.
+2025-11-01 22:15:13,824 - INFO - Trigger Order 1368621925250174981 (sell 94.0 @ Trigger 0.7151) storniert.
+2025-11-01 22:15:14,228 - INFO - Trigger Order 1368621927011266560 (sell 94.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:15:14,612 - INFO - Trigger Order 1368621928623386624 (sell 94.0 @ Trigger 0.7204) storniert.
+2025-11-01 22:15:14,714 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-01 22:15:14,714 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-01 22:15:15,035 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-01 22:15:17,398 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-01 22:15:17,398 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-01 22:15:17,398 - INFO - Prüfe Long Entry Bands: [0.589229359206332, 0.5704483215941254, 0.5290978804782469]
+2025-11-01 22:15:17,735 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.1242, Trigger@0.5894, Limit@0.5892
+2025-11-01 22:15:18,879 - INFO - ✅ Long Entry 2/3 platziert: Amount=117.8816, Trigger@0.5706, Limit@0.5704
+2025-11-01 22:15:20,086 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.0943, Trigger@0.5292, Limit@0.5291
+2025-11-01 22:15:20,968 - INFO - Prüfe Short Entry Bands: [0.6418420854326072, 0.662973640897475, 0.7147868374926515]
+2025-11-01 22:15:21,278 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.7693, Trigger@0.6417, Limit@0.6418
+2025-11-01 22:15:22,474 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.4299, Trigger@0.6628, Limit@0.6630
+2025-11-01 22:15:23,685 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.0775, Trigger@0.7146, Limit@0.7148
+2025-11-01 22:15:24,596 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-01 22:15:24,597 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-01 22:15:24,616 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-01 22:25:54,316 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-01 22:25:54,316 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-01 22:25:56,250 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-01 22:25:56,591 - INFO - Aktueller Status: Preis=0.6133, Average=0.6154
+2025-11-01 22:25:57,956 - INFO - Trigger Order 1368625709196058624 (buy 114.0 @ Trigger 0.5894) storniert.
+2025-11-01 22:25:58,328 - INFO - Trigger Order 1368625710769909760 (buy 114.0 @ Trigger 0.615) storniert.
+2025-11-01 22:25:58,696 - INFO - Trigger Order 1368625712338579456 (buy 114.0 @ Trigger 0.585) storniert.
+2025-11-01 22:25:59,082 - INFO - Trigger Order 1368625713964982272 (buy 117.0 @ Trigger 0.5706) storniert.
+2025-11-01 22:25:59,449 - INFO - Trigger Order 1368625715588173824 (buy 117.0 @ Trigger 0.615) storniert.
+2025-11-01 22:25:59,829 - INFO - Trigger Order 1368625717311221760 (buy 117.0 @ Trigger 0.5664) storniert.
+2025-11-01 22:26:00,218 - INFO - Trigger Order 1368625719022796800 (buy 127.0 @ Trigger 0.5292) storniert.
+2025-11-01 22:26:00,619 - INFO - Trigger Order 1368625720671158272 (buy 127.0 @ Trigger 0.615) storniert.
+2025-11-01 22:26:01,012 - INFO - Trigger Order 1368625722315321344 (buy 127.0 @ Trigger 0.5253) storniert.
+2025-11-01 22:26:01,390 - INFO - Trigger Order 1368625723954999296 (sell 104.0 @ Trigger 0.6417) storniert.
+2025-11-01 22:26:01,764 - INFO - Trigger Order 1368625725636915200 (sell 104.0 @ Trigger 0.615) storniert.
+2025-11-01 22:26:02,147 - INFO - Trigger Order 1368625727298158592 (sell 104.0 @ Trigger 0.6464) storniert.
+2025-11-01 22:26:02,577 - INFO - Trigger Order 1368625728993173504 (sell 101.0 @ Trigger 0.6628) storniert.
+2025-11-01 22:26:02,957 - INFO - Trigger Order 1368625730700251137 (sell 101.0 @ Trigger 0.615) storniert.
+2025-11-01 22:26:03,335 - INFO - Trigger Order 1368625732374769665 (sell 101.0 @ Trigger 0.6677) storniert.
+2025-11-01 22:26:03,701 - INFO - Trigger Order 1368625734101831681 (sell 94.0 @ Trigger 0.7146) storniert.
+2025-11-01 22:26:04,095 - INFO - Trigger Order 1368625735741288448 (sell 94.0 @ Trigger 0.615) storniert.
+2025-11-01 22:26:04,466 - INFO - Trigger Order 1368625737401507840 (sell 94.0 @ Trigger 0.7199) storniert.
+2025-11-01 22:26:04,567 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-01 22:26:04,567 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-01 22:26:04,856 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-01 22:26:07,160 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-01 22:26:07,160 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-01 22:26:07,160 - INFO - Prüfe Long Entry Bands: [0.589644552367536, 0.5708502809300708, 0.5294707027386277]
+2025-11-01 22:26:07,435 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.0438, Trigger@0.5898, Limit@0.5896
+2025-11-01 22:26:08,592 - INFO - ✅ Long Entry 2/3 platziert: Amount=117.7985, Trigger@0.5710, Limit@0.5709
+2025-11-01 22:26:09,732 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.0048, Trigger@0.5296, Limit@0.5295
+2025-11-01 22:26:10,602 - INFO - Prüfe Short Entry Bands: [0.6422943514989204, 0.6634407970523039, 0.7152905031739496]
+2025-11-01 22:26:10,880 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.6955, Trigger@0.6422, Limit@0.6423
+2025-11-01 22:26:12,040 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.3585, Trigger@0.6633, Limit@0.6634
+2025-11-01 22:26:13,207 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.0112, Trigger@0.7151, Limit@0.7153
+2025-11-01 22:26:14,093 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-01 22:26:14,093 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-01 22:26:14,109 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-01 22:30:03,764 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-01 22:30:03,765 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-01 22:30:06,478 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-01 22:30:06,855 - INFO - Aktueller Status: Preis=0.6134, Average=0.6154
+2025-11-01 22:30:08,238 - INFO - Trigger Order 1368628434226458624 (buy 114.0 @ Trigger 0.5898) storniert.
+2025-11-01 22:30:08,624 - INFO - Trigger Order 1368628435796635648 (buy 114.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:30:09,003 - INFO - Trigger Order 1368628437411442689 (buy 114.0 @ Trigger 0.5855) storniert.
+2025-11-01 22:30:09,533 - INFO - Trigger Order 1368628439070883840 (buy 117.0 @ Trigger 0.571) storniert.
+2025-11-01 22:30:09,919 - INFO - Trigger Order 1368628440685391872 (buy 117.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:30:10,304 - INFO - Trigger Order 1368628442264252416 (buy 117.0 @ Trigger 0.5668) storniert.
+2025-11-01 22:30:10,697 - INFO - Trigger Order 1368628443789471744 (buy 127.0 @ Trigger 0.5296) storniert.
+2025-11-01 22:30:11,098 - INFO - Trigger Order 1368628445492363264 (buy 127.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:30:11,480 - INFO - Trigger Order 1368628447077810176 (buy 127.0 @ Trigger 0.5257) storniert.
+2025-11-01 22:30:11,847 - INFO - Trigger Order 1368628448687693824 (sell 104.0 @ Trigger 0.6422) storniert.
+2025-11-01 22:30:12,245 - INFO - Trigger Order 1368628450270191616 (sell 104.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:30:12,618 - INFO - Trigger Order 1368628451925696512 (sell 104.0 @ Trigger 0.6469) storniert.
+2025-11-01 22:30:12,988 - INFO - Trigger Order 1368628453477588992 (sell 101.0 @ Trigger 0.6633) storniert.
+2025-11-01 22:30:13,365 - INFO - Trigger Order 1368628455104978944 (sell 101.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:30:13,747 - INFO - Trigger Order 1368628456695050240 (sell 101.0 @ Trigger 0.6682) storniert.
+2025-11-01 22:30:14,122 - INFO - Trigger Order 1368628458427592704 (sell 94.0 @ Trigger 0.7151) storniert.
+2025-11-01 22:30:14,507 - INFO - Trigger Order 1368628460017750016 (sell 94.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:30:14,869 - INFO - Trigger Order 1368628461639704576 (sell 94.0 @ Trigger 0.7204) storniert.
+2025-11-01 22:30:14,969 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-01 22:30:14,970 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-01 22:30:15,246 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-01 22:30:17,531 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-01 22:30:17,531 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-01 22:30:17,532 - INFO - Prüfe Long Entry Bands: [0.5896764903030132, 0.5708812008789896, 0.5294993813740416]
+2025-11-01 22:30:17,827 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.0377, Trigger@0.5898, Limit@0.5897
+2025-11-01 22:30:18,988 - INFO - ✅ Long Entry 2/3 platziert: Amount=117.7922, Trigger@0.5710, Limit@0.5709
+2025-11-01 22:30:20,146 - INFO - ✅ Long Entry 3/3 platziert: Amount=126.9979, Trigger@0.5296, Limit@0.5295
+2025-11-01 22:30:21,036 - INFO - Prüfe Short Entry Bands: [0.6423291411963291, 0.6634767321411369, 0.7153292466878957]
+2025-11-01 22:30:21,320 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.6898, Trigger@0.6422, Limit@0.6423
+2025-11-01 22:30:22,577 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.3530, Trigger@0.6633, Limit@0.6635
+2025-11-01 22:30:23,752 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.0061, Trigger@0.7152, Limit@0.7153
+2025-11-01 22:30:24,656 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-01 22:30:24,656 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-01 22:30:24,675 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-01 22:45:03,271 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-01 22:45:03,272 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-01 22:45:05,303 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-01 22:45:05,656 - INFO - Aktueller Status: Preis=0.6115, Average=0.6148
+2025-11-01 22:45:07,064 - INFO - Trigger Order 1368629484425654272 (buy 114.0 @ Trigger 0.5898) storniert.
+2025-11-01 22:45:07,461 - INFO - Trigger Order 1368629486082408448 (buy 114.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:45:07,839 - INFO - Trigger Order 1368629487723884544 (buy 114.0 @ Trigger 0.5855) storniert.
+2025-11-01 22:45:08,219 - INFO - Trigger Order 1368629489317720065 (buy 117.0 @ Trigger 0.571) storniert.
+2025-11-01 22:45:08,603 - INFO - Trigger Order 1368629490863910912 (buy 117.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:45:08,975 - INFO - Trigger Order 1368629492549726208 (buy 117.0 @ Trigger 0.5668) storniert.
+2025-11-01 22:45:09,358 - INFO - Trigger Order 1368629494155714560 (buy 126.0 @ Trigger 0.5296) storniert.
+2025-11-01 22:45:09,747 - INFO - Trigger Order 1368629495775956992 (buy 126.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:45:10,153 - INFO - Trigger Order 1368629497402105856 (buy 126.0 @ Trigger 0.5257) storniert.
+2025-11-01 22:45:10,541 - INFO - Trigger Order 1368629499088945152 (sell 104.0 @ Trigger 0.6422) storniert.
+2025-11-01 22:45:10,914 - INFO - Trigger Order 1368629500921556992 (sell 104.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:45:11,287 - INFO - Trigger Order 1368629502612160512 (sell 104.0 @ Trigger 0.6469) storniert.
+2025-11-01 22:45:11,659 - INFO - Trigger Order 1368629504282996737 (sell 101.0 @ Trigger 0.6633) storniert.
+2025-11-01 22:45:12,050 - INFO - Trigger Order 1368629505996959744 (sell 101.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:45:12,451 - INFO - Trigger Order 1368629507675201536 (sell 101.0 @ Trigger 0.6682) storniert.
+2025-11-01 22:45:12,822 - INFO - Trigger Order 1368629509230043137 (sell 94.0 @ Trigger 0.7152) storniert.
+2025-11-01 22:45:13,191 - INFO - Trigger Order 1368629510862872576 (sell 94.0 @ Trigger 0.6154) storniert.
+2025-11-01 22:45:13,587 - INFO - Trigger Order 1368629512439926784 (sell 94.0 @ Trigger 0.7204) storniert.
+2025-11-01 22:45:13,688 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-01 22:45:13,689 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-01 22:45:13,957 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-01 22:45:16,290 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-01 22:45:16,290 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-01 22:45:16,290 - INFO - Prüfe Long Entry Bands: [0.589069669528946, 0.570293721849531, 0.5289544873011774]
+2025-11-01 22:45:16,580 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.1551, Trigger@0.5892, Limit@0.5891
+2025-11-01 22:45:17,757 - INFO - ✅ Long Entry 2/3 platziert: Amount=117.9135, Trigger@0.5704, Limit@0.5703
+2025-11-01 22:45:18,909 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.1288, Trigger@0.5291, Limit@0.5290
+2025-11-01 22:45:19,788 - INFO - Prüfe Short Entry Bands: [0.6416681369455638, 0.6627939654533102, 0.7145931199229215]
+2025-11-01 22:45:20,070 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.7977, Trigger@0.6415, Limit@0.6417
+2025-11-01 22:45:21,258 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.4574, Trigger@0.6627, Limit@0.6628
+2025-11-01 22:45:22,416 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.1030, Trigger@0.7144, Limit@0.7146
+2025-11-01 22:45:23,285 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-01 22:45:23,285 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-01 22:45:23,303 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-01 23:00:03,243 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-01 23:00:03,243 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-01 23:00:05,353 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-01 23:00:05,699 - INFO - Aktueller Status: Preis=0.6078, Average=0.6136
+2025-11-01 23:00:07,068 - INFO - Trigger Order 1368633254064467968 (buy 114.0 @ Trigger 0.5892) storniert.
+2025-11-01 23:00:07,437 - INFO - Trigger Order 1368633255675080704 (buy 114.0 @ Trigger 0.6148) storniert.
+2025-11-01 23:00:07,819 - INFO - Trigger Order 1368633257340518400 (buy 114.0 @ Trigger 0.5849) storniert.
+2025-11-01 23:00:08,193 - INFO - Trigger Order 1368633258955026432 (buy 117.0 @ Trigger 0.5704) storniert.
+2025-11-01 23:00:08,570 - INFO - Trigger Order 1368633260621967360 (buy 117.0 @ Trigger 0.6148) storniert.
+2025-11-01 23:00:08,936 - INFO - Trigger Order 1368633262186442752 (buy 117.0 @ Trigger 0.5662) storniert.
+2025-11-01 23:00:09,323 - INFO - Trigger Order 1368633263837196288 (buy 127.0 @ Trigger 0.5291) storniert.
+2025-11-01 23:00:09,715 - INFO - Trigger Order 1368633265406160897 (buy 127.0 @ Trigger 0.6148) storniert.
+2025-11-01 23:00:10,087 - INFO - Trigger Order 1368633267100663808 (buy 127.0 @ Trigger 0.5252) storniert.
+2025-11-01 23:00:10,460 - INFO - Trigger Order 1368633268669329408 (sell 104.0 @ Trigger 0.6415) storniert.
+2025-11-01 23:00:10,848 - INFO - Trigger Order 1368633270368542720 (sell 104.0 @ Trigger 0.6148) storniert.
+2025-11-01 23:00:11,225 - INFO - Trigger Order 1368633271941402624 (sell 104.0 @ Trigger 0.6462) storniert.
+2025-11-01 23:00:11,591 - INFO - Trigger Order 1368633273677033472 (sell 101.0 @ Trigger 0.6627) storniert.
+2025-11-01 23:00:11,967 - INFO - Trigger Order 1368633275285254144 (sell 101.0 @ Trigger 0.6148) storniert.
+2025-11-01 23:00:12,329 - INFO - Trigger Order 1368633276906942464 (sell 101.0 @ Trigger 0.6675) storniert.
+2025-11-01 23:00:12,706 - INFO - Trigger Order 1368633278501294081 (sell 94.0 @ Trigger 0.7144) storniert.
+2025-11-01 23:00:13,074 - INFO - Trigger Order 1368633280110665728 (sell 94.0 @ Trigger 0.6148) storniert.
+2025-11-01 23:00:13,474 - INFO - Trigger Order 1368633281772335105 (sell 94.0 @ Trigger 0.7197) storniert.
+2025-11-01 23:00:13,574 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-01 23:00:13,575 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-01 23:00:13,843 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-01 23:00:16,149 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-01 23:00:16,149 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-01 23:00:16,149 - INFO - Prüfe Long Entry Bands: [0.5878879659162889, 0.5691496837395326, 0.5278933777908629]
+2025-11-01 23:00:16,458 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.3846, Trigger@0.5880, Limit@0.5879
+2025-11-01 23:00:17,618 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.1505, Trigger@0.5693, Limit@0.5691
+2025-11-01 23:00:18,776 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.3843, Trigger@0.5280, Limit@0.5279
+2025-11-01 23:00:19,792 - INFO - Prüfe Short Entry Bands: [0.6403809181414418, 0.6614643671664898, 0.7131596099069193]
+2025-11-01 23:00:20,076 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.0083, Trigger@0.6402, Limit@0.6404
+2025-11-01 23:00:21,210 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.6613, Trigger@0.6613, Limit@0.6615
+2025-11-01 23:00:22,395 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.2921, Trigger@0.7130, Limit@0.7132
+2025-11-01 23:00:23,255 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-01 23:00:23,255 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-01 23:00:23,274 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-01 23:15:03,518 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-01 23:15:03,518 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-01 23:15:05,546 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-01 23:15:05,923 - INFO - Aktueller Status: Preis=0.6078, Average=0.6136
+2025-11-01 23:15:07,437 - INFO - Trigger Order 1368637028359553024 (buy 114.0 @ Trigger 0.588) storniert.
+2025-11-01 23:15:07,843 - INFO - Trigger Order 1368637030016004096 (buy 114.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:15:08,243 - INFO - Trigger Order 1368637031707119616 (buy 114.0 @ Trigger 0.5837) storniert.
+2025-11-01 23:15:08,627 - INFO - Trigger Order 1368637033260003328 (buy 118.0 @ Trigger 0.5693) storniert.
+2025-11-01 23:15:08,998 - INFO - Trigger Order 1368637034886406144 (buy 118.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:15:09,373 - INFO - Trigger Order 1368637036516745216 (buy 118.0 @ Trigger 0.5651) storniert.
+2025-11-01 23:15:09,754 - INFO - Trigger Order 1368637038136991744 (buy 127.0 @ Trigger 0.528) storniert.
+2025-11-01 23:15:10,130 - INFO - Trigger Order 1368637040279760896 (buy 127.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:15:10,502 - INFO - Trigger Order 1368637041982648320 (buy 127.0 @ Trigger 0.5241) storniert.
+2025-11-01 23:15:10,897 - INFO - Trigger Order 1368637043594768385 (sell 105.0 @ Trigger 0.6402) storniert.
+2025-11-01 23:15:11,297 - INFO - Trigger Order 1368637045182177281 (sell 105.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:15:11,673 - INFO - Trigger Order 1368637046734069760 (sell 105.0 @ Trigger 0.6449) storniert.
+2025-11-01 23:15:12,039 - INFO - Trigger Order 1368637048349605888 (sell 101.0 @ Trigger 0.6613) storniert.
+2025-11-01 23:15:12,412 - INFO - Trigger Order 1368637049930858498 (sell 101.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:15:12,783 - INFO - Trigger Order 1368637051592318976 (sell 101.0 @ Trigger 0.6662) storniert.
+2025-11-01 23:15:13,162 - INFO - Trigger Order 1368637053277614080 (sell 94.0 @ Trigger 0.713) storniert.
+2025-11-01 23:15:13,543 - INFO - Trigger Order 1368637054873251840 (sell 94.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:15:13,916 - INFO - Trigger Order 1368637056445128704 (sell 94.0 @ Trigger 0.7182) storniert.
+2025-11-01 23:15:14,026 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-01 23:15:14,026 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-01 23:15:14,297 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-01 23:15:16,597 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-01 23:15:16,597 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-01 23:15:16,598 - INFO - Prüfe Long Entry Bands: [0.5878879659162889, 0.5691496837395326, 0.5278933777908629]
+2025-11-01 23:15:16,876 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.3846, Trigger@0.5880, Limit@0.5879
+2025-11-01 23:15:18,037 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.1505, Trigger@0.5693, Limit@0.5691
+2025-11-01 23:15:19,228 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.3843, Trigger@0.5280, Limit@0.5279
+2025-11-01 23:15:20,106 - INFO - Prüfe Short Entry Bands: [0.6403809181414418, 0.6614643671664898, 0.7131596099069193]
+2025-11-01 23:15:20,409 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.0083, Trigger@0.6402, Limit@0.6404
+2025-11-01 23:15:21,582 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.6613, Trigger@0.6613, Limit@0.6615
+2025-11-01 23:15:22,755 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.2921, Trigger@0.7130, Limit@0.7132
+2025-11-01 23:15:23,626 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-01 23:15:23,626 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-01 23:15:23,643 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-01 23:30:03,073 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-01 23:30:03,074 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-01 23:30:05,049 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-01 23:30:05,395 - INFO - Aktueller Status: Preis=0.6093, Average=0.6141
+2025-11-01 23:30:06,819 - INFO - Trigger Order 1368640805032505344 (buy 114.0 @ Trigger 0.588) storniert.
+2025-11-01 23:30:07,201 - INFO - Trigger Order 1368640806618468353 (buy 114.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:30:07,582 - INFO - Trigger Order 1368640808220692481 (buy 114.0 @ Trigger 0.5837) storniert.
+2025-11-01 23:30:07,979 - INFO - Trigger Order 1368640809851764736 (buy 118.0 @ Trigger 0.5693) storniert.
+2025-11-01 23:30:08,353 - INFO - Trigger Order 1368640811491733504 (buy 118.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:30:08,741 - INFO - Trigger Order 1368640813077180416 (buy 118.0 @ Trigger 0.5651) storniert.
+2025-11-01 23:30:09,110 - INFO - Trigger Order 1368640814785769472 (buy 127.0 @ Trigger 0.528) storniert.
+2025-11-01 23:30:09,483 - INFO - Trigger Order 1368640816462499840 (buy 127.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:30:09,870 - INFO - Trigger Order 1368640818147799040 (buy 127.0 @ Trigger 0.5241) storniert.
+2025-11-01 23:30:10,312 - INFO - Trigger Order 1368640819743436800 (sell 105.0 @ Trigger 0.6402) storniert.
+2025-11-01 23:30:10,679 - INFO - Trigger Order 1368640821458907136 (sell 105.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:30:11,064 - INFO - Trigger Order 1368640823088984064 (sell 105.0 @ Trigger 0.6449) storniert.
+2025-11-01 23:30:11,453 - INFO - Trigger Order 1368640824766705665 (sell 101.0 @ Trigger 0.6613) storniert.
+2025-11-01 23:30:11,833 - INFO - Trigger Order 1368640826407198720 (sell 101.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:30:12,231 - INFO - Trigger Order 1368640827979542528 (sell 101.0 @ Trigger 0.6662) storniert.
+2025-11-01 23:30:12,612 - INFO - Trigger Order 1368640829632102400 (sell 94.0 @ Trigger 0.713) storniert.
+2025-11-01 23:30:12,982 - INFO - Trigger Order 1368640831304900608 (sell 94.0 @ Trigger 0.6136) storniert.
+2025-11-01 23:30:13,367 - INFO - Trigger Order 1368640832861712384 (sell 94.0 @ Trigger 0.7182) storniert.
+2025-11-01 23:30:13,467 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-01 23:30:13,468 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-01 23:30:13,745 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-01 23:30:16,071 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-01 23:30:16,071 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-01 23:30:16,071 - INFO - Prüfe Long Entry Bands: [0.5883670349484471, 0.5696134829733157, 0.5283235573220715]
+2025-11-01 23:30:16,385 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.2915, Trigger@0.5885, Limit@0.5884
+2025-11-01 23:30:17,551 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.0543, Trigger@0.5697, Limit@0.5696
+2025-11-01 23:30:18,727 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.2806, Trigger@0.5284, Limit@0.5283
+2025-11-01 23:30:19,601 - INFO - Prüfe Short Entry Bands: [0.6409027636025724, 0.6620033934989845, 0.7137407626161093]
+2025-11-01 23:30:19,894 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.9228, Trigger@0.6408, Limit@0.6409
+2025-11-01 23:30:21,090 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.5785, Trigger@0.6619, Limit@0.6620
+2025-11-01 23:30:22,245 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.2153, Trigger@0.7136, Limit@0.7137
+2025-11-01 23:30:23,116 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-01 23:30:23,117 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-01 23:30:23,133 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-01 23:45:03,612 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-01 23:45:03,613 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-01 23:45:05,569 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-01 23:45:05,932 - INFO - Aktueller Status: Preis=0.6105, Average=0.6145
+2025-11-01 23:45:07,343 - INFO - Trigger Order 1368644577780113411 (buy 114.0 @ Trigger 0.5885) storniert.
+2025-11-01 23:45:07,716 - INFO - Trigger Order 1368644579432669184 (buy 114.0 @ Trigger 0.6141) storniert.
+2025-11-01 23:45:08,096 - INFO - Trigger Order 1368644581086212096 (buy 114.0 @ Trigger 0.5842) storniert.
+2025-11-01 23:45:08,483 - INFO - Trigger Order 1368644582670671872 (buy 118.0 @ Trigger 0.5697) storniert.
+2025-11-01 23:45:08,864 - INFO - Trigger Order 1368644584351772672 (buy 118.0 @ Trigger 0.6141) storniert.
+2025-11-01 23:45:09,235 - INFO - Trigger Order 1368644585971589120 (buy 118.0 @ Trigger 0.5656) storniert.
+2025-11-01 23:45:09,603 - INFO - Trigger Order 1368644587631718400 (buy 127.0 @ Trigger 0.5284) storniert.
+2025-11-01 23:45:09,982 - INFO - Trigger Order 1368644589246525440 (buy 127.0 @ Trigger 0.6141) storniert.
+2025-11-01 23:45:10,380 - INFO - Trigger Order 1368644590894886912 (buy 127.0 @ Trigger 0.5246) storniert.
+2025-11-01 23:45:10,765 - INFO - Trigger Order 1368644592492486656 (sell 104.0 @ Trigger 0.6408) storniert.
+2025-11-01 23:45:11,135 - INFO - Trigger Order 1368644594207956992 (sell 104.0 @ Trigger 0.6141) storniert.
+2025-11-01 23:45:11,531 - INFO - Trigger Order 1368644595894497280 (sell 104.0 @ Trigger 0.6455) storniert.
+2025-11-01 23:45:11,898 - INFO - Trigger Order 1368644597568024576 (sell 101.0 @ Trigger 0.6619) storniert.
+2025-11-01 23:45:12,269 - INFO - Trigger Order 1368644599221391360 (sell 101.0 @ Trigger 0.6141) storniert.
+2025-11-01 23:45:12,656 - INFO - Trigger Order 1368644600827293696 (sell 101.0 @ Trigger 0.6667) storniert.
+2025-11-01 23:45:13,052 - INFO - Trigger Order 1368644602434228224 (sell 94.0 @ Trigger 0.7136) storniert.
+2025-11-01 23:45:13,439 - INFO - Trigger Order 1368644604037443585 (sell 94.0 @ Trigger 0.6141) storniert.
+2025-11-01 23:45:13,803 - INFO - Trigger Order 1368644605642870784 (sell 94.0 @ Trigger 0.7188) storniert.
+2025-11-01 23:45:13,903 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-01 23:45:13,904 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-01 23:45:14,192 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-01 23:45:16,492 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-01 23:45:16,492 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-01 23:45:16,492 - INFO - Prüfe Long Entry Bands: [0.5887502901741738, 0.5699845223603422, 0.5286677009470384]
+2025-11-01 23:45:16,782 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.2171, Trigger@0.5889, Limit@0.5888
+2025-11-01 23:45:17,949 - INFO - ✅ Long Entry 2/3 platziert: Amount=117.9775, Trigger@0.5701, Limit@0.5700
+2025-11-01 23:45:19,098 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.1977, Trigger@0.5288, Limit@0.5287
+2025-11-01 23:45:19,970 - INFO - Prüfe Short Entry Bands: [0.6413202399714768, 0.6624346145649803, 0.7142056847834615]
+2025-11-01 23:45:20,268 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.8545, Trigger@0.6412, Limit@0.6413
+2025-11-01 23:45:21,436 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.5124, Trigger@0.6623, Limit@0.6624
+2025-11-01 23:45:22,620 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.1540, Trigger@0.7141, Limit@0.7142
+2025-11-01 23:45:23,489 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-01 23:45:23,490 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-01 23:45:23,508 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 00:00:03,174 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 00:00:03,174 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 00:00:05,172 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 00:00:05,545 - INFO - Aktueller Status: Preis=0.6106, Average=0.6145
+2025-11-02 00:00:06,944 - INFO - Trigger Order 1368648354377568256 (buy 114.0 @ Trigger 0.5889) storniert.
+2025-11-02 00:00:07,317 - INFO - Trigger Order 1368648355974787072 (buy 114.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:00:07,720 - INFO - Trigger Order 1368648357644935168 (buy 114.0 @ Trigger 0.5846) storniert.
+2025-11-02 00:00:08,119 - INFO - Trigger Order 1368648359263932417 (buy 117.0 @ Trigger 0.5701) storniert.
+2025-11-02 00:00:08,503 - INFO - Trigger Order 1368648360841981953 (buy 117.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:00:08,868 - INFO - Trigger Order 1368648362389680128 (buy 117.0 @ Trigger 0.5659) storniert.
+2025-11-02 00:00:09,251 - INFO - Trigger Order 1368648364078481408 (buy 127.0 @ Trigger 0.5288) storniert.
+2025-11-02 00:00:09,620 - INFO - Trigger Order 1368648365651857408 (buy 127.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:00:10,001 - INFO - Trigger Order 1368648367240986624 (buy 127.0 @ Trigger 0.5249) storniert.
+2025-11-02 00:00:10,384 - INFO - Trigger Order 1368648368985518080 (sell 104.0 @ Trigger 0.6412) storniert.
+2025-11-02 00:00:10,763 - INFO - Trigger Order 1368648370585350144 (sell 104.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:00:11,142 - INFO - Trigger Order 1368648372269957120 (sell 104.0 @ Trigger 0.6459) storniert.
+2025-11-02 00:00:11,521 - INFO - Trigger Order 1368648373888229376 (sell 101.0 @ Trigger 0.6623) storniert.
+2025-11-02 00:00:11,887 - INFO - Trigger Order 1368648375478300673 (sell 101.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:00:12,272 - INFO - Trigger Order 1368648377147932673 (sell 101.0 @ Trigger 0.6671) storniert.
+2025-11-02 00:00:12,635 - INFO - Trigger Order 1368648378787176448 (sell 94.0 @ Trigger 0.7141) storniert.
+2025-11-02 00:00:13,019 - INFO - Trigger Order 1368648380427149312 (sell 94.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:00:13,425 - INFO - Trigger Order 1368648382068363265 (sell 94.0 @ Trigger 0.7193) storniert.
+2025-11-02 00:00:13,526 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 00:00:13,526 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 00:00:13,818 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 00:00:16,074 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 00:00:16,074 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 00:00:16,074 - INFO - Prüfe Long Entry Bands: [0.588782228109651, 0.5700154423092612, 0.5286963795824523]
+2025-11-02 00:00:16,358 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.2109, Trigger@0.5889, Limit@0.5888
+2025-11-02 00:00:17,526 - INFO - ✅ Long Entry 2/3 platziert: Amount=117.9711, Trigger@0.5701, Limit@0.5700
+2025-11-02 00:00:18,725 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.1908, Trigger@0.5288, Limit@0.5287
+2025-11-02 00:00:19,574 - INFO - Prüfe Short Entry Bands: [0.6413550296688855, 0.6624705496538134, 0.7142444282974074]
+2025-11-02 00:00:19,862 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.8488, Trigger@0.6412, Limit@0.6414
+2025-11-02 00:00:21,044 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.5069, Trigger@0.6623, Limit@0.6625
+2025-11-02 00:00:22,332 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.1489, Trigger@0.7141, Limit@0.7142
+2025-11-02 00:00:23,192 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 00:00:23,192 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 00:00:23,210 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 00:15:03,682 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 00:15:03,683 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 00:15:05,676 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 00:15:06,025 - INFO - Aktueller Status: Preis=0.6104, Average=0.6144
+2025-11-02 00:15:07,435 - INFO - Trigger Order 1368652127421640704 (buy 114.0 @ Trigger 0.5889) storniert.
+2025-11-02 00:15:07,804 - INFO - Trigger Order 1368652129019670528 (buy 114.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:15:08,179 - INFO - Trigger Order 1368652130659643392 (buy 114.0 @ Trigger 0.5846) storniert.
+2025-11-02 00:15:08,571 - INFO - Trigger Order 1368652132297224192 (buy 117.0 @ Trigger 0.5701) storniert.
+2025-11-02 00:15:08,940 - INFO - Trigger Order 1368652134024290304 (buy 117.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:15:09,340 - INFO - Trigger Order 1368652135722463232 (buy 117.0 @ Trigger 0.566) storniert.
+2025-11-02 00:15:09,718 - INFO - Trigger Order 1368652137372332032 (buy 127.0 @ Trigger 0.5288) storniert.
+2025-11-02 00:15:10,090 - INFO - Trigger Order 1368652138922717184 (buy 127.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:15:10,462 - INFO - Trigger Order 1368652140516257796 (buy 127.0 @ Trigger 0.5249) storniert.
+2025-11-02 00:15:10,835 - INFO - Trigger Order 1368652142148657152 (sell 104.0 @ Trigger 0.6412) storniert.
+2025-11-02 00:15:11,208 - INFO - Trigger Order 1368652143754260480 (sell 104.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:15:11,577 - INFO - Trigger Order 1368652145419698176 (sell 104.0 @ Trigger 0.6459) storniert.
+2025-11-02 00:15:11,958 - INFO - Trigger Order 1368652147030011905 (sell 101.0 @ Trigger 0.6623) storniert.
+2025-11-02 00:15:12,327 - INFO - Trigger Order 1368652149278457856 (sell 101.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:15:12,710 - INFO - Trigger Order 1368652150871564288 (sell 101.0 @ Trigger 0.6672) storniert.
+2025-11-02 00:15:13,103 - INFO - Trigger Order 1368652152440958976 (sell 94.0 @ Trigger 0.7141) storniert.
+2025-11-02 00:15:13,479 - INFO - Trigger Order 1368652154080935936 (sell 94.0 @ Trigger 0.6145) storniert.
+2025-11-02 00:15:13,862 - INFO - Trigger Order 1368652155693051905 (sell 94.0 @ Trigger 0.7193) storniert.
+2025-11-02 00:15:13,962 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 00:15:13,963 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 00:15:14,246 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 00:15:16,570 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 00:15:16,570 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 00:15:16,570 - INFO - Prüfe Long Entry Bands: [0.5887183522386966, 0.5699536024114235, 0.5286390223116244]
+2025-11-02 00:15:16,858 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.2233, Trigger@0.5888, Limit@0.5887
+2025-11-02 00:15:18,068 - INFO - ✅ Long Entry 2/3 platziert: Amount=117.9839, Trigger@0.5701, Limit@0.5700
+2025-11-02 00:15:19,214 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.2046, Trigger@0.5287, Limit@0.5286
+2025-11-02 00:15:20,075 - INFO - Prüfe Short Entry Bands: [0.6412854502740681, 0.6623986794761474, 0.7141669412695155]
+2025-11-02 00:15:20,345 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.8602, Trigger@0.6412, Limit@0.6413
+2025-11-02 00:15:21,469 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.5179, Trigger@0.6623, Limit@0.6624
+2025-11-02 00:15:22,628 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.1591, Trigger@0.7140, Limit@0.7142
+2025-11-02 00:15:23,525 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 00:15:23,526 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 00:15:23,544 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 00:30:03,223 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 00:30:03,225 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 00:30:05,238 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 00:30:05,617 - INFO - Aktueller Status: Preis=0.6113, Average=0.6147
+2025-11-02 00:30:07,021 - INFO - Trigger Order 1368655904369029120 (buy 114.0 @ Trigger 0.5888) storniert.
+2025-11-02 00:30:07,397 - INFO - Trigger Order 1368655906020077568 (buy 114.0 @ Trigger 0.6144) storniert.
+2025-11-02 00:30:07,795 - INFO - Trigger Order 1368655907722670080 (buy 114.0 @ Trigger 0.5845) storniert.
+2025-11-02 00:30:08,183 - INFO - Trigger Order 1368655909409079296 (buy 117.0 @ Trigger 0.5701) storniert.
+2025-11-02 00:30:08,564 - INFO - Trigger Order 1368655911049564160 (buy 117.0 @ Trigger 0.6144) storniert.
+2025-11-02 00:30:08,950 - INFO - Trigger Order 1368655912621912064 (buy 117.0 @ Trigger 0.5659) storniert.
+2025-11-02 00:30:09,344 - INFO - Trigger Order 1368655914274172928 (buy 127.0 @ Trigger 0.5287) storniert.
+2025-11-02 00:30:09,722 - INFO - Trigger Order 1368655915835265024 (buy 127.0 @ Trigger 0.6144) storniert.
+2025-11-02 00:30:10,103 - INFO - Trigger Order 1368655917454266368 (buy 127.0 @ Trigger 0.5249) storniert.
+2025-11-02 00:30:10,466 - INFO - Trigger Order 1368655919039713281 (sell 104.0 @ Trigger 0.6412) storniert.
+2025-11-02 00:30:10,855 - INFO - Trigger Order 1368655920579022849 (sell 104.0 @ Trigger 0.6144) storniert.
+2025-11-02 00:30:11,239 - INFO - Trigger Order 1368655922125479936 (sell 104.0 @ Trigger 0.6458) storniert.
+2025-11-02 00:30:11,626 - INFO - Trigger Order 1368655923728949248 (sell 101.0 @ Trigger 0.6623) storniert.
+2025-11-02 00:30:12,010 - INFO - Trigger Order 1368655925315383296 (sell 101.0 @ Trigger 0.6144) storniert.
+2025-11-02 00:30:12,383 - INFO - Trigger Order 1368655926979530752 (sell 101.0 @ Trigger 0.6671) storniert.
+2025-11-02 00:30:12,753 - INFO - Trigger Order 1368655928602210304 (sell 94.0 @ Trigger 0.714) storniert.
+2025-11-02 00:30:13,147 - INFO - Trigger Order 1368655930158297089 (sell 94.0 @ Trigger 0.6144) storniert.
+2025-11-02 00:30:13,519 - INFO - Trigger Order 1368655931873472512 (sell 94.0 @ Trigger 0.7192) storniert.
+2025-11-02 00:30:13,619 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 00:30:13,620 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 00:30:13,951 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 00:30:16,250 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 00:30:16,250 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 00:30:16,251 - INFO - Prüfe Long Entry Bands: [0.5890057936579915, 0.5702318819516933, 0.5288971300303495]
+2025-11-02 00:30:16,537 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.1675, Trigger@0.5891, Limit@0.5890
+2025-11-02 00:30:17,677 - INFO - ✅ Long Entry 2/3 platziert: Amount=117.9263, Trigger@0.5703, Limit@0.5702
+2025-11-02 00:30:18,882 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.1426, Trigger@0.5290, Limit@0.5289
+2025-11-02 00:30:19,789 - INFO - Prüfe Short Entry Bands: [0.6415985575507464, 0.6627220952756442, 0.7145156328950295]
+2025-11-02 00:30:20,059 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.8090, Trigger@0.6415, Limit@0.6416
+2025-11-02 00:30:21,220 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.4684, Trigger@0.6626, Limit@0.6627
+2025-11-02 00:30:22,358 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.1132, Trigger@0.7144, Limit@0.7145
+2025-11-02 00:30:23,203 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 00:30:23,203 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 00:30:23,221 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 00:45:03,724 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 00:45:03,725 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 00:45:05,769 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 00:45:06,110 - INFO - Aktueller Status: Preis=0.6114, Average=0.6148
+2025-11-02 00:45:07,522 - INFO - Trigger Order 1368659677917229057 (buy 114.0 @ Trigger 0.5891) storniert.
+2025-11-02 00:45:07,908 - INFO - Trigger Order 1368659679484907520 (buy 114.0 @ Trigger 0.6147) storniert.
+2025-11-02 00:45:08,301 - INFO - Trigger Order 1368659681091330048 (buy 114.0 @ Trigger 0.5848) storniert.
+2025-11-02 00:45:08,693 - INFO - Trigger Order 1368659682689359872 (buy 117.0 @ Trigger 0.5703) storniert.
+2025-11-02 00:45:09,063 - INFO - Trigger Order 1368659684391432192 (buy 117.0 @ Trigger 0.6147) storniert.
+2025-11-02 00:45:09,454 - INFO - Trigger Order 1368659685966098432 (buy 117.0 @ Trigger 0.5662) storniert.
+2025-11-02 00:45:09,837 - INFO - Trigger Order 1368659687709421568 (buy 127.0 @ Trigger 0.529) storniert.
+2025-11-02 00:45:10,207 - INFO - Trigger Order 1368659689453527040 (buy 127.0 @ Trigger 0.6147) storniert.
+2025-11-02 00:45:10,572 - INFO - Trigger Order 1368659691127779328 (buy 127.0 @ Trigger 0.5251) storniert.
+2025-11-02 00:45:10,944 - INFO - Trigger Order 1368659692679671809 (sell 104.0 @ Trigger 0.6415) storniert.
+2025-11-02 00:45:11,329 - INFO - Trigger Order 1368659694299193344 (sell 104.0 @ Trigger 0.6147) storniert.
+2025-11-02 00:45:11,715 - INFO - Trigger Order 1368659695926067200 (sell 104.0 @ Trigger 0.6462) storniert.
+2025-11-02 00:45:12,103 - INFO - Trigger Order 1368659697491058688 (sell 101.0 @ Trigger 0.6626) storniert.
+2025-11-02 00:45:12,480 - INFO - Trigger Order 1368659699171729408 (sell 101.0 @ Trigger 0.6147) storniert.
+2025-11-02 00:45:12,850 - INFO - Trigger Order 1368659700721659904 (sell 101.0 @ Trigger 0.6674) storniert.
+2025-11-02 00:45:13,271 - INFO - Trigger Order 1368659702343864320 (sell 94.0 @ Trigger 0.7144) storniert.
+2025-11-02 00:45:13,639 - INFO - Trigger Order 1368659703888359424 (sell 94.0 @ Trigger 0.6147) storniert.
+2025-11-02 00:45:14,027 - INFO - Trigger Order 1368659705436057600 (sell 94.0 @ Trigger 0.7196) storniert.
+2025-11-02 00:45:14,127 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 00:45:14,128 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 00:45:14,445 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 00:45:16,731 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 00:45:16,731 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 00:45:16,731 - INFO - Prüfe Long Entry Bands: [0.5890377315934687, 0.5702628019006122, 0.5289258086657634]
+2025-11-02 00:45:17,010 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.1613, Trigger@0.5892, Limit@0.5890
+2025-11-02 00:45:18,142 - INFO - ✅ Long Entry 2/3 platziert: Amount=117.9199, Trigger@0.5704, Limit@0.5703
+2025-11-02 00:45:19,340 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.1357, Trigger@0.5290, Limit@0.5289
+2025-11-02 00:45:20,232 - INFO - Prüfe Short Entry Bands: [0.6416333472481551, 0.6627580303644771, 0.7145543764089755]
+2025-11-02 00:45:20,514 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.8034, Trigger@0.6415, Limit@0.6416
+2025-11-02 00:45:21,661 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.4629, Trigger@0.6626, Limit@0.6628
+2025-11-02 00:45:22,833 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.1081, Trigger@0.7144, Limit@0.7146
+2025-11-02 00:45:23,706 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 00:45:23,706 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 00:45:23,724 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 01:00:03,215 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 01:00:03,216 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 01:00:05,143 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 01:00:05,504 - INFO - Aktueller Status: Preis=0.6126, Average=0.6122
+2025-11-02 01:00:06,885 - INFO - Trigger Order 1368663454755725312 (buy 114.0 @ Trigger 0.5892) storniert.
+2025-11-02 01:00:07,251 - INFO - Trigger Order 1368663456316006400 (buy 114.0 @ Trigger 0.6148) storniert.
+2025-11-02 01:00:07,637 - INFO - Trigger Order 1368663457939931136 (buy 114.0 @ Trigger 0.5849) storniert.
+2025-11-02 01:00:08,008 - INFO - Trigger Order 1368663459513307136 (buy 117.0 @ Trigger 0.5704) storniert.
+2025-11-02 01:00:08,395 - INFO - Trigger Order 1368663461074579456 (buy 117.0 @ Trigger 0.6148) storniert.
+2025-11-02 01:00:08,770 - INFO - Trigger Order 1368663462834683904 (buy 117.0 @ Trigger 0.5662) storniert.
+2025-11-02 01:00:09,158 - INFO - Trigger Order 1368663464528883712 (buy 127.0 @ Trigger 0.529) storniert.
+2025-11-02 01:00:09,532 - INFO - Trigger Order 1368663466228391940 (buy 127.0 @ Trigger 0.6148) storniert.
+2025-11-02 01:00:09,918 - INFO - Trigger Order 1368663467834810368 (buy 127.0 @ Trigger 0.5252) storniert.
+2025-11-02 01:00:10,303 - INFO - Trigger Order 1368663469467381760 (sell 104.0 @ Trigger 0.6415) storniert.
+2025-11-02 01:00:10,703 - INFO - Trigger Order 1368663471047647232 (sell 104.0 @ Trigger 0.6148) storniert.
+2025-11-02 01:00:11,099 - INFO - Trigger Order 1368663472620507136 (sell 104.0 @ Trigger 0.6462) storniert.
+2025-11-02 01:00:11,470 - INFO - Trigger Order 1368663474176593921 (sell 101.0 @ Trigger 0.6626) storniert.
+2025-11-02 01:00:11,847 - INFO - Trigger Order 1368663475857997824 (sell 101.0 @ Trigger 0.6148) storniert.
+2025-11-02 01:00:12,234 - INFO - Trigger Order 1368663477409161216 (sell 101.0 @ Trigger 0.6675) storniert.
+2025-11-02 01:00:12,631 - INFO - Trigger Order 1368663479130066944 (sell 94.0 @ Trigger 0.7144) storniert.
+2025-11-02 01:00:13,034 - INFO - Trigger Order 1368663480761135104 (sell 94.0 @ Trigger 0.6148) storniert.
+2025-11-02 01:00:13,409 - INFO - Trigger Order 1368663482398420992 (sell 94.0 @ Trigger 0.7196) storniert.
+2025-11-02 01:00:13,509 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 01:00:13,510 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 01:00:13,787 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 01:00:16,066 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 01:00:16,066 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 01:00:16,066 - INFO - Prüfe Long Entry Bands: [0.5865337974520548, 0.5678386779053723, 0.5266774036493133]
+2025-11-02 01:00:16,352 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.6487, Trigger@0.5867, Limit@0.5865
+2025-11-02 01:00:17,493 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.4233, Trigger@0.5680, Limit@0.5678
+2025-11-02 01:00:18,656 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.6784, Trigger@0.5268, Limit@0.5267
+2025-11-02 01:00:19,548 - INFO - Prüfe Short Entry Bands: [0.638905834971313, 0.6599407193999713, 0.7115168849156087]
+2025-11-02 01:00:19,843 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.2508, Trigger@0.6388, Limit@0.6389
+2025-11-02 01:00:20,988 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.8960, Trigger@0.6598, Limit@0.6599
+2025-11-02 01:00:22,167 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.5098, Trigger@0.7114, Limit@0.7115
+2025-11-02 01:00:23,028 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 01:00:23,028 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 01:00:23,046 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 01:15:03,728 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 01:15:03,729 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 01:15:05,829 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 01:15:06,186 - INFO - Aktueller Status: Preis=0.6120, Average=0.6120
+2025-11-02 01:15:07,583 - INFO - Trigger Order 1368667226870714368 (buy 114.0 @ Trigger 0.5867) storniert.
+2025-11-02 01:15:07,974 - INFO - Trigger Order 1368667230054191104 (buy 114.0 @ Trigger 0.5824) storniert.
+2025-11-02 01:15:08,363 - INFO - Trigger Order 1368667231634202624 (buy 118.0 @ Trigger 0.568) storniert.
+2025-11-02 01:15:08,735 - INFO - Trigger Order 1368667234922967040 (buy 118.0 @ Trigger 0.5638) storniert.
+2025-11-02 01:15:09,116 - INFO - Trigger Order 1368667236517613569 (buy 127.0 @ Trigger 0.5268) storniert.
+2025-11-02 01:15:09,484 - INFO - Trigger Order 1368667239787929601 (buy 127.0 @ Trigger 0.5229) storniert.
+2025-11-02 01:15:09,859 - INFO - Trigger Order 1368667241499205632 (sell 105.0 @ Trigger 0.6388) storniert.
+2025-11-02 01:15:10,243 - INFO - Trigger Order 1368667244679729153 (sell 105.0 @ Trigger 0.6434) storniert.
+2025-11-02 01:15:10,639 - INFO - Trigger Order 1368667246284906496 (sell 101.0 @ Trigger 0.6598) storniert.
+2025-11-02 01:15:11,025 - INFO - Trigger Order 1368667249629999104 (sell 101.0 @ Trigger 0.6646) storniert.
+2025-11-02 01:15:11,392 - INFO - Trigger Order 1368667251211251712 (sell 94.0 @ Trigger 0.7114) storniert.
+2025-11-02 01:15:11,762 - INFO - Trigger Order 1368667254434439168 (sell 94.0 @ Trigger 0.7166) storniert.
+2025-11-02 01:15:11,863 - INFO - 12 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 01:15:11,863 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 01:15:12,127 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 01:15:14,462 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 01:15:14,462 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 01:15:14,462 - INFO - Prüfe Long Entry Bands: [0.5863421698391914, 0.567653158211859, 0.5265053318368298]
+2025-11-02 01:15:14,739 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.6862, Trigger@0.5865, Limit@0.5863
+2025-11-02 01:15:15,893 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.4620, Trigger@0.5678, Limit@0.5677
+2025-11-02 01:15:17,064 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.7201, Trigger@0.5266, Limit@0.5265
+2025-11-02 01:15:17,969 - INFO - Prüfe Short Entry Bands: [0.6386970967868607, 0.6597251088669733, 0.7112844238319326]
+2025-11-02 01:15:18,270 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.2852, Trigger@0.6386, Limit@0.6387
+2025-11-02 01:15:19,454 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.9293, Trigger@0.6596, Limit@0.6597
+2025-11-02 01:15:20,580 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.5407, Trigger@0.7111, Limit@0.7113
+2025-11-02 01:15:21,438 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 01:15:21,438 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 01:15:21,457 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 01:30:03,272 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 01:30:03,273 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 01:30:05,249 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 01:30:05,588 - INFO - Aktueller Status: Preis=0.6095, Average=0.6111
+2025-11-02 01:30:06,961 - INFO - Trigger Order 1368670994952495104 (buy 114.0 @ Trigger 0.5865) storniert.
+2025-11-02 01:30:07,340 - INFO - Trigger Order 1368670996622557184 (buy 114.0 @ Trigger 0.612) storniert.
+2025-11-02 01:30:07,744 - INFO - Trigger Order 1368670998174961666 (buy 114.0 @ Trigger 0.5822) storniert.
+2025-11-02 01:30:08,139 - INFO - Trigger Order 1368670999784763392 (buy 118.0 @ Trigger 0.5678) storniert.
+2025-11-02 01:30:08,531 - INFO - Trigger Order 1368671001454911488 (buy 118.0 @ Trigger 0.612) storniert.
+2025-11-02 01:30:08,898 - INFO - Trigger Order 1368671003144400896 (buy 118.0 @ Trigger 0.5636) storniert.
+2025-11-02 01:30:09,280 - INFO - Trigger Order 1368671004709687296 (buy 127.0 @ Trigger 0.5266) storniert.
+2025-11-02 01:30:09,687 - INFO - Trigger Order 1368671006365925376 (buy 127.0 @ Trigger 0.612) storniert.
+2025-11-02 01:30:10,071 - INFO - Trigger Order 1368671008074510337 (buy 127.0 @ Trigger 0.5228) storniert.
+2025-11-02 01:30:10,464 - INFO - Trigger Order 1368671009754923008 (sell 105.0 @ Trigger 0.6386) storniert.
+2025-11-02 01:30:10,840 - INFO - Trigger Order 1368671011315716097 (sell 105.0 @ Trigger 0.612) storniert.
+2025-11-02 01:30:11,225 - INFO - Trigger Order 1368671013030375424 (sell 105.0 @ Trigger 0.6432) storniert.
+2025-11-02 01:30:11,598 - INFO - Trigger Order 1368671014667956224 (sell 101.0 @ Trigger 0.6596) storniert.
+2025-11-02 01:30:11,980 - INFO - Trigger Order 1368671016277577728 (sell 101.0 @ Trigger 0.612) storniert.
+2025-11-02 01:30:12,367 - INFO - Trigger Order 1368671017889181696 (sell 101.0 @ Trigger 0.6644) storniert.
+2025-11-02 01:30:12,746 - INFO - Trigger Order 1368671019452149760 (sell 94.0 @ Trigger 0.7111) storniert.
+2025-11-02 01:30:13,165 - INFO - Trigger Order 1368671021092642816 (sell 94.0 @ Trigger 0.612) storniert.
+2025-11-02 01:30:13,547 - INFO - Trigger Order 1368671022627753984 (sell 94.0 @ Trigger 0.7163) storniert.
+2025-11-02 01:30:13,648 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 01:30:13,648 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 01:30:13,914 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 01:30:16,216 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 01:30:16,216 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 01:30:16,216 - INFO - Prüfe Long Entry Bands: [0.5855437214522609, 0.566880159488887, 0.525788365951482]
+2025-11-02 01:30:16,507 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8426, Trigger@0.5857, Limit@0.5855
+2025-11-02 01:30:17,695 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.6235, Trigger@0.5670, Limit@0.5669
+2025-11-02 01:30:18,880 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8943, Trigger@0.5259, Limit@0.5258
+2025-11-02 01:30:19,779 - INFO - Prüfe Short Entry Bands: [0.6378273543516432, 0.6588267316461488, 0.7103158359832824]
+2025-11-02 01:30:20,051 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4287, Trigger@0.6377, Limit@0.6378
+2025-11-02 01:30:21,218 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0683, Trigger@0.6587, Limit@0.6588
+2025-11-02 01:30:22,359 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6696, Trigger@0.7102, Limit@0.7103
+2025-11-02 01:30:23,239 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 01:30:23,240 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 01:30:23,258 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 01:45:03,717 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 01:45:03,718 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 01:45:05,700 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 01:45:06,070 - INFO - Aktueller Status: Preis=0.6105, Average=0.6115
+2025-11-02 01:45:07,467 - INFO - Trigger Order 1368674777167368192 (buy 114.0 @ Trigger 0.5857) storniert.
+2025-11-02 01:45:07,848 - INFO - Trigger Order 1368674778865549312 (buy 114.0 @ Trigger 0.6111) storniert.
+2025-11-02 01:45:08,221 - INFO - Trigger Order 1368674780501323776 (buy 114.0 @ Trigger 0.5814) storniert.
+2025-11-02 01:45:08,594 - INFO - Trigger Order 1368674782203916288 (buy 118.0 @ Trigger 0.567) storniert.
+2025-11-02 01:45:08,965 - INFO - Trigger Order 1368674783791165440 (buy 118.0 @ Trigger 0.6111) storniert.
+2025-11-02 01:45:09,336 - INFO - Trigger Order 1368674785400786944 (buy 118.0 @ Trigger 0.5629) storniert.
+2025-11-02 01:45:09,718 - INFO - Trigger Order 1368674787175968769 (buy 127.0 @ Trigger 0.5259) storniert.
+2025-11-02 01:45:10,100 - INFO - Trigger Order 1368674788839604224 (buy 127.0 @ Trigger 0.6111) storniert.
+2025-11-02 01:45:10,470 - INFO - Trigger Order 1368674790530424832 (buy 127.0 @ Trigger 0.5221) storniert.
+2025-11-02 01:45:10,856 - INFO - Trigger Order 1368674792102043648 (sell 105.0 @ Trigger 0.6377) storniert.
+2025-11-02 01:45:11,233 - INFO - Trigger Order 1368674793679101952 (sell 105.0 @ Trigger 0.6111) storniert.
+2025-11-02 01:45:11,606 - INFO - Trigger Order 1368674795304529920 (sell 105.0 @ Trigger 0.6424) storniert.
+2025-11-02 01:45:12,000 - INFO - Trigger Order 1368674796918349824 (sell 102.0 @ Trigger 0.6587) storniert.
+2025-11-02 01:45:12,396 - INFO - Trigger Order 1368674798575099904 (sell 102.0 @ Trigger 0.6111) storniert.
+2025-11-02 01:45:12,798 - INFO - Trigger Order 1368674800168931328 (sell 102.0 @ Trigger 0.6635) storniert.
+2025-11-02 01:45:13,182 - INFO - Trigger Order 1368674801770344448 (sell 94.0 @ Trigger 0.7102) storniert.
+2025-11-02 01:45:13,574 - INFO - Trigger Order 1368674803391148032 (sell 94.0 @ Trigger 0.6111) storniert.
+2025-11-02 01:45:13,947 - INFO - Trigger Order 1368674804986945536 (sell 94.0 @ Trigger 0.7154) storniert.
+2025-11-02 01:45:14,048 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 01:45:14,048 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 01:45:14,318 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 01:45:16,932 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 01:45:16,932 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 01:45:16,932 - INFO - Prüfe Long Entry Bands: [0.5858631008070331, 0.5671893589780759, 0.5260751523056212]
+2025-11-02 01:45:17,250 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.7799, Trigger@0.5860, Limit@0.5859
+2025-11-02 01:45:18,411 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.5589, Trigger@0.5673, Limit@0.5672
+2025-11-02 01:45:19,570 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8246, Trigger@0.5262, Limit@0.5261
+2025-11-02 01:45:20,447 - INFO - Prüfe Short Entry Bands: [0.6381752513257303, 0.6591860825344786, 0.7107032711227426]
+2025-11-02 01:45:20,751 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.3713, Trigger@0.6380, Limit@0.6382
+2025-11-02 01:45:21,906 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0127, Trigger@0.6591, Limit@0.6592
+2025-11-02 01:45:23,073 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6180, Trigger@0.7106, Limit@0.7107
+2025-11-02 01:45:23,985 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 01:45:23,985 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 01:45:24,004 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 02:00:03,192 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 02:00:03,193 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 02:00:05,151 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 02:00:05,506 - INFO - Aktueller Status: Preis=0.6099, Average=0.6113
+2025-11-02 02:00:06,886 - INFO - Trigger Order 1368678555160719360 (buy 114.0 @ Trigger 0.586) storniert.
+2025-11-02 02:00:07,289 - INFO - Trigger Order 1368678556863905792 (buy 114.0 @ Trigger 0.6115) storniert.
+2025-11-02 02:00:07,656 - INFO - Trigger Order 1368678558463438848 (buy 114.0 @ Trigger 0.5817) storniert.
+2025-11-02 02:00:08,047 - INFO - Trigger Order 1368678560030601216 (buy 118.0 @ Trigger 0.5673) storniert.
+2025-11-02 02:00:08,418 - INFO - Trigger Order 1368678561733193729 (buy 118.0 @ Trigger 0.6115) storniert.
+2025-11-02 02:00:08,800 - INFO - Trigger Order 1368678563379163136 (buy 118.0 @ Trigger 0.5632) storniert.
+2025-11-02 02:00:09,165 - INFO - Trigger Order 1368678564963102720 (buy 127.0 @ Trigger 0.5262) storniert.
+2025-11-02 02:00:09,544 - INFO - Trigger Order 1368678566611984388 (buy 127.0 @ Trigger 0.6115) storniert.
+2025-11-02 02:00:09,907 - INFO - Trigger Order 1368678568205303808 (buy 127.0 @ Trigger 0.5223) storniert.
+2025-11-02 02:00:10,275 - INFO - Trigger Order 1368678569827770368 (sell 105.0 @ Trigger 0.638) storniert.
+2025-11-02 02:00:10,666 - INFO - Trigger Order 1368678571459354625 (sell 105.0 @ Trigger 0.6115) storniert.
+2025-11-02 02:00:11,053 - INFO - Trigger Order 1368678573012488193 (sell 105.0 @ Trigger 0.6427) storniert.
+2025-11-02 02:00:11,435 - INFO - Trigger Order 1368678574678618112 (sell 102.0 @ Trigger 0.6591) storniert.
+2025-11-02 02:00:11,820 - INFO - Trigger Order 1368678576341954562 (sell 102.0 @ Trigger 0.6115) storniert.
+2025-11-02 02:00:12,199 - INFO - Trigger Order 1368678577931595776 (sell 102.0 @ Trigger 0.6639) storniert.
+2025-11-02 02:00:12,563 - INFO - Trigger Order 1368678579552399360 (sell 94.0 @ Trigger 0.7106) storniert.
+2025-11-02 02:00:12,951 - INFO - Trigger Order 1368678581296242688 (sell 94.0 @ Trigger 0.6115) storniert.
+2025-11-02 02:00:13,323 - INFO - Trigger Order 1368678583015391232 (sell 94.0 @ Trigger 0.7157) storniert.
+2025-11-02 02:00:13,424 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 02:00:13,424 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 02:00:13,712 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 02:00:16,002 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 02:00:16,002 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 02:00:16,002 - INFO - Prüfe Long Entry Bands: [0.5856714731941697, 0.5670038392845625, 0.5259030804931377]
+2025-11-02 02:00:16,289 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8175, Trigger@0.5858, Limit@0.5857
+2025-11-02 02:00:17,411 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.5977, Trigger@0.5671, Limit@0.5670
+2025-11-02 02:00:18,562 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8664, Trigger@0.5260, Limit@0.5259
+2025-11-02 02:00:19,414 - INFO - Prüfe Short Entry Bands: [0.637966513141278, 0.6589704720014807, 0.7104708100390664]
+2025-11-02 02:00:19,730 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4057, Trigger@0.6378, Limit@0.6380
+2025-11-02 02:00:20,854 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0461, Trigger@0.6588, Limit@0.6590
+2025-11-02 02:00:22,012 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6490, Trigger@0.7103, Limit@0.7105
+2025-11-02 02:00:22,879 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 02:00:22,879 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 02:00:22,897 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 02:15:03,651 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 02:15:03,652 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 02:15:05,616 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 02:15:05,953 - INFO - Aktueller Status: Preis=0.6100, Average=0.6113
+2025-11-02 02:15:07,345 - INFO - Trigger Order 1368682326075195392 (buy 114.0 @ Trigger 0.5858) storniert.
+2025-11-02 02:15:07,742 - INFO - Trigger Order 1368682327643136000 (buy 114.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:15:08,125 - INFO - Trigger Order 1368682329174056960 (buy 114.0 @ Trigger 0.5815) storniert.
+2025-11-02 02:15:08,523 - INFO - Trigger Order 1368682330782707712 (buy 118.0 @ Trigger 0.5671) storniert.
+2025-11-02 02:15:08,923 - INFO - Trigger Order 1368682332386893824 (buy 118.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:15:09,287 - INFO - Trigger Order 1368682333994037248 (buy 118.0 @ Trigger 0.563) storniert.
+2025-11-02 02:15:09,672 - INFO - Trigger Order 1368682335592587264 (buy 127.0 @ Trigger 0.526) storniert.
+2025-11-02 02:15:10,041 - INFO - Trigger Order 1368682337202683904 (buy 127.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:15:10,436 - INFO - Trigger Order 1368682338763476992 (buy 127.0 @ Trigger 0.5222) storniert.
+2025-11-02 02:15:10,807 - INFO - Trigger Order 1368682340449075200 (sell 105.0 @ Trigger 0.6378) storniert.
+2025-11-02 02:15:11,176 - INFO - Trigger Order 1368682342138650624 (sell 105.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:15:11,539 - INFO - Trigger Order 1368682343683395584 (sell 105.0 @ Trigger 0.6425) storniert.
+2025-11-02 02:15:11,909 - INFO - Trigger Order 1368682345234046976 (sell 102.0 @ Trigger 0.6588) storniert.
+2025-11-02 02:15:12,334 - INFO - Trigger Order 1368682346795053056 (sell 102.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:15:12,707 - INFO - Trigger Order 1368682348388892672 (sell 102.0 @ Trigger 0.6636) storniert.
+2025-11-02 02:15:13,087 - INFO - Trigger Order 1368682350028865536 (sell 94.0 @ Trigger 0.7103) storniert.
+2025-11-02 02:15:13,459 - INFO - Trigger Order 1368682351631085568 (sell 94.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:15:13,822 - INFO - Trigger Order 1368682353220726784 (sell 94.0 @ Trigger 0.7155) storniert.
+2025-11-02 02:15:13,922 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 02:15:13,923 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 02:15:14,202 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 02:15:16,478 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 02:15:16,479 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 02:15:16,479 - INFO - Prüfe Long Entry Bands: [0.585703411129647, 0.5670347592334815, 0.5259317591285516]
+2025-11-02 02:15:16,779 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8112, Trigger@0.5858, Limit@0.5857
+2025-11-02 02:15:17,960 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.5912, Trigger@0.5672, Limit@0.5670
+2025-11-02 02:15:19,154 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8594, Trigger@0.5260, Limit@0.5259
+2025-11-02 02:15:20,047 - INFO - Prüfe Short Entry Bands: [0.6380013028386866, 0.6590064070903137, 0.7105095535530124]
+2025-11-02 02:15:20,335 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4000, Trigger@0.6379, Limit@0.6380
+2025-11-02 02:15:21,523 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0405, Trigger@0.6589, Limit@0.6590
+2025-11-02 02:15:22,697 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6438, Trigger@0.7104, Limit@0.7105
+2025-11-02 02:15:23,583 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 02:15:23,583 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 02:15:23,600 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 02:30:03,204 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 02:30:03,205 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 02:30:05,255 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 02:30:05,614 - INFO - Aktueller Status: Preis=0.6103, Average=0.6114
+2025-11-02 02:30:07,149 - INFO - Trigger Order 1368686102941605888 (buy 114.0 @ Trigger 0.5858) storniert.
+2025-11-02 02:30:07,532 - INFO - Trigger Order 1368686104614617088 (buy 114.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:30:07,902 - INFO - Trigger Order 1368686106300428288 (buy 114.0 @ Trigger 0.5815) storniert.
+2025-11-02 02:30:08,272 - INFO - Trigger Order 1368686107974250496 (buy 118.0 @ Trigger 0.5672) storniert.
+2025-11-02 02:30:08,654 - INFO - Trigger Order 1368686109551824896 (buy 118.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:30:09,025 - INFO - Trigger Order 1368686111131836416 (buy 118.0 @ Trigger 0.563) storniert.
+2025-11-02 02:30:09,414 - INFO - Trigger Order 1368686112975368192 (buy 127.0 @ Trigger 0.526) storniert.
+2025-11-02 02:30:09,776 - INFO - Trigger Order 1368686114605449216 (buy 127.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:30:10,137 - INFO - Trigger Order 1368686116303413248 (buy 127.0 @ Trigger 0.5222) storniert.
+2025-11-02 02:30:10,511 - INFO - Trigger Order 1368686117932044288 (sell 105.0 @ Trigger 0.6379) storniert.
+2025-11-02 02:30:10,894 - INFO - Trigger Order 1368686119575699456 (sell 105.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:30:11,281 - INFO - Trigger Order 1368686121304268800 (sell 105.0 @ Trigger 0.6425) storniert.
+2025-11-02 02:30:11,652 - INFO - Trigger Order 1368686122917830656 (sell 102.0 @ Trigger 0.6589) storniert.
+2025-11-02 02:30:12,032 - INFO - Trigger Order 1368686124551647232 (sell 102.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:30:12,400 - INFO - Trigger Order 1368686126116122624 (sell 102.0 @ Trigger 0.6637) storniert.
+2025-11-02 02:30:12,777 - INFO - Trigger Order 1368686127851577344 (sell 94.0 @ Trigger 0.7104) storniert.
+2025-11-02 02:30:13,160 - INFO - Trigger Order 1368686129478152192 (sell 94.0 @ Trigger 0.6113) storniert.
+2025-11-02 02:30:13,541 - INFO - Trigger Order 1368686131059699712 (sell 94.0 @ Trigger 0.7156) storniert.
+2025-11-02 02:30:13,642 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 02:30:13,642 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 02:30:13,897 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 02:30:16,194 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 02:30:16,194 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 02:30:16,195 - INFO - Prüfe Long Entry Bands: [0.5857992249360786, 0.5671275190802381, 0.5260177950347933]
+2025-11-02 02:30:16,488 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.7925, Trigger@0.5859, Limit@0.5858
+2025-11-02 02:30:17,636 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.5718, Trigger@0.5672, Limit@0.5671
+2025-11-02 02:30:18,837 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8385, Trigger@0.5261, Limit@0.5260
+2025-11-02 02:30:19,675 - INFO - Prüfe Short Entry Bands: [0.6381056719309127, 0.6591142123568126, 0.7106257840948504]
+2025-11-02 02:30:19,974 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.3828, Trigger@0.6380, Limit@0.6381
+2025-11-02 02:30:21,143 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0238, Trigger@0.6590, Limit@0.6591
+2025-11-02 02:30:22,266 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6283, Trigger@0.7105, Limit@0.7106
+2025-11-02 02:30:23,143 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 02:30:23,144 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 02:30:23,160 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 02:45:03,823 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 02:45:03,824 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 02:45:05,812 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 02:45:06,168 - INFO - Aktueller Status: Preis=0.6099, Average=0.6113
+2025-11-02 02:45:07,557 - INFO - Trigger Order 1368689876657061888 (buy 114.0 @ Trigger 0.5859) storniert.
+2025-11-02 02:45:07,937 - INFO - Trigger Order 1368689878268190720 (buy 114.0 @ Trigger 0.6114) storniert.
+2025-11-02 02:45:08,327 - INFO - Trigger Order 1368689879899258880 (buy 114.0 @ Trigger 0.5816) storniert.
+2025-11-02 02:45:08,719 - INFO - Trigger Order 1368689881509142530 (buy 118.0 @ Trigger 0.5672) storniert.
+2025-11-02 02:45:09,105 - INFO - Trigger Order 1368689883099512832 (buy 118.0 @ Trigger 0.6114) storniert.
+2025-11-02 02:45:09,495 - INFO - Trigger Order 1368689884986650624 (buy 118.0 @ Trigger 0.5631) storniert.
+2025-11-02 02:45:09,860 - INFO - Trigger Order 1368689886551420933 (buy 127.0 @ Trigger 0.5261) storniert.
+2025-11-02 02:45:10,248 - INFO - Trigger Order 1368689888090005504 (buy 127.0 @ Trigger 0.6114) storniert.
+2025-11-02 02:45:10,643 - INFO - Trigger Order 1368689889641897986 (buy 127.0 @ Trigger 0.5223) storniert.
+2025-11-02 02:45:11,022 - INFO - Trigger Order 1368689891250548740 (sell 105.0 @ Trigger 0.638) storniert.
+2025-11-02 02:45:11,407 - INFO - Trigger Order 1368689892867317761 (sell 105.0 @ Trigger 0.6114) storniert.
+2025-11-02 02:45:11,797 - INFO - Trigger Order 1368689894436712448 (sell 105.0 @ Trigger 0.6426) storniert.
+2025-11-02 02:45:12,173 - INFO - Trigger Order 1368689896109514752 (sell 102.0 @ Trigger 0.659) storniert.
+2025-11-02 02:45:12,572 - INFO - Trigger Order 1368689897830424576 (sell 102.0 @ Trigger 0.6114) storniert.
+2025-11-02 02:45:12,954 - INFO - Trigger Order 1368689899373924352 (sell 102.0 @ Trigger 0.6638) storniert.
+2025-11-02 02:45:13,335 - INFO - Trigger Order 1368689900921622528 (sell 94.0 @ Trigger 0.7105) storniert.
+2025-11-02 02:45:13,710 - INFO - Trigger Order 1368689902557405184 (sell 94.0 @ Trigger 0.6114) storniert.
+2025-11-02 02:45:14,081 - INFO - Trigger Order 1368689904179355648 (sell 94.0 @ Trigger 0.7157) storniert.
+2025-11-02 02:45:14,182 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 02:45:14,182 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 02:45:14,458 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 02:45:16,743 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 02:45:16,744 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 02:45:16,744 - INFO - Prüfe Long Entry Bands: [0.5856714731941697, 0.5670038392845625, 0.5259030804931377]
+2025-11-02 02:45:17,045 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8175, Trigger@0.5858, Limit@0.5857
+2025-11-02 02:45:18,200 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.5977, Trigger@0.5671, Limit@0.5670
+2025-11-02 02:45:19,367 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8664, Trigger@0.5260, Limit@0.5259
+2025-11-02 02:45:20,230 - INFO - Prüfe Short Entry Bands: [0.637966513141278, 0.6589704720014807, 0.7104708100390664]
+2025-11-02 02:45:20,540 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4057, Trigger@0.6378, Limit@0.6380
+2025-11-02 02:45:21,682 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0461, Trigger@0.6588, Limit@0.6590
+2025-11-02 02:45:22,874 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6490, Trigger@0.7103, Limit@0.7105
+2025-11-02 02:45:23,764 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 02:45:23,764 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 02:45:23,781 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 03:00:03,376 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 03:00:03,377 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 03:00:05,646 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 03:00:05,999 - INFO - Aktueller Status: Preis=0.6087, Average=0.6109
+2025-11-02 03:00:07,379 - INFO - Trigger Order 1368693653867405312 (buy 114.0 @ Trigger 0.5858) storniert.
+2025-11-02 03:00:07,756 - INFO - Trigger Order 1368693655478013952 (buy 114.0 @ Trigger 0.6113) storniert.
+2025-11-02 03:00:08,142 - INFO - Trigger Order 1368693657159417856 (buy 114.0 @ Trigger 0.5815) storniert.
+2025-11-02 03:00:08,537 - INFO - Trigger Order 1368693658741182465 (buy 118.0 @ Trigger 0.5671) storniert.
+2025-11-02 03:00:08,917 - INFO - Trigger Order 1368693660313530368 (buy 118.0 @ Trigger 0.6113) storniert.
+2025-11-02 03:00:09,307 - INFO - Trigger Order 1368693661982867456 (buy 118.0 @ Trigger 0.563) storniert.
+2025-11-02 03:00:09,685 - INFO - Trigger Order 1368693663606579200 (buy 127.0 @ Trigger 0.526) storniert.
+2025-11-02 03:00:10,058 - INFO - Trigger Order 1368693665216675840 (buy 127.0 @ Trigger 0.6113) storniert.
+2025-11-02 03:00:10,433 - INFO - Trigger Order 1368693666830753792 (buy 127.0 @ Trigger 0.5222) storniert.
+2025-11-02 03:00:10,803 - INFO - Trigger Order 1368693668513398784 (sell 105.0 @ Trigger 0.6378) storniert.
+2025-11-02 03:00:11,169 - INFO - Trigger Order 1368693670150680576 (sell 105.0 @ Trigger 0.6113) storniert.
+2025-11-02 03:00:11,544 - INFO - Trigger Order 1368693671751913472 (sell 105.0 @ Trigger 0.6425) storniert.
+2025-11-02 03:00:11,916 - INFO - Trigger Order 1368693673346740224 (sell 102.0 @ Trigger 0.6588) storniert.
+2025-11-02 03:00:12,293 - INFO - Trigger Order 1368693674968948737 (sell 102.0 @ Trigger 0.6113) storniert.
+2025-11-02 03:00:12,683 - INFO - Trigger Order 1368693676654538752 (sell 102.0 @ Trigger 0.6636) storniert.
+2025-11-02 03:00:13,048 - INFO - Trigger Order 1368693678307094528 (sell 94.0 @ Trigger 0.7103) storniert.
+2025-11-02 03:00:13,434 - INFO - Trigger Order 1368693680026464256 (sell 94.0 @ Trigger 0.6113) storniert.
+2025-11-02 03:00:13,799 - INFO - Trigger Order 1368693681608011776 (sell 94.0 @ Trigger 0.7155) storniert.
+2025-11-02 03:00:13,900 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 03:00:13,900 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 03:00:14,172 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 03:00:16,443 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 03:00:16,444 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 03:00:16,444 - INFO - Prüfe Long Entry Bands: [0.5852882179684431, 0.5666327998975361, 0.5255589368681709]
+2025-11-02 03:00:16,732 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8927, Trigger@0.5854, Limit@0.5853
+2025-11-02 03:00:17,891 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.6753, Trigger@0.5667, Limit@0.5666
+2025-11-02 03:00:19,060 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.9501, Trigger@0.5257, Limit@0.5256
+2025-11-02 03:00:19,936 - INFO - Prüfe Short Entry Bands: [0.6375490367723736, 0.6585392509354849, 0.7100058878717144]
+2025-11-02 03:00:20,216 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4748, Trigger@0.6374, Limit@0.6375
+2025-11-02 03:00:21,367 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.1129, Trigger@0.6584, Limit@0.6585
+2025-11-02 03:00:22,525 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.7110, Trigger@0.7099, Limit@0.7100
+2025-11-02 03:00:23,387 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 03:00:23,387 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 03:00:23,402 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 03:15:03,874 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 03:15:03,875 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 03:15:06,199 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 03:15:06,545 - INFO - Aktueller Status: Preis=0.6104, Average=0.6114
+2025-11-02 03:15:07,958 - INFO - Trigger Order 1368697427423477760 (buy 114.0 @ Trigger 0.5854) storniert.
+2025-11-02 03:15:08,352 - INFO - Trigger Order 1368697429071110145 (buy 114.0 @ Trigger 0.6109) storniert.
+2025-11-02 03:15:08,729 - INFO - Trigger Order 1368697430674575361 (buy 114.0 @ Trigger 0.5811) storniert.
+2025-11-02 03:15:09,118 - INFO - Trigger Order 1368697432280993792 (buy 118.0 @ Trigger 0.5667) storniert.
+2025-11-02 03:15:09,502 - INFO - Trigger Order 1368697433945321473 (buy 118.0 @ Trigger 0.6109) storniert.
+2025-11-02 03:15:09,888 - INFO - Trigger Order 1368697435576475648 (buy 118.0 @ Trigger 0.5626) storniert.
+2025-11-02 03:15:10,266 - INFO - Trigger Order 1368697437179129856 (buy 127.0 @ Trigger 0.5257) storniert.
+2025-11-02 03:15:10,646 - INFO - Trigger Order 1368697438806814720 (buy 127.0 @ Trigger 0.6109) storniert.
+2025-11-02 03:15:11,030 - INFO - Trigger Order 1368697440442593280 (buy 127.0 @ Trigger 0.5218) storniert.
+2025-11-02 03:15:11,411 - INFO - Trigger Order 1368697442065788928 (sell 105.0 @ Trigger 0.6374) storniert.
+2025-11-02 03:15:11,792 - INFO - Trigger Order 1368697443659628544 (sell 105.0 @ Trigger 0.6109) storniert.
+2025-11-02 03:15:12,188 - INFO - Trigger Order 1368697445261848576 (sell 105.0 @ Trigger 0.6421) storniert.
+2025-11-02 03:15:12,556 - INFO - Trigger Order 1368697446876655616 (sell 102.0 @ Trigger 0.6584) storniert.
+2025-11-02 03:15:12,954 - INFO - Trigger Order 1368697448459415552 (sell 102.0 @ Trigger 0.6109) storniert.
+2025-11-02 03:15:13,329 - INFO - Trigger Order 1368697450127761408 (sell 102.0 @ Trigger 0.6632) storniert.
+2025-11-02 03:15:13,708 - INFO - Trigger Order 1368697451717398528 (sell 94.0 @ Trigger 0.7099) storniert.
+2025-11-02 03:15:14,099 - INFO - Trigger Order 1368697453302845440 (sell 94.0 @ Trigger 0.6109) storniert.
+2025-11-02 03:15:14,482 - INFO - Trigger Order 1368697454947016704 (sell 94.0 @ Trigger 0.715) storniert.
+2025-11-02 03:15:14,582 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 03:15:14,583 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 03:15:14,875 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 03:15:17,227 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 03:15:17,227 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 03:15:17,228 - INFO - Prüfe Long Entry Bands: [0.5858311628715559, 0.5671584390291571, 0.5260464736702073]
+2025-11-02 03:15:17,522 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.7862, Trigger@0.5860, Limit@0.5858
+2025-11-02 03:15:18,691 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.5653, Trigger@0.5673, Limit@0.5672
+2025-11-02 03:15:19,857 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8315, Trigger@0.5262, Limit@0.5260
+2025-11-02 03:15:20,758 - INFO - Prüfe Short Entry Bands: [0.6381404616283216, 0.6591501474456457, 0.7106645276087966]
+2025-11-02 03:15:21,058 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.3770, Trigger@0.6380, Limit@0.6381
+2025-11-02 03:15:22,233 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0182, Trigger@0.6590, Limit@0.6592
+2025-11-02 03:15:23,403 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6232, Trigger@0.7105, Limit@0.7107
+2025-11-02 03:15:24,338 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 03:15:24,338 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 03:15:24,355 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 03:30:03,335 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 03:30:03,335 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 03:30:05,573 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 03:30:05,926 - INFO - Aktueller Status: Preis=0.6096, Average=0.6112
+2025-11-02 03:30:07,331 - INFO - Trigger Order 1368701205614768128 (buy 114.0 @ Trigger 0.586) storniert.
+2025-11-02 03:30:07,725 - INFO - Trigger Order 1368701207284105216 (buy 114.0 @ Trigger 0.6114) storniert.
+2025-11-02 03:30:08,103 - INFO - Trigger Order 1368701208902377472 (buy 114.0 @ Trigger 0.5817) storniert.
+2025-11-02 03:30:08,483 - INFO - Trigger Order 1368701210546974720 (buy 118.0 @ Trigger 0.5673) storniert.
+2025-11-02 03:30:08,859 - INFO - Trigger Order 1368701212162076673 (buy 118.0 @ Trigger 0.6114) storniert.
+2025-11-02 03:30:09,239 - INFO - Trigger Order 1368701213798371330 (buy 118.0 @ Trigger 0.5631) storniert.
+2025-11-02 03:30:09,631 - INFO - Trigger Order 1368701215403548672 (buy 127.0 @ Trigger 0.5262) storniert.
+2025-11-02 03:30:10,025 - INFO - Trigger Order 1368701217061539840 (buy 127.0 @ Trigger 0.6114) storniert.
+2025-11-02 03:30:10,415 - INFO - Trigger Order 1368701218746408961 (buy 127.0 @ Trigger 0.5223) storniert.
+2025-11-02 03:30:10,814 - INFO - Trigger Order 1368701220432949248 (sell 105.0 @ Trigger 0.638) storniert.
+2025-11-02 03:30:11,186 - INFO - Trigger Order 1368701222077415424 (sell 105.0 @ Trigger 0.6114) storniert.
+2025-11-02 03:30:11,570 - INFO - Trigger Order 1368701223746449408 (sell 105.0 @ Trigger 0.6427) storniert.
+2025-11-02 03:30:11,965 - INFO - Trigger Order 1368701225412399104 (sell 102.0 @ Trigger 0.659) storniert.
+2025-11-02 03:30:12,351 - INFO - Trigger Order 1368701227040780289 (sell 102.0 @ Trigger 0.6114) storniert.
+2025-11-02 03:30:12,744 - INFO - Trigger Order 1368701228657549312 (sell 102.0 @ Trigger 0.6638) storniert.
+2025-11-02 03:30:13,125 - INFO - Trigger Order 1368701230285664257 (sell 94.0 @ Trigger 0.7105) storniert.
+2025-11-02 03:30:13,508 - INFO - Trigger Order 1368701231863238656 (sell 94.0 @ Trigger 0.6114) storniert.
+2025-11-02 03:30:13,889 - INFO - Trigger Order 1368701233523666944 (sell 94.0 @ Trigger 0.7157) storniert.
+2025-11-02 03:30:13,990 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 03:30:13,990 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 03:30:14,251 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 03:30:16,552 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 03:30:16,553 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 03:30:16,553 - INFO - Prüfe Long Entry Bands: [0.585575659387738, 0.5669110794378059, 0.525817044586896]
+2025-11-02 03:30:16,829 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8363, Trigger@0.5857, Limit@0.5856
+2025-11-02 03:30:18,004 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.6171, Trigger@0.5670, Limit@0.5669
+2025-11-02 03:30:19,178 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8873, Trigger@0.5259, Limit@0.5258
+2025-11-02 03:30:20,052 - INFO - Prüfe Short Entry Bands: [0.6378621440490518, 0.6588626667349817, 0.7103545794972285]
+2025-11-02 03:30:20,345 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4230, Trigger@0.6377, Limit@0.6379
+2025-11-02 03:30:21,557 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0627, Trigger@0.6587, Limit@0.6589
+2025-11-02 03:30:22,718 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6645, Trigger@0.7102, Limit@0.7104
+2025-11-02 03:30:23,599 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 03:30:23,600 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 03:30:23,617 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 03:45:03,766 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 03:45:03,767 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 03:45:06,418 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 03:45:06,806 - INFO - Aktueller Status: Preis=0.6104, Average=0.6114
+2025-11-02 03:45:08,255 - INFO - Trigger Order 1368704977619464192 (buy 114.0 @ Trigger 0.5857) storniert.
+2025-11-02 03:45:08,659 - INFO - Trigger Order 1368704980856741889 (buy 114.0 @ Trigger 0.5814) storniert.
+2025-11-02 03:45:09,050 - INFO - Trigger Order 1368704982523125760 (buy 118.0 @ Trigger 0.567) storniert.
+2025-11-02 03:45:09,442 - INFO - Trigger Order 1368704985777385472 (buy 118.0 @ Trigger 0.5629) storniert.
+2025-11-02 03:45:09,830 - INFO - Trigger Order 1368704987429646336 (buy 127.0 @ Trigger 0.5259) storniert.
+2025-11-02 03:45:10,209 - INFO - Trigger Order 1368704990696579072 (buy 127.0 @ Trigger 0.5221) storniert.
+2025-11-02 03:45:10,600 - INFO - Trigger Order 1368704992349564928 (sell 105.0 @ Trigger 0.6377) storniert.
+2025-11-02 03:45:10,984 - INFO - Trigger Order 1368704995631312896 (sell 105.0 @ Trigger 0.6424) storniert.
+2025-11-02 03:45:11,372 - INFO - Trigger Order 1368704997445943296 (sell 102.0 @ Trigger 0.6587) storniert.
+2025-11-02 03:45:11,762 - INFO - Trigger Order 1368705000667168768 (sell 102.0 @ Trigger 0.6635) storniert.
+2025-11-02 03:45:12,153 - INFO - Trigger Order 1368705002270896128 (sell 94.0 @ Trigger 0.7102) storniert.
+2025-11-02 03:45:12,551 - INFO - Trigger Order 1368705005578698753 (sell 94.0 @ Trigger 0.7154) storniert.
+2025-11-02 03:45:12,652 - INFO - 12 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 03:45:12,652 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 03:45:12,942 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 03:45:15,272 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 03:45:15,273 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 03:45:15,273 - INFO - Prüfe Long Entry Bands: [0.5858311628715559, 0.5671584390291571, 0.5260464736702073]
+2025-11-02 03:45:15,559 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.7862, Trigger@0.5860, Limit@0.5858
+2025-11-02 03:45:16,762 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.5653, Trigger@0.5673, Limit@0.5672
+2025-11-02 03:45:17,929 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8315, Trigger@0.5262, Limit@0.5260
+2025-11-02 03:45:18,799 - INFO - Prüfe Short Entry Bands: [0.6381404616283216, 0.6591501474456457, 0.7106645276087966]
+2025-11-02 03:45:19,107 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.3770, Trigger@0.6380, Limit@0.6381
+2025-11-02 03:45:20,286 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0182, Trigger@0.6590, Limit@0.6592
+2025-11-02 03:45:21,472 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6232, Trigger@0.7105, Limit@0.7107
+2025-11-02 03:45:22,392 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 03:45:22,392 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 03:45:22,409 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 04:00:03,274 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 04:00:03,275 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 04:00:05,293 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 04:00:05,669 - INFO - Aktueller Status: Preis=0.6094, Average=0.6111
+2025-11-02 04:00:07,061 - INFO - Trigger Order 1368708747166302208 (buy 114.0 @ Trigger 0.586) storniert.
+2025-11-02 04:00:07,449 - INFO - Trigger Order 1368708748810469376 (buy 114.0 @ Trigger 0.6114) storniert.
+2025-11-02 04:00:07,828 - INFO - Trigger Order 1368708750513352704 (buy 114.0 @ Trigger 0.5817) storniert.
+2025-11-02 04:00:08,219 - INFO - Trigger Order 1368708752174813184 (buy 118.0 @ Trigger 0.5673) storniert.
+2025-11-02 04:00:08,586 - INFO - Trigger Order 1368708753835757568 (buy 118.0 @ Trigger 0.6114) storniert.
+2025-11-02 04:00:08,993 - INFO - Trigger Order 1368708755433787394 (buy 118.0 @ Trigger 0.5631) storniert.
+2025-11-02 04:00:09,382 - INFO - Trigger Order 1368708757066362880 (buy 127.0 @ Trigger 0.5262) storniert.
+2025-11-02 04:00:09,774 - INFO - Trigger Order 1368708758679662592 (buy 127.0 @ Trigger 0.6114) storniert.
+2025-11-02 04:00:10,171 - INFO - Trigger Order 1368708760298663936 (buy 127.0 @ Trigger 0.5223) storniert.
+2025-11-02 04:00:10,557 - INFO - Trigger Order 1368708762005450752 (sell 105.0 @ Trigger 0.638) storniert.
+2025-11-02 04:00:10,951 - INFO - Trigger Order 1368708763658817536 (sell 105.0 @ Trigger 0.6114) storniert.
+2025-11-02 04:00:11,325 - INFO - Trigger Order 1368708765249449984 (sell 105.0 @ Trigger 0.6427) storniert.
+2025-11-02 04:00:11,721 - INFO - Trigger Order 1368708766954299392 (sell 102.0 @ Trigger 0.659) storniert.
+2025-11-02 04:00:12,111 - INFO - Trigger Order 1368708768650043395 (sell 102.0 @ Trigger 0.6114) storniert.
+2025-11-02 04:00:12,495 - INFO - Trigger Order 1368708770272718848 (sell 102.0 @ Trigger 0.6638) storniert.
+2025-11-02 04:00:12,874 - INFO - Trigger Order 1368708771932938240 (sell 94.0 @ Trigger 0.7105) storniert.
+2025-11-02 04:00:13,270 - INFO - Trigger Order 1368708773620293632 (sell 94.0 @ Trigger 0.6114) storniert.
+2025-11-02 04:00:13,635 - INFO - Trigger Order 1368708775343636480 (sell 94.0 @ Trigger 0.7157) storniert.
+2025-11-02 04:00:13,736 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 04:00:13,737 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 04:00:14,017 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 04:00:16,350 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 04:00:16,351 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 04:00:16,351 - INFO - Prüfe Long Entry Bands: [0.5855117835167837, 0.5668492395399682, 0.5257596873160681]
+2025-11-02 04:00:16,663 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8488, Trigger@0.5856, Limit@0.5855
+2025-11-02 04:00:17,838 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.6300, Trigger@0.5670, Limit@0.5668
+2025-11-02 04:00:19,011 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.9013, Trigger@0.5259, Limit@0.5258
+2025-11-02 04:00:19,895 - INFO - Prüfe Short Entry Bands: [0.6377925646542345, 0.6587907965573158, 0.7102770924693365]
+2025-11-02 04:00:20,166 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4345, Trigger@0.6377, Limit@0.6378
+2025-11-02 04:00:21,319 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0739, Trigger@0.6587, Limit@0.6588
+2025-11-02 04:00:22,477 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6748, Trigger@0.7101, Limit@0.7103
+2025-11-02 04:00:23,361 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 04:00:23,361 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 04:00:23,378 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 04:15:03,901 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 04:15:03,902 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 04:15:05,925 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 04:15:06,288 - INFO - Aktueller Status: Preis=0.6094, Average=0.6111
+2025-11-02 04:15:07,698 - INFO - Trigger Order 1368712526615887872 (buy 114.0 @ Trigger 0.5856) storniert.
+2025-11-02 04:15:08,070 - INFO - Trigger Order 1368712528294125568 (buy 114.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:15:08,456 - INFO - Trigger Order 1368712529960251393 (buy 114.0 @ Trigger 0.5814) storniert.
+2025-11-02 04:15:08,847 - INFO - Trigger Order 1368712531569360896 (buy 118.0 @ Trigger 0.567) storniert.
+2025-11-02 04:15:09,224 - INFO - Trigger Order 1368712533226110976 (buy 118.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:15:09,615 - INFO - Trigger Order 1368712534833041408 (buy 118.0 @ Trigger 0.5628) storniert.
+2025-11-02 04:15:10,031 - INFO - Trigger Order 1368712536485081088 (buy 127.0 @ Trigger 0.5259) storniert.
+2025-11-02 04:15:10,406 - INFO - Trigger Order 1368712538083631104 (buy 127.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:15:10,787 - INFO - Trigger Order 1368712539756642304 (buy 127.0 @ Trigger 0.522) storniert.
+2025-11-02 04:15:11,172 - INFO - Trigger Order 1368712541353943040 (sell 105.0 @ Trigger 0.6377) storniert.
+2025-11-02 04:15:11,563 - INFO - Trigger Order 1368712542914949121 (sell 105.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:15:11,957 - INFO - Trigger Order 1368712544521887744 (sell 105.0 @ Trigger 0.6423) storniert.
+2025-11-02 04:15:12,332 - INFO - Trigger Order 1368712546170249216 (sell 102.0 @ Trigger 0.6587) storniert.
+2025-11-02 04:15:12,703 - INFO - Trigger Order 1368712547748294656 (sell 102.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:15:13,082 - INFO - Trigger Order 1368712549374697472 (sell 102.0 @ Trigger 0.6635) storniert.
+2025-11-02 04:15:13,508 - INFO - Trigger Order 1368712551015657472 (sell 94.0 @ Trigger 0.7101) storniert.
+2025-11-02 04:15:13,897 - INFO - Trigger Order 1368712552628662272 (sell 94.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:15:14,284 - INFO - Trigger Order 1368712554282033152 (sell 94.0 @ Trigger 0.7153) storniert.
+2025-11-02 04:15:14,385 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 04:15:14,385 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 04:15:14,656 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 04:15:16,994 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 04:15:16,999 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 04:15:16,999 - INFO - Prüfe Long Entry Bands: [0.5855117835167837, 0.5668492395399682, 0.5257596873160681]
+2025-11-02 04:15:17,319 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8488, Trigger@0.5856, Limit@0.5855
+2025-11-02 04:15:18,498 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.6300, Trigger@0.5670, Limit@0.5668
+2025-11-02 04:15:19,704 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.9013, Trigger@0.5259, Limit@0.5258
+2025-11-02 04:15:20,595 - INFO - Prüfe Short Entry Bands: [0.6377925646542345, 0.6587907965573158, 0.7102770924693365]
+2025-11-02 04:15:20,878 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4345, Trigger@0.6377, Limit@0.6378
+2025-11-02 04:15:22,039 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0739, Trigger@0.6587, Limit@0.6588
+2025-11-02 04:15:23,237 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6748, Trigger@0.7101, Limit@0.7103
+2025-11-02 04:15:24,113 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 04:15:24,114 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 04:15:24,131 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 04:30:03,398 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 04:30:03,398 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 04:30:05,665 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 04:30:06,015 - INFO - Aktueller Status: Preis=0.6087, Average=0.6109
+2025-11-02 04:30:07,433 - INFO - Trigger Order 1368716304287600640 (buy 114.0 @ Trigger 0.5856) storniert.
+2025-11-02 04:30:07,804 - INFO - Trigger Order 1368716305839493122 (buy 114.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:30:08,195 - INFO - Trigger Order 1368716307525087232 (buy 114.0 @ Trigger 0.5814) storniert.
+2025-11-02 04:30:08,582 - INFO - Trigger Order 1368716309185306625 (buy 118.0 @ Trigger 0.567) storniert.
+2025-11-02 04:30:08,951 - INFO - Trigger Order 1368716310846251008 (buy 118.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:30:09,340 - INFO - Trigger Order 1368716312516014080 (buy 118.0 @ Trigger 0.5628) storniert.
+2025-11-02 04:30:09,724 - INFO - Trigger Order 1368716314216509441 (buy 127.0 @ Trigger 0.5259) storniert.
+2025-11-02 04:30:10,088 - INFO - Trigger Order 1368716315887804416 (buy 127.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:30:10,473 - INFO - Trigger Order 1368716317532700672 (buy 127.0 @ Trigger 0.522) storniert.
+2025-11-02 04:30:10,865 - INFO - Trigger Order 1368716319194157056 (sell 105.0 @ Trigger 0.6377) storniert.
+2025-11-02 04:30:11,254 - INFO - Trigger Order 1368716320817356800 (sell 105.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:30:11,621 - INFO - Trigger Order 1368716322452615168 (sell 105.0 @ Trigger 0.6423) storniert.
+2025-11-02 04:30:11,989 - INFO - Trigger Order 1368716324012896256 (sell 102.0 @ Trigger 0.6587) storniert.
+2025-11-02 04:30:12,362 - INFO - Trigger Order 1368716325765820416 (sell 102.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:30:12,740 - INFO - Trigger Order 1368716327389016064 (sell 102.0 @ Trigger 0.6635) storniert.
+2025-11-02 04:30:13,124 - INFO - Trigger Order 1368716329045766144 (sell 94.0 @ Trigger 0.7101) storniert.
+2025-11-02 04:30:13,513 - INFO - Trigger Order 1368716330736369665 (sell 94.0 @ Trigger 0.6111) storniert.
+2025-11-02 04:30:13,902 - INFO - Trigger Order 1368716332340097024 (sell 94.0 @ Trigger 0.7153) storniert.
+2025-11-02 04:30:14,005 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 04:30:14,005 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 04:30:14,272 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 04:30:16,574 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 04:30:16,578 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 04:30:16,579 - INFO - Prüfe Long Entry Bands: [0.5852882179684431, 0.5666327998975361, 0.5255589368681709]
+2025-11-02 04:30:16,874 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8927, Trigger@0.5854, Limit@0.5853
+2025-11-02 04:30:18,039 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.6753, Trigger@0.5667, Limit@0.5666
+2025-11-02 04:30:19,194 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.9501, Trigger@0.5257, Limit@0.5256
+2025-11-02 04:30:20,070 - INFO - Prüfe Short Entry Bands: [0.6375490367723736, 0.6585392509354849, 0.7100058878717144]
+2025-11-02 04:30:20,360 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4748, Trigger@0.6374, Limit@0.6375
+2025-11-02 04:30:21,512 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.1129, Trigger@0.6584, Limit@0.6585
+2025-11-02 04:30:22,664 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.7110, Trigger@0.7099, Limit@0.7100
+2025-11-02 04:30:23,511 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 04:30:23,511 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 04:30:23,528 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 04:45:03,962 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 04:45:03,962 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 04:45:06,239 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 04:45:06,595 - INFO - Aktueller Status: Preis=0.6096, Average=0.6112
+2025-11-02 04:45:07,994 - INFO - Trigger Order 1368720077239398401 (buy 114.0 @ Trigger 0.5854) storniert.
+2025-11-02 04:45:08,379 - INFO - Trigger Order 1368720078892769280 (buy 114.0 @ Trigger 0.6109) storniert.
+2025-11-02 04:45:08,755 - INFO - Trigger Order 1368720080553709568 (buy 114.0 @ Trigger 0.5811) storniert.
+2025-11-02 04:45:09,146 - INFO - Trigger Order 1368720082155937792 (buy 118.0 @ Trigger 0.5667) storniert.
+2025-11-02 04:45:09,521 - INFO - Trigger Order 1368720083787522048 (buy 118.0 @ Trigger 0.6109) storniert.
+2025-11-02 04:45:09,908 - INFO - Trigger Order 1368720085359865856 (buy 118.0 @ Trigger 0.5626) storniert.
+2025-11-02 04:45:10,293 - INFO - Trigger Order 1368720086990725120 (buy 127.0 @ Trigger 0.5257) storniert.
+2025-11-02 04:45:10,683 - INFO - Trigger Order 1368720088618115072 (buy 127.0 @ Trigger 0.6109) storniert.
+2025-11-02 04:45:11,063 - INFO - Trigger Order 1368720090221584384 (buy 127.0 @ Trigger 0.5218) storniert.
+2025-11-02 04:45:11,439 - INFO - Trigger Order 1368720091840581633 (sell 105.0 @ Trigger 0.6374) storniert.
+2025-11-02 04:45:11,817 - INFO - Trigger Order 1368720093498322944 (sell 105.0 @ Trigger 0.6109) storniert.
+2025-11-02 04:45:12,188 - INFO - Trigger Order 1368720095064760320 (sell 105.0 @ Trigger 0.6421) storniert.
+2025-11-02 04:45:12,570 - INFO - Trigger Order 1368720096713121792 (sell 102.0 @ Trigger 0.6584) storniert.
+2025-11-02 04:45:12,951 - INFO - Trigger Order 1368720098311876608 (sell 102.0 @ Trigger 0.6109) storniert.
+2025-11-02 04:45:13,334 - INFO - Trigger Order 1368720099900792832 (sell 102.0 @ Trigger 0.6632) storniert.
+2025-11-02 04:45:13,711 - INFO - Trigger Order 1368720101526220800 (sell 94.0 @ Trigger 0.7099) storniert.
+2025-11-02 04:45:14,097 - INFO - Trigger Order 1368720103093899265 (sell 94.0 @ Trigger 0.6109) storniert.
+2025-11-02 04:45:14,474 - INFO - Trigger Order 1368720104670146560 (sell 94.0 @ Trigger 0.715) storniert.
+2025-11-02 04:45:14,574 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 04:45:14,575 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 04:45:14,859 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 04:45:17,182 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 04:45:17,182 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 04:45:17,182 - INFO - Prüfe Long Entry Bands: [0.585575659387738, 0.5669110794378059, 0.525817044586896]
+2025-11-02 04:45:17,467 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8363, Trigger@0.5857, Limit@0.5856
+2025-11-02 04:45:18,601 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.6171, Trigger@0.5670, Limit@0.5669
+2025-11-02 04:45:19,780 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8873, Trigger@0.5259, Limit@0.5258
+2025-11-02 04:45:20,670 - INFO - Prüfe Short Entry Bands: [0.6378621440490518, 0.6588626667349817, 0.7103545794972285]
+2025-11-02 04:45:20,952 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4230, Trigger@0.6377, Limit@0.6379
+2025-11-02 04:45:22,101 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0627, Trigger@0.6587, Limit@0.6589
+2025-11-02 04:45:23,264 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6645, Trigger@0.7102, Limit@0.7104
+2025-11-02 04:45:24,138 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 04:45:24,138 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 04:45:24,155 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 05:00:03,435 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 05:00:03,436 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 05:00:05,427 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 05:00:05,776 - INFO - Aktueller Status: Preis=0.6086, Average=0.6108
+2025-11-02 05:00:07,149 - INFO - Trigger Order 1368723854621487104 (buy 114.0 @ Trigger 0.5857) storniert.
+2025-11-02 05:00:07,525 - INFO - Trigger Order 1368723856191664128 (buy 114.0 @ Trigger 0.6112) storniert.
+2025-11-02 05:00:07,894 - INFO - Trigger Order 1368723857735168000 (buy 114.0 @ Trigger 0.5814) storniert.
+2025-11-02 05:00:08,273 - INFO - Trigger Order 1368723859358363649 (buy 118.0 @ Trigger 0.567) storniert.
+2025-11-02 05:00:08,648 - INFO - Trigger Order 1368723860980568064 (buy 118.0 @ Trigger 0.6112) storniert.
+2025-11-02 05:00:09,024 - INFO - Trigger Order 1368723862642503680 (buy 118.0 @ Trigger 0.5629) storniert.
+2025-11-02 05:00:09,390 - INFO - Trigger Order 1368723864268902400 (buy 127.0 @ Trigger 0.5259) storniert.
+2025-11-02 05:00:09,769 - INFO - Trigger Order 1368723865950822400 (buy 127.0 @ Trigger 0.6112) storniert.
+2025-11-02 05:00:10,319 - INFO - Trigger Order 1368723867583393792 (buy 127.0 @ Trigger 0.5221) storniert.
+2025-11-02 05:00:10,684 - INFO - Trigger Order 1368723869243346945 (sell 105.0 @ Trigger 0.6377) storniert.
+2025-11-02 05:00:11,052 - INFO - Trigger Order 1368723870895091712 (sell 105.0 @ Trigger 0.6112) storniert.
+2025-11-02 05:00:11,435 - INFO - Trigger Order 1368723872486535168 (sell 105.0 @ Trigger 0.6424) storniert.
+2025-11-02 05:00:11,812 - INFO - Trigger Order 1368723874034233344 (sell 102.0 @ Trigger 0.6587) storniert.
+2025-11-02 05:00:12,206 - INFO - Trigger Order 1368723875681091590 (sell 102.0 @ Trigger 0.6112) storniert.
+2025-11-02 05:00:13,049 - INFO - Trigger Order 1368723877283827712 (sell 102.0 @ Trigger 0.6635) storniert.
+2025-11-02 05:00:13,425 - INFO - Trigger Order 1368723878898118656 (sell 94.0 @ Trigger 0.7102) storniert.
+2025-11-02 05:00:13,803 - INFO - Trigger Order 1368723880572166144 (sell 94.0 @ Trigger 0.6112) storniert.
+2025-11-02 05:00:14,171 - INFO - Trigger Order 1368723882152603648 (sell 94.0 @ Trigger 0.7154) storniert.
+2025-11-02 05:00:14,272 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 05:00:14,272 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 05:00:14,551 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 05:00:16,834 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 05:00:16,835 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 05:00:16,835 - INFO - Prüfe Long Entry Bands: [0.5852562800329659, 0.5666018799486172, 0.525530258232757]
+2025-11-02 05:00:17,118 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8990, Trigger@0.5854, Limit@0.5853
+2025-11-02 05:00:18,265 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.6818, Trigger@0.5667, Limit@0.5666
+2025-11-02 05:00:19,446 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.9571, Trigger@0.5256, Limit@0.5255
+2025-11-02 05:00:20,332 - INFO - Prüfe Short Entry Bands: [0.637514247074965, 0.658503315846652, 0.7099671443577684]
+2025-11-02 05:00:20,624 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.4805, Trigger@0.6374, Limit@0.6375
+2025-11-02 05:00:21,749 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.1184, Trigger@0.6584, Limit@0.6585
+2025-11-02 05:00:22,912 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.7161, Trigger@0.7098, Limit@0.7100
+2025-11-02 05:00:23,788 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 05:00:23,788 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 05:00:23,803 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 05:15:03,915 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 05:15:03,916 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 05:15:05,956 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 05:15:06,292 - INFO - Aktueller Status: Preis=0.6101, Average=0.6113
+2025-11-02 05:15:07,658 - INFO - Trigger Order 1368727627995033601 (buy 114.0 @ Trigger 0.5854) storniert.
+2025-11-02 05:15:08,035 - INFO - Trigger Order 1368727629586636800 (buy 114.0 @ Trigger 0.6108) storniert.
+2025-11-02 05:15:08,410 - INFO - Trigger Order 1368727631181713408 (buy 114.0 @ Trigger 0.5811) storniert.
+2025-11-02 05:15:08,787 - INFO - Trigger Order 1368727632758771712 (buy 118.0 @ Trigger 0.5667) storniert.
+2025-11-02 05:15:09,168 - INFO - Trigger Order 1368727634452029440 (buy 118.0 @ Trigger 0.6108) storniert.
+2025-11-02 05:15:09,556 - INFO - Trigger Order 1368727636067266560 (buy 118.0 @ Trigger 0.5626) storniert.
+2025-11-02 05:15:09,935 - INFO - Trigger Order 1368727637749993472 (buy 127.0 @ Trigger 0.5256) storniert.
+2025-11-02 05:15:10,304 - INFO - Trigger Order 1368727639403540480 (buy 127.0 @ Trigger 0.6108) storniert.
+2025-11-02 05:15:10,683 - INFO - Trigger Order 1368727641029943296 (buy 127.0 @ Trigger 0.5218) storniert.
+2025-11-02 05:15:11,067 - INFO - Trigger Order 1368727642715533312 (sell 105.0 @ Trigger 0.6374) storniert.
+2025-11-02 05:15:11,447 - INFO - Trigger Order 1368727644326666240 (sell 105.0 @ Trigger 0.6108) storniert.
+2025-11-02 05:15:11,834 - INFO - Trigger Order 1368727645902479360 (sell 105.0 @ Trigger 0.642) storniert.
+2025-11-02 05:15:12,209 - INFO - Trigger Order 1368727647447224320 (sell 102.0 @ Trigger 0.6584) storniert.
+2025-11-02 05:15:12,596 - INFO - Trigger Order 1368727649061519360 (sell 102.0 @ Trigger 0.6108) storniert.
+2025-11-02 05:15:12,981 - INFO - Trigger Order 1368727650715578368 (sell 102.0 @ Trigger 0.6632) storniert.
+2025-11-02 05:15:13,357 - INFO - Trigger Order 1368727652300034048 (sell 94.0 @ Trigger 0.7098) storniert.
+2025-11-02 05:15:13,747 - INFO - Trigger Order 1368727653943685120 (sell 94.0 @ Trigger 0.6108) storniert.
+2025-11-02 05:15:14,134 - INFO - Trigger Order 1368727655570780160 (sell 94.0 @ Trigger 0.715) storniert.
+2025-11-02 05:15:14,234 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 05:15:14,235 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 05:15:14,497 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 05:15:16,782 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 05:15:16,782 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 05:15:16,782 - INFO - Prüfe Long Entry Bands: [0.5857353490651241, 0.5670656791824004, 0.5259604377639655]
+2025-11-02 05:15:17,076 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.8050, Trigger@0.5859, Limit@0.5857
+2025-11-02 05:15:18,242 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.5847, Trigger@0.5672, Limit@0.5671
+2025-11-02 05:15:19,374 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.8525, Trigger@0.5261, Limit@0.5260
+2025-11-02 05:15:20,285 - INFO - Prüfe Short Entry Bands: [0.6380360925360954, 0.6590423421791466, 0.7105482970669584]
+2025-11-02 05:15:20,566 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.3942, Trigger@0.6379, Limit@0.6380
+2025-11-02 05:15:21,734 - INFO - ✅ Short Entry 2/3 platziert: Amount=102.0349, Trigger@0.6589, Limit@0.6590
+2025-11-02 05:15:22,867 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.6387, Trigger@0.7104, Limit@0.7105
+2025-11-02 05:15:23,730 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 05:15:23,731 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 05:15:23,752 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 05:30:03,425 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 05:30:03,426 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 05:30:05,386 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 05:30:05,755 - INFO - Aktueller Status: Preis=0.6113, Average=0.6117
+2025-11-02 05:30:07,132 - INFO - Trigger Order 1368731402695675904 (buy 114.0 @ Trigger 0.5859) storniert.
+2025-11-02 05:30:07,515 - INFO - Trigger Order 1368731405999546368 (buy 114.0 @ Trigger 0.5816) storniert.
+2025-11-02 05:30:07,900 - INFO - Trigger Order 1368731407597576192 (buy 118.0 @ Trigger 0.5672) storniert.
+2025-11-02 05:30:08,303 - INFO - Trigger Order 1368731410773905408 (buy 118.0 @ Trigger 0.563) storniert.
+2025-11-02 05:30:08,690 - INFO - Trigger Order 1368731412350963712 (buy 127.0 @ Trigger 0.5261) storniert.
+2025-11-02 05:30:09,083 - INFO - Trigger Order 1368731415719981057 (buy 127.0 @ Trigger 0.5222) storniert.
+2025-11-02 05:30:09,457 - INFO - Trigger Order 1368731417341669376 (sell 105.0 @ Trigger 0.6379) storniert.
+2025-11-02 05:30:09,824 - INFO - Trigger Order 1368731420559220736 (sell 105.0 @ Trigger 0.6426) storniert.
+2025-11-02 05:30:10,224 - INFO - Trigger Order 1368731422227738624 (sell 102.0 @ Trigger 0.6589) storniert.
+2025-11-02 05:30:10,591 - INFO - Trigger Order 1368731425456922624 (sell 102.0 @ Trigger 0.6637) storniert.
+2025-11-02 05:30:10,974 - INFO - Trigger Order 1368731427015241728 (sell 94.0 @ Trigger 0.7104) storniert.
+2025-11-02 05:30:11,367 - INFO - Trigger Order 1368731430163656704 (sell 94.0 @ Trigger 0.7156) storniert.
+2025-11-02 05:30:11,467 - INFO - 12 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 05:30:11,468 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 05:30:11,754 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 05:30:14,114 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 05:30:14,114 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 05:30:14,115 - INFO - Prüfe Long Entry Bands: [0.5861186042908508, 0.5674367185694269, 0.5263045813889324]
+2025-11-02 05:30:14,415 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.7299, Trigger@0.5862, Limit@0.5861
+2025-11-02 05:30:15,587 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.5072, Trigger@0.5676, Limit@0.5674
+2025-11-02 05:30:16,755 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.7689, Trigger@0.5264, Limit@0.5263
+2025-11-02 05:30:17,618 - INFO - Prüfe Short Entry Bands: [0.6384535689049998, 0.6594735632451425, 0.7110132192343106]
+2025-11-02 05:30:17,928 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.3253, Trigger@0.6383, Limit@0.6385
+2025-11-02 05:30:19,093 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.9682, Trigger@0.6593, Limit@0.6595
+2025-11-02 05:30:20,287 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.5768, Trigger@0.7109, Limit@0.7110
+2025-11-02 05:30:21,143 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 05:30:21,143 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 05:30:21,159 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 05:45:03,934 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 05:45:03,935 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 05:45:05,919 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 05:45:06,275 - INFO - Aktueller Status: Preis=0.6131, Average=0.6123
+2025-11-02 05:45:07,693 - INFO - Trigger Order 1368735166370484224 (buy 114.0 @ Trigger 0.5862) storniert.
+2025-11-02 05:45:08,063 - INFO - Trigger Order 1368735169654628352 (buy 114.0 @ Trigger 0.582) storniert.
+2025-11-02 05:45:08,431 - INFO - Trigger Order 1368735171273625600 (buy 118.0 @ Trigger 0.5676) storniert.
+2025-11-02 05:45:08,810 - INFO - Trigger Order 1368735174553571335 (buy 118.0 @ Trigger 0.5634) storniert.
+2025-11-02 05:45:09,193 - INFO - Trigger Order 1368735176210325504 (buy 127.0 @ Trigger 0.5264) storniert.
+2025-11-02 05:45:09,565 - INFO - Trigger Order 1368735179439423488 (buy 127.0 @ Trigger 0.5226) storniert.
+2025-11-02 05:45:09,948 - INFO - Trigger Order 1368735181083586560 (sell 105.0 @ Trigger 0.6383) storniert.
+2025-11-02 05:45:10,315 - INFO - Trigger Order 1368735184377622528 (sell 105.0 @ Trigger 0.643) storniert.
+2025-11-02 05:45:10,695 - INFO - Trigger Order 1368735186016608256 (sell 101.0 @ Trigger 0.6593) storniert.
+2025-11-02 05:45:11,053 - INFO - Trigger Order 1368735189358653440 (sell 101.0 @ Trigger 0.6642) storniert.
+2025-11-02 05:45:11,431 - INFO - Trigger Order 1368735191014973440 (sell 94.0 @ Trigger 0.7109) storniert.
+2025-11-02 05:45:11,814 - INFO - Trigger Order 1368735194203369472 (sell 94.0 @ Trigger 0.7161) storniert.
+2025-11-02 05:45:11,915 - INFO - 12 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 05:45:11,915 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 05:45:12,200 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 05:45:14,533 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 05:45:14,533 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 05:45:14,534 - INFO - Prüfe Long Entry Bands: [0.5866934871294408, 0.5679932776499667, 0.5268207968263828]
+2025-11-02 05:45:14,825 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.6175, Trigger@0.5868, Limit@0.5867
+2025-11-02 05:45:16,005 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.3911, Trigger@0.5681, Limit@0.5680
+2025-11-02 05:45:17,155 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.6437, Trigger@0.5269, Limit@0.5268
+2025-11-02 05:45:18,037 - INFO - Prüfe Short Entry Bands: [0.6390797834583565, 0.6601203948441363, 0.7117106024853387]
+2025-11-02 05:45:18,351 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.2221, Trigger@0.6389, Limit@0.6391
+2025-11-02 05:45:19,494 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.8683, Trigger@0.6600, Limit@0.6601
+2025-11-02 05:45:20,696 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.4841, Trigger@0.7116, Limit@0.7117
+2025-11-02 05:45:21,587 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 05:45:21,588 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 05:45:21,605 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 06:00:03,445 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 06:00:03,446 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 06:00:05,427 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 06:00:05,800 - INFO - Aktueller Status: Preis=0.6159, Average=0.6133
+2025-11-02 06:00:07,201 - INFO - Trigger Order 1368738942983479296 (buy 114.0 @ Trigger 0.5868) storniert.
+2025-11-02 06:00:07,564 - INFO - Trigger Order 1368738944565972992 (buy 114.0 @ Trigger 0.6123) storniert.
+2025-11-02 06:00:07,956 - INFO - Trigger Order 1368738946188652544 (buy 114.0 @ Trigger 0.5825) storniert.
+2025-11-02 06:00:08,339 - INFO - Trigger Order 1368738947939184641 (buy 118.0 @ Trigger 0.5681) storniert.
+2025-11-02 06:00:08,717 - INFO - Trigger Order 1368738949503660032 (buy 118.0 @ Trigger 0.6123) storniert.
+2025-11-02 06:00:09,100 - INFO - Trigger Order 1368738951133736960 (buy 118.0 @ Trigger 0.564) storniert.
+2025-11-02 06:00:09,499 - INFO - Trigger Order 1368738952732282880 (buy 127.0 @ Trigger 0.5269) storniert.
+2025-11-02 06:00:09,881 - INFO - Trigger Order 1368738954367250432 (buy 127.0 @ Trigger 0.6123) storniert.
+2025-11-02 06:00:10,279 - INFO - Trigger Order 1368738956020617216 (buy 127.0 @ Trigger 0.5231) storniert.
+2025-11-02 06:00:10,671 - INFO - Trigger Order 1368738957705486337 (sell 105.0 @ Trigger 0.6389) storniert.
+2025-11-02 06:00:11,059 - INFO - Trigger Order 1368738959337070592 (sell 105.0 @ Trigger 0.6123) storniert.
+2025-11-02 06:00:11,447 - INFO - Trigger Order 1368738960956796928 (sell 105.0 @ Trigger 0.6436) storniert.
+2025-11-02 06:00:11,838 - INFO - Trigger Order 1368738962541518848 (sell 101.0 @ Trigger 0.66) storniert.
+2025-11-02 06:00:12,230 - INFO - Trigger Order 1368738964254035972 (sell 101.0 @ Trigger 0.6123) storniert.
+2025-11-02 06:00:12,611 - INFO - Trigger Order 1368738965922557952 (sell 101.0 @ Trigger 0.6648) storniert.
+2025-11-02 06:00:12,999 - INFO - Trigger Order 1368738967612432384 (sell 94.0 @ Trigger 0.7116) storniert.
+2025-11-02 06:00:13,396 - INFO - Trigger Order 1368738969265713152 (sell 94.0 @ Trigger 0.6123) storniert.
+2025-11-02 06:00:13,767 - INFO - Trigger Order 1368738970890416128 (sell 94.0 @ Trigger 0.7168) storniert.
+2025-11-02 06:00:13,868 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 06:00:13,868 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 06:00:14,149 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 06:00:16,436 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 06:00:16,437 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 06:00:16,437 - INFO - Prüfe Long Entry Bands: [0.5875877493228029, 0.5688590362196951, 0.5276237986179722]
+2025-11-02 06:00:16,734 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.4430, Trigger@0.5877, Limit@0.5876
+2025-11-02 06:00:17,925 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2109, Trigger@0.5690, Limit@0.5689
+2025-11-02 06:00:19,120 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.4494, Trigger@0.5277, Limit@0.5276
+2025-11-02 06:00:20,004 - INFO - Prüfe Short Entry Bands: [0.6400538949858, 0.6611265773314596, 0.7127954208758268]
+2025-11-02 06:00:20,291 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.0620, Trigger@0.6399, Limit@0.6401
+2025-11-02 06:00:21,492 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7133, Trigger@0.6610, Limit@0.6611
+2025-11-02 06:00:22,649 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3403, Trigger@0.7126, Limit@0.7128
+2025-11-02 06:00:23,546 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 06:00:23,546 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 06:00:23,563 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 06:15:03,877 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 06:15:03,878 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 06:15:05,850 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 06:15:06,208 - INFO - Aktueller Status: Preis=0.6141, Average=0.6127
+2025-11-02 06:15:07,710 - INFO - Trigger Order 1368742725827497984 (buy 114.0 @ Trigger 0.5877) storniert.
+2025-11-02 06:15:08,101 - INFO - Trigger Order 1368742729106202624 (buy 114.0 @ Trigger 0.5834) storniert.
+2025-11-02 06:15:08,491 - INFO - Trigger Order 1368742730851463168 (buy 118.0 @ Trigger 0.569) storniert.
+2025-11-02 06:15:08,883 - INFO - Trigger Order 1368742734210670592 (buy 118.0 @ Trigger 0.5648) storniert.
+2025-11-02 06:15:09,259 - INFO - Trigger Order 1368742735830913024 (buy 127.0 @ Trigger 0.5277) storniert.
+2025-11-02 06:15:09,642 - INFO - Trigger Order 1368742739151560704 (buy 127.0 @ Trigger 0.5239) storniert.
+2025-11-02 06:15:10,035 - INFO - Trigger Order 1368742740801167360 (sell 105.0 @ Trigger 0.6399) storniert.
+2025-11-02 06:15:10,414 - INFO - Trigger Order 1368742744105463808 (sell 105.0 @ Trigger 0.6446) storniert.
+2025-11-02 06:15:10,815 - INFO - Trigger Order 1368742745821233152 (sell 101.0 @ Trigger 0.661) storniert.
+2025-11-02 06:15:11,201 - INFO - Trigger Order 1368742748984250369 (sell 101.0 @ Trigger 0.6658) storniert.
+2025-11-02 06:15:11,598 - INFO - Trigger Order 1368742750674558976 (sell 94.0 @ Trigger 0.7126) storniert.
+2025-11-02 06:15:11,966 - INFO - Trigger Order 1368742753953984512 (sell 94.0 @ Trigger 0.7179) storniert.
+2025-11-02 06:15:12,067 - INFO - 12 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 06:15:12,067 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 06:15:12,355 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 06:15:14,663 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 06:15:14,664 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 06:15:14,664 - INFO - Prüfe Long Entry Bands: [0.587012866484213, 0.5683024771391554, 0.5271075831805219]
+2025-11-02 06:15:14,971 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.5551, Trigger@0.5871, Limit@0.5870
+2025-11-02 06:15:16,120 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.3267, Trigger@0.5684, Limit@0.5683
+2025-11-02 06:15:17,302 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.5742, Trigger@0.5272, Limit@0.5271
+2025-11-02 06:15:18,199 - INFO - Prüfe Short Entry Bands: [0.6394276804324435, 0.660479745732466, 0.7120980376247987]
+2025-11-02 06:15:18,487 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.1649, Trigger@0.6393, Limit@0.6394
+2025-11-02 06:15:19,662 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.8129, Trigger@0.6603, Limit@0.6605
+2025-11-02 06:15:20,872 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.4327, Trigger@0.7120, Limit@0.7121
+2025-11-02 06:15:21,741 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 06:15:21,742 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 06:15:21,760 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 06:30:03,422 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 06:30:03,423 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 06:30:05,369 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 06:30:05,734 - INFO - Aktueller Status: Preis=0.6127, Average=0.6122
+2025-11-02 06:30:07,139 - INFO - Trigger Order 1368746493348487168 (buy 114.0 @ Trigger 0.5871) storniert.
+2025-11-02 06:30:07,524 - INFO - Trigger Order 1368746496463609856 (buy 114.0 @ Trigger 0.5828) storniert.
+2025-11-02 06:30:07,895 - INFO - Trigger Order 1368746498134188032 (buy 118.0 @ Trigger 0.5684) storniert.
+2025-11-02 06:30:08,280 - INFO - Trigger Order 1368746501438054400 (buy 118.0 @ Trigger 0.5643) storniert.
+2025-11-02 06:30:08,666 - INFO - Trigger Order 1368746503082950656 (buy 127.0 @ Trigger 0.5272) storniert.
+2025-11-02 06:30:09,053 - INFO - Trigger Order 1368746506438909952 (buy 127.0 @ Trigger 0.5234) storniert.
+2025-11-02 06:30:09,455 - INFO - Trigger Order 1368746508053712896 (sell 105.0 @ Trigger 0.6393) storniert.
+2025-11-02 06:30:09,843 - INFO - Trigger Order 1368746511296901120 (sell 105.0 @ Trigger 0.644) storniert.
+2025-11-02 06:30:10,217 - INFO - Trigger Order 1368746512973119488 (sell 101.0 @ Trigger 0.6603) storniert.
+2025-11-02 06:30:10,594 - INFO - Trigger Order 1368746516420837376 (sell 101.0 @ Trigger 0.6652) storniert.
+2025-11-02 06:30:10,987 - INFO - Trigger Order 1368746518085677056 (sell 94.0 @ Trigger 0.712) storniert.
+2025-11-02 06:30:11,375 - INFO - Trigger Order 1368746521268723712 (sell 94.0 @ Trigger 0.7172) storniert.
+2025-11-02 06:30:11,475 - INFO - 12 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 06:30:11,476 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 06:30:11,766 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 06:30:14,082 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 06:30:14,082 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 06:30:14,082 - INFO - Prüfe Long Entry Bands: [0.586565735387532, 0.5678695978542913, 0.5267060822847272]
+2025-11-02 06:30:14,374 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.6425, Trigger@0.5867, Limit@0.5866
+2025-11-02 06:30:15,561 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.4169, Trigger@0.5680, Limit@0.5679
+2025-11-02 06:30:16,736 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.6715, Trigger@0.5268, Limit@0.5267
+2025-11-02 06:30:17,633 - INFO - Prüfe Short Entry Bands: [0.6389406246687217, 0.6599766544888044, 0.7115556284295548]
+2025-11-02 06:30:17,925 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.2450, Trigger@0.6388, Limit@0.6389
+2025-11-02 06:30:19,155 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.8905, Trigger@0.6598, Limit@0.6600
+2025-11-02 06:30:20,348 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.5047, Trigger@0.7114, Limit@0.7116
+2025-11-02 06:30:21,229 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 06:30:21,229 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 06:30:21,248 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 06:45:03,854 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 06:45:03,855 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 06:45:05,945 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 06:45:06,312 - INFO - Aktueller Status: Preis=0.6136, Average=0.6125
+2025-11-02 06:45:07,756 - INFO - Trigger Order 1368750265726472192 (buy 114.0 @ Trigger 0.5867) storniert.
+2025-11-02 06:45:08,143 - INFO - Trigger Order 1368750268976541696 (buy 114.0 @ Trigger 0.5824) storniert.
+2025-11-02 06:45:08,535 - INFO - Trigger Order 1368750270680936448 (buy 118.0 @ Trigger 0.568) storniert.
+2025-11-02 06:45:08,915 - INFO - Trigger Order 1368750273984540673 (buy 118.0 @ Trigger 0.5638) storniert.
+2025-11-02 06:45:09,307 - INFO - Trigger Order 1368750275642798081 (buy 127.0 @ Trigger 0.5268) storniert.
+2025-11-02 06:45:09,697 - INFO - Trigger Order 1368750278925434880 (buy 127.0 @ Trigger 0.523) storniert.
+2025-11-02 06:45:10,070 - INFO - Trigger Order 1368750280628834304 (sell 105.0 @ Trigger 0.6388) storniert.
+2025-11-02 06:45:10,446 - INFO - Trigger Order 1368750284010434561 (sell 105.0 @ Trigger 0.6435) storniert.
+2025-11-02 06:45:10,835 - INFO - Trigger Order 1368750285694312448 (sell 101.0 @ Trigger 0.6598) storniert.
+2025-11-02 06:45:11,231 - INFO - Trigger Order 1368750289042612224 (sell 101.0 @ Trigger 0.6647) storniert.
+2025-11-02 06:45:11,608 - INFO - Trigger Order 1368750290736594944 (sell 94.0 @ Trigger 0.7114) storniert.
+2025-11-02 06:45:12,007 - INFO - Trigger Order 1368750294047404034 (sell 94.0 @ Trigger 0.7166) storniert.
+2025-11-02 06:45:12,108 - INFO - 12 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 06:45:12,108 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 06:45:12,386 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 06:45:14,721 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 06:45:14,721 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 06:45:14,721 - INFO - Prüfe Long Entry Bands: [0.5868531768068269, 0.5681478773945611, 0.5269641900034523]
+2025-11-02 06:45:15,007 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.5863, Trigger@0.5870, Limit@0.5869
+2025-11-02 06:45:16,164 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.3589, Trigger@0.5683, Limit@0.5681
+2025-11-02 06:45:17,341 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.6089, Trigger@0.5271, Limit@0.5270
+2025-11-02 06:45:18,245 - INFO - Prüfe Short Entry Bands: [0.6392537319454, 0.6603000702883012, 0.7119043200550688]
+2025-11-02 06:45:18,523 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.1935, Trigger@0.6391, Limit@0.6393
+2025-11-02 06:45:19,708 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.8406, Trigger@0.6602, Limit@0.6603
+2025-11-02 06:45:20,917 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.4584, Trigger@0.7118, Limit@0.7119
+2025-11-02 06:45:21,788 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 06:45:21,788 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 06:45:21,806 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 07:00:03,448 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 07:00:03,449 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 07:00:05,367 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 07:00:05,717 - INFO - Aktueller Status: Preis=0.6156, Average=0.6132
+2025-11-02 07:00:07,150 - INFO - Trigger Order 1368754043271843841 (buy 114.0 @ Trigger 0.587) storniert.
+2025-11-02 07:00:07,515 - INFO - Trigger Order 1368754044940660737 (buy 114.0 @ Trigger 0.6125) storniert.
+2025-11-02 07:00:07,897 - INFO - Trigger Order 1368754046518235136 (buy 114.0 @ Trigger 0.5827) storniert.
+2025-11-02 07:00:08,272 - INFO - Trigger Order 1368754048132530176 (buy 118.0 @ Trigger 0.5683) storniert.
+2025-11-02 07:00:08,647 - INFO - Trigger Order 1368754049701711872 (buy 118.0 @ Trigger 0.6125) storniert.
+2025-11-02 07:00:09,014 - INFO - Trigger Order 1368754051420565504 (buy 118.0 @ Trigger 0.5641) storniert.
+2025-11-02 07:00:09,378 - INFO - Trigger Order 1368754053057159168 (buy 127.0 @ Trigger 0.5271) storniert.
+2025-11-02 07:00:09,754 - INFO - Trigger Order 1368754054734360576 (buy 127.0 @ Trigger 0.6125) storniert.
+2025-11-02 07:00:10,129 - INFO - Trigger Order 1368754056441147396 (buy 127.0 @ Trigger 0.5232) storniert.
+2025-11-02 07:00:10,520 - INFO - Trigger Order 1368754058035277824 (sell 105.0 @ Trigger 0.6391) storniert.
+2025-11-02 07:00:10,902 - INFO - Trigger Order 1368754059750453248 (sell 105.0 @ Trigger 0.6125) storniert.
+2025-11-02 07:00:11,268 - INFO - Trigger Order 1368754061320925185 (sell 105.0 @ Trigger 0.6438) storniert.
+2025-11-02 07:00:11,640 - INFO - Trigger Order 1368754062938124288 (sell 101.0 @ Trigger 0.6602) storniert.
+2025-11-02 07:00:12,019 - INFO - Trigger Order 1368754064726700032 (sell 101.0 @ Trigger 0.6125) storniert.
+2025-11-02 07:00:12,406 - INFO - Trigger Order 1368754066415497216 (sell 101.0 @ Trigger 0.665) storniert.
+2025-11-02 07:00:12,782 - INFO - Trigger Order 1368754068067328001 (sell 94.0 @ Trigger 0.7118) storniert.
+2025-11-02 07:00:13,150 - INFO - Trigger Order 1368754069687058432 (sell 94.0 @ Trigger 0.6125) storniert.
+2025-11-02 07:00:13,526 - INFO - Trigger Order 1368754071277211649 (sell 94.0 @ Trigger 0.717) storniert.
+2025-11-02 07:00:13,626 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 07:00:13,627 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 07:00:13,902 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 07:00:16,210 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 07:00:16,210 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 07:00:16,210 - INFO - Prüfe Long Entry Bands: [0.5874919355163712, 0.5687662763729385, 0.5275377627117304]
+2025-11-02 07:00:16,498 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.4617, Trigger@0.5876, Limit@0.5875
+2025-11-02 07:00:17,696 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2302, Trigger@0.5689, Limit@0.5688
+2025-11-02 07:00:18,864 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.4702, Trigger@0.5276, Limit@0.5275
+2025-11-02 07:00:19,744 - INFO - Prüfe Short Entry Bands: [0.6399495258935739, 0.6610187720649607, 0.7126791903339887]
+2025-11-02 07:00:20,038 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.0791, Trigger@0.6398, Limit@0.6399
+2025-11-02 07:00:21,188 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7298, Trigger@0.6609, Limit@0.6610
+2025-11-02 07:00:22,333 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3557, Trigger@0.7125, Limit@0.7127
+2025-11-02 07:00:23,188 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 07:00:23,189 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 07:00:23,206 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 07:15:03,767 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 07:15:03,768 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 07:15:05,819 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 07:15:06,169 - INFO - Aktueller Status: Preis=0.6150, Average=0.6130
+2025-11-02 07:15:07,585 - INFO - Trigger Order 1368757824439853056 (buy 114.0 @ Trigger 0.5876) storniert.
+2025-11-02 07:15:07,970 - INFO - Trigger Order 1368757826072682496 (buy 114.0 @ Trigger 0.6132) storniert.
+2025-11-02 07:15:08,367 - INFO - Trigger Order 1368757827783143424 (buy 114.0 @ Trigger 0.5833) storniert.
+2025-11-02 07:15:08,739 - INFO - Trigger Order 1368757829419732992 (buy 118.0 @ Trigger 0.5689) storniert.
+2025-11-02 07:15:09,111 - INFO - Trigger Order 1368757831113719808 (buy 118.0 @ Trigger 0.6132) storniert.
+2025-11-02 07:15:09,500 - INFO - Trigger Order 1368757832733233157 (buy 118.0 @ Trigger 0.5647) storniert.
+2025-11-02 07:15:09,871 - INFO - Trigger Order 1368757834311282688 (buy 127.0 @ Trigger 0.5276) storniert.
+2025-11-02 07:15:10,251 - INFO - Trigger Order 1368757836012367872 (buy 127.0 @ Trigger 0.6132) storniert.
+2025-11-02 07:15:10,626 - INFO - Trigger Order 1368757837606203392 (buy 127.0 @ Trigger 0.5238) storniert.
+2025-11-02 07:15:11,019 - INFO - Trigger Order 1368757839267958784 (sell 105.0 @ Trigger 0.6398) storniert.
+2025-11-02 07:15:11,412 - INFO - Trigger Order 1368757840892145664 (sell 105.0 @ Trigger 0.6132) storniert.
+2025-11-02 07:15:11,779 - INFO - Trigger Order 1368757842459824128 (sell 105.0 @ Trigger 0.6445) storniert.
+2025-11-02 07:15:12,159 - INFO - Trigger Order 1368757844095090688 (sell 101.0 @ Trigger 0.6609) storniert.
+2025-11-02 07:15:12,551 - INFO - Trigger Order 1368757845688922112 (sell 101.0 @ Trigger 0.6132) storniert.
+2025-11-02 07:15:12,935 - INFO - Trigger Order 1368757847346188288 (sell 101.0 @ Trigger 0.6657) storniert.
+2025-11-02 07:15:13,335 - INFO - Trigger Order 1368757848930394112 (sell 94.0 @ Trigger 0.7125) storniert.
+2025-11-02 07:15:13,711 - INFO - Trigger Order 1368757850458361856 (sell 94.0 @ Trigger 0.6132) storniert.
+2025-11-02 07:15:14,086 - INFO - Trigger Order 1368757852050956288 (sell 94.0 @ Trigger 0.7177) storniert.
+2025-11-02 07:15:14,186 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 07:15:14,187 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 07:15:14,472 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 07:15:16,786 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 07:15:16,786 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 07:15:16,787 - INFO - Prüfe Long Entry Bands: [0.587300307903508, 0.5685807566794253, 0.527365690899247]
+2025-11-02 07:15:17,082 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.4991, Trigger@0.5874, Limit@0.5873
+2025-11-02 07:15:18,247 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2687, Trigger@0.5687, Limit@0.5686
+2025-11-02 07:15:19,422 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.5118, Trigger@0.5275, Limit@0.5274
+2025-11-02 07:15:20,300 - INFO - Prüfe Short Entry Bands: [0.6397407877091218, 0.6608031615319628, 0.7124467292503127]
+2025-11-02 07:15:20,592 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.1134, Trigger@0.6396, Limit@0.6397
+2025-11-02 07:15:21,757 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7630, Trigger@0.6607, Limit@0.6608
+2025-11-02 07:15:22,911 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3865, Trigger@0.7123, Limit@0.7124
+2025-11-02 07:15:23,774 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 07:15:23,774 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 07:15:23,792 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 07:30:03,254 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 07:30:03,254 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 07:30:05,235 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 07:30:05,587 - INFO - Aktueller Status: Preis=0.6148, Average=0.6129
+2025-11-02 07:30:07,023 - INFO - Trigger Order 1368761601750343681 (buy 114.0 @ Trigger 0.5874) storniert.
+2025-11-02 07:30:07,406 - INFO - Trigger Order 1368761603374264321 (buy 114.0 @ Trigger 0.613) storniert.
+2025-11-02 07:30:07,794 - INFO - Trigger Order 1368761605001658368 (buy 114.0 @ Trigger 0.5831) storniert.
+2025-11-02 07:30:08,176 - INFO - Trigger Order 1368761606624124930 (buy 118.0 @ Trigger 0.5687) storniert.
+2025-11-02 07:30:08,554 - INFO - Trigger Order 1368761608269533187 (buy 118.0 @ Trigger 0.613) storniert.
+2025-11-02 07:30:08,927 - INFO - Trigger Order 1368761609908994048 (buy 118.0 @ Trigger 0.5645) storniert.
+2025-11-02 07:30:09,307 - INFO - Trigger Order 1368761611569639424 (buy 127.0 @ Trigger 0.5275) storniert.
+2025-11-02 07:30:09,694 - INFO - Trigger Order 1368761613146267648 (buy 127.0 @ Trigger 0.613) storniert.
+2025-11-02 07:30:10,077 - INFO - Trigger Order 1368761614825230336 (buy 127.0 @ Trigger 0.5236) storniert.
+2025-11-02 07:30:10,470 - INFO - Trigger Order 1368761616456814592 (sell 105.0 @ Trigger 0.6396) storniert.
+2025-11-02 07:30:10,843 - INFO - Trigger Order 1368761618106167296 (sell 105.0 @ Trigger 0.613) storniert.
+2025-11-02 07:30:11,229 - INFO - Trigger Order 1368761619757735936 (sell 105.0 @ Trigger 0.6443) storniert.
+2025-11-02 07:30:11,609 - INFO - Trigger Order 1368761621325160448 (sell 101.0 @ Trigger 0.6607) storniert.
+2025-11-02 07:30:12,012 - INFO - Trigger Order 1368761622946394112 (sell 101.0 @ Trigger 0.613) storniert.
+2025-11-02 07:30:12,387 - INFO - Trigger Order 1368761624597147648 (sell 101.0 @ Trigger 0.6655) storniert.
+2025-11-02 07:30:12,788 - INFO - Trigger Order 1368761626170822656 (sell 94.0 @ Trigger 0.7123) storniert.
+2025-11-02 07:30:13,172 - INFO - Trigger Order 1368761627773046785 (sell 94.0 @ Trigger 0.613) storniert.
+2025-11-02 07:30:13,572 - INFO - Trigger Order 1368761629369835520 (sell 94.0 @ Trigger 0.7175) storniert.
+2025-11-02 07:30:13,673 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 07:30:13,673 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 07:30:13,972 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 07:30:16,295 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 07:30:16,295 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 07:30:16,296 - INFO - Prüfe Long Entry Bands: [0.5872364320325535, 0.5685189167815875, 0.5273083336284191]
+2025-11-02 07:30:16,603 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.5115, Trigger@0.5874, Limit@0.5872
+2025-11-02 07:30:17,795 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2816, Trigger@0.5686, Limit@0.5685
+2025-11-02 07:30:18,962 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.5256, Trigger@0.5274, Limit@0.5273
+2025-11-02 07:30:19,843 - INFO - Prüfe Short Entry Bands: [0.6396712083143044, 0.6607312913542969, 0.7123692422224207]
+2025-11-02 07:30:20,143 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.1248, Trigger@0.6395, Limit@0.6397
+2025-11-02 07:30:21,328 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7741, Trigger@0.6606, Limit@0.6607
+2025-11-02 07:30:22,467 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3967, Trigger@0.7122, Limit@0.7124
+2025-11-02 07:30:23,359 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 07:30:23,359 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 07:30:23,377 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 07:45:03,790 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 07:45:03,791 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 07:45:05,818 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 07:45:06,171 - INFO - Aktueller Status: Preis=0.6144, Average=0.6128
+2025-11-02 07:45:07,576 - INFO - Trigger Order 1368765374619496448 (buy 114.0 @ Trigger 0.5874) storniert.
+2025-11-02 07:45:07,946 - INFO - Trigger Order 1368765376268156928 (buy 114.0 @ Trigger 0.6129) storniert.
+2025-11-02 07:45:08,326 - INFO - Trigger Order 1368765377917030401 (buy 114.0 @ Trigger 0.5831) storniert.
+2025-11-02 07:45:08,735 - INFO - Trigger Order 1368765379598135296 (buy 118.0 @ Trigger 0.5686) storniert.
+2025-11-02 07:45:09,117 - INFO - Trigger Order 1368765381221625856 (buy 118.0 @ Trigger 0.6129) storniert.
+2025-11-02 07:45:09,507 - INFO - Trigger Order 1368765382863106048 (buy 118.0 @ Trigger 0.5645) storniert.
+2025-11-02 07:45:09,904 - INFO - Trigger Order 1368765384502091784 (buy 127.0 @ Trigger 0.5274) storniert.
+2025-11-02 07:45:10,316 - INFO - Trigger Order 1368765386136625152 (buy 127.0 @ Trigger 0.6129) storniert.
+2025-11-02 07:45:10,715 - INFO - Trigger Order 1368765387747667968 (buy 127.0 @ Trigger 0.5236) storniert.
+2025-11-02 07:45:11,112 - INFO - Trigger Order 1368765389471825920 (sell 105.0 @ Trigger 0.6395) storniert.
+2025-11-02 07:45:11,487 - INFO - Trigger Order 1368765391090098176 (sell 105.0 @ Trigger 0.6129) storniert.
+2025-11-02 07:45:11,876 - INFO - Trigger Order 1368765392743383040 (sell 105.0 @ Trigger 0.6442) storniert.
+2025-11-02 07:45:12,252 - INFO - Trigger Order 1368765394434203648 (sell 101.0 @ Trigger 0.6606) storniert.
+2025-11-02 07:45:12,639 - INFO - Trigger Order 1368765396035907584 (sell 101.0 @ Trigger 0.6129) storniert.
+2025-11-02 07:45:13,013 - INFO - Trigger Order 1368765397608046593 (sell 101.0 @ Trigger 0.6654) storniert.
+2025-11-02 07:45:13,401 - INFO - Trigger Order 1368765399204114432 (sell 94.0 @ Trigger 0.7122) storniert.
+2025-11-02 07:45:13,771 - INFO - Trigger Order 1368765400827310080 (sell 94.0 @ Trigger 0.6129) storniert.
+2025-11-02 07:45:14,159 - INFO - Trigger Order 1368765402511187969 (sell 94.0 @ Trigger 0.7174) storniert.
+2025-11-02 07:45:14,259 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 07:45:14,260 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 07:45:14,564 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 07:45:16,892 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 07:45:16,892 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 07:45:16,893 - INFO - Prüfe Long Entry Bands: [0.5871086802906447, 0.568395236985912, 0.5271936190867635]
+2025-11-02 07:45:17,211 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.5364, Trigger@0.5872, Limit@0.5871
+2025-11-02 07:45:18,372 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.3073, Trigger@0.5685, Limit@0.5684
+2025-11-02 07:45:19,527 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.5534, Trigger@0.5273, Limit@0.5272
+2025-11-02 07:45:20,426 - INFO - Prüfe Short Entry Bands: [0.6395320495246696, 0.660587550998965, 0.7122142681666368]
+2025-11-02 07:45:20,698 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.1477, Trigger@0.6394, Limit@0.6395
+2025-11-02 07:45:21,858 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7962, Trigger@0.6605, Limit@0.6606
+2025-11-02 07:45:23,057 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.4173, Trigger@0.7121, Limit@0.7122
+2025-11-02 07:45:23,924 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 07:45:23,925 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 07:45:23,942 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 08:00:03,325 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 08:00:03,326 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 08:00:06,724 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 08:00:07,074 - INFO - Aktueller Status: Preis=0.6156, Average=0.6132
+2025-11-02 08:00:08,461 - INFO - Trigger Order 1368769152026456064 (buy 114.0 @ Trigger 0.5872) storniert.
+2025-11-02 08:00:08,843 - INFO - Trigger Order 1368769153645027329 (buy 114.0 @ Trigger 0.6128) storniert.
+2025-11-02 08:00:09,264 - INFO - Trigger Order 1368769155294113792 (buy 114.0 @ Trigger 0.5829) storniert.
+2025-11-02 08:00:09,644 - INFO - Trigger Order 1368769156917829632 (buy 118.0 @ Trigger 0.5685) storniert.
+2025-11-02 08:00:10,021 - INFO - Trigger Order 1368769158557282304 (buy 118.0 @ Trigger 0.6128) storniert.
+2025-11-02 08:00:10,409 - INFO - Trigger Order 1368769160171364352 (buy 118.0 @ Trigger 0.5644) storniert.
+2025-11-02 08:00:10,770 - INFO - Trigger Order 1368769161750654976 (buy 127.0 @ Trigger 0.5273) storniert.
+2025-11-02 08:00:11,140 - INFO - Trigger Order 1368769163400978433 (buy 127.0 @ Trigger 0.6128) storniert.
+2025-11-02 08:00:11,530 - INFO - Trigger Order 1368769165097709568 (buy 127.0 @ Trigger 0.5235) storniert.
+2025-11-02 08:00:11,921 - INFO - Trigger Order 1368769166687350784 (sell 105.0 @ Trigger 0.6394) storniert.
+2025-11-02 08:00:12,325 - INFO - Trigger Order 1368769168304844800 (sell 105.0 @ Trigger 0.6128) storniert.
+2025-11-02 08:00:12,702 - INFO - Trigger Order 1368769169915461632 (sell 105.0 @ Trigger 0.6441) storniert.
+2025-11-02 08:00:13,071 - INFO - Trigger Order 1368769171551756288 (sell 101.0 @ Trigger 0.6605) storniert.
+2025-11-02 08:00:13,446 - INFO - Trigger Order 1368769173165748224 (sell 101.0 @ Trigger 0.6128) storniert.
+2025-11-02 08:00:13,822 - INFO - Trigger Order 1368769174818304003 (sell 101.0 @ Trigger 0.6653) storniert.
+2025-11-02 08:00:14,198 - INFO - Trigger Order 1368769176567627776 (sell 94.0 @ Trigger 0.7121) storniert.
+2025-11-02 08:00:14,563 - INFO - Trigger Order 1368769178161975296 (sell 94.0 @ Trigger 0.6128) storniert.
+2025-11-02 08:00:14,939 - INFO - Trigger Order 1368769179771346944 (sell 94.0 @ Trigger 0.7173) storniert.
+2025-11-02 08:00:15,039 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 08:00:15,040 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 08:00:15,319 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 08:00:17,655 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 08:00:17,655 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 08:00:17,656 - INFO - Prüfe Long Entry Bands: [0.5874919355163712, 0.5687662763729385, 0.5275377627117304]
+2025-11-02 08:00:17,951 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.4617, Trigger@0.5876, Limit@0.5875
+2025-11-02 08:00:19,103 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2302, Trigger@0.5689, Limit@0.5688
+2025-11-02 08:00:20,257 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.4702, Trigger@0.5276, Limit@0.5275
+2025-11-02 08:00:21,146 - INFO - Prüfe Short Entry Bands: [0.6399495258935739, 0.6610187720649607, 0.7126791903339887]
+2025-11-02 08:00:21,426 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.0791, Trigger@0.6398, Limit@0.6399
+2025-11-02 08:00:22,583 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7298, Trigger@0.6609, Limit@0.6610
+2025-11-02 08:00:23,731 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3557, Trigger@0.7125, Limit@0.7127
+2025-11-02 08:00:24,604 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 08:00:24,604 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 08:00:24,621 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 08:15:03,842 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 08:15:03,843 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 08:15:06,004 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 08:15:06,365 - INFO - Aktueller Status: Preis=0.6150, Average=0.6130
+2025-11-02 08:15:07,815 - INFO - Trigger Order 1368772930016423936 (buy 114.0 @ Trigger 0.5876) storniert.
+2025-11-02 08:15:08,208 - INFO - Trigger Order 1368772931624644609 (buy 114.0 @ Trigger 0.6132) storniert.
+2025-11-02 08:15:08,601 - INFO - Trigger Order 1368772933245607936 (buy 114.0 @ Trigger 0.5833) storniert.
+2025-11-02 08:15:08,984 - INFO - Trigger Order 1368772934861656065 (buy 118.0 @ Trigger 0.5689) storniert.
+2025-11-02 08:15:09,376 - INFO - Trigger Order 1368772936456482817 (buy 118.0 @ Trigger 0.6132) storniert.
+2025-11-02 08:15:09,770 - INFO - Trigger Order 1368772938054512641 (buy 118.0 @ Trigger 0.5647) storniert.
+2025-11-02 08:15:10,163 - INFO - Trigger Order 1368772939665125376 (buy 127.0 @ Trigger 0.5276) storniert.
+2025-11-02 08:15:10,558 - INFO - Trigger Order 1368772941324267520 (buy 127.0 @ Trigger 0.6132) storniert.
+2025-11-02 08:15:10,956 - INFO - Trigger Order 1368772942985211904 (buy 127.0 @ Trigger 0.5238) storniert.
+2025-11-02 08:15:11,348 - INFO - Trigger Order 1368772944595394560 (sell 105.0 @ Trigger 0.6398) storniert.
+2025-11-02 08:15:11,728 - INFO - Trigger Order 1368772946240290816 (sell 105.0 @ Trigger 0.6132) storniert.
+2025-11-02 08:15:12,108 - INFO - Trigger Order 1368772947858993152 (sell 105.0 @ Trigger 0.6445) storniert.
+2025-11-02 08:15:12,487 - INFO - Trigger Order 1368772949469175808 (sell 101.0 @ Trigger 0.6609) storniert.
+2025-11-02 08:15:12,864 - INFO - Trigger Order 1368772951071830016 (sell 101.0 @ Trigger 0.6132) storniert.
+2025-11-02 08:15:13,239 - INFO - Trigger Order 1368772952691126272 (sell 101.0 @ Trigger 0.6657) storniert.
+2025-11-02 08:15:13,623 - INFO - Trigger Order 1368772954273886208 (sell 94.0 @ Trigger 0.7125) storniert.
+2025-11-02 08:15:14,015 - INFO - Trigger Order 1368772955926441984 (sell 94.0 @ Trigger 0.6132) storniert.
+2025-11-02 08:15:14,398 - INFO - Trigger Order 1368772957523480576 (sell 94.0 @ Trigger 0.7177) storniert.
+2025-11-02 08:15:14,499 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 08:15:14,499 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 08:15:14,791 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 08:15:17,100 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 08:15:17,101 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 08:15:17,101 - INFO - Prüfe Long Entry Bands: [0.587300307903508, 0.5685807566794253, 0.527365690899247]
+2025-11-02 08:15:17,393 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.4991, Trigger@0.5874, Limit@0.5873
+2025-11-02 08:15:18,537 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2687, Trigger@0.5687, Limit@0.5686
+2025-11-02 08:15:19,717 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.5118, Trigger@0.5275, Limit@0.5274
+2025-11-02 08:15:20,594 - INFO - Prüfe Short Entry Bands: [0.6397407877091218, 0.6608031615319628, 0.7124467292503127]
+2025-11-02 08:15:20,894 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.1134, Trigger@0.6396, Limit@0.6397
+2025-11-02 08:15:22,061 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7630, Trigger@0.6607, Limit@0.6608
+2025-11-02 08:15:23,227 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3865, Trigger@0.7123, Limit@0.7124
+2025-11-02 08:15:24,125 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 08:15:24,126 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 08:15:24,142 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 08:30:03,324 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 08:30:03,324 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 08:30:05,335 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 08:30:05,686 - INFO - Aktueller Status: Preis=0.6148, Average=0.6129
+2025-11-02 08:30:07,047 - INFO - Trigger Order 1368776702572376066 (buy 114.0 @ Trigger 0.5874) storniert.
+2025-11-02 08:30:07,443 - INFO - Trigger Order 1368776704166211584 (buy 114.0 @ Trigger 0.613) storniert.
+2025-11-02 08:30:07,859 - INFO - Trigger Order 1368776705759055872 (buy 114.0 @ Trigger 0.5831) storniert.
+2025-11-02 08:30:08,255 - INFO - Trigger Order 1368776707369152512 (buy 118.0 @ Trigger 0.5687) storniert.
+2025-11-02 08:30:08,648 - INFO - Trigger Order 1368776708979769344 (buy 118.0 @ Trigger 0.613) storniert.
+2025-11-02 08:30:09,048 - INFO - Trigger Order 1368776710673969152 (buy 118.0 @ Trigger 0.5645) storniert.
+2025-11-02 08:30:09,431 - INFO - Trigger Order 1368776712323141632 (buy 127.0 @ Trigger 0.5275) storniert.
+2025-11-02 08:30:09,803 - INFO - Trigger Order 1368776713950531585 (buy 127.0 @ Trigger 0.613) storniert.
+2025-11-02 08:30:10,191 - INFO - Trigger Order 1368776715574718464 (buy 127.0 @ Trigger 0.5236) storniert.
+2025-11-02 08:30:10,572 - INFO - Trigger Order 1368776717259321344 (sell 105.0 @ Trigger 0.6396) storniert.
+2025-11-02 08:30:10,963 - INFO - Trigger Order 1368776718907387904 (sell 105.0 @ Trigger 0.613) storniert.
+2025-11-02 08:30:11,343 - INFO - Trigger Order 1368776720505712640 (sell 105.0 @ Trigger 0.6443) storniert.
+2025-11-02 08:30:11,747 - INFO - Trigger Order 1368776722154594304 (sell 101.0 @ Trigger 0.6607) storniert.
+2025-11-02 08:30:12,141 - INFO - Trigger Order 1368776723768885248 (sell 101.0 @ Trigger 0.613) storniert.
+2025-11-02 08:30:12,531 - INFO - Trigger Order 1368776725438730240 (sell 101.0 @ Trigger 0.6655) storniert.
+2025-11-02 08:30:12,921 - INFO - Trigger Order 1368776727015788544 (sell 94.0 @ Trigger 0.7123) storniert.
+2025-11-02 08:30:13,300 - INFO - Trigger Order 1368776728667103232 (sell 94.0 @ Trigger 0.613) storniert.
+2025-11-02 08:30:13,692 - INFO - Trigger Order 1368776730349449216 (sell 94.0 @ Trigger 0.7175) storniert.
+2025-11-02 08:30:13,793 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 08:30:13,793 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 08:30:14,075 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 08:30:16,394 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 08:30:16,394 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 08:30:16,394 - INFO - Prüfe Long Entry Bands: [0.5872364320325535, 0.5685189167815875, 0.5273083336284191]
+2025-11-02 08:30:16,693 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.5115, Trigger@0.5874, Limit@0.5872
+2025-11-02 08:30:17,919 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2816, Trigger@0.5686, Limit@0.5685
+2025-11-02 08:30:19,101 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.5256, Trigger@0.5274, Limit@0.5273
+2025-11-02 08:30:19,979 - INFO - Prüfe Short Entry Bands: [0.6396712083143044, 0.6607312913542969, 0.7123692422224207]
+2025-11-02 08:30:20,286 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.1248, Trigger@0.6395, Limit@0.6397
+2025-11-02 08:30:21,480 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7741, Trigger@0.6606, Limit@0.6607
+2025-11-02 08:30:22,669 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3967, Trigger@0.7122, Limit@0.7124
+2025-11-02 08:30:23,569 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 08:30:23,570 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 08:30:23,585 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 08:45:03,856 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 08:45:03,856 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 08:45:06,408 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 08:45:06,773 - INFO - Aktueller Status: Preis=0.6159, Average=0.6133
+2025-11-02 08:45:08,181 - INFO - Trigger Order 1368780474492194816 (buy 114.0 @ Trigger 0.5874) storniert.
+2025-11-02 08:45:08,556 - INFO - Trigger Order 1368780476148948992 (buy 114.0 @ Trigger 0.6129) storniert.
+2025-11-02 08:45:08,945 - INFO - Trigger Order 1368780477965082624 (buy 114.0 @ Trigger 0.5831) storniert.
+2025-11-02 08:45:09,324 - INFO - Trigger Order 1368780479612198912 (buy 118.0 @ Trigger 0.5686) storniert.
+2025-11-02 08:45:09,719 - INFO - Trigger Order 1368780481261805568 (buy 118.0 @ Trigger 0.6129) storniert.
+2025-11-02 08:45:10,163 - INFO - Trigger Order 1368780482875367424 (buy 118.0 @ Trigger 0.5645) storniert.
+2025-11-02 08:45:10,541 - INFO - Trigger Order 1368780484604149760 (buy 127.0 @ Trigger 0.5274) storniert.
+2025-11-02 08:45:10,913 - INFO - Trigger Order 1368780486264795142 (buy 127.0 @ Trigger 0.6129) storniert.
+2025-11-02 08:45:11,290 - INFO - Trigger Order 1368780487846342656 (buy 127.0 @ Trigger 0.5236) storniert.
+2025-11-02 08:45:11,693 - INFO - Trigger Order 1368780489563320320 (sell 105.0 @ Trigger 0.6395) storniert.
+2025-11-02 08:45:12,082 - INFO - Trigger Order 1368780491260510208 (sell 105.0 @ Trigger 0.6129) storniert.
+2025-11-02 08:45:12,469 - INFO - Trigger Order 1368780492933738496 (sell 105.0 @ Trigger 0.6442) storniert.
+2025-11-02 08:45:12,867 - INFO - Trigger Order 1368780494564892673 (sell 101.0 @ Trigger 0.6606) storniert.
+2025-11-02 08:45:13,245 - INFO - Trigger Order 1368780496205594624 (sell 101.0 @ Trigger 0.6129) storniert.
+2025-11-02 08:45:13,651 - INFO - Trigger Order 1368780497876430849 (sell 101.0 @ Trigger 0.6654) storniert.
+2025-11-02 08:45:14,023 - INFO - Trigger Order 1368780499548155904 (sell 94.0 @ Trigger 0.7122) storniert.
+2025-11-02 08:45:14,411 - INFO - Trigger Order 1368780501242949632 (sell 94.0 @ Trigger 0.6129) storniert.
+2025-11-02 08:45:14,786 - INFO - Trigger Order 1368780502891827201 (sell 94.0 @ Trigger 0.7174) storniert.
+2025-11-02 08:45:14,886 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 08:45:14,887 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 08:45:15,168 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 08:45:17,456 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 08:45:17,456 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 08:45:17,456 - INFO - Prüfe Long Entry Bands: [0.5875877493228029, 0.5688590362196951, 0.5276237986179722]
+2025-11-02 08:45:17,755 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.4430, Trigger@0.5877, Limit@0.5876
+2025-11-02 08:45:18,971 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2109, Trigger@0.5690, Limit@0.5689
+2025-11-02 08:45:20,136 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.4494, Trigger@0.5277, Limit@0.5276
+2025-11-02 08:45:21,041 - INFO - Prüfe Short Entry Bands: [0.6400538949858, 0.6611265773314596, 0.7127954208758268]
+2025-11-02 08:45:21,383 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.0620, Trigger@0.6399, Limit@0.6401
+2025-11-02 08:45:22,554 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7133, Trigger@0.6610, Limit@0.6611
+2025-11-02 08:45:23,766 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3403, Trigger@0.7126, Limit@0.7128
+2025-11-02 08:45:24,670 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 08:45:24,670 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 08:45:24,688 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 09:00:03,443 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 09:00:03,444 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 09:00:05,766 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 09:00:06,127 - INFO - Aktueller Status: Preis=0.6176, Average=0.6138
+2025-11-02 09:00:07,522 - INFO - Trigger Order 1368784253815140353 (buy 114.0 @ Trigger 0.5877) storniert.
+2025-11-02 09:00:07,912 - INFO - Trigger Order 1368784255627374592 (buy 114.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:00:08,295 - INFO - Trigger Order 1368784257273049088 (buy 114.0 @ Trigger 0.5834) storniert.
+2025-11-02 09:00:08,671 - INFO - Trigger Order 1368784258910789632 (buy 118.0 @ Trigger 0.569) storniert.
+2025-11-02 09:00:09,048 - INFO - Trigger Order 1368784260610727936 (buy 118.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:00:09,421 - INFO - Trigger Order 1368784262188773376 (buy 118.0 @ Trigger 0.5648) storniert.
+2025-11-02 09:00:09,815 - INFO - Trigger Order 1368784263771987968 (buy 127.0 @ Trigger 0.5277) storniert.
+2025-11-02 09:00:10,211 - INFO - Trigger Order 1368784265450438656 (buy 127.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:00:10,601 - INFO - Trigger Order 1368784267177762816 (buy 127.0 @ Trigger 0.5239) storniert.
+2025-11-02 09:00:10,983 - INFO - Trigger Order 1368784269023256576 (sell 105.0 @ Trigger 0.6399) storniert.
+2025-11-02 09:00:11,395 - INFO - Trigger Order 1368784270633869312 (sell 105.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:00:11,784 - INFO - Trigger Order 1368784272313823234 (sell 105.0 @ Trigger 0.6446) storniert.
+2025-11-02 09:00:12,164 - INFO - Trigger Order 1368784273930592256 (sell 101.0 @ Trigger 0.661) storniert.
+2025-11-02 09:00:12,567 - INFO - Trigger Order 1368784275701317636 (sell 101.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:00:12,947 - INFO - Trigger Order 1368784277382934528 (sell 101.0 @ Trigger 0.6658) storniert.
+2025-11-02 09:00:13,335 - INFO - Trigger Order 1368784279032107008 (sell 94.0 @ Trigger 0.7126) storniert.
+2025-11-02 09:00:13,718 - INFO - Trigger Order 1368784280688861184 (sell 94.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:00:14,095 - INFO - Trigger Order 1368784282383355904 (sell 94.0 @ Trigger 0.7179) storniert.
+2025-11-02 09:00:14,196 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 09:00:14,197 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 09:00:14,470 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 09:00:16,794 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 09:00:16,794 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 09:00:16,794 - INFO - Prüfe Long Entry Bands: [0.5881306942259157, 0.5693846753513161, 0.5281113354200085]
+2025-11-02 09:00:17,097 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.3374, Trigger@0.5883, Limit@0.5881
+2025-11-02 09:00:18,276 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.1018, Trigger@0.5695, Limit@0.5694
+2025-11-02 09:00:19,455 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.3317, Trigger@0.5282, Limit@0.5281
+2025-11-02 09:00:20,330 - INFO - Prüfe Short Entry Bands: [0.640645319841748, 0.6617374738416204, 0.713454060612909]
+2025-11-02 09:00:20,626 - INFO - ✅ Short Entry 1/3 platziert: Amount=104.9650, Trigger@0.6405, Limit@0.6406
+2025-11-02 09:00:21,792 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.6194, Trigger@0.6616, Limit@0.6617
+2025-11-02 09:00:22,970 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.2532, Trigger@0.7133, Limit@0.7135
+2025-11-02 09:00:23,850 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 09:00:23,851 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 09:00:23,865 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 09:15:03,867 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 09:15:03,868 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 09:15:06,184 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 09:15:06,536 - INFO - Aktueller Status: Preis=0.6160, Average=0.6133
+2025-11-02 09:15:08,163 - INFO - Trigger Order 1368788025883049984 (buy 114.0 @ Trigger 0.5883) storniert.
+2025-11-02 09:15:08,550 - INFO - Trigger Order 1368788027569676288 (buy 114.0 @ Trigger 0.6138) storniert.
+2025-11-02 09:15:08,935 - INFO - Trigger Order 1368788029188677638 (buy 114.0 @ Trigger 0.584) storniert.
+2025-11-02 09:15:09,304 - INFO - Trigger Order 1368788030882361344 (buy 118.0 @ Trigger 0.5695) storniert.
+2025-11-02 09:15:09,675 - INFO - Trigger Order 1368788032522334208 (buy 118.0 @ Trigger 0.6138) storniert.
+2025-11-02 09:15:10,074 - INFO - Trigger Order 1368788034167312384 (buy 118.0 @ Trigger 0.5653) storniert.
+2025-11-02 09:15:10,628 - INFO - Trigger Order 1368788035801849859 (buy 127.0 @ Trigger 0.5282) storniert.
+2025-11-02 09:15:11,191 - INFO - Trigger Order 1368788037401120768 (buy 127.0 @ Trigger 0.6138) storniert.
+2025-11-02 09:15:11,583 - INFO - Trigger Order 1368788039058862081 (buy 127.0 @ Trigger 0.5244) storniert.
+2025-11-02 09:15:11,990 - INFO - Trigger Order 1368788040722497536 (sell 104.0 @ Trigger 0.6405) storniert.
+2025-11-02 09:15:12,390 - INFO - Trigger Order 1368788042323992576 (sell 104.0 @ Trigger 0.6138) storniert.
+2025-11-02 09:15:12,759 - INFO - Trigger Order 1368788043981471744 (sell 104.0 @ Trigger 0.6452) storniert.
+2025-11-02 09:15:13,154 - INFO - Trigger Order 1368788045624909825 (sell 101.0 @ Trigger 0.6616) storniert.
+2025-11-02 09:15:13,526 - INFO - Trigger Order 1368788047248105472 (sell 101.0 @ Trigger 0.6138) storniert.
+2025-11-02 09:15:13,909 - INFO - Trigger Order 1368788048964005888 (sell 101.0 @ Trigger 0.6664) storniert.
+2025-11-02 09:15:14,299 - INFO - Trigger Order 1368788050575429632 (sell 94.0 @ Trigger 0.7133) storniert.
+2025-11-02 09:15:14,695 - INFO - Trigger Order 1368788052191227904 (sell 94.0 @ Trigger 0.6138) storniert.
+2025-11-02 09:15:15,085 - INFO - Trigger Order 1368788053821825024 (sell 94.0 @ Trigger 0.7185) storniert.
+2025-11-02 09:15:15,202 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 09:15:15,202 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 09:15:15,473 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 09:15:18,007 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 09:15:18,007 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 09:15:18,008 - INFO - Prüfe Long Entry Bands: [0.5876196872582802, 0.568889956168614, 0.527652477253386]
+2025-11-02 09:15:18,321 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.4368, Trigger@0.5877, Limit@0.5876
+2025-11-02 09:15:19,509 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2045, Trigger@0.5690, Limit@0.5689
+2025-11-02 09:15:20,911 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.4425, Trigger@0.5278, Limit@0.5277
+2025-11-02 09:15:21,921 - INFO - Prüfe Short Entry Bands: [0.6400886846832087, 0.6611625124202927, 0.7128341643897728]
+2025-11-02 09:15:22,187 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.0563, Trigger@0.6400, Limit@0.6401
+2025-11-02 09:15:23,379 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7077, Trigger@0.6610, Limit@0.6612
+2025-11-02 09:15:24,549 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3352, Trigger@0.7127, Limit@0.7128
+2025-11-02 09:15:25,431 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 09:15:25,431 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 09:15:25,450 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 09:30:03,420 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 09:30:03,420 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 09:30:05,472 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 09:30:05,836 - INFO - Aktueller Status: Preis=0.6159, Average=0.6133
+2025-11-02 09:30:07,252 - INFO - Trigger Order 1368791805894672384 (buy 114.0 @ Trigger 0.5877) storniert.
+2025-11-02 09:30:07,632 - INFO - Trigger Order 1368791807546499072 (buy 114.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:30:08,001 - INFO - Trigger Order 1368791809245917189 (buy 114.0 @ Trigger 0.5834) storniert.
+2025-11-02 09:30:08,373 - INFO - Trigger Order 1368791810911055872 (buy 118.0 @ Trigger 0.569) storniert.
+2025-11-02 09:30:08,882 - INFO - Trigger Order 1368791812530057216 (buy 118.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:30:09,263 - INFO - Trigger Order 1368791815139434496 (buy 118.0 @ Trigger 0.5649) storniert.
+2025-11-02 09:30:09,664 - INFO - Trigger Order 1368791816755228672 (buy 127.0 @ Trigger 0.5278) storniert.
+2025-11-02 09:30:10,071 - INFO - Trigger Order 1368791818397892608 (buy 127.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:30:10,464 - INFO - Trigger Order 1368791820628533248 (buy 127.0 @ Trigger 0.5239) storniert.
+2025-11-02 09:30:10,843 - INFO - Trigger Order 1368791822181666817 (sell 105.0 @ Trigger 0.64) storniert.
+2025-11-02 09:30:11,209 - INFO - Trigger Order 1368791823783890944 (sell 105.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:30:11,585 - INFO - Trigger Order 1368791825486782464 (sell 105.0 @ Trigger 0.6446) storniert.
+2025-11-02 09:30:11,993 - INFO - Trigger Order 1368791827155599360 (sell 101.0 @ Trigger 0.661) storniert.
+2025-11-02 09:30:12,373 - INFO - Trigger Order 1368791828824928257 (sell 101.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:30:12,778 - INFO - Trigger Order 1368791830376820737 (sell 101.0 @ Trigger 0.6659) storniert.
+2025-11-02 09:30:13,161 - INFO - Trigger Order 1368791832060243968 (sell 94.0 @ Trigger 0.7127) storniert.
+2025-11-02 09:30:13,532 - INFO - Trigger Order 1368791833714761728 (sell 94.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:30:13,902 - INFO - Trigger Order 1368791835309322240 (sell 94.0 @ Trigger 0.7179) storniert.
+2025-11-02 09:30:14,003 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 09:30:14,003 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 09:30:14,272 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 09:30:16,555 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 09:30:16,555 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 09:30:16,555 - INFO - Prüfe Long Entry Bands: [0.5875877493228029, 0.5688590362196951, 0.5276237986179722]
+2025-11-02 09:30:16,846 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.4430, Trigger@0.5877, Limit@0.5876
+2025-11-02 09:30:17,999 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2109, Trigger@0.5690, Limit@0.5689
+2025-11-02 09:30:19,225 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.4494, Trigger@0.5277, Limit@0.5276
+2025-11-02 09:30:20,091 - INFO - Prüfe Short Entry Bands: [0.6400538949858, 0.6611265773314596, 0.7127954208758268]
+2025-11-02 09:30:20,375 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.0620, Trigger@0.6399, Limit@0.6401
+2025-11-02 09:30:21,546 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7133, Trigger@0.6610, Limit@0.6611
+2025-11-02 09:30:22,693 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3403, Trigger@0.7126, Limit@0.7128
+2025-11-02 09:30:23,606 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 09:30:23,607 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 09:30:23,623 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 09:45:03,835 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 09:45:03,836 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 09:45:05,948 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 09:45:06,311 - INFO - Aktueller Status: Preis=0.6143, Average=0.6127
+2025-11-02 09:45:07,820 - INFO - Trigger Order 1368795574610735104 (buy 114.0 @ Trigger 0.5877) storniert.
+2025-11-02 09:45:08,214 - INFO - Trigger Order 1368795576213774336 (buy 114.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:45:08,615 - INFO - Trigger Order 1368795577811288064 (buy 114.0 @ Trigger 0.5834) storniert.
+2025-11-02 09:45:09,023 - INFO - Trigger Order 1368795579421896705 (buy 118.0 @ Trigger 0.569) storniert.
+2025-11-02 09:45:09,405 - INFO - Trigger Order 1368795581108527104 (buy 118.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:45:09,810 - INFO - Trigger Order 1368795582818988032 (buy 118.0 @ Trigger 0.5648) storniert.
+2025-11-02 09:45:10,179 - INFO - Trigger Order 1368795584522686464 (buy 127.0 @ Trigger 0.5277) storniert.
+2025-11-02 09:45:10,566 - INFO - Trigger Order 1368795586234953729 (buy 127.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:45:10,964 - INFO - Trigger Order 1368795587810504705 (buy 127.0 @ Trigger 0.5239) storniert.
+2025-11-02 09:45:11,374 - INFO - Trigger Order 1368795589399420928 (sell 105.0 @ Trigger 0.6399) storniert.
+2025-11-02 09:45:11,775 - INFO - Trigger Order 1368795591014227968 (sell 105.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:45:12,165 - INFO - Trigger Order 1368795592675172352 (sell 105.0 @ Trigger 0.6446) storniert.
+2025-11-02 09:45:12,559 - INFO - Trigger Order 1368795594334154752 (sell 101.0 @ Trigger 0.661) storniert.
+2025-11-02 09:45:12,934 - INFO - Trigger Order 1368795595902824448 (sell 101.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:45:13,336 - INFO - Trigger Order 1368795597465792512 (sell 101.0 @ Trigger 0.6658) storniert.
+2025-11-02 09:45:13,756 - INFO - Trigger Order 1368795599126740992 (sell 94.0 @ Trigger 0.7126) storniert.
+2025-11-02 09:45:14,149 - INFO - Trigger Order 1368795600783491072 (sell 94.0 @ Trigger 0.6133) storniert.
+2025-11-02 09:45:14,542 - INFO - Trigger Order 1368795602482184192 (sell 94.0 @ Trigger 0.7179) storniert.
+2025-11-02 09:45:14,642 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 09:45:14,643 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 09:45:14,929 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 09:45:17,272 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 09:45:17,273 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 09:45:17,274 - INFO - Prüfe Long Entry Bands: [0.5870767423551675, 0.5683643170369932, 0.5271649404513497]
+2025-11-02 09:45:17,604 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.5427, Trigger@0.5872, Limit@0.5871
+2025-11-02 09:45:18,798 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.3138, Trigger@0.5685, Limit@0.5684
+2025-11-02 09:45:20,027 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.5603, Trigger@0.5273, Limit@0.5272
+2025-11-02 09:45:20,913 - INFO - Prüfe Short Entry Bands: [0.6394972598272609, 0.660551615910132, 0.7121755246526907]
+2025-11-02 09:45:21,222 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.1534, Trigger@0.6394, Limit@0.6395
+2025-11-02 09:45:22,397 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.8018, Trigger@0.6604, Limit@0.6606
+2025-11-02 09:45:23,620 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.4224, Trigger@0.7120, Limit@0.7122
+2025-11-02 09:45:24,523 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 09:45:24,524 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 09:45:24,541 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 10:00:03,290 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 10:00:03,291 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 10:00:05,276 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 10:00:05,645 - INFO - Aktueller Status: Preis=0.6130, Average=0.6123
+2025-11-02 10:00:07,089 - INFO - Trigger Order 1368799352537788416 (buy 114.0 @ Trigger 0.5872) storniert.
+2025-11-02 10:00:07,472 - INFO - Trigger Order 1368799355939663872 (buy 114.0 @ Trigger 0.5829) storniert.
+2025-11-02 10:00:07,870 - INFO - Trigger Order 1368799357608701952 (buy 118.0 @ Trigger 0.5685) storniert.
+2025-11-02 10:00:08,286 - INFO - Trigger Order 1368799361170481152 (buy 118.0 @ Trigger 0.5643) storniert.
+2025-11-02 10:00:08,667 - INFO - Trigger Order 1368799362768506880 (buy 127.0 @ Trigger 0.5273) storniert.
+2025-11-02 10:00:09,095 - INFO - Trigger Order 1368799366119759872 (buy 127.0 @ Trigger 0.5234) storniert.
+2025-11-02 10:00:09,460 - INFO - Trigger Order 1368799367775694848 (sell 105.0 @ Trigger 0.6394) storniert.
+2025-11-02 10:00:09,867 - INFO - Trigger Order 1368799371086802944 (sell 105.0 @ Trigger 0.644) storniert.
+2025-11-02 10:00:10,253 - INFO - Trigger Order 1368799372718387200 (sell 101.0 @ Trigger 0.6604) storniert.
+2025-11-02 10:00:10,693 - INFO - Trigger Order 1368799375988441088 (sell 101.0 @ Trigger 0.6652) storniert.
+2025-11-02 10:00:11,124 - INFO - Trigger Order 1368799377888976896 (sell 94.0 @ Trigger 0.712) storniert.
+2025-11-02 10:00:11,511 - INFO - Trigger Order 1368799381252288512 (sell 94.0 @ Trigger 0.7172) storniert.
+2025-11-02 10:00:11,612 - INFO - 12 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 10:00:11,612 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 10:00:11,898 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 10:00:14,267 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 10:00:14,268 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 10:00:14,268 - INFO - Prüfe Long Entry Bands: [0.5866615491939636, 0.5679623577010479, 0.5267921181909689]
+2025-11-02 10:00:14,559 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.6237, Trigger@0.5868, Limit@0.5867
+2025-11-02 10:00:15,798 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.3975, Trigger@0.5681, Limit@0.5680
+2025-11-02 10:00:17,030 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.6506, Trigger@0.5269, Limit@0.5268
+2025-11-02 10:00:17,893 - INFO - Prüfe Short Entry Bands: [0.6390449937609478, 0.6600844597553033, 0.7116718589713927]
+2025-11-02 10:00:18,179 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.2279, Trigger@0.6389, Limit@0.6390
+2025-11-02 10:00:19,379 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.8738, Trigger@0.6599, Limit@0.6601
+2025-11-02 10:00:20,543 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.4892, Trigger@0.7115, Limit@0.7117
+2025-11-02 10:00:21,417 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 10:00:21,418 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 10:00:21,441 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-11-02 10:15:03,844 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-11-02 10:15:03,845 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-11-02 10:15:06,407 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-11-02 10:15:06,819 - INFO - Aktueller Status: Preis=0.6151, Average=0.6130
+2025-11-02 10:15:08,283 - INFO - Trigger Order 1368803114757988352 (buy 114.0 @ Trigger 0.5868) storniert.
+2025-11-02 10:15:08,651 - INFO - Trigger Order 1368803116426801152 (buy 114.0 @ Trigger 0.6123) storniert.
+2025-11-02 10:15:09,051 - INFO - Trigger Order 1368803118205190144 (buy 114.0 @ Trigger 0.5825) storniert.
+2025-11-02 10:15:09,447 - INFO - Trigger Order 1368803119899684864 (buy 118.0 @ Trigger 0.5681) storniert.
+2025-11-02 10:15:09,828 - INFO - Trigger Order 1368803121660567552 (buy 118.0 @ Trigger 0.6123) storniert.
+2025-11-02 10:15:10,210 - INFO - Trigger Order 1368803123321942016 (buy 118.0 @ Trigger 0.5639) storniert.
+2025-11-02 10:15:10,575 - INFO - Trigger Order 1368803125059194881 (buy 127.0 @ Trigger 0.5269) storniert.
+2025-11-02 10:15:10,974 - INFO - Trigger Order 1368803126694973440 (buy 127.0 @ Trigger 0.6123) storniert.
+2025-11-02 10:15:11,394 - INFO - Trigger Order 1368803128280420352 (buy 127.0 @ Trigger 0.5231) storniert.
+2025-11-02 10:15:11,820 - INFO - Trigger Order 1368803129925578756 (sell 105.0 @ Trigger 0.6389) storniert.
+2025-11-02 10:15:12,206 - INFO - Trigger Order 1368803131568238592 (sell 105.0 @ Trigger 0.6123) storniert.
+2025-11-02 10:15:12,589 - INFO - Trigger Order 1368803133288423424 (sell 105.0 @ Trigger 0.6436) storniert.
+2025-11-02 10:15:13,003 - INFO - Trigger Order 1368803134919491584 (sell 101.0 @ Trigger 0.6599) storniert.
+2025-11-02 10:15:13,398 - INFO - Trigger Order 1368803136568365056 (sell 101.0 @ Trigger 0.6123) storniert.
+2025-11-02 10:15:13,805 - INFO - Trigger Order 1368803138170589184 (sell 101.0 @ Trigger 0.6648) storniert.
+2025-11-02 10:15:14,187 - INFO - Trigger Order 1368803139810050048 (sell 94.0 @ Trigger 0.7115) storniert.
+2025-11-02 10:15:14,571 - INFO - Trigger Order 1368803141464109056 (sell 94.0 @ Trigger 0.6123) storniert.
+2025-11-02 10:15:14,955 - INFO - Trigger Order 1368803143106772992 (sell 94.0 @ Trigger 0.7167) storniert.
+2025-11-02 10:15:15,055 - INFO - 18 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-11-02 10:15:15,056 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-11-02 10:15:15,354 - INFO - Keine offene Position für ADA/USDT:USDT und Cooldown nicht aktiv.
+2025-11-02 10:15:17,671 - INFO - Platziere neue Entry-Orders für ADA/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 51.90 USDT
+2025-11-02 10:15:17,671 - INFO - Risikoberechnung basiert auf initialem Kapital: 51.90 USDT
+2025-11-02 10:15:17,671 - INFO - Prüfe Long Entry Bands: [0.5873322458389852, 0.5686116766283441, 0.5273943695346609]
+2025-11-02 10:15:17,988 - INFO - ✅ Long Entry 1/3 platziert: Amount=114.4928, Trigger@0.5875, Limit@0.5873
+2025-11-02 10:15:19,164 - INFO - ✅ Long Entry 2/3 platziert: Amount=118.2623, Trigger@0.5687, Limit@0.5686
+2025-11-02 10:15:20,332 - INFO - ✅ Long Entry 3/3 platziert: Amount=127.5048, Trigger@0.5275, Limit@0.5274
+2025-11-02 10:15:21,230 - INFO - Prüfe Short Entry Bands: [0.6397755774065305, 0.6608390966207959, 0.7124854727642588]
+2025-11-02 10:15:21,506 - INFO - ✅ Short Entry 1/3 platziert: Amount=105.1077, Trigger@0.6396, Limit@0.6398
+2025-11-02 10:15:22,757 - INFO - ✅ Short Entry 2/3 platziert: Amount=101.7575, Trigger@0.6607, Limit@0.6608
+2025-11-02 10:15:23,939 - INFO - ✅ Short Entry 3/3 platziert: Amount=94.3813, Trigger@0.7123, Limit@0.7125
+2025-11-02 10:15:24,853 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-11-02 10:15:24,853 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-11-02 10:15:24,872 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<

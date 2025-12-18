@@ -1,0 +1,26 @@
+{
+    "market": {
+        "symbol": "ETH/USDT:USDT",
+        "timeframe": "30m"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 5,
+        "envelopes": [
+            0.01350934814435623,
+            0.04540046542511937,
+            0.05391611376322532
+        ],
+        "trigger_price_delta_pct": 0.0995
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.86,
+        "leverage": 14,
+        "stop_loss_pct": 0.74
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}
