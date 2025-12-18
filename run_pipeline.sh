@@ -169,7 +169,7 @@ for config_file in sorted(config_files):
                 new_strategies.append({
                     "symbol": symbol,
                     "timeframe": timeframe,
-                    "active": False,  # Standardmäßig deaktiviert (Sicherheit)
+                    "active": True,  # Automatisch aktiviert
                     "_comment": "Optimiert am " + os.path.basename(config_file)
                 })
                 print(f"  ✓ Hinzugefügt: {symbol} ({timeframe})")
@@ -189,9 +189,8 @@ if new_strategies:
     
     print(f"\n✅ settings.json erfolgreich aktualisiert!")
     print(f"   Total Strategien: {len(new_strategies)}")
-    print(f"   Status: ALLE DEAKTIVIERT (active: false)")
-    print(f"\n⚠️  WICHTIG: Aktiviere Strategien manuell in settings.json!")
-    print(f"   Ändere 'active: false' auf 'active: true' für gewünschte Strategien.")
+    print(f"   Status: ALLE AKTIVIERT (active: true)")
+    print(f"\n✅ Strategien sind bereit für Live-Trading!")
 else:
     print("⚠️  Keine Strategien zum Aktualisieren gefunden.")
 
@@ -201,9 +200,8 @@ PYTHON_SCRIPT
         echo -e "${GREEN}✔ settings.json wurde erfolgreich aktualisiert!${NC}"
         echo -e "\n${YELLOW}📝 Nächste Schritte:${NC}"
         echo -e "   1. Öffne settings.json"
-        echo -e "   2. Setze 'active: true' für die Strategien, die du aktivieren möchtest"
-        echo -e "   3. Starte den Bot mit: python master_runner.py"
-    else
+        echo -e "   2. Prüfe settings.json bei Bedarf"
+        echo -e "   2
         echo -e "${RED}❌ Fehler beim Aktualisieren der settings.json${NC}"
     fi
 else
