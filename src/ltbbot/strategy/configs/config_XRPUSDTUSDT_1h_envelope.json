@@ -1,0 +1,26 @@
+{
+    "market": {
+        "symbol": "XRP/USDT:USDT",
+        "timeframe": "1h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 5,
+        "envelopes": [
+            0.012213911991144863,
+            0.07769205675339856,
+            0.1069989321991805
+        ],
+        "trigger_price_delta_pct": 0.1294
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.89,
+        "leverage": 15,
+        "stop_loss_pct": 0.5
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

@@ -1907,3 +1907,67 @@ ccxt.base.errors.DDoSProtection: bitget {"code":"429","msg":"Too Many Requests",
 2025-11-02 10:15:25,353 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
 2025-11-02 10:15:25,353 - INFO - ===== Handelszyklus für AAVE/USDT:USDT (6h) abgeschlossen =====
 2025-11-02 10:15:25,369 - INFO - >>> ltbbot-Lauf für AAVE/USDT:USDT (6h) normal abgeschlossen <<<
+2025-12-19 10:22:00,603 - INFO - Konfiguration geladen für AAVE/USDT:USDT (6h).
+2025-12-19 10:22:00,603 - INFO - --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (6h) auf Account 'DeinAccountName' ---
+2025-12-19 10:22:00,604 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-19 10:22:02,770 - INFO - ===== Starte Handelszyklus für AAVE/USDT:USDT (6h) auf 'DeinAccountName' =====
+2025-12-19 10:22:03,114 - INFO - Aktueller Status: Preis=181.3400, Average=178.4094
+2025-12-19 10:22:03,115 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-19 10:22:03,695 - INFO - Einige SL-IDs aus dem Tracker sind nicht mehr offen. Aktualisiere Tracker.
+2025-12-19 10:22:04,244 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-19 10:22:04,522 - INFO - Keine offene Position für AAVE/USDT:USDT und Cooldown nicht aktiv.
+2025-12-19 10:22:06,846 - INFO - Platziere neue Entry-Orders für AAVE/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 16.10 USDT
+2025-12-19 10:22:06,846 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-19 10:22:06,846 - INFO - Risikoberechnung basiert auf initialem Kapital: 16.10 USDT
+2025-12-19 10:22:06,847 - INFO - Prüfe Long Entry Bands: [174.18284575455763, 172.838995309389, 161.1272467750592]
+2025-12-19 10:22:07,178 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.1664, Trigger@173.8812, Limit@174.1828
+2025-12-19 10:22:08,360 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.1677, Trigger@172.5396, Limit@172.8390
+2025-12-19 10:22:09,611 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.1799, Trigger@160.8482, Limit@161.1272
+2025-12-19 10:22:10,477 - INFO - Prüfe Short Entry Bands: [182.73846893762806, 184.15928935139914, 197.54515257635384]
+2025-12-19 10:22:10,779 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.1586, Trigger@183.0550, Limit@182.7385
+2025-12-19 10:22:11,961 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1574, Trigger@184.4783, Limit@184.1593
+2025-12-19 10:22:13,104 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1467, Trigger@197.8873, Limit@197.5452
+2025-12-19 10:22:14,019 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-19 10:22:14,020 - INFO - ===== Handelszyklus für AAVE/USDT:USDT (6h) abgeschlossen =====
+2025-12-19 10:22:14,040 - INFO - >>> ltbbot-Lauf für AAVE/USDT:USDT (6h) normal abgeschlossen <<<
+2025-12-19 10:30:05,369 - INFO - Konfiguration geladen für AAVE/USDT:USDT (6h).
+2025-12-19 10:30:05,370 - INFO - --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (6h) auf Account 'DeinAccountName' ---
+2025-12-19 10:30:05,370 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-19 10:30:07,741 - INFO - ===== Starte Handelszyklus für AAVE/USDT:USDT (6h) auf 'DeinAccountName' =====
+2025-12-19 10:30:08,121 - INFO - Aktueller Status: Preis=181.3100, Average=178.3994
+2025-12-19 10:30:08,121 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-19 10:30:09,523 - INFO - Trigger Order 1385840850043482112 (buy 0.1 @ Trigger 173.88) storniert.
+2025-12-19 10:30:09,897 - INFO - Trigger Order 1385840851700232192 (buy 0.1 @ Trigger 178.41) storniert.
+2025-12-19 10:30:10,271 - INFO - Trigger Order 1385840853377228800 (buy 0.1 @ Trigger 173.31) storniert.
+2025-12-19 10:30:10,639 - INFO - Trigger Order 1385840855047286784 (buy 0.1 @ Trigger 172.54) storniert.
+2025-12-19 10:30:11,026 - INFO - Trigger Order 1385840856780054528 (buy 0.1 @ Trigger 178.41) storniert.
+2025-12-19 10:30:11,413 - INFO - Trigger Order 1385840858537463808 (buy 0.1 @ Trigger 171.97) storniert.
+2025-12-19 10:30:11,778 - INFO - Trigger Order 1385840860234915840 (buy 0.1 @ Trigger 160.85) storniert.
+2025-12-19 10:30:12,154 - INFO - Trigger Order 1385840861854642177 (buy 0.1 @ Trigger 178.41) storniert.
+2025-12-19 10:30:12,537 - INFO - Trigger Order 1385840863482548224 (buy 0.1 @ Trigger 160.32) storniert.
+2025-12-19 10:30:12,902 - INFO - Trigger Order 1385840865151881216 (sell 0.1 @ Trigger 183.05) storniert.
+2025-12-19 10:30:13,266 - INFO - Trigger Order 1385840866783465473 (sell 0.1 @ Trigger 178.41) storniert.
+2025-12-19 10:30:13,655 - INFO - Trigger Order 1385840868448088064 (sell 0.1 @ Trigger 183.65) storniert.
+2025-12-19 10:30:14,037 - INFO - Trigger Order 1385840870155689984 (sell 0.1 @ Trigger 184.48) storniert.
+2025-12-19 10:30:14,422 - INFO - Trigger Order 1385840871786754048 (sell 0.1 @ Trigger 178.41) storniert.
+2025-12-19 10:30:14,797 - INFO - Trigger Order 1385840873372205056 (sell 0.1 @ Trigger 185.08) storniert.
+2025-12-19 10:30:15,206 - INFO - Trigger Order 1385840874974425088 (sell 0.1 @ Trigger 197.89) storniert.
+2025-12-19 10:30:15,576 - INFO - Trigger Order 1385840876585037824 (sell 0.1 @ Trigger 178.41) storniert.
+2025-12-19 10:30:15,947 - INFO - Trigger Order 1385840878279241728 (sell 0.1 @ Trigger 198.53) storniert.
+2025-12-19 10:30:16,048 - INFO - 18 offene Order(s) für AAVE/USDT:USDT erfolgreich storniert.
+2025-12-19 10:30:16,048 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-19 10:30:16,322 - INFO - Keine offene Position für AAVE/USDT:USDT und Cooldown nicht aktiv.
+2025-12-19 10:30:18,670 - INFO - Platziere neue Entry-Orders für AAVE/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 16.10 USDT
+2025-12-19 10:30:18,670 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-19 10:30:18,670 - INFO - Risikoberechnung basiert auf initialem Kapital: 16.10 USDT
+2025-12-19 10:30:18,670 - INFO - Prüfe Long Entry Bands: [174.17308265540666, 172.82930753421775, 161.11821545352248]
+2025-12-19 10:30:18,980 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.1664, Trigger@173.8714, Limit@174.1731
+2025-12-19 10:30:20,161 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.1677, Trigger@172.5300, Limit@172.8293
+2025-12-19 10:30:21,325 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.1799, Trigger@160.8392, Limit@161.1182
+2025-12-19 10:30:22,208 - INFO - Prüfe Short Entry Bands: [182.72822628839813, 184.1489670639562, 197.53407999970003]
+2025-12-19 10:30:22,538 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.1586, Trigger@183.0447, Limit@182.7282
+2025-12-19 10:30:23,758 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1574, Trigger@184.4679, Limit@184.1490
+2025-12-19 10:30:24,916 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1467, Trigger@197.8762, Limit@197.5341
+2025-12-19 10:30:25,770 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-19 10:30:25,770 - INFO - ===== Handelszyklus für AAVE/USDT:USDT (6h) abgeschlossen =====
+2025-12-19 10:30:25,790 - INFO - >>> ltbbot-Lauf für AAVE/USDT:USDT (6h) normal abgeschlossen <<<

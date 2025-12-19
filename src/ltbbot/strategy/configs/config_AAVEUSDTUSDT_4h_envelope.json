@@ -1,0 +1,26 @@
+{
+    "market": {
+        "symbol": "AAVE/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 10,
+        "envelopes": [
+            0.04490570361357349,
+            0.06756859841963236,
+            0.08628778307158758
+        ],
+        "trigger_price_delta_pct": 0.0983
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.91,
+        "leverage": 4,
+        "stop_loss_pct": 0.5
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

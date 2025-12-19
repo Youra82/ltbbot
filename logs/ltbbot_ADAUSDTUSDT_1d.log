@@ -1869,3 +1869,23 @@
 2025-11-02 10:15:24,853 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
 2025-11-02 10:15:24,853 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
 2025-11-02 10:15:24,872 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 10:21:58,695 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-12-19 10:21:58,695 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 10:21:58,696 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-19 10:22:00,719 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 10:22:01,052 - INFO - Aktueller Status: Preis=0.3660, Average=0.3690
+2025-12-19 10:22:01,053 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 10:22:01,053 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 10:22:01,887 - INFO - Trigger Order 1385620152217841664 (buy 66.0 @ Trigger 0.3722) storniert.
+2025-12-19 10:22:01,988 - INFO - 1 offene Order(s) für ADA/USDT:USDT erfolgreich storniert.
+2025-12-19 10:22:02,257 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 10:22:02,298 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 10:30:03,605 - INFO - Konfiguration geladen für ADA/USDT:USDT (1d).
+2025-12-19 10:30:03,605 - INFO - --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 10:30:03,606 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-19 10:30:05,952 - INFO - ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 10:30:06,300 - INFO - Aktueller Status: Preis=0.3658, Average=0.3690
+2025-12-19 10:30:06,301 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 10:30:06,301 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 10:30:07,129 - INFO - ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 10:30:07,155 - INFO - >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<

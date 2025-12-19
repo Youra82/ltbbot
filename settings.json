@@ -1,35 +1,27 @@
 {
     "live_trading_settings": {
-        "use_auto_optimizer_results": true,
+        "use_auto_optimizer_results": false,
         "active_strategies": [
             {
                 "symbol": "AAVE/USDT:USDT",
                 "timeframe": "2h",
-                "active": true,
-                "_comment": "Portfolio-optimiert (WR 50.85%, DD 22.19%)"
+                "active": true
             },
             {
                 "symbol": "SOL/USDT:USDT",
                 "timeframe": "30m",
-                "active": true,
-                "_comment": "Portfolio-optimiert (WR 54.80%, DD 22.82%)"
+                "active": true
+            },
+            {
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "30m",
+                "active": true
             },
             {
                 "symbol": "BTC/USDT:USDT",
                 "timeframe": "1d",
-                "active": true,
-                "_comment": "Portfolio-optimiert (WR 36.63%, DD 24.48%)"
-            },
-            {
-                "symbol": "ETH/USDT:USDT",
-                "timeframe": "15m",
-                "active": true,
-                "_comment": "Portfolio-optimiert (WR 47.90%, DD 26.73%)"
+                "active": true
             }
-        ],
-        "_instructions": "Optimales Portfolio (4 Strategien, Max DD 23.95%)",
-        "_last_update": "2025-12-18 - Portfolio-Optimierung",
-        "_test_capital": "20 USDT",
-        "_monitoring": "Täglich prüfen, Auto-Deactivation bei WR < 25%"
+        ]
     }
 }

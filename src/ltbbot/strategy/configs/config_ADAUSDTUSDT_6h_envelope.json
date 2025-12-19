@@ -5,17 +5,17 @@
     },
     "strategy": {
         "average_type": "WMA",
-        "average_period": 9,
+        "average_period": 7,
         "envelopes": [
-            0.045559381323929976,
-            0.05676834437952714,
-            0.09948367534787354
+            0.04569318697552473,
+            0.05507566332938728,
+            0.11955788394771034
         ],
-        "trigger_price_delta_pct": 0.1932
+        "trigger_price_delta_pct": 0.0476
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 1.0,
+        "risk_per_entry_pct": 0.94,
         "leverage": 15,
         "stop_loss_pct": 0.5
     },

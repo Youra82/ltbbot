@@ -1,0 +1,450 @@
+2025-12-19 10:45:03,597 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 10:45:03,598 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 10:45:03,599 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 10:45:05,820 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 10:45:06,184 - INFO - Aktueller Status: Preis=88000.0000, Average=87204.8667
+2025-12-19 10:45:06,184 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 10:45:06,184 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 10:45:07,001 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 10:45:07,023 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 11:00:03,140 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 11:00:03,140 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 11:00:03,140 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 11:00:05,401 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 11:00:05,788 - INFO - Aktueller Status: Preis=88065.0000, Average=87219.3111
+2025-12-19 11:00:05,789 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 11:00:05,789 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 11:00:06,591 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 11:00:06,623 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 11:15:02,951 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 11:15:02,952 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 11:15:02,952 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 11:15:05,273 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 11:15:05,662 - INFO - Aktueller Status: Preis=88144.4000, Average=87236.9556
+2025-12-19 11:15:05,662 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 11:15:05,662 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 11:15:06,569 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 11:15:06,594 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 11:30:03,512 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 11:30:03,513 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 11:30:03,513 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 11:30:05,904 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 11:30:06,255 - INFO - Aktueller Status: Preis=87911.9000, Average=87185.2889
+2025-12-19 11:30:06,255 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 11:30:06,255 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 11:30:07,057 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 11:30:07,097 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 11:45:03,718 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 11:45:03,718 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 11:45:03,718 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 11:45:06,382 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 11:45:06,822 - INFO - Aktueller Status: Preis=88027.1000, Average=87210.8889
+2025-12-19 11:45:06,823 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 11:45:06,824 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 11:45:07,684 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 11:45:07,730 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 12:00:02,958 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 12:00:02,959 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 12:00:02,960 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 12:00:05,583 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 12:00:05,997 - INFO - Aktueller Status: Preis=88221.2000, Average=87254.0222
+2025-12-19 12:00:05,997 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 12:00:05,997 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 12:00:06,843 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 12:00:06,862 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 12:15:03,295 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 12:15:03,295 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 12:15:03,295 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 12:15:06,023 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 12:15:06,509 - INFO - Aktueller Status: Preis=88295.1000, Average=87270.4444
+2025-12-19 12:15:06,510 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 12:15:06,510 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 12:15:07,413 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 12:15:07,464 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 12:30:03,569 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 12:30:03,569 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 12:30:03,570 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 12:30:06,095 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 12:30:06,498 - INFO - Aktueller Status: Preis=88256.1000, Average=87261.7778
+2025-12-19 12:30:06,498 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 12:30:06,499 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 12:30:07,325 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 12:30:07,383 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 12:45:03,595 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 12:45:03,595 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 12:45:03,595 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 12:45:05,916 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 12:45:06,287 - INFO - Aktueller Status: Preis=88255.8000, Average=87261.7111
+2025-12-19 12:45:06,287 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 12:45:06,288 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 12:45:07,101 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 12:45:07,124 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 13:00:03,642 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 13:00:03,643 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 13:00:03,643 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 13:00:05,848 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 13:00:06,229 - INFO - Aktueller Status: Preis=88151.9000, Average=87238.6222
+2025-12-19 13:00:06,230 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 13:00:06,230 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 13:00:07,097 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 13:00:07,131 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 13:15:03,722 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 13:15:03,723 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 13:15:03,723 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 13:15:05,927 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 13:15:06,270 - INFO - Aktueller Status: Preis=88153.9000, Average=87239.0667
+2025-12-19 13:15:06,271 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 13:15:06,271 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 13:15:07,128 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 13:15:07,156 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 13:30:02,839 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 13:30:02,840 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 13:30:02,840 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 13:30:05,080 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 13:30:05,442 - INFO - Aktueller Status: Preis=87977.3000, Average=87199.8222
+2025-12-19 13:30:05,442 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 13:30:05,443 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 13:30:06,248 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 13:30:06,279 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 13:45:03,624 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 13:45:03,625 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 13:45:03,625 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 13:45:05,842 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 13:45:06,193 - INFO - Aktueller Status: Preis=88005.6000, Average=87206.1111
+2025-12-19 13:45:06,193 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 13:45:06,193 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 13:45:07,010 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 13:45:07,037 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 14:00:03,711 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 14:00:03,712 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 14:00:03,713 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 14:00:05,840 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 14:00:06,196 - INFO - Aktueller Status: Preis=87828.6000, Average=87166.7778
+2025-12-19 14:00:06,196 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 14:00:06,196 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 14:00:07,024 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 14:00:07,066 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 14:15:03,712 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 14:15:03,712 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 14:15:03,713 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 14:15:06,063 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 14:15:06,440 - INFO - Aktueller Status: Preis=87964.1000, Average=87196.8889
+2025-12-19 14:15:06,440 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 14:15:06,441 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 14:15:07,278 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 14:15:07,302 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 14:30:03,275 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 14:30:03,276 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 14:30:03,276 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 14:30:05,375 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 14:30:05,727 - INFO - Aktueller Status: Preis=88004.9000, Average=87205.9556
+2025-12-19 14:30:05,727 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 14:30:05,727 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 14:30:06,568 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 14:30:06,594 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 14:45:03,504 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 14:45:03,504 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 14:45:03,505 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 14:45:05,714 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 14:45:06,078 - INFO - Aktueller Status: Preis=88074.6000, Average=87221.4444
+2025-12-19 14:45:06,078 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 14:45:06,078 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 14:45:06,941 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 14:45:06,966 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 15:00:03,467 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 15:00:03,468 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 15:00:03,468 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 15:00:05,669 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 15:00:06,036 - INFO - Aktueller Status: Preis=87959.0000, Average=87195.7556
+2025-12-19 15:00:06,036 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 15:00:06,036 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 15:00:06,836 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 15:00:06,862 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 15:15:03,301 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 15:15:03,301 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 15:15:03,301 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 15:15:05,681 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 15:15:06,081 - INFO - Aktueller Status: Preis=88130.8000, Average=87233.9333
+2025-12-19 15:15:06,081 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 15:15:06,082 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 15:15:06,960 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 15:15:07,002 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 15:30:03,306 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 15:30:03,306 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 15:30:03,307 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 15:30:05,674 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 15:30:06,010 - INFO - Aktueller Status: Preis=87979.6000, Average=87200.3333
+2025-12-19 15:30:06,010 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 15:30:06,010 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 15:30:06,825 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 15:30:06,866 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 15:45:03,272 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 15:45:03,273 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 15:45:03,273 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 15:45:05,572 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 15:45:05,973 - INFO - Aktueller Status: Preis=88373.9000, Average=87287.9556
+2025-12-19 15:45:05,974 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 15:45:05,974 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 15:45:06,875 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 15:45:06,906 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 16:00:03,339 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 16:00:03,339 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 16:00:03,340 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 16:00:05,534 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 16:00:05,908 - INFO - Aktueller Status: Preis=88199.9000, Average=87249.2889
+2025-12-19 16:00:05,908 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 16:00:05,909 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 16:00:06,699 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 16:00:06,731 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 16:15:03,316 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 16:15:03,317 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 16:15:03,317 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 16:15:05,551 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 16:15:05,919 - INFO - Aktueller Status: Preis=88716.6000, Average=87364.1111
+2025-12-19 16:15:05,919 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 16:15:05,919 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 16:15:06,717 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 16:15:06,743 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 16:30:04,512 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 16:30:04,513 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 16:30:04,513 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 16:30:07,086 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 16:30:07,454 - INFO - Aktueller Status: Preis=88038.7000, Average=87213.4667
+2025-12-19 16:30:07,454 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 16:30:07,454 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 16:30:08,300 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 16:30:08,368 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 16:45:03,563 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 16:45:03,564 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 16:45:03,564 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 16:45:06,198 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 16:45:06,547 - INFO - Aktueller Status: Preis=88004.3000, Average=87205.8222
+2025-12-19 16:45:06,547 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 16:45:06,547 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 16:45:07,357 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 16:45:07,381 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 17:00:03,735 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 17:00:03,737 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 17:00:03,738 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 17:00:06,220 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 17:00:06,590 - INFO - Aktueller Status: Preis=87908.6000, Average=87184.5556
+2025-12-19 17:00:06,591 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 17:00:06,591 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 17:00:07,456 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 17:00:07,504 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 17:15:03,839 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 17:15:03,840 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 17:15:03,840 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 17:15:06,514 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 17:15:06,908 - INFO - Aktueller Status: Preis=88338.6000, Average=87280.1111
+2025-12-19 17:15:06,909 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 17:15:06,909 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 17:15:07,752 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 17:15:07,774 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 17:30:03,020 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 17:30:03,020 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 17:30:03,021 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 17:30:05,333 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 17:30:05,685 - INFO - Aktueller Status: Preis=88352.0000, Average=87283.0889
+2025-12-19 17:30:05,685 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 17:30:05,685 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 17:30:06,519 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 17:30:06,546 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 17:45:03,113 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 17:45:03,114 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 17:45:03,114 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 17:45:05,649 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 17:45:06,025 - INFO - Aktueller Status: Preis=88468.8000, Average=87309.0444
+2025-12-19 17:45:06,025 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 17:45:06,025 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 17:45:06,864 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 17:45:06,886 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 18:00:03,274 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 18:00:03,274 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 18:00:03,275 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 18:00:05,539 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 18:00:05,890 - INFO - Aktueller Status: Preis=87946.9000, Average=87193.0667
+2025-12-19 18:00:05,890 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 18:00:05,890 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 18:00:06,743 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 18:00:06,763 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 18:15:03,709 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 18:15:03,709 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 18:15:03,710 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 18:15:06,341 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 18:15:06,699 - INFO - Aktueller Status: Preis=88060.1000, Average=87218.2222
+2025-12-19 18:15:06,700 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 18:15:06,700 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 18:15:07,532 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 18:15:07,621 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 18:30:03,673 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 18:30:03,673 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 18:30:03,674 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 18:30:05,844 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 18:30:06,190 - INFO - Aktueller Status: Preis=87575.5000, Average=87110.5333
+2025-12-19 18:30:06,190 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 18:30:06,191 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 18:30:07,024 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 18:30:07,052 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 18:45:03,643 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 18:45:03,644 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 18:45:03,644 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 18:45:06,131 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 18:45:06,574 - INFO - Aktueller Status: Preis=87088.0000, Average=87002.2000
+2025-12-19 18:45:06,574 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 18:45:06,574 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 18:45:07,408 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 18:45:07,448 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 19:00:03,554 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 19:00:03,555 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 19:00:03,555 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 19:00:05,822 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 19:00:06,191 - INFO - Aktueller Status: Preis=86922.5000, Average=86965.4222
+2025-12-19 19:00:06,192 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 19:00:06,192 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 19:00:07,004 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 19:00:07,038 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 19:15:03,442 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 19:15:03,443 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 19:15:03,443 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 19:15:05,542 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 19:15:05,885 - INFO - Aktueller Status: Preis=87157.7000, Average=87017.6889
+2025-12-19 19:15:05,885 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 19:15:05,885 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 19:15:06,765 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 19:15:06,784 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 19:30:03,342 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 19:30:03,343 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 19:30:03,343 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 19:30:05,548 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 19:30:05,885 - INFO - Aktueller Status: Preis=87308.0000, Average=87051.0889
+2025-12-19 19:30:05,885 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 19:30:05,885 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 19:30:06,721 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 19:30:06,746 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 19:45:03,379 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 19:45:03,380 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 19:45:03,380 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 19:45:05,509 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 19:45:05,869 - INFO - Aktueller Status: Preis=86991.9000, Average=86980.8444
+2025-12-19 19:45:05,870 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 19:45:05,870 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 19:45:06,677 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 19:45:06,709 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 20:00:03,451 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 20:00:03,452 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 20:00:03,452 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 20:00:05,687 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 20:00:06,045 - INFO - Aktueller Status: Preis=87144.1000, Average=87014.6667
+2025-12-19 20:00:06,045 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 20:00:06,046 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 20:00:06,846 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 20:00:06,880 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 20:15:03,384 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 20:15:03,384 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 20:15:03,385 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 20:15:05,562 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 20:15:05,908 - INFO - Aktueller Status: Preis=87282.4000, Average=87045.4000
+2025-12-19 20:15:05,908 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 20:15:05,909 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 20:15:06,708 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 20:15:06,740 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 20:30:03,489 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 20:30:03,489 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 20:30:03,490 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 20:30:05,693 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 20:30:06,057 - INFO - Aktueller Status: Preis=87611.4000, Average=87118.5111
+2025-12-19 20:30:06,057 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 20:30:06,058 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 20:30:06,869 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 20:30:06,895 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 20:45:03,550 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 20:45:03,550 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 20:45:03,551 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 20:45:05,736 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 20:45:06,083 - INFO - Aktueller Status: Preis=87935.9000, Average=87190.6222
+2025-12-19 20:45:06,083 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 20:45:06,083 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 20:45:06,917 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 20:45:06,941 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 21:00:03,509 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 21:00:03,510 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 21:00:03,510 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 21:00:05,732 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 21:00:06,105 - INFO - Aktueller Status: Preis=87806.0000, Average=87161.7556
+2025-12-19 21:00:06,105 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 21:00:06,105 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 21:00:07,055 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 21:00:07,109 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 21:15:03,595 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 21:15:03,595 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 21:15:03,596 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 21:15:06,243 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 21:15:06,616 - INFO - Aktueller Status: Preis=87749.0000, Average=87149.0889
+2025-12-19 21:15:06,616 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 21:15:06,616 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 21:15:07,480 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 21:15:07,516 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 21:30:04,095 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 21:30:04,096 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 21:30:04,096 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 21:30:06,377 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 21:30:06,739 - INFO - Aktueller Status: Preis=87993.8000, Average=87203.4889
+2025-12-19 21:30:06,740 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 21:30:06,740 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 21:30:07,577 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 21:30:07,603 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 21:45:02,806 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 21:45:02,807 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 21:45:02,807 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 21:45:04,713 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 21:45:05,046 - INFO - Aktueller Status: Preis=88031.0000, Average=87211.7556
+2025-12-19 21:45:05,046 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 21:45:05,046 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 21:45:05,879 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 21:45:05,899 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 22:00:03,491 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 22:00:03,492 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 22:00:03,492 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 22:00:05,445 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 22:00:05,800 - INFO - Aktueller Status: Preis=88019.7000, Average=87209.2444
+2025-12-19 22:00:05,800 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 22:00:05,800 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 22:00:06,605 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 22:00:06,623 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 22:15:03,887 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 22:15:03,888 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 22:15:03,888 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 22:15:05,887 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 22:15:06,233 - INFO - Aktueller Status: Preis=87879.8000, Average=87178.1556
+2025-12-19 22:15:06,234 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 22:15:06,234 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 22:15:07,107 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 22:15:07,128 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 22:30:03,677 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 22:30:03,678 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 22:30:03,679 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 22:30:05,644 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 22:30:05,978 - INFO - Aktueller Status: Preis=87964.4000, Average=87196.9556
+2025-12-19 22:30:05,978 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 22:30:05,978 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 22:30:06,823 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 22:30:06,842 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 22:45:02,516 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 22:45:02,517 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 22:45:02,517 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 22:45:04,448 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 22:45:04,773 - INFO - Aktueller Status: Preis=87862.0000, Average=87174.2000
+2025-12-19 22:45:04,774 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 22:45:04,774 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 22:45:05,584 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 22:45:05,602 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 23:00:04,453 - INFO - Konfiguration geladen für BTC/USDT:USDT (1d).
+2025-12-19 23:00:04,455 - INFO - --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+2025-12-19 23:00:04,456 - INFO - ✅ Performance Health Check: Keine Performance-Daten vorhanden
+2025-12-19 23:00:06,715 - INFO - ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 23:00:07,146 - INFO - Aktueller Status: Preis=87797.9000, Average=87159.9556
+2025-12-19 23:00:07,146 - INFO - 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+2025-12-19 23:00:07,147 - WARNING - ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+2025-12-19 23:00:07,976 - INFO - ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+2025-12-19 23:00:08,074 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
