@@ -1988,3 +1988,5 @@ ccxt.base.errors.DDoSProtection: bitget {"code":"429","msg":"Too Many Requests",
 2025-11-02 10:15:30,116 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
 2025-11-02 10:15:30,117 - INFO - ===== Handelszyklus für BTC/USDT:USDT (4h) abgeschlossen =====
 2025-11-02 10:15:30,134 - INFO - >>> ltbbot-Lauf für BTC/USDT:USDT (4h) normal abgeschlossen <<<
+2025-12-19 10:22:04,645 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_BTCUSDTUSDT_4h_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-19 10:30:09,756 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_BTCUSDTUSDT_4h_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs

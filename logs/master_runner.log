@@ -9172,3 +9172,1312 @@ ccxt.base.errors.DDoSProtection: bitget {"code":"429","msg":"Too Many Requests",
 10:15:30 [BTCUSDTUSDT_4h] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
 10:15:30 [BTCUSDTUSDT_4h] INFO: ===== Handelszyklus für BTC/USDT:USDT (4h) abgeschlossen =====
 10:15:30 [BTCUSDTUSDT_4h] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (4h) normal abgeschlossen <<<
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+/bin/sh: 1: /home/matola/ltbbot/.venv/bin/python3: not found
+2025-12-19 10:16:04,376 - CRITICAL - Fehler: Python-Interpreter in der venv nicht gefunden unter /home/matola/ltbbot/.venv/bin/python3
+2025-12-19 10:21:57,433 - INFO - =======================================================
+2025-12-19 10:21:57,433 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 10:21:57,433 - INFO - =======================================================
+2025-12-19 10:21:57,436 - INFO - =======================================================
+2025-12-19 10:21:57,436 - INFO - 
+--- Starte Bot für: ADA/USDT:USDT (1d) ---
+2025-12-19 10:21:57,437 - INFO - Prozess für ADA/USDT:USDT_1d gestartet (PID: 3299755).
+2025-12-19 10:21:59,437 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (6h) ---
+2025-12-19 10:21:59,439 - INFO - Prozess für AAVE/USDT:USDT_6h gestartet (PID: 3299768).
+2025-12-19 10:22:01,439 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-19 10:22:01,440 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3299789).
+2025-12-19 10:22:03,441 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (4h) ---
+2025-12-19 10:22:03,442 - INFO - Prozess für BTC/USDT:USDT_4h gestartet (PID: 3299814).
+2025-12-19 10:30:01,998 - INFO - =======================================================
+2025-12-19 10:30:01,998 - INFO - =======================================================
+2025-12-19 10:30:01,998 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 10:30:01,998 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 10:30:01,999 - INFO - =======================================================
+2025-12-19 10:30:01,999 - INFO - =======================================================
+2025-12-19 10:30:01,999 - INFO - =======================================================
+2025-12-19 10:30:01,999 - INFO - =======================================================
+2025-12-19 10:30:01,999 - INFO - 
+--- Starte Bot für: ADA/USDT:USDT (1d) ---
+2025-12-19 10:30:01,999 - INFO - 
+--- Starte Bot für: ADA/USDT:USDT (1d) ---
+2025-12-19 10:30:02,000 - INFO - Prozess für ADA/USDT:USDT_1d gestartet (PID: 3303791).
+2025-12-19 10:30:02,000 - INFO - Prozess für ADA/USDT:USDT_1d gestartet (PID: 3303791).
+10:30:03 [ADAUSDTUSDT_1d] INFO: Konfiguration geladen für ADA/USDT:USDT (1d).
+10:30:03 [ADAUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für ADA/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+10:30:03 [ADAUSDTUSDT_1d] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-19 10:30:04,000 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (6h) ---
+2025-12-19 10:30:04,000 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (6h) ---
+2025-12-19 10:30:04,001 - INFO - Prozess für AAVE/USDT:USDT_6h gestartet (PID: 3303844).
+2025-12-19 10:30:04,001 - INFO - Prozess für AAVE/USDT:USDT_6h gestartet (PID: 3303844).
+10:30:05 [AAVEUSDTUSDT_6h] INFO: Konfiguration geladen für AAVE/USDT:USDT (6h).
+10:30:05 [AAVEUSDTUSDT_6h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (6h) auf Account 'DeinAccountName' ---
+10:30:05 [AAVEUSDTUSDT_6h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+10:30:05 [ADAUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für ADA/USDT:USDT (1d) auf 'DeinAccountName' =====
+2025-12-19 10:30:06,002 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-19 10:30:06,002 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-19 10:30:06,003 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3303886).
+2025-12-19 10:30:06,003 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3303886).
+10:30:06 [ADAUSDTUSDT_1d] INFO: Aktueller Status: Preis=0.3658, Average=0.3690
+10:30:06 [ADAUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+10:30:06 [ADAUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+10:30:07 [ADAUSDTUSDT_1d] INFO: ===== Handelszyklus für ADA/USDT:USDT (1d) abgeschlossen =====
+10:30:07 [ADAUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für ADA/USDT:USDT (1d) normal abgeschlossen <<<
+10:30:07 [AAVEUSDTUSDT_6h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (6h) auf 'DeinAccountName' =====
+10:30:07 [SOLUSDTUSDT_30m] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-19 10:30:08,003 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (4h) ---
+2025-12-19 10:30:08,003 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (4h) ---
+2025-12-19 10:30:08,004 - INFO - Prozess für BTC/USDT:USDT_4h gestartet (PID: 3303940).
+2025-12-19 10:30:08,004 - INFO - Prozess für BTC/USDT:USDT_4h gestartet (PID: 3303940).
+10:30:08 [AAVEUSDTUSDT_6h] INFO: Aktueller Status: Preis=181.3100, Average=178.3994
+10:30:08 [AAVEUSDTUSDT_6h] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+10:30:09 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840850043482112 (buy 0.1 @ Trigger 173.88) storniert.
+10:30:09 [BTCUSDTUSDT_4h] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_BTCUSDTUSDT_4h_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+10:30:09 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840851700232192 (buy 0.1 @ Trigger 178.41) storniert.
+10:30:10 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840853377228800 (buy 0.1 @ Trigger 173.31) storniert.
+10:30:10 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840855047286784 (buy 0.1 @ Trigger 172.54) storniert.
+10:30:11 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840856780054528 (buy 0.1 @ Trigger 178.41) storniert.
+10:30:11 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840858537463808 (buy 0.1 @ Trigger 171.97) storniert.
+10:30:11 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840860234915840 (buy 0.1 @ Trigger 160.85) storniert.
+10:30:12 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840861854642177 (buy 0.1 @ Trigger 178.41) storniert.
+10:30:12 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840863482548224 (buy 0.1 @ Trigger 160.32) storniert.
+10:30:12 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840865151881216 (sell 0.1 @ Trigger 183.05) storniert.
+10:30:13 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840866783465473 (sell 0.1 @ Trigger 178.41) storniert.
+10:30:13 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840868448088064 (sell 0.1 @ Trigger 183.65) storniert.
+10:30:14 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840870155689984 (sell 0.1 @ Trigger 184.48) storniert.
+10:30:14 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840871786754048 (sell 0.1 @ Trigger 178.41) storniert.
+10:30:14 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840873372205056 (sell 0.1 @ Trigger 185.08) storniert.
+10:30:15 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840874974425088 (sell 0.1 @ Trigger 197.89) storniert.
+10:30:15 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840876585037824 (sell 0.1 @ Trigger 178.41) storniert.
+10:30:15 [AAVEUSDTUSDT_6h] INFO: Trigger Order 1385840878279241728 (sell 0.1 @ Trigger 198.53) storniert.
+10:30:16 [AAVEUSDTUSDT_6h] INFO: 18 offene Order(s) für AAVE/USDT:USDT erfolgreich storniert.
+10:30:16 [AAVEUSDTUSDT_6h] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+10:30:16 [AAVEUSDTUSDT_6h] INFO: Keine offene Position für AAVE/USDT:USDT und Cooldown nicht aktiv.
+10:30:18 [AAVEUSDTUSDT_6h] INFO: Platziere neue Entry-Orders für AAVE/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 16.10 USDT
+10:30:18 [AAVEUSDTUSDT_6h] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+10:30:18 [AAVEUSDTUSDT_6h] INFO: Risikoberechnung basiert auf initialem Kapital: 16.10 USDT
+10:30:18 [AAVEUSDTUSDT_6h] INFO: Prüfe Long Entry Bands: [174.17308265540666, 172.82930753421775, 161.11821545352248]
+10:30:18 [AAVEUSDTUSDT_6h] INFO: ✅ Long Entry 1/3 platziert: Amount=0.1664, Trigger@173.8714, Limit@174.1731
+10:30:20 [AAVEUSDTUSDT_6h] INFO: ✅ Long Entry 2/3 platziert: Amount=0.1677, Trigger@172.5300, Limit@172.8293
+10:30:21 [AAVEUSDTUSDT_6h] INFO: ✅ Long Entry 3/3 platziert: Amount=0.1799, Trigger@160.8392, Limit@161.1182
+10:30:22 [AAVEUSDTUSDT_6h] INFO: Prüfe Short Entry Bands: [182.72822628839813, 184.1489670639562, 197.53407999970003]
+10:30:22 [AAVEUSDTUSDT_6h] INFO: ✅ Short Entry 1/3 platziert: Amount=0.1586, Trigger@183.0447, Limit@182.7282
+10:30:23 [AAVEUSDTUSDT_6h] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1574, Trigger@184.4679, Limit@184.1490
+10:30:24 [AAVEUSDTUSDT_6h] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1467, Trigger@197.8762, Limit@197.5341
+10:30:25 [AAVEUSDTUSDT_6h] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+10:30:25 [AAVEUSDTUSDT_6h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (6h) abgeschlossen =====
+10:30:25 [AAVEUSDTUSDT_6h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (6h) normal abgeschlossen <<<
+2025-12-19 10:45:01,975 - INFO - =======================================================
+2025-12-19 10:45:01,975 - INFO - =======================================================
+2025-12-19 10:45:01,976 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 10:45:01,976 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 10:45:01,976 - INFO - =======================================================
+2025-12-19 10:45:01,976 - INFO - =======================================================
+2025-12-19 10:45:01,976 - INFO - =======================================================
+2025-12-19 10:45:01,976 - INFO - =======================================================
+2025-12-19 10:45:01,977 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 10:45:01,977 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 10:45:01,978 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3312957).
+2025-12-19 10:45:01,978 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3312957).
+10:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+10:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+10:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+10:45:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+10:45:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88000.0000, Average=87204.8667
+10:45:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+10:45:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+10:45:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+10:45:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 11:00:01,447 - INFO - =======================================================
+2025-12-19 11:00:01,447 - INFO - =======================================================
+2025-12-19 11:00:01,448 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 11:00:01,448 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 11:00:01,448 - INFO - =======================================================
+2025-12-19 11:00:01,448 - INFO - =======================================================
+2025-12-19 11:00:01,449 - INFO - =======================================================
+2025-12-19 11:00:01,449 - INFO - =======================================================
+2025-12-19 11:00:01,449 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 11:00:01,449 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 11:00:01,451 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3322398).
+2025-12-19 11:00:01,451 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3322398).
+11:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+11:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+11:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+11:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+11:00:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88065.0000, Average=87219.3111
+11:00:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+11:00:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+11:00:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+11:00:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 11:15:01,415 - INFO - =======================================================
+2025-12-19 11:15:01,415 - INFO - =======================================================
+2025-12-19 11:15:01,416 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 11:15:01,416 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 11:15:01,416 - INFO - =======================================================
+2025-12-19 11:15:01,416 - INFO - =======================================================
+2025-12-19 11:15:01,416 - INFO - =======================================================
+2025-12-19 11:15:01,416 - INFO - =======================================================
+2025-12-19 11:15:01,416 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 11:15:01,416 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 11:15:01,418 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3331401).
+2025-12-19 11:15:01,418 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3331401).
+11:15:02 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+11:15:02 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+11:15:02 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+11:15:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+11:15:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88144.4000, Average=87236.9556
+11:15:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+11:15:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+11:15:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+11:15:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 11:30:01,630 - INFO - =======================================================
+2025-12-19 11:30:01,630 - INFO - =======================================================
+2025-12-19 11:30:01,630 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 11:30:01,630 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 11:30:01,630 - INFO - =======================================================
+2025-12-19 11:30:01,630 - INFO - =======================================================
+2025-12-19 11:30:01,630 - INFO - =======================================================
+2025-12-19 11:30:01,630 - INFO - =======================================================
+2025-12-19 11:30:01,631 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 11:30:01,631 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 11:30:01,631 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3343295).
+2025-12-19 11:30:01,631 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3343295).
+11:30:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+11:30:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+11:30:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+11:30:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+11:30:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87911.9000, Average=87185.2889
+11:30:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+11:30:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+11:30:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+11:30:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 11:45:01,977 - INFO - =======================================================
+2025-12-19 11:45:01,977 - INFO - =======================================================
+2025-12-19 11:45:01,977 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 11:45:01,977 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 11:45:01,977 - INFO - =======================================================
+2025-12-19 11:45:01,977 - INFO - =======================================================
+2025-12-19 11:45:01,978 - INFO - =======================================================
+2025-12-19 11:45:01,978 - INFO - =======================================================
+2025-12-19 11:45:01,978 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 11:45:01,978 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 11:45:01,979 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3350774).
+2025-12-19 11:45:01,979 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3350774).
+11:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+11:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+11:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+11:45:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+11:45:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88027.1000, Average=87210.8889
+11:45:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+11:45:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+11:45:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+11:45:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 12:00:01,224 - INFO - =======================================================
+2025-12-19 12:00:01,224 - INFO - =======================================================
+2025-12-19 12:00:01,224 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 12:00:01,224 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 12:00:01,224 - INFO - =======================================================
+2025-12-19 12:00:01,224 - INFO - =======================================================
+2025-12-19 12:00:01,225 - INFO - =======================================================
+2025-12-19 12:00:01,225 - INFO - =======================================================
+2025-12-19 12:00:01,225 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 12:00:01,225 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 12:00:01,226 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3356291).
+2025-12-19 12:00:01,226 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3356291).
+12:00:02 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+12:00:02 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+12:00:02 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+12:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+12:00:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88221.2000, Average=87254.0222
+12:00:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+12:00:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+12:00:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+12:00:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 12:15:01,543 - INFO - =======================================================
+2025-12-19 12:15:01,543 - INFO - =======================================================
+2025-12-19 12:15:01,544 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 12:15:01,544 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 12:15:01,544 - INFO - =======================================================
+2025-12-19 12:15:01,544 - INFO - =======================================================
+2025-12-19 12:15:01,544 - INFO - =======================================================
+2025-12-19 12:15:01,544 - INFO - =======================================================
+2025-12-19 12:15:01,544 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 12:15:01,544 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 12:15:01,545 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3366885).
+2025-12-19 12:15:01,545 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3366885).
+12:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+12:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+12:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+12:15:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+12:15:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88295.1000, Average=87270.4444
+12:15:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+12:15:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+12:15:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+12:15:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 12:30:01,829 - INFO - =======================================================
+2025-12-19 12:30:01,829 - INFO - =======================================================
+2025-12-19 12:30:01,829 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 12:30:01,829 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 12:30:01,829 - INFO - =======================================================
+2025-12-19 12:30:01,829 - INFO - =======================================================
+2025-12-19 12:30:01,829 - INFO - =======================================================
+2025-12-19 12:30:01,829 - INFO - =======================================================
+2025-12-19 12:30:01,830 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 12:30:01,830 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 12:30:01,830 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3371863).
+2025-12-19 12:30:01,830 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3371863).
+12:30:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+12:30:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+12:30:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+12:30:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+12:30:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88256.1000, Average=87261.7778
+12:30:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+12:30:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+12:30:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+12:30:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 12:45:01,872 - INFO - =======================================================
+2025-12-19 12:45:01,872 - INFO - =======================================================
+2025-12-19 12:45:01,872 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 12:45:01,872 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 12:45:01,873 - INFO - =======================================================
+2025-12-19 12:45:01,873 - INFO - =======================================================
+2025-12-19 12:45:01,873 - INFO - =======================================================
+2025-12-19 12:45:01,873 - INFO - =======================================================
+2025-12-19 12:45:01,873 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 12:45:01,873 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 12:45:01,874 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3375354).
+2025-12-19 12:45:01,874 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3375354).
+12:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+12:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+12:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+12:45:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+12:45:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88255.8000, Average=87261.7111
+12:45:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+12:45:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+12:45:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+12:45:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 13:00:02,055 - INFO - =======================================================
+2025-12-19 13:00:02,055 - INFO - =======================================================
+2025-12-19 13:00:02,055 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 13:00:02,055 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 13:00:02,055 - INFO - =======================================================
+2025-12-19 13:00:02,055 - INFO - =======================================================
+2025-12-19 13:00:02,055 - INFO - =======================================================
+2025-12-19 13:00:02,055 - INFO - =======================================================
+2025-12-19 13:00:02,056 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 13:00:02,056 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 13:00:02,056 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3378600).
+2025-12-19 13:00:02,056 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3378600).
+13:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+13:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+13:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+13:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+13:00:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88151.9000, Average=87238.6222
+13:00:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+13:00:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+13:00:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+13:00:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 13:15:02,053 - INFO - =======================================================
+2025-12-19 13:15:02,053 - INFO - =======================================================
+2025-12-19 13:15:02,054 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 13:15:02,054 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 13:15:02,054 - INFO - =======================================================
+2025-12-19 13:15:02,054 - INFO - =======================================================
+2025-12-19 13:15:02,054 - INFO - =======================================================
+2025-12-19 13:15:02,054 - INFO - =======================================================
+2025-12-19 13:15:02,054 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 13:15:02,054 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 13:15:02,055 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3388813).
+2025-12-19 13:15:02,055 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3388813).
+13:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+13:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+13:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+13:15:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+13:15:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88153.9000, Average=87239.0667
+13:15:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+13:15:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+13:15:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+13:15:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 13:30:01,182 - INFO - =======================================================
+2025-12-19 13:30:01,182 - INFO - =======================================================
+2025-12-19 13:30:01,182 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 13:30:01,182 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 13:30:01,182 - INFO - =======================================================
+2025-12-19 13:30:01,182 - INFO - =======================================================
+2025-12-19 13:30:01,183 - INFO - =======================================================
+2025-12-19 13:30:01,183 - INFO - =======================================================
+2025-12-19 13:30:01,183 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 13:30:01,183 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 13:30:01,184 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3399523).
+2025-12-19 13:30:01,184 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3399523).
+13:30:02 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+13:30:02 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+13:30:02 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+13:30:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+13:30:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87977.3000, Average=87199.8222
+13:30:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+13:30:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+13:30:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+13:30:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 13:45:02,025 - INFO - =======================================================
+2025-12-19 13:45:02,025 - INFO - =======================================================
+2025-12-19 13:45:02,025 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 13:45:02,025 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 13:45:02,025 - INFO - =======================================================
+2025-12-19 13:45:02,025 - INFO - =======================================================
+2025-12-19 13:45:02,025 - INFO - =======================================================
+2025-12-19 13:45:02,025 - INFO - =======================================================
+2025-12-19 13:45:02,025 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 13:45:02,025 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 13:45:02,027 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3409036).
+2025-12-19 13:45:02,027 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3409036).
+13:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+13:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+13:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+13:45:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+13:45:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88005.6000, Average=87206.1111
+13:45:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+13:45:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+13:45:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+13:45:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 14:00:02,062 - INFO - =======================================================
+2025-12-19 14:00:02,062 - INFO - =======================================================
+2025-12-19 14:00:02,062 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 14:00:02,062 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 14:00:02,062 - INFO - =======================================================
+2025-12-19 14:00:02,062 - INFO - =======================================================
+2025-12-19 14:00:02,062 - INFO - =======================================================
+2025-12-19 14:00:02,062 - INFO - =======================================================
+2025-12-19 14:00:02,062 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 14:00:02,062 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 14:00:02,063 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3422146).
+2025-12-19 14:00:02,063 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3422146).
+14:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+14:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+14:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+14:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+14:00:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87828.6000, Average=87166.7778
+14:00:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+14:00:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+14:00:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+14:00:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 14:15:01,975 - INFO - =======================================================
+2025-12-19 14:15:01,975 - INFO - =======================================================
+2025-12-19 14:15:01,976 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 14:15:01,976 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 14:15:01,976 - INFO - =======================================================
+2025-12-19 14:15:01,976 - INFO - =======================================================
+2025-12-19 14:15:01,976 - INFO - =======================================================
+2025-12-19 14:15:01,976 - INFO - =======================================================
+2025-12-19 14:15:01,976 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 14:15:01,976 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 14:15:01,977 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3430081).
+2025-12-19 14:15:01,977 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3430081).
+14:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+14:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+14:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+14:15:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+14:15:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87964.1000, Average=87196.8889
+14:15:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+14:15:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+14:15:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+14:15:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 14:30:01,948 - INFO - =======================================================
+2025-12-19 14:30:01,948 - INFO - =======================================================
+2025-12-19 14:30:01,948 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 14:30:01,948 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 14:30:01,949 - INFO - =======================================================
+2025-12-19 14:30:01,949 - INFO - =======================================================
+2025-12-19 14:30:01,949 - INFO - =======================================================
+2025-12-19 14:30:01,949 - INFO - =======================================================
+2025-12-19 14:30:01,949 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 14:30:01,949 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 14:30:01,950 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3436843).
+2025-12-19 14:30:01,950 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3436843).
+14:30:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+14:30:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+14:30:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+14:30:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+14:30:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88004.9000, Average=87205.9556
+14:30:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+14:30:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+14:30:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+14:30:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 14:45:01,898 - INFO - =======================================================
+2025-12-19 14:45:01,898 - INFO - =======================================================
+2025-12-19 14:45:01,898 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 14:45:01,898 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 14:45:01,899 - INFO - =======================================================
+2025-12-19 14:45:01,899 - INFO - =======================================================
+2025-12-19 14:45:01,899 - INFO - =======================================================
+2025-12-19 14:45:01,899 - INFO - =======================================================
+2025-12-19 14:45:01,899 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 14:45:01,899 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 14:45:01,900 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3444731).
+2025-12-19 14:45:01,900 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3444731).
+14:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+14:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+14:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+14:45:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+14:45:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88074.6000, Average=87221.4444
+14:45:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+14:45:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+14:45:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+14:45:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 15:00:01,708 - INFO - =======================================================
+2025-12-19 15:00:01,708 - INFO - =======================================================
+2025-12-19 15:00:01,709 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 15:00:01,709 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 15:00:01,709 - INFO - =======================================================
+2025-12-19 15:00:01,709 - INFO - =======================================================
+2025-12-19 15:00:01,709 - INFO - =======================================================
+2025-12-19 15:00:01,709 - INFO - =======================================================
+2025-12-19 15:00:01,709 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 15:00:01,709 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 15:00:01,710 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3456229).
+2025-12-19 15:00:01,710 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3456229).
+15:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+15:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+15:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+15:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+15:00:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87959.0000, Average=87195.7556
+15:00:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+15:00:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+15:00:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+15:00:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 15:15:01,813 - INFO - =======================================================
+2025-12-19 15:15:01,813 - INFO - =======================================================
+2025-12-19 15:15:01,814 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 15:15:01,814 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 15:15:01,814 - INFO - =======================================================
+2025-12-19 15:15:01,814 - INFO - =======================================================
+2025-12-19 15:15:01,814 - INFO - =======================================================
+2025-12-19 15:15:01,814 - INFO - =======================================================
+2025-12-19 15:15:01,814 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 15:15:01,814 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 15:15:01,815 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3466887).
+2025-12-19 15:15:01,815 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3466887).
+15:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+15:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+15:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+15:15:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+15:15:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88130.8000, Average=87233.9333
+15:15:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+15:15:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+15:15:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+15:15:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 15:30:01,602 - INFO - =======================================================
+2025-12-19 15:30:01,602 - INFO - =======================================================
+2025-12-19 15:30:01,602 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 15:30:01,602 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 15:30:01,602 - INFO - =======================================================
+2025-12-19 15:30:01,602 - INFO - =======================================================
+2025-12-19 15:30:01,603 - INFO - =======================================================
+2025-12-19 15:30:01,603 - INFO - =======================================================
+2025-12-19 15:30:01,603 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 15:30:01,603 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 15:30:01,604 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3478048).
+2025-12-19 15:30:01,604 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3478048).
+15:30:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+15:30:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+15:30:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+15:30:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+15:30:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87979.6000, Average=87200.3333
+15:30:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+15:30:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+15:30:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+15:30:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 15:45:01,694 - INFO - =======================================================
+2025-12-19 15:45:01,694 - INFO - =======================================================
+2025-12-19 15:45:01,694 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 15:45:01,694 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 15:45:01,694 - INFO - =======================================================
+2025-12-19 15:45:01,694 - INFO - =======================================================
+2025-12-19 15:45:01,695 - INFO - =======================================================
+2025-12-19 15:45:01,695 - INFO - =======================================================
+2025-12-19 15:45:01,695 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 15:45:01,695 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 15:45:01,696 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3489598).
+2025-12-19 15:45:01,696 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3489598).
+15:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+15:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+15:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+15:45:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+15:45:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88373.9000, Average=87287.9556
+15:45:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+15:45:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+15:45:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+15:45:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 16:00:01,616 - INFO - =======================================================
+2025-12-19 16:00:01,616 - INFO - =======================================================
+2025-12-19 16:00:01,617 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 16:00:01,617 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 16:00:01,617 - INFO - =======================================================
+2025-12-19 16:00:01,617 - INFO - =======================================================
+2025-12-19 16:00:01,617 - INFO - =======================================================
+2025-12-19 16:00:01,617 - INFO - =======================================================
+2025-12-19 16:00:01,617 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 16:00:01,617 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 16:00:01,618 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3501517).
+2025-12-19 16:00:01,618 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3501517).
+16:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+16:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+16:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+16:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+16:00:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88199.9000, Average=87249.2889
+16:00:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+16:00:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+16:00:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+16:00:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 16:15:01,851 - INFO - =======================================================
+2025-12-19 16:15:01,851 - INFO - =======================================================
+2025-12-19 16:15:01,852 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 16:15:01,852 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 16:15:01,852 - INFO - =======================================================
+2025-12-19 16:15:01,852 - INFO - =======================================================
+2025-12-19 16:15:01,852 - INFO - =======================================================
+2025-12-19 16:15:01,852 - INFO - =======================================================
+2025-12-19 16:15:01,852 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 16:15:01,852 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 16:15:01,853 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3510799).
+2025-12-19 16:15:01,853 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3510799).
+16:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+16:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+16:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+16:15:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+16:15:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88716.6000, Average=87364.1111
+16:15:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+16:15:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+16:15:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+16:15:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 16:30:01,822 - INFO - =======================================================
+2025-12-19 16:30:01,822 - INFO - =======================================================
+2025-12-19 16:30:01,822 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 16:30:01,822 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 16:30:01,822 - INFO - =======================================================
+2025-12-19 16:30:01,822 - INFO - =======================================================
+2025-12-19 16:30:01,823 - INFO - =======================================================
+2025-12-19 16:30:01,823 - INFO - =======================================================
+2025-12-19 16:30:01,823 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 16:30:01,823 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 16:30:01,823 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3519062).
+2025-12-19 16:30:01,823 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3519062).
+16:30:04 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+16:30:04 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+16:30:04 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+16:30:07 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+16:30:07 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88038.7000, Average=87213.4667
+16:30:07 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+16:30:07 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+16:30:08 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+16:30:08 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 16:45:01,930 - INFO - =======================================================
+2025-12-19 16:45:01,930 - INFO - =======================================================
+2025-12-19 16:45:01,930 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 16:45:01,930 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 16:45:01,930 - INFO - =======================================================
+2025-12-19 16:45:01,930 - INFO - =======================================================
+2025-12-19 16:45:01,930 - INFO - =======================================================
+2025-12-19 16:45:01,930 - INFO - =======================================================
+2025-12-19 16:45:01,930 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 16:45:01,930 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 16:45:01,931 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3525852).
+2025-12-19 16:45:01,931 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3525852).
+16:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+16:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+16:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+16:45:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+16:45:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88004.3000, Average=87205.8222
+16:45:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+16:45:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+16:45:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+16:45:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 17:00:02,032 - INFO - =======================================================
+2025-12-19 17:00:02,032 - INFO - =======================================================
+2025-12-19 17:00:02,032 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 17:00:02,032 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 17:00:02,032 - INFO - =======================================================
+2025-12-19 17:00:02,032 - INFO - =======================================================
+2025-12-19 17:00:02,033 - INFO - =======================================================
+2025-12-19 17:00:02,033 - INFO - =======================================================
+2025-12-19 17:00:02,033 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 17:00:02,033 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 17:00:02,034 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3540772).
+2025-12-19 17:00:02,034 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3540772).
+17:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+17:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+17:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+17:00:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+17:00:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87908.6000, Average=87184.5556
+17:00:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+17:00:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+17:00:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+17:00:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 17:15:02,074 - INFO - =======================================================
+2025-12-19 17:15:02,074 - INFO - =======================================================
+2025-12-19 17:15:02,074 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 17:15:02,074 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 17:15:02,074 - INFO - =======================================================
+2025-12-19 17:15:02,074 - INFO - =======================================================
+2025-12-19 17:15:02,074 - INFO - =======================================================
+2025-12-19 17:15:02,074 - INFO - =======================================================
+2025-12-19 17:15:02,075 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 17:15:02,075 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 17:15:02,079 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3552665).
+2025-12-19 17:15:02,079 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3552665).
+17:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+17:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+17:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+17:15:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+17:15:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88338.6000, Average=87280.1111
+17:15:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+17:15:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+17:15:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+17:15:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 17:30:01,378 - INFO - =======================================================
+2025-12-19 17:30:01,378 - INFO - =======================================================
+2025-12-19 17:30:01,379 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 17:30:01,379 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 17:30:01,379 - INFO - =======================================================
+2025-12-19 17:30:01,379 - INFO - =======================================================
+2025-12-19 17:30:01,379 - INFO - =======================================================
+2025-12-19 17:30:01,379 - INFO - =======================================================
+2025-12-19 17:30:01,379 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 17:30:01,379 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 17:30:01,380 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3559699).
+2025-12-19 17:30:01,380 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3559699).
+17:30:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+17:30:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+17:30:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+17:30:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+17:30:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88352.0000, Average=87283.0889
+17:30:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+17:30:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+17:30:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+17:30:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 17:45:01,414 - INFO - =======================================================
+2025-12-19 17:45:01,414 - INFO - =======================================================
+2025-12-19 17:45:01,414 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 17:45:01,414 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 17:45:01,414 - INFO - =======================================================
+2025-12-19 17:45:01,414 - INFO - =======================================================
+2025-12-19 17:45:01,414 - INFO - =======================================================
+2025-12-19 17:45:01,414 - INFO - =======================================================
+2025-12-19 17:45:01,414 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 17:45:01,414 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 17:45:01,415 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3569357).
+2025-12-19 17:45:01,415 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3569357).
+17:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+17:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+17:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+17:45:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+17:45:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88468.8000, Average=87309.0444
+17:45:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+17:45:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+17:45:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+17:45:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 18:00:01,625 - INFO - =======================================================
+2025-12-19 18:00:01,625 - INFO - =======================================================
+2025-12-19 18:00:01,625 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 18:00:01,625 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 18:00:01,625 - INFO - =======================================================
+2025-12-19 18:00:01,625 - INFO - =======================================================
+2025-12-19 18:00:01,625 - INFO - =======================================================
+2025-12-19 18:00:01,625 - INFO - =======================================================
+2025-12-19 18:00:01,626 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 18:00:01,626 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 18:00:01,627 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3579501).
+2025-12-19 18:00:01,627 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3579501).
+18:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+18:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+18:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+18:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+18:00:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87946.9000, Average=87193.0667
+18:00:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+18:00:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+18:00:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+18:00:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 18:15:01,663 - INFO - =======================================================
+2025-12-19 18:15:01,663 - INFO - =======================================================
+2025-12-19 18:15:01,664 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 18:15:01,664 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 18:15:01,664 - INFO - =======================================================
+2025-12-19 18:15:01,664 - INFO - =======================================================
+2025-12-19 18:15:01,664 - INFO - =======================================================
+2025-12-19 18:15:01,664 - INFO - =======================================================
+2025-12-19 18:15:01,664 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 18:15:01,664 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 18:15:01,667 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3586509).
+2025-12-19 18:15:01,667 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3586509).
+18:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+18:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+18:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+18:15:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+18:15:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88060.1000, Average=87218.2222
+18:15:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+18:15:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+18:15:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+18:15:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 18:30:02,001 - INFO - =======================================================
+2025-12-19 18:30:02,001 - INFO - =======================================================
+2025-12-19 18:30:02,001 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 18:30:02,001 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 18:30:02,001 - INFO - =======================================================
+2025-12-19 18:30:02,001 - INFO - =======================================================
+2025-12-19 18:30:02,002 - INFO - =======================================================
+2025-12-19 18:30:02,002 - INFO - =======================================================
+2025-12-19 18:30:02,002 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 18:30:02,002 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 18:30:02,003 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3602280).
+2025-12-19 18:30:02,003 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3602280).
+18:30:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+18:30:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+18:30:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+18:30:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+18:30:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87575.5000, Average=87110.5333
+18:30:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+18:30:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+18:30:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+18:30:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 18:45:01,963 - INFO - =======================================================
+2025-12-19 18:45:01,963 - INFO - =======================================================
+2025-12-19 18:45:01,964 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 18:45:01,964 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 18:45:01,964 - INFO - =======================================================
+2025-12-19 18:45:01,964 - INFO - =======================================================
+2025-12-19 18:45:01,964 - INFO - =======================================================
+2025-12-19 18:45:01,964 - INFO - =======================================================
+2025-12-19 18:45:01,964 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 18:45:01,964 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 18:45:01,965 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3623851).
+2025-12-19 18:45:01,965 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3623851).
+18:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+18:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+18:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+18:45:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+18:45:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87088.0000, Average=87002.2000
+18:45:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+18:45:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+18:45:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+18:45:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 19:00:02,052 - INFO - =======================================================
+2025-12-19 19:00:02,052 - INFO - =======================================================
+2025-12-19 19:00:02,052 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 19:00:02,052 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 19:00:02,052 - INFO - =======================================================
+2025-12-19 19:00:02,052 - INFO - =======================================================
+2025-12-19 19:00:02,052 - INFO - =======================================================
+2025-12-19 19:00:02,052 - INFO - =======================================================
+2025-12-19 19:00:02,052 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 19:00:02,052 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 19:00:02,053 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3630845).
+2025-12-19 19:00:02,053 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3630845).
+19:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+19:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+19:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+19:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+19:00:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=86922.5000, Average=86965.4222
+19:00:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+19:00:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+19:00:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+19:00:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 19:15:02,013 - INFO - =======================================================
+2025-12-19 19:15:02,013 - INFO - =======================================================
+2025-12-19 19:15:02,013 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 19:15:02,013 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 19:15:02,013 - INFO - =======================================================
+2025-12-19 19:15:02,013 - INFO - =======================================================
+2025-12-19 19:15:02,014 - INFO - =======================================================
+2025-12-19 19:15:02,014 - INFO - =======================================================
+2025-12-19 19:15:02,014 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 19:15:02,014 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 19:15:02,014 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3643157).
+2025-12-19 19:15:02,014 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3643157).
+19:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+19:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+19:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+19:15:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+19:15:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87157.7000, Average=87017.6889
+19:15:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+19:15:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+19:15:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+19:15:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 19:30:01,840 - INFO - =======================================================
+2025-12-19 19:30:01,840 - INFO - =======================================================
+2025-12-19 19:30:01,841 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 19:30:01,841 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 19:30:01,841 - INFO - =======================================================
+2025-12-19 19:30:01,841 - INFO - =======================================================
+2025-12-19 19:30:01,841 - INFO - =======================================================
+2025-12-19 19:30:01,841 - INFO - =======================================================
+2025-12-19 19:30:01,841 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 19:30:01,841 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 19:30:01,842 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3650570).
+2025-12-19 19:30:01,842 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3650570).
+19:30:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+19:30:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+19:30:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+19:30:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+19:30:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87308.0000, Average=87051.0889
+19:30:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+19:30:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+19:30:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+19:30:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 19:45:01,821 - INFO - =======================================================
+2025-12-19 19:45:01,821 - INFO - =======================================================
+2025-12-19 19:45:01,821 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 19:45:01,821 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 19:45:01,821 - INFO - =======================================================
+2025-12-19 19:45:01,821 - INFO - =======================================================
+2025-12-19 19:45:01,822 - INFO - =======================================================
+2025-12-19 19:45:01,822 - INFO - =======================================================
+2025-12-19 19:45:01,822 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 19:45:01,822 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 19:45:01,822 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3668095).
+2025-12-19 19:45:01,822 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3668095).
+19:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+19:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+19:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+19:45:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+19:45:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=86991.9000, Average=86980.8444
+19:45:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+19:45:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+19:45:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+19:45:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 20:00:01,799 - INFO - =======================================================
+2025-12-19 20:00:01,799 - INFO - =======================================================
+2025-12-19 20:00:01,799 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 20:00:01,799 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 20:00:01,800 - INFO - =======================================================
+2025-12-19 20:00:01,800 - INFO - =======================================================
+2025-12-19 20:00:01,800 - INFO - =======================================================
+2025-12-19 20:00:01,800 - INFO - =======================================================
+2025-12-19 20:00:01,800 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 20:00:01,800 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 20:00:01,801 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3680125).
+2025-12-19 20:00:01,801 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3680125).
+20:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+20:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+20:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+20:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+20:00:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87144.1000, Average=87014.6667
+20:00:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+20:00:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+20:00:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+20:00:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 20:15:01,741 - INFO - =======================================================
+2025-12-19 20:15:01,741 - INFO - =======================================================
+2025-12-19 20:15:01,741 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 20:15:01,741 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 20:15:01,742 - INFO - =======================================================
+2025-12-19 20:15:01,742 - INFO - =======================================================
+2025-12-19 20:15:01,742 - INFO - =======================================================
+2025-12-19 20:15:01,742 - INFO - =======================================================
+2025-12-19 20:15:01,742 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 20:15:01,742 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 20:15:01,743 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3689887).
+2025-12-19 20:15:01,743 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3689887).
+20:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+20:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+20:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+20:15:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+20:15:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87282.4000, Average=87045.4000
+20:15:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+20:15:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+20:15:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+20:15:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 20:30:01,821 - INFO - =======================================================
+2025-12-19 20:30:01,821 - INFO - =======================================================
+2025-12-19 20:30:01,821 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 20:30:01,821 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 20:30:01,821 - INFO - =======================================================
+2025-12-19 20:30:01,821 - INFO - =======================================================
+2025-12-19 20:30:01,822 - INFO - =======================================================
+2025-12-19 20:30:01,822 - INFO - =======================================================
+2025-12-19 20:30:01,822 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 20:30:01,822 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 20:30:01,823 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3700773).
+2025-12-19 20:30:01,823 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3700773).
+20:30:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+20:30:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+20:30:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+20:30:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+20:30:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87611.4000, Average=87118.5111
+20:30:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+20:30:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+20:30:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+20:30:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 20:45:01,891 - INFO - =======================================================
+2025-12-19 20:45:01,891 - INFO - =======================================================
+2025-12-19 20:45:01,891 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 20:45:01,891 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 20:45:01,891 - INFO - =======================================================
+2025-12-19 20:45:01,891 - INFO - =======================================================
+2025-12-19 20:45:01,892 - INFO - =======================================================
+2025-12-19 20:45:01,892 - INFO - =======================================================
+2025-12-19 20:45:01,892 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 20:45:01,892 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 20:45:01,893 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3713088).
+2025-12-19 20:45:01,893 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3713088).
+20:45:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+20:45:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+20:45:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+20:45:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+20:45:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87935.9000, Average=87190.6222
+20:45:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+20:45:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+20:45:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+20:45:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 21:00:01,840 - INFO - =======================================================
+2025-12-19 21:00:01,840 - INFO - =======================================================
+2025-12-19 21:00:01,840 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 21:00:01,840 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 21:00:01,840 - INFO - =======================================================
+2025-12-19 21:00:01,840 - INFO - =======================================================
+2025-12-19 21:00:01,840 - INFO - =======================================================
+2025-12-19 21:00:01,840 - INFO - =======================================================
+2025-12-19 21:00:01,840 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 21:00:01,840 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 21:00:01,841 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3721495).
+2025-12-19 21:00:01,841 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3721495).
+21:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+21:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+21:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+21:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+21:00:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87806.0000, Average=87161.7556
+21:00:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+21:00:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+21:00:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+21:00:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 21:15:01,765 - INFO - =======================================================
+2025-12-19 21:15:01,765 - INFO - =======================================================
+2025-12-19 21:15:01,765 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 21:15:01,765 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 21:15:01,765 - INFO - =======================================================
+2025-12-19 21:15:01,765 - INFO - =======================================================
+2025-12-19 21:15:01,765 - INFO - =======================================================
+2025-12-19 21:15:01,765 - INFO - =======================================================
+2025-12-19 21:15:01,766 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 21:15:01,766 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 21:15:01,767 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3738266).
+2025-12-19 21:15:01,767 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3738266).
+21:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+21:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+21:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+21:15:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+21:15:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87749.0000, Average=87149.0889
+21:15:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+21:15:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+21:15:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+21:15:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 21:30:02,101 - INFO - =======================================================
+2025-12-19 21:30:02,101 - INFO - =======================================================
+2025-12-19 21:30:02,102 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 21:30:02,102 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 21:30:02,102 - INFO - =======================================================
+2025-12-19 21:30:02,102 - INFO - =======================================================
+2025-12-19 21:30:02,102 - INFO - =======================================================
+2025-12-19 21:30:02,102 - INFO - =======================================================
+2025-12-19 21:30:02,102 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 21:30:02,102 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 21:30:02,103 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3745100).
+2025-12-19 21:30:02,103 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3745100).
+21:30:04 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+21:30:04 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+21:30:04 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+21:30:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+21:30:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87993.8000, Average=87203.4889
+21:30:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+21:30:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+21:30:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+21:30:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 21:45:01,441 - INFO - =======================================================
+2025-12-19 21:45:01,441 - INFO - =======================================================
+2025-12-19 21:45:01,441 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 21:45:01,441 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 21:45:01,441 - INFO - =======================================================
+2025-12-19 21:45:01,441 - INFO - =======================================================
+2025-12-19 21:45:01,441 - INFO - =======================================================
+2025-12-19 21:45:01,441 - INFO - =======================================================
+2025-12-19 21:45:01,441 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 21:45:01,441 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 21:45:01,442 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3747412).
+2025-12-19 21:45:01,442 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3747412).
+21:45:02 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+21:45:02 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+21:45:02 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+21:45:04 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+21:45:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88031.0000, Average=87211.7556
+21:45:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+21:45:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+21:45:05 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+21:45:05 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 22:00:01,199 - INFO - =======================================================
+2025-12-19 22:00:01,199 - INFO - =======================================================
+2025-12-19 22:00:01,201 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 22:00:01,201 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 22:00:01,202 - INFO - =======================================================
+2025-12-19 22:00:01,202 - INFO - =======================================================
+2025-12-19 22:00:01,203 - INFO - =======================================================
+2025-12-19 22:00:01,203 - INFO - =======================================================
+2025-12-19 22:00:01,204 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 22:00:01,204 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 22:00:01,205 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3747739).
+2025-12-19 22:00:01,205 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3747739).
+22:00:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+22:00:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+22:00:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+22:00:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+22:00:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=88019.7000, Average=87209.2444
+22:00:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+22:00:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+22:00:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+22:00:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 22:15:01,828 - INFO - =======================================================
+2025-12-19 22:15:01,828 - INFO - =======================================================
+2025-12-19 22:15:01,829 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 22:15:01,829 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 22:15:01,829 - INFO - =======================================================
+2025-12-19 22:15:01,829 - INFO - =======================================================
+2025-12-19 22:15:01,830 - INFO - =======================================================
+2025-12-19 22:15:01,830 - INFO - =======================================================
+2025-12-19 22:15:01,830 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 22:15:01,830 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 22:15:01,831 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3748181).
+2025-12-19 22:15:01,831 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3748181).
+22:15:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+22:15:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+22:15:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+22:15:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+22:15:06 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87879.8000, Average=87178.1556
+22:15:06 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+22:15:06 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+22:15:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+22:15:07 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 22:30:01,543 - INFO - =======================================================
+2025-12-19 22:30:01,543 - INFO - =======================================================
+2025-12-19 22:30:01,545 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 22:30:01,545 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 22:30:01,545 - INFO - =======================================================
+2025-12-19 22:30:01,545 - INFO - =======================================================
+2025-12-19 22:30:01,546 - INFO - =======================================================
+2025-12-19 22:30:01,546 - INFO - =======================================================
+2025-12-19 22:30:01,547 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 22:30:01,547 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 22:30:01,548 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3748617).
+2025-12-19 22:30:01,548 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3748617).
+22:30:03 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+22:30:03 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+22:30:03 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+22:30:05 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+22:30:05 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87964.4000, Average=87196.9556
+22:30:05 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+22:30:05 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+22:30:06 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+22:30:06 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 22:45:01,154 - INFO - =======================================================
+2025-12-19 22:45:01,154 - INFO - =======================================================
+2025-12-19 22:45:01,154 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 22:45:01,154 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 22:45:01,154 - INFO - =======================================================
+2025-12-19 22:45:01,154 - INFO - =======================================================
+2025-12-19 22:45:01,154 - INFO - =======================================================
+2025-12-19 22:45:01,154 - INFO - =======================================================
+2025-12-19 22:45:01,154 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 22:45:01,154 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 22:45:01,155 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3748946).
+2025-12-19 22:45:01,155 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3748946).
+22:45:02 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+22:45:02 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+22:45:02 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+22:45:04 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+22:45:04 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87862.0000, Average=87174.2000
+22:45:04 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+22:45:04 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+22:45:05 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+22:45:05 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-19 23:00:01,818 - INFO - =======================================================
+2025-12-19 23:00:01,818 - INFO - =======================================================
+2025-12-19 23:00:01,820 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 23:00:01,820 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-19 23:00:01,820 - INFO - =======================================================
+2025-12-19 23:00:01,820 - INFO - =======================================================
+2025-12-19 23:00:01,822 - INFO - =======================================================
+2025-12-19 23:00:01,822 - INFO - =======================================================
+2025-12-19 23:00:01,822 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 23:00:01,822 - INFO - 
+--- Starte Bot für: BTC/USDT:USDT (1d) ---
+2025-12-19 23:00:01,823 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3749395).
+2025-12-19 23:00:01,823 - INFO - Prozess für BTC/USDT:USDT_1d gestartet (PID: 3749395).
+23:00:04 [BTCUSDTUSDT_1d] INFO: Konfiguration geladen für BTC/USDT:USDT (1d).
+23:00:04 [BTCUSDTUSDT_1d] INFO: --- Starte ltbbot (Envelope) für BTC/USDT:USDT (1d) auf Account 'DeinAccountName' ---
+23:00:04 [BTCUSDTUSDT_1d] INFO: ✅ Performance Health Check: Keine Performance-Daten vorhanden
+23:00:06 [BTCUSDTUSDT_1d] INFO: ===== Starte Handelszyklus für BTC/USDT:USDT (1d) auf 'DeinAccountName' =====
+23:00:07 [BTCUSDTUSDT_1d] INFO: Aktueller Status: Preis=87797.9000, Average=87159.9556
+23:00:07 [BTCUSDTUSDT_1d] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+23:00:07 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+23:00:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
+23:00:08 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<

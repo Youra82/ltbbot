@@ -1761,3 +1761,5 @@ ccxt.base.errors.DDoSProtection: bitget {"code":"429","msg":"Too Many Requests",
 2025-11-02 10:15:26,129 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
 2025-11-02 10:15:26,129 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
 2025-11-02 10:15:26,145 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-19 10:22:02,872 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-19 10:30:07,757 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
