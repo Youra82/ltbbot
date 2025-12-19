@@ -39,3 +39,4 @@ cython_debug/
 # .idea/ # Kann man drin lassen, wenn man VS Code nutzt und kein PyCharm etc.
 #*.db # Wird oben schon ignoriert
 #*.csv # Wird oben schon ignoriert
+artifacts/db/*.db
