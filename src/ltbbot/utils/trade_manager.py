@@ -347,7 +347,32 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
 
     # Alte TP/SL Orders wurden bereits zu Beginn von full_trade_cycle storniert
 
-    # Neuen TP (am Moving Average) und SL setzen
+    # Sicherheits-Check: Existieren TP und SL für diese Position?
+    open_triggers = exchange.fetch_open_trigger_orders(symbol)
+    tp_exists = False
+    sl_exists = False
+    for order in open_triggers:
+        if order.get('reduceOnly') and order.get('side') != position['side']:
+            # TP/SL sind immer reduceOnly und entgegengesetzte Seite
+            if order.get('type', '').lower() == 'market' and order.get('triggerPrice'):
+                # Heuristik: TP ist näher am Average, SL weiter weg
+                trigger_price = float(order.get('triggerPrice', 0))
+                avg_entry_price = float(position.get('entryPrice', position.get('info', {}).get('avgOpenPrice', 0)))
+                if position['side'] == 'long':
+                    if trigger_price > avg_entry_price:
+                        tp_exists = True
+                    elif trigger_price < avg_entry_price:
+                        sl_exists = True
+                else:
+                    if trigger_price < avg_entry_price:
+                        tp_exists = True
+                    elif trigger_price > avg_entry_price:
+                        sl_exists = True
+
+    if not tp_exists or not sl_exists:
+        logger.warning(f"Sicherheits-Check: TP vorhanden? {tp_exists}, SL vorhanden? {sl_exists}. Fehlt etwas, wird nachgetragen!")
+
+    # Neuen TP (am Moving Average) und SL setzen, falls sie fehlen
     amount_contracts = position['contracts']
     try:
         amount_contracts_float = float(amount_contracts)
