@@ -567,21 +567,11 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # (Entry erst wenn Preis tief genug gefallen ist)
                 entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct_cfg)
 
-                # Entry Order (Trigger Limit)
-                entry_order = exchange.place_trigger_limit_order(
-                    symbol=symbol, side=side, amount=amount_coins,
-                    trigger_price=entry_trigger_price, price=entry_limit_price
-                )
-                logger.info(f"✅ Long Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
-                
-                # Keine Telegram-Benachrichtigung mehr beim Platzieren der Entry-Order
-                
-                time.sleep(0.1)
 
-                # Zugehöriger Take Profit (Trigger Market am Average)
+                # ZUERST TP platzieren
                 tp_price = band_prices.get('average')
                 if tp_price is None or pd.isna(tp_price) or tp_price <= 0:
-                     logger.error("Ungültiger Average-Preis für TP. Überspringe TP.")
+                    logger.error("Ungültiger Average-Preis für TP. Überspringe TP.")
                 else:
                     exchange.place_trigger_market_order(
                         symbol=symbol, side='sell', amount=amount_coins,
@@ -590,7 +580,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     logger.debug(f"  TP für Long Entry {i+1} @ {tp_price:.4f} platziert.")
                     time.sleep(0.1)
 
-                # Zugehöriger Stop Loss (Trigger Market)
+                # Dann SL platzieren
                 sl_order = exchange.place_trigger_market_order(
                     symbol=symbol, side='sell', amount=amount_coins,
                     trigger_price=sl_price, reduce=True
@@ -598,6 +588,14 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 logger.debug(f"  SL für Long Entry {i+1} @ {sl_price:.4f} platziert.")
                 if sl_order and 'id' in sl_order:
                     new_sl_ids.append(sl_order['id'])
+                time.sleep(0.1)
+
+                # Dann Entry Order (Trigger Limit)
+                entry_order = exchange.place_trigger_limit_order(
+                    symbol=symbol, side=side, amount=amount_coins,
+                    trigger_price=entry_trigger_price, price=entry_limit_price
+                )
+                logger.info(f"✅ Long Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 time.sleep(0.1)
 
             except ccxt.InsufficientFunds as e:
@@ -647,21 +645,11 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # (Entry erst wenn Preis hoch genug gestiegen ist)
                 entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct_cfg)
 
-                # Entry Order (Trigger Limit)
-                entry_order = exchange.place_trigger_limit_order(
-                    symbol=symbol, side=side, amount=amount_coins,
-                    trigger_price=entry_trigger_price, price=entry_limit_price
-                )
-                logger.info(f"✅ Short Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
-                
-                # Keine Telegram-Benachrichtigung mehr beim Platzieren der Entry-Order
-                
-                time.sleep(0.1)
 
-                # Zugehöriger Take Profit (Trigger Market am Average)
+                # ZUERST TP platzieren
                 tp_price = band_prices.get('average')
                 if tp_price is None or pd.isna(tp_price) or tp_price <= 0:
-                     logger.error("Ungültiger Average-Preis für TP. Überspringe TP.")
+                    logger.error("Ungültiger Average-Preis für TP. Überspringe TP.")
                 else:
                     exchange.place_trigger_market_order(
                         symbol=symbol, side='buy', amount=amount_coins,
@@ -670,7 +658,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     logger.debug(f"  TP für Short Entry {i+1} @ {tp_price:.4f} platziert.")
                     time.sleep(0.1)
 
-                # Zugehöriger Stop Loss (Trigger Market)
+                # Dann SL platzieren
                 sl_order = exchange.place_trigger_market_order(
                     symbol=symbol, side='buy', amount=amount_coins,
                     trigger_price=sl_price, reduce=True
@@ -678,6 +666,14 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 logger.debug(f"  SL für Short Entry {i+1} @ {sl_price:.4f} platziert.")
                 if sl_order and 'id' in sl_order:
                     new_sl_ids.append(sl_order['id'])
+                time.sleep(0.1)
+
+                # Dann Entry Order (Trigger Limit)
+                entry_order = exchange.place_trigger_limit_order(
+                    symbol=symbol, side=side, amount=amount_coins,
+                    trigger_price=entry_trigger_price, price=entry_limit_price
+                )
+                logger.info(f"✅ Short Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 time.sleep(0.1)
 
             except ccxt.InsufficientFunds as e:
