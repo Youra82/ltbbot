@@ -15,18 +15,17 @@ echo -e "${BLUE}--- Sicheres Update für ltbbot wird ausgeführt ---${NC}"
 PROJECT_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 cd "$PROJECT_ROOT" || { echo -e "${RED}Fehler: Kann nicht ins Projektverzeichnis wechseln${NC}"; exit 1; }
 
-# 1. Sichere die einzigen Dateien, die lokal wichtig sind
-echo -e "${YELLOW}1/6: Erstelle Backups von 'secret.json' und 'settings.json'...${NC}"
+# 1. Sichere NUR secret.json (settings.json soll vom Repo aktualisiert werden!)
+echo -e "${YELLOW}1/5: Erstelle Backup von 'secret.json'...${NC}"
 if [ -f "secret.json" ]; then
     cp secret.json secret.json.bak
+    echo -e "${GREEN}✔ Backup von secret.json erstellt.${NC}"
+else
+    echo -e "${YELLOW}⚠ Keine secret.json gefunden (wird beim ersten Start erstellt).${NC}"
 fi
-if [ -f "settings.json" ]; then
-    cp settings.json settings.json.bak
-fi
-echo -e "${GREEN}✔ Backups erstellt.${NC}"
 
 # 2. Hole die neuesten Daten von GitHub
-echo -e "${YELLOW}2/6: Hole den neuesten Stand von GitHub (origin/main)...${NC}"
+echo -e "${YELLOW}2/5: Hole den neuesten Stand von GitHub (origin/main)...${NC}"
 if git fetch origin main; then
     echo -e "${GREEN}✔ Fetch abgeschlossen.${NC}"
 else
@@ -35,28 +34,26 @@ else
 fi
 
 # 3. Setze das lokale Verzeichnis hart auf den Stand von GitHub zurück
-echo -e "${YELLOW}3/6: Setze alle Dateien auf den neuesten Stand zurück (verwirft lokale Code-Änderungen!)...${NC}"
+echo -e "${YELLOW}3/5: Setze alle Dateien auf den neuesten Stand zurück (inkl. settings.json!)...${NC}"
 if git reset --hard origin/main; then
-    echo -e "${GREEN}✔ Reset auf origin/main durchgeführt.${NC}"
+    echo -e "${GREEN}✔ Reset auf origin/main durchgeführt - settings.json wurde aktualisiert!${NC}"
 else
     echo -e "${RED}✘ Fehler beim Reset. Update abgebrochen.${NC}"
     exit 1
 fi
 
-# 4. Stelle die Konfigurationen aus dem Backup wieder her
-echo -e "${YELLOW}4/6: Stelle 'secret.json' und 'settings.json' aus Backups wieder her...${NC}"
+# 4. Stelle NUR secret.json aus dem Backup wieder her
+echo -e "${YELLOW}4/5: Stelle 'secret.json' aus Backup wieder her...${NC}"
 if [ -f "secret.json.bak" ]; then
     cp secret.json.bak secret.json
     rm secret.json.bak
+    echo -e "${GREEN}✔ secret.json wiederhergestellt.${NC}"
+else
+    echo -e "${YELLOW}⚠ Kein Backup gefunden (normal beim ersten Update).${NC}"
 fi
-if [ -f "settings.json.bak" ]; then
-    cp settings.json.bak settings.json
-    rm settings.json.bak
-fi
-echo -e "${GREEN}✔ Konfigurationen wiederhergestellt.${NC}"
 
-# 5. Aktualisiere Python-Abhängigkeiten (falls requirements.txt geändert wurde)
-echo -e "${YELLOW}5/6: Aktualisiere Python-Bibliotheken gemäß requirements.txt...${NC}"
+# 5. Aktualisiere Python-Abhängigkeiten (nur wenn nötig)
+echo -e "${YELLOW}5/5: Prüfe und aktualisiere Python-Bibliotheken...${NC}"
 VENV_PATH="$PROJECT_ROOT/.venv/bin/activate"
 
 # Funktion zum Neuerstellen des venv
@@ -65,8 +62,8 @@ rebuild_venv() {
     rm -rf .venv
     python3 -m venv .venv
     source .venv/bin/activate
-    python -m pip install --upgrade pip --no-cache-dir
-    python -m pip install -r requirements.txt --no-cache-dir
+    python -m pip install --upgrade pip --no-cache-dir -q
+    python -m pip install -r requirements.txt --no-cache-dir -q
     deactivate
 }
 
@@ -74,24 +71,22 @@ if [ -f "$VENV_PATH" ]; then
     source "$VENV_PATH"
     
     # Teste ob pip funktioniert
-    echo -e "${BLUE}Teste pip...${NC}"
     if python -m pip --version >/dev/null 2>&1; then
-        # Pip funktioniert, versuche Update
-        echo -e "${BLUE}Aktualisiere pip...${NC}"
-        python -m pip install --upgrade pip --no-cache-dir 2>/dev/null || true
+        # Pip funktioniert - prüfe ob requirements erfüllt sind
+        echo -e "${BLUE}Prüfe ob Pakete aktuell sind...${NC}"
         
-        # Installiere requirements
-        echo -e "${BLUE}Installiere Python-Pakete...${NC}"
-        if python -m pip install -r requirements.txt --no-cache-dir 2>&1; then
-            echo -e "${GREEN}✔ Python-Bibliotheken aktualisiert.${NC}"
-            deactivate
+        # Versuche requirements zu überprüfen (leise)
+        if python -m pip check >/dev/null 2>&1 && \
+           python -m pip install -r requirements.txt --dry-run >/dev/null 2>&1; then
+            echo -e "${GREEN}✔ Alle Pakete sind bereits aktuell. Keine Installation nötig.${NC}"
         else
-            # Installation fehlgeschlagen, venv neu erstellen
-            deactivate
-            echo -e "${RED}⚠ Pip ist beschädigt. Erstelle virtuelle Umgebung neu...${NC}"
-            rebuild_venv
-            echo -e "${GREEN}✔ Virtuelle Umgebung neu erstellt und Pakete installiert.${NC}"
+            # Nur wenn wirklich nötig, installiere Pakete
+            echo -e "${BLUE}Aktualisiere Pakete...${NC}"
+            python -m pip install --upgrade pip --no-cache-dir -q 2>/dev/null || true
+            python -m pip install -r requirements.txt --no-cache-dir -q
+            echo -e "${GREEN}✔ Python-Bibliotheken aktualisiert.${NC}"
         fi
+        deactivate
     else
         # Pip ist kaputt, venv neu erstellen
         deactivate
@@ -111,6 +106,8 @@ chmod +x *.sh 2>/dev/null
 echo -e "${GREEN}✔ Ausführungsrechte gesetzt.${NC}"
 
 echo -e "\n${GREEN}======================================================="
-echo "✅ Update erfolgreich abgeschlossen. Dein ltbbot ist jetzt auf dem neuesten Stand."
-echo "   Bitte starte den master_runner.py neu, falls er lief."
+echo "✅ Update erfolgreich abgeschlossen!"
+echo "   - Code und settings.json wurden von GitHub aktualisiert"
+echo "   - secret.json blieb unverändert"
+echo "   - Bitte starte master_runner.py neu, falls er lief"
 echo -e "=======================================================${NC}"
