@@ -10,17 +10,17 @@
             {
                 "symbol": "SOL/USDT:USDT",
                 "timeframe": "30m",
-                "active": true
+                "active": false
             },
             {
                 "symbol": "DOGE/USDT:USDT",
                 "timeframe": "30m",
-                "active": true
+                "active": false
             },
             {
                 "symbol": "BTC/USDT:USDT",
                 "timeframe": "1d",
-                "active": true
+                "active": false
             }
         ]
     }
