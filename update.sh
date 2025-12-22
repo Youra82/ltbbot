@@ -1,39 +1,32 @@
 #!/bin/bash
 set -e
 
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+echo "--- Sicheres Update wird ausgeführt (Robuste Version) ---"
 
-echo -e "${YELLOW}=== ltbbot Update ===${NC}"
+# 1. Sichere die einzige Datei, die lokal wichtig ist
+echo "1. Erstelle ein Backup von 'secret.json'..."
+cp secret.json secret.json.bak
 
-# 1. Backup secret.json
-if [ -f "secret.json" ]; then
-    cp secret.json secret.json.bak
-fi
+# 2. Hole die neuesten Daten von GitHub
+echo "2. Hole den neuesten Stand von GitHub..."
+git fetch origin
 
-# 2. Git update
-echo "Hole Updates von GitHub..."
-git fetch origin main
+# 3. Setze das lokale Verzeichnis hart auf den Stand von GitHub zurück
+echo "3. Setze alle Dateien auf den neuesten Stand zurück und verwerfe lokale Änderungen..."
 git reset --hard origin/main
 
-# 3. Restore secret.json
-if [ -f "secret.json.bak" ]; then
-    mv secret.json.bak secret.json
-fi
+# 4. Stelle die API-Schlüssel aus dem Backup wieder her
+echo "4. Stelle den Inhalt von 'secret.json' aus dem Backup wieder her..."
+cp secret.json.bak secret.json
+rm secret.json.bak
 
-# 4. Update pip packages (optional)
-if [ -f ".venv/bin/activate" ]; then
-    echo "Aktualisiere Python-Pakete..."
-    source .venv/bin/activate
-    pip install -r requirements.txt -q
-    deactivate
-else
-    echo -e "${YELLOW}Hinweis: Keine .venv gefunden. Führe './install.sh' aus.${NC}"
-fi
+# 5. Lösche den Python-Cache, um alte Code-Versionen zu entfernen
+echo "5. Lösche alten Python-Cache für einen sauberen Neustart..."
+find . -type f -name "*.pyc" -delete
+find . -type d -name "__pycache__" -delete
 
-# 5. Set permissions
-chmod +x *.sh 2>/dev/null || true
+# 6. Setze die Ausführungsrechte für alle Skripte
+echo "6. Setze Ausführungsrechte für alle .sh-Skripte..."
+chmod +x *.sh
 
-echo -e "${GREEN}✅ Update abgeschlossen! Bitte master_runner.py neu starten.${NC}"
+echo "✅ Update erfolgreich abgeschlossen. Dein Bot ist jetzt auf dem neuesten Stand."
