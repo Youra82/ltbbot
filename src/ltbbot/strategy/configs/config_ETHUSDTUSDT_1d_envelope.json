@@ -1,4 +1,4 @@
-{
+﻿{
     "market":  {
                    "symbol":  "ETH/USDT:USDT",
                    "timeframe":  "1d"
@@ -7,9 +7,7 @@
                      "average_type":  "WMA",
                      "average_period":  6,
                      "envelopes":  [
-                                       0.0365206341906252,
-                                       0.04267826410222728,
-                                       0.09016765667376267
+                                       0.0365206341906252
                                    ],
                      "trigger_price_delta_pct":  0.0802
                  },

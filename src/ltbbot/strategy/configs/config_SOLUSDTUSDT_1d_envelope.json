@@ -1,4 +1,4 @@
-{
+﻿{
     "market":  {
                    "symbol":  "SOL/USDT:USDT",
                    "timeframe":  "1d"
@@ -7,9 +7,7 @@
                      "average_type":  "DCM",
                      "average_period":  10,
                      "envelopes":  [
-                                       0.042734966694662375,
-                                       0.08962478065202505,
-                                       0.09959245444290155
+                                       0.042734966694662375
                                    ],
                      "trigger_price_delta_pct":  0.049
                  },

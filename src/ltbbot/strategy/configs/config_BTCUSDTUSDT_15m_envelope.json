@@ -1,4 +1,4 @@
-{
+﻿{
     "market":  {
                    "symbol":  "BTC/USDT:USDT",
                    "timeframe":  "15m"
@@ -7,9 +7,7 @@
                      "average_type":  "WMA",
                      "average_period":  11,
                      "envelopes":  [
-                                       0.03783260051722639,
-                                       0.05827023289669341,
-                                       0.06579301198446055
+                                       0.03783260051722639
                                    ],
                      "trigger_price_delta_pct":  0.0518
                  },

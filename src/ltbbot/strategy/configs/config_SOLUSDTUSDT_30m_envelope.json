@@ -1,4 +1,4 @@
-{
+﻿{
     "market":  {
                    "symbol":  "SOL/USDT:USDT",
                    "timeframe":  "30m"
@@ -7,9 +7,7 @@
                      "average_type":  "WMA",
                      "average_period":  5,
                      "envelopes":  [
-                                       0.02099599016288265,
-                                       0.06319652646558495,
-                                       0.1455336558053113
+                                       0.02099599016288265
                                    ],
                      "trigger_price_delta_pct":  0.1774
                  },

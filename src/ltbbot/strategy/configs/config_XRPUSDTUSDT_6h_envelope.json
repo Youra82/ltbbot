@@ -1,4 +1,4 @@
-{
+﻿{
     "market":  {
                    "symbol":  "XRP/USDT:USDT",
                    "timeframe":  "6h"
@@ -7,9 +7,7 @@
                      "average_type":  "WMA",
                      "average_period":  5,
                      "envelopes":  [
-                                       0.02910473894361748,
-                                       0.036092551725874396,
-                                       0.0754680167519574
+                                       0.02910473894361748
                                    ],
                      "trigger_price_delta_pct":  0.0226
                  },
