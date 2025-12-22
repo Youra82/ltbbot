@@ -111,48 +111,41 @@ def calculate_atr_adjusted_stop_loss(exchange: Exchange, symbol: str, base_sl_pc
         float: Angepasster Stop-Loss in Prozent (z.B. 0.015 für 1.5%)
     """
     try:
-        # Hole aktuelle Kerzen für ATR-Berechnung (14 Perioden + etwas Buffer)
-        ohlcv = exchange.fetch_ohlcv(symbol, limit=50)
+        # Timeframe dynamisch aus Symbol ableiten (z.B. "SOL/USDT:USDT (30m)" → "30m")
+        # Annahme: Symbol ist im Format "COIN/USDT:USDT" und Timeframe wird separat übergeben
+        # Hole Timeframe aus Symbol falls vorhanden, sonst Default "30m"
+        timeframe = "30m"
+        if ":" in symbol and "_" in symbol:
+            # z.B. "SOLUSDTUSDT_30m" → "30m"
+            parts = symbol.split("_")
+            if len(parts) > 1:
+                timeframe = parts[-1]
         
-        if not ohlcv or len(ohlcv) < 14:
+        # Hole aktuelle Kerzen für ATR-Berechnung (14 Perioden + etwas Buffer)
+        ohlcv_df = exchange.fetch_recent_ohlcv(symbol, timeframe, limit=50)
+        if ohlcv_df is None or len(ohlcv_df) < 14:
             logger.warning(f"Nicht genug Daten für ATR-Berechnung. Verwende Basis-SL: {base_sl_pct*100:.2f}%")
             return base_sl_pct
         
-        # Konvertiere zu DataFrame
-        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        
         # Berechne ATR (14 Perioden Standard)
         atr_value = ta.volatility.average_true_range(
-            high=df['high'],
-            low=df['low'],
-            close=df['close'],
+            high=ohlcv_df['high'],
+            low=ohlcv_df['low'],
+            close=ohlcv_df['close'],
             window=14
         ).iloc[-1]
-        
-        # Aktueller Preis
-        current_price = df['close'].iloc[-1]
-        
-        # ATR als Prozent des aktuellen Preises
+        current_price = ohlcv_df['close'].iloc[-1]
         atr_pct = (atr_value / current_price)
-        
-        # Stop-Loss Berechnung: Minimum von Basis-SL oder 2x ATR (für genug Spielraum)
-        # Je höher die Volatilität, desto weiter der SL
         atr_multiplier = 2.0  # Kann in Config konfigurierbar gemacht werden
         atr_based_sl = atr_pct * atr_multiplier
-        
-        # Begrenze den SL: Minimum = Basis-SL, Maximum = 3x Basis-SL
         min_sl = base_sl_pct * 0.8  # Mindestens 80% des Basis-SL
         max_sl = base_sl_pct * 3.0  # Maximal 3x Basis-SL
-        
         adjusted_sl = max(min_sl, min(atr_based_sl, max_sl))
-        
         logger.info(f"📊 ATR Stop-Loss Anpassung:")
         logger.info(f"   ATR: {atr_value:.4f} ({atr_pct*100:.2f}% vom Preis)")
         logger.info(f"   Basis-SL: {base_sl_pct*100:.2f}% → ATR-basiert: {atr_based_sl*100:.2f}%")
         logger.info(f"   Finaler SL: {adjusted_sl*100:.2f}% (Min: {min_sl*100:.2f}%, Max: {max_sl*100:.2f}%)")
-        
         return adjusted_sl
-        
     except Exception as e:
         logger.error(f"Fehler bei ATR-Berechnung: {e}. Verwende Basis-SL.")
         return base_sl_pct
