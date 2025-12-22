@@ -10481,3 +10481,853 @@ ccxt.base.errors.DDoSProtection: bitget {"code":"429","msg":"Too Many Requests",
 23:00:07 [BTCUSDTUSDT_1d] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
 23:00:07 [BTCUSDTUSDT_1d] INFO: ===== Handelszyklus für BTC/USDT:USDT (1d) abgeschlossen =====
 23:00:08 [BTCUSDTUSDT_1d] INFO: >>> ltbbot-Lauf für BTC/USDT:USDT (1d) normal abgeschlossen <<<
+2025-12-22 10:30:01,290 - INFO - =======================================================
+2025-12-22 10:30:01,290 - INFO - =======================================================
+2025-12-22 10:30:01,290 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 10:30:01,290 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 10:30:01,290 - INFO - =======================================================
+2025-12-22 10:30:01,290 - INFO - =======================================================
+2025-12-22 10:30:01,291 - INFO - =======================================================
+2025-12-22 10:30:01,291 - INFO - =======================================================
+2025-12-22 10:30:01,291 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 10:30:01,291 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 10:30:01,292 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3892728).
+2025-12-22 10:30:01,292 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3892728).
+10:30:03 [AAVEUSDTUSDT_2h] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_AAVEUSDTUSDT_2h_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 10:30:03,292 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 10:30:03,292 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 10:30:03,294 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3892812).
+2025-12-22 10:30:03,294 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3892812).
+10:30:04 [SOLUSDTUSDT_30m] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 10:45:01,668 - INFO - =======================================================
+2025-12-22 10:45:01,668 - INFO - =======================================================
+2025-12-22 10:45:01,669 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 10:45:01,669 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 10:45:01,669 - INFO - =======================================================
+2025-12-22 10:45:01,669 - INFO - =======================================================
+2025-12-22 10:45:01,669 - INFO - =======================================================
+2025-12-22 10:45:01,669 - INFO - =======================================================
+2025-12-22 10:45:01,669 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 10:45:01,669 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 10:45:01,671 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3893334).
+2025-12-22 10:45:01,671 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3893334).
+2025-12-22 10:45:03,675 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 10:45:03,675 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 10:45:03,683 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3893418).
+2025-12-22 10:45:03,683 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3893418).
+10:45:03 [AAVEUSDTUSDT_2h] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_AAVEUSDTUSDT_2h_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+10:45:05 [SOLUSDTUSDT_30m] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:00:01,199 - INFO - =======================================================
+2025-12-22 11:00:01,199 - INFO - =======================================================
+2025-12-22 11:00:01,200 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 11:00:01,200 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 11:00:01,200 - INFO - =======================================================
+2025-12-22 11:00:01,200 - INFO - =======================================================
+2025-12-22 11:00:01,200 - INFO - =======================================================
+2025-12-22 11:00:01,200 - INFO - =======================================================
+2025-12-22 11:00:01,200 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 11:00:01,200 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 11:00:01,201 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3893827).
+2025-12-22 11:00:01,201 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3893827).
+11:00:03 [AAVEUSDTUSDT_2h] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_AAVEUSDTUSDT_2h_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:00:03,201 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 11:00:03,201 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 11:00:03,204 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3893911).
+2025-12-22 11:00:03,204 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3893911).
+11:00:04 [SOLUSDTUSDT_30m] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:15:01,443 - INFO - =======================================================
+2025-12-22 11:15:01,443 - INFO - =======================================================
+2025-12-22 11:15:01,443 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 11:15:01,443 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 11:15:01,444 - INFO - =======================================================
+2025-12-22 11:15:01,444 - INFO - =======================================================
+2025-12-22 11:15:01,444 - INFO - =======================================================
+2025-12-22 11:15:01,444 - INFO - =======================================================
+2025-12-22 11:15:01,444 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 11:15:01,444 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 11:15:01,445 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3894386).
+2025-12-22 11:15:01,445 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3894386).
+11:15:03 [AAVEUSDTUSDT_2h] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_AAVEUSDTUSDT_2h_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:15:03,447 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 11:15:03,447 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 11:15:03,451 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3894475).
+2025-12-22 11:15:03,451 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3894475).
+11:15:05 [SOLUSDTUSDT_30m] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:30:01,594 - INFO - =======================================================
+2025-12-22 11:30:01,594 - INFO - =======================================================
+2025-12-22 11:30:01,595 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 11:30:01,595 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 11:30:01,595 - INFO - =======================================================
+2025-12-22 11:30:01,595 - INFO - =======================================================
+2025-12-22 11:30:01,595 - INFO - =======================================================
+2025-12-22 11:30:01,595 - INFO - =======================================================
+2025-12-22 11:30:01,595 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 11:30:01,595 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 11:30:01,596 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3894984).
+2025-12-22 11:30:01,596 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3894984).
+11:30:03 [AAVEUSDTUSDT_2h] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_AAVEUSDTUSDT_2h_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:30:03,597 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 11:30:03,597 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 11:30:03,598 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3895069).
+2025-12-22 11:30:03,598 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3895069).
+11:30:05 [SOLUSDTUSDT_30m] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:45:01,813 - INFO - =======================================================
+2025-12-22 11:45:01,813 - INFO - =======================================================
+2025-12-22 11:45:01,814 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 11:45:01,814 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 11:45:01,814 - INFO - =======================================================
+2025-12-22 11:45:01,814 - INFO - =======================================================
+2025-12-22 11:45:01,814 - INFO - =======================================================
+2025-12-22 11:45:01,814 - INFO - =======================================================
+2025-12-22 11:45:01,814 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 11:45:01,814 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 11:45:01,817 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3895562).
+2025-12-22 11:45:01,817 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3895562).
+11:45:03 [AAVEUSDTUSDT_2h] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_AAVEUSDTUSDT_2h_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:45:03,817 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 11:45:03,817 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 11:45:03,818 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3895646).
+2025-12-22 11:45:03,818 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3895646).
+11:45:05 [SOLUSDTUSDT_30m] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 12:00:01,362 - INFO - =======================================================
+2025-12-22 12:00:01,362 - INFO - =======================================================
+2025-12-22 12:00:01,362 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 12:00:01,362 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 12:00:01,363 - INFO - =======================================================
+2025-12-22 12:00:01,363 - INFO - =======================================================
+2025-12-22 12:00:01,363 - INFO - =======================================================
+2025-12-22 12:00:01,363 - INFO - =======================================================
+2025-12-22 12:00:01,363 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 12:00:01,363 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 12:00:01,364 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3896562).
+2025-12-22 12:00:01,364 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3896562).
+2025-12-22 12:00:03,365 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 12:00:03,365 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 12:00:03,366 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3896643).
+2025-12-22 12:00:03,366 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3896643).
+12:00:03 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+12:00:03 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+12:00:03 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+12:00:05 [SOLUSDTUSDT_30m] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+12:00:07 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+12:00:07 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=158.7100, Average=159.8500
+12:00:07 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+12:00:07 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+12:00:08 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+12:00:08 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+2025-12-22 12:15:02,085 - INFO - =======================================================
+2025-12-22 12:15:02,085 - INFO - =======================================================
+2025-12-22 12:15:02,085 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 12:15:02,085 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 12:15:02,085 - INFO - =======================================================
+2025-12-22 12:15:02,085 - INFO - =======================================================
+2025-12-22 12:15:02,086 - INFO - =======================================================
+2025-12-22 12:15:02,086 - INFO - =======================================================
+2025-12-22 12:15:02,086 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 12:15:02,086 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 12:15:02,087 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3897100).
+2025-12-22 12:15:02,087 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3897100).
+12:15:03 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+12:15:03 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+12:15:03 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 12:15:04,087 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 12:15:04,087 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 12:15:04,088 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3897187).
+2025-12-22 12:15:04,088 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3897187).
+12:15:05 [SOLUSDTUSDT_30m] CRITICAL: Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+12:15:06 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+12:15:06 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=158.8800, Average=159.9067
+12:15:06 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+12:15:06 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+12:15:07 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+12:15:07 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+2025-12-22 12:30:01,626 - INFO - =======================================================
+2025-12-22 12:30:01,626 - INFO - =======================================================
+2025-12-22 12:30:01,626 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 12:30:01,626 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 12:30:01,626 - INFO - =======================================================
+2025-12-22 12:30:01,626 - INFO - =======================================================
+2025-12-22 12:30:01,627 - INFO - =======================================================
+2025-12-22 12:30:01,627 - INFO - =======================================================
+2025-12-22 12:30:01,627 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 12:30:01,627 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 12:30:01,628 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3897639).
+2025-12-22 12:30:01,628 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3897639).
+12:30:03 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+12:30:03 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+12:30:03 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 12:30:03,628 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 12:30:03,628 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 12:30:03,629 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3897728).
+2025-12-22 12:30:03,629 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3897728).
+12:30:05 [SOLUSDTUSDT_30m] INFO: Konfiguration geladen für SOL/USDT:USDT (30m).
+12:30:05 [SOLUSDTUSDT_30m] INFO: --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+12:30:05 [SOLUSDTUSDT_30m] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+12:30:06 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+12:30:06 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=158.9800, Average=159.9400
+12:30:06 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+12:30:06 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+12:30:07 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+12:30:07 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+12:30:08 [SOLUSDTUSDT_30m] INFO: ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+12:30:08 [SOLUSDTUSDT_30m] INFO: Aktueller Status: Preis=126.7580, Average=126.6734
+12:30:08 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+12:30:09 [SOLUSDTUSDT_30m] INFO: Einige SL-IDs aus dem Tracker sind nicht mehr offen. Aktualisiere Tracker.
+12:30:09 [SOLUSDTUSDT_30m] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+12:30:10 [SOLUSDTUSDT_30m] INFO: Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+12:30:12 [SOLUSDTUSDT_30m] INFO: Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+12:30:12 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+12:30:12 [SOLUSDTUSDT_30m] INFO: Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+12:30:12 [SOLUSDTUSDT_30m] INFO: Prüfe Long Entry Bands: [124.01376653970108, 118.66808112441436, 108.23815700471147]
+12:30:13 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 1/3 platziert: Amount=0.2111, Trigger@123.7938, Limit@124.0138
+12:30:14 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 2/3 platziert: Amount=0.2206, Trigger@118.4576, Limit@118.6681
+12:30:15 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 3/3 platziert: Amount=0.2418, Trigger@108.0461, Limit@108.2382
+12:30:16 [SOLUSDTUSDT_30m] INFO: Prüfe Short Entry Bands: [129.39007269344626, 135.21875567143317, 148.24855403683128]
+12:30:16 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 1/3 platziert: Amount=0.2023, Trigger@129.6196, Limit@129.3901
+12:30:17 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1936, Trigger@135.4586, Limit@135.2188
+12:30:19 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1766, Trigger@148.5115, Limit@148.2486
+12:30:19 [SOLUSDTUSDT_30m] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+12:30:19 [SOLUSDTUSDT_30m] INFO: ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+12:30:19 [SOLUSDTUSDT_30m] INFO: >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 12:45:02,060 - INFO - =======================================================
+2025-12-22 12:45:02,060 - INFO - =======================================================
+2025-12-22 12:45:02,060 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 12:45:02,060 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 12:45:02,060 - INFO - =======================================================
+2025-12-22 12:45:02,060 - INFO - =======================================================
+2025-12-22 12:45:02,060 - INFO - =======================================================
+2025-12-22 12:45:02,060 - INFO - =======================================================
+2025-12-22 12:45:02,060 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 12:45:02,060 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 12:45:02,062 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3898132).
+2025-12-22 12:45:02,062 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3898132).
+12:45:03 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+12:45:03 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+12:45:03 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 12:45:04,062 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 12:45:04,062 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 12:45:04,063 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3898231).
+2025-12-22 12:45:04,063 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3898231).
+12:45:05 [SOLUSDTUSDT_30m] INFO: Konfiguration geladen für SOL/USDT:USDT (30m).
+12:45:05 [SOLUSDTUSDT_30m] INFO: --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+12:45:05 [SOLUSDTUSDT_30m] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+12:45:06 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+12:45:06 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=159.1900, Average=160.0100
+12:45:06 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+12:45:06 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+12:45:07 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+12:45:07 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+12:45:08 [SOLUSDTUSDT_30m] INFO: ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+12:45:08 [SOLUSDTUSDT_30m] INFO: Aktueller Status: Preis=127.0070, Average=126.7564
+12:45:08 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+12:45:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960250343305216 (buy 0.2 @ Trigger 123.794) storniert.
+12:45:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960252155539456 (buy 0.2 @ Trigger 126.673) storniert.
+12:45:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960253984260096 (buy 0.2 @ Trigger 123.27) storniert.
+12:45:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960255658303488 (buy 0.2 @ Trigger 118.458) storniert.
+12:45:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960257338974208 (buy 0.2 @ Trigger 126.673) storniert.
+12:45:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960259013230592 (buy 0.2 @ Trigger 117.956) storniert.
+12:45:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960260699336705 (buy 0.2 @ Trigger 108.046) storniert.
+12:45:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960262306271236 (buy 0.2 @ Trigger 126.673) storniert.
+12:45:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960263978762240 (buy 0.2 @ Trigger 107.589) storniert.
+12:45:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960265584975873 (sell 0.2 @ Trigger 129.62) storniert.
+12:45:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960267255549953 (sell 0.2 @ Trigger 126.673) storniert.
+12:45:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960268899205121 (sell 0.2 @ Trigger 130.166) storniert.
+12:45:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960270560665600 (sell 0.1 @ Trigger 135.459) storniert.
+12:45:15 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960272271126528 (sell 0.1 @ Trigger 126.673) storniert.
+12:45:16 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960273873645568 (sell 0.1 @ Trigger 136.03) storniert.
+12:45:16 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960275584925697 (sell 0.1 @ Trigger 148.512) storniert.
+12:45:16 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960277317169152 (sell 0.1 @ Trigger 126.673) storniert.
+12:45:17 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386960278860673024 (sell 0.1 @ Trigger 149.138) storniert.
+12:45:17 [SOLUSDTUSDT_30m] INFO: 18 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+12:45:17 [SOLUSDTUSDT_30m] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+12:45:17 [SOLUSDTUSDT_30m] INFO: Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+12:45:19 [SOLUSDTUSDT_30m] INFO: Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+12:45:19 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+12:45:19 [SOLUSDTUSDT_30m] INFO: Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+12:45:19 [SOLUSDTUSDT_30m] INFO: Prüfe Long Entry Bands: [124.09502387251757, 118.74583581271773, 108.30907771127964]
+12:45:20 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 1/3 platziert: Amount=0.2109, Trigger@123.8749, Limit@124.0950
+12:45:21 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 2/3 platziert: Amount=0.2204, Trigger@118.5352, Limit@118.7458
+12:45:22 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 3/3 platziert: Amount=0.2417, Trigger@108.1169, Limit@108.3091
+12:45:23 [SOLUSDTUSDT_30m] INFO: Prüfe Short Entry Bands: [129.47485273435112, 135.30735483053627, 148.34569068892287]
+12:45:23 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 1/3 platziert: Amount=0.2022, Trigger@129.7045, Limit@129.4749
+12:45:24 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1935, Trigger@135.5474, Limit@135.3074
+12:45:25 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1765, Trigger@148.6089, Limit@148.3457
+12:45:26 [SOLUSDTUSDT_30m] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+12:45:26 [SOLUSDTUSDT_30m] INFO: ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+12:45:26 [SOLUSDTUSDT_30m] INFO: >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 13:00:02,098 - INFO - =======================================================
+2025-12-22 13:00:02,098 - INFO - =======================================================
+2025-12-22 13:00:02,098 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 13:00:02,098 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 13:00:02,098 - INFO - =======================================================
+2025-12-22 13:00:02,098 - INFO - =======================================================
+2025-12-22 13:00:02,099 - INFO - =======================================================
+2025-12-22 13:00:02,099 - INFO - =======================================================
+2025-12-22 13:00:02,099 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 13:00:02,099 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 13:00:02,100 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3898625).
+2025-12-22 13:00:02,100 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3898625).
+13:00:03 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+13:00:03 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+13:00:03 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 13:00:04,100 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 13:00:04,100 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 13:00:04,101 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3898724).
+2025-12-22 13:00:04,101 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3898724).
+13:00:05 [SOLUSDTUSDT_30m] INFO: Konfiguration geladen für SOL/USDT:USDT (30m).
+13:00:05 [SOLUSDTUSDT_30m] INFO: --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+13:00:05 [SOLUSDTUSDT_30m] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+13:00:06 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+13:00:06 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=159.0700, Average=159.5053
+13:00:06 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+13:00:06 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+13:00:07 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+13:00:07 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+13:00:12 [SOLUSDTUSDT_30m] INFO: ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+13:00:13 [SOLUSDTUSDT_30m] INFO: Aktueller Status: Preis=127.0430, Average=126.8786
+13:00:13 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+13:00:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964055240028163 (buy 0.2 @ Trigger 123.875) storniert.
+13:00:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964056964407296 (buy 0.2 @ Trigger 126.756) storniert.
+13:00:15 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964058578694145 (buy 0.2 @ Trigger 123.35) storniert.
+13:00:15 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964060260089856 (buy 0.2 @ Trigger 118.535) storniert.
+13:00:16 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964061858119680 (buy 0.2 @ Trigger 126.756) storniert.
+13:00:16 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964063435698176 (buy 0.2 @ Trigger 118.033) storniert.
+13:00:16 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964065033433088 (buy 0.2 @ Trigger 108.117) storniert.
+13:00:17 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964066623369216 (buy 0.2 @ Trigger 126.756) storniert.
+13:00:17 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964068209332224 (buy 0.2 @ Trigger 107.659) storniert.
+13:00:18 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964069844299776 (sell 0.2 @ Trigger 129.705) storniert.
+13:00:18 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964071484571648 (sell 0.2 @ Trigger 126.756) storniert.
+13:00:18 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964073077678080 (sell 0.2 @ Trigger 130.252) storniert.
+13:00:19 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964074681143297 (sell 0.1 @ Trigger 135.547) storniert.
+13:00:19 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964076333182976 (sell 0.1 @ Trigger 126.756) storniert.
+13:00:20 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964077977870336 (sell 0.1 @ Trigger 136.119) storniert.
+13:00:20 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964079647203328 (sell 0.1 @ Trigger 148.609) storniert.
+13:00:20 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964081194381312 (sell 0.1 @ Trigger 126.756) storniert.
+13:00:21 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386964082741354497 (sell 0.1 @ Trigger 149.236) storniert.
+13:00:21 [SOLUSDTUSDT_30m] INFO: 18 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+13:00:21 [SOLUSDTUSDT_30m] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+13:00:21 [SOLUSDTUSDT_30m] INFO: Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+13:00:23 [SOLUSDTUSDT_30m] INFO: Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+13:00:23 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+13:00:23 [SOLUSDTUSDT_30m] INFO: Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+13:00:23 [SOLUSDTUSDT_30m] INFO: Prüfe Long Entry Bands: [124.21465816251968, 118.86031319718364, 108.41349349854023]
+13:00:24 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 1/3 platziert: Amount=0.2107, Trigger@123.9943, Limit@124.2147
+13:00:25 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 2/3 platziert: Amount=0.2202, Trigger@118.6495, Limit@118.8603
+13:00:26 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 3/3 platziert: Amount=0.2415, Trigger@108.2212, Limit@108.4135
+13:00:27 [SOLUSDTUSDT_30m] INFO: Prüfe Short Entry Bands: [129.59967346927368, 135.43779841177, 148.4887039285083]
+13:00:27 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 1/3 platziert: Amount=0.2020, Trigger@129.8296, Limit@129.5997
+13:00:28 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1933, Trigger@135.6781, Limit@135.4378
+13:00:30 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1763, Trigger@148.7521, Limit@148.4887
+13:00:30 [SOLUSDTUSDT_30m] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+13:00:30 [SOLUSDTUSDT_30m] INFO: ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+13:00:30 [SOLUSDTUSDT_30m] INFO: >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 13:15:01,116 - INFO - =======================================================
+2025-12-22 13:15:01,116 - INFO - =======================================================
+2025-12-22 13:15:01,116 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 13:15:01,116 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 13:15:01,117 - INFO - =======================================================
+2025-12-22 13:15:01,117 - INFO - =======================================================
+2025-12-22 13:15:01,117 - INFO - =======================================================
+2025-12-22 13:15:01,117 - INFO - =======================================================
+2025-12-22 13:15:01,117 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 13:15:01,117 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 13:15:01,118 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3899175).
+2025-12-22 13:15:01,118 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3899175).
+13:15:02 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+13:15:02 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+13:15:02 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 13:15:03,118 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 13:15:03,118 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 13:15:03,119 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3899274).
+2025-12-22 13:15:03,119 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3899274).
+13:15:04 [SOLUSDTUSDT_30m] INFO: Konfiguration geladen für SOL/USDT:USDT (30m).
+13:15:04 [SOLUSDTUSDT_30m] INFO: --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+13:15:04 [SOLUSDTUSDT_30m] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+13:15:05 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+13:15:05 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=158.0900, Average=159.1787
+13:15:05 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+13:15:05 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+13:15:06 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+13:15:06 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+13:15:07 [SOLUSDTUSDT_30m] INFO: ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+13:15:07 [SOLUSDTUSDT_30m] INFO: Aktueller Status: Preis=127.0020, Average=126.8649
+13:15:07 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+13:15:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967846840217600 (buy 0.2 @ Trigger 123.994) storniert.
+13:15:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967850041286656 (buy 0.2 @ Trigger 123.469) storniert.
+13:15:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967851696996352 (buy 0.2 @ Trigger 118.649) storniert.
+13:15:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967854977466371 (buy 0.2 @ Trigger 118.147) storniert.
+13:15:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967856557989889 (buy 0.2 @ Trigger 108.221) storniert.
+13:15:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967859792527360 (buy 0.2 @ Trigger 107.763) storniert.
+13:15:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967861478633479 (sell 0.2 @ Trigger 129.83) storniert.
+13:15:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967864977199104 (sell 0.2 @ Trigger 130.377) storniert.
+13:15:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967866729607168 (sell 0.1 @ Trigger 135.678) storniert.
+13:15:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967870048116736 (sell 0.1 @ Trigger 136.25) storniert.
+13:15:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967871615541248 (sell 0.1 @ Trigger 148.752) storniert.
+13:15:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386967874787680256 (sell 0.1 @ Trigger 149.38) storniert.
+13:15:13 [SOLUSDTUSDT_30m] INFO: 12 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+13:15:13 [SOLUSDTUSDT_30m] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+13:15:13 [SOLUSDTUSDT_30m] INFO: Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+13:15:16 [SOLUSDTUSDT_30m] INFO: Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+13:15:16 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+13:15:16 [SOLUSDTUSDT_30m] INFO: Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+13:15:16 [SOLUSDTUSDT_30m] INFO: Prüfe Long Entry Bands: [124.20127844105191, 118.84751021637867, 108.40181579183624]
+13:15:16 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 1/3 platziert: Amount=0.2108, Trigger@123.9809, Limit@124.2013
+13:15:17 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 2/3 platziert: Amount=0.2203, Trigger@118.6367, Limit@118.8475
+13:15:18 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 3/3 platziert: Amount=0.2415, Trigger@108.2095, Limit@108.4018
+13:15:19 [SOLUSDTUSDT_30m] INFO: Prüfe Short Entry Bands: [129.5857137035022, 135.42320979521085, 148.4727095400113]
+13:15:19 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 1/3 platziert: Amount=0.2020, Trigger@129.8156, Limit@129.5857
+13:15:21 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1933, Trigger@135.6635, Limit@135.4232
+13:15:22 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1763, Trigger@148.7361, Limit@148.4727
+13:15:23 [SOLUSDTUSDT_30m] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+13:15:23 [SOLUSDTUSDT_30m] INFO: ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+13:15:23 [SOLUSDTUSDT_30m] INFO: >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 13:30:01,126 - INFO - =======================================================
+2025-12-22 13:30:01,126 - INFO - =======================================================
+2025-12-22 13:30:01,126 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 13:30:01,126 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 13:30:01,127 - INFO - =======================================================
+2025-12-22 13:30:01,127 - INFO - =======================================================
+2025-12-22 13:30:01,127 - INFO - =======================================================
+2025-12-22 13:30:01,127 - INFO - =======================================================
+2025-12-22 13:30:01,127 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 13:30:01,127 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 13:30:01,128 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3899671).
+2025-12-22 13:30:01,128 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3899671).
+13:30:02 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+13:30:02 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+13:30:02 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 13:30:03,129 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 13:30:03,129 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 13:30:03,130 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3899770).
+2025-12-22 13:30:03,130 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3899770).
+13:30:04 [SOLUSDTUSDT_30m] INFO: Konfiguration geladen für SOL/USDT:USDT (30m).
+13:30:04 [SOLUSDTUSDT_30m] INFO: --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+13:30:04 [SOLUSDTUSDT_30m] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+13:30:05 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+13:30:05 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=157.9900, Average=159.1453
+13:30:05 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+13:30:05 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+13:30:06 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+13:30:06 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+13:30:07 [SOLUSDTUSDT_30m] INFO: ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+13:30:08 [SOLUSDTUSDT_30m] INFO: Aktueller Status: Preis=127.2440, Average=127.0822
+13:30:08 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+13:30:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971589668904960 (buy 0.2 @ Trigger 123.981) storniert.
+13:30:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971591325859840 (buy 0.2 @ Trigger 126.865) storniert.
+13:30:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971592873353217 (buy 0.2 @ Trigger 123.456) storniert.
+13:30:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971594505367552 (buy 0.2 @ Trigger 118.637) storniert.
+13:30:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971596216643584 (buy 0.2 @ Trigger 126.865) storniert.
+13:30:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971597823873024 (buy 0.2 @ Trigger 118.134) storniert.
+13:30:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971599463849984 (buy 0.2 @ Trigger 108.21) storniert.
+13:30:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971601031274499 (buy 0.2 @ Trigger 126.865) storniert.
+13:30:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971602630549504 (buy 0.2 @ Trigger 107.751) storniert.
+13:30:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971604244541440 (sell 0.2 @ Trigger 129.816) storniert.
+13:30:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971605830799360 (sell 0.2 @ Trigger 126.865) storniert.
+13:30:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971607394463744 (sell 0.2 @ Trigger 130.363) storniert.
+13:30:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971609051213824 (sell 0.1 @ Trigger 135.663) storniert.
+13:30:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971610653732864 (sell 0.1 @ Trigger 126.865) storniert.
+13:30:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971612230496256 (sell 0.1 @ Trigger 136.236) storniert.
+13:30:15 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971613819707393 (sell 0.1 @ Trigger 148.736) storniert.
+13:30:15 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971615426555904 (sell 0.1 @ Trigger 126.865) storniert.
+13:30:16 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386971617015971840 (sell 0.1 @ Trigger 149.364) storniert.
+13:30:16 [SOLUSDTUSDT_30m] INFO: 18 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+13:30:16 [SOLUSDTUSDT_30m] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+13:30:16 [SOLUSDTUSDT_30m] INFO: Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+13:30:18 [SOLUSDTUSDT_30m] INFO: Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+13:30:18 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+13:30:18 [SOLUSDTUSDT_30m] INFO: Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+13:30:18 [SOLUSDTUSDT_30m] INFO: Prüfe Long Entry Bands: [124.4139833789225, 119.05104638439524, 108.58746284621826]
+13:30:19 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 1/3 platziert: Amount=0.2104, Trigger@124.1933, Limit@124.4140
+13:30:20 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 2/3 platziert: Amount=0.2199, Trigger@118.8398, Limit@119.0510
+13:30:21 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 3/3 platziert: Amount=0.2411, Trigger@108.3948, Limit@108.5875
+13:30:22 [SOLUSDTUSDT_30m] INFO: Prüfe Short Entry Bands: [129.80763993105953, 135.6551332165096, 148.72698130641004]
+13:30:22 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 1/3 platziert: Amount=0.2017, Trigger@130.0379, Limit@129.8076
+13:30:23 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1930, Trigger@135.8958, Limit@135.6551
+13:30:24 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1760, Trigger@148.9908, Limit@148.7270
+13:30:25 [SOLUSDTUSDT_30m] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+13:30:25 [SOLUSDTUSDT_30m] INFO: ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+13:30:25 [SOLUSDTUSDT_30m] INFO: >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 13:45:01,147 - INFO - =======================================================
+2025-12-22 13:45:01,147 - INFO - =======================================================
+2025-12-22 13:45:01,147 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 13:45:01,147 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 13:45:01,147 - INFO - =======================================================
+2025-12-22 13:45:01,147 - INFO - =======================================================
+2025-12-22 13:45:01,148 - INFO - =======================================================
+2025-12-22 13:45:01,148 - INFO - =======================================================
+2025-12-22 13:45:01,148 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 13:45:01,148 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 13:45:01,149 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3900164).
+2025-12-22 13:45:01,149 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3900164).
+13:45:02 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+13:45:02 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+13:45:02 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 13:45:03,149 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 13:45:03,149 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 13:45:03,150 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3900263).
+2025-12-22 13:45:03,150 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3900263).
+13:45:04 [SOLUSDTUSDT_30m] INFO: Konfiguration geladen für SOL/USDT:USDT (30m).
+13:45:04 [SOLUSDTUSDT_30m] INFO: --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+13:45:04 [SOLUSDTUSDT_30m] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+13:45:05 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+13:45:05 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=158.2500, Average=159.2320
+13:45:05 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+13:45:05 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+13:45:06 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+13:45:06 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+13:45:07 [SOLUSDTUSDT_30m] INFO: ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+13:45:08 [SOLUSDTUSDT_30m] INFO: Aktueller Status: Preis=126.8440, Average=126.9489
+13:45:08 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+13:45:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975375230320640 (buy 0.2 @ Trigger 124.193) storniert.
+13:45:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975378514161664 (buy 0.2 @ Trigger 123.667) storniert.
+13:45:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975380325875712 (buy 0.2 @ Trigger 118.84) storniert.
+13:45:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975383606046720 (buy 0.2 @ Trigger 118.337) storniert.
+13:45:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975385199656960 (buy 0.2 @ Trigger 108.395) storniert.
+13:45:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975388865478656 (buy 0.2 @ Trigger 107.936) storniert.
+13:45:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975390497288198 (sell 0.2 @ Trigger 130.038) storniert.
+13:45:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975393710125056 (sell 0.2 @ Trigger 130.586) storniert.
+13:45:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975395346202624 (sell 0.1 @ Trigger 135.896) storniert.
+13:45:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975398587670529 (sell 0.1 @ Trigger 136.469) storniert.
+13:45:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975400240955392 (sell 0.1 @ Trigger 148.991) storniert.
+13:45:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386975403424432128 (sell 0.1 @ Trigger 149.619) storniert.
+13:45:13 [SOLUSDTUSDT_30m] INFO: 12 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+13:45:13 [SOLUSDTUSDT_30m] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+13:45:14 [SOLUSDTUSDT_30m] INFO: Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+13:45:16 [SOLUSDTUSDT_30m] INFO: Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+13:45:16 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+13:45:16 [SOLUSDTUSDT_30m] INFO: Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+13:45:16 [SOLUSDTUSDT_30m] INFO: Prüfe Long Entry Bands: [124.28344951094421, 118.92613925459064, 108.47353400032563]
+13:45:16 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 1/3 platziert: Amount=0.2106, Trigger@124.0630, Limit@124.2834
+13:45:17 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 2/3 platziert: Amount=0.2201, Trigger@118.7152, Limit@118.9261
+13:45:19 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 3/3 platziert: Amount=0.2413, Trigger@108.2811, Limit@108.4735
+13:45:20 [SOLUSDTUSDT_30m] INFO: Prüfe Short Entry Bands: [129.67144709426458, 135.5128052500789, 148.5709384918051]
+13:45:20 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 1/3 platziert: Amount=0.2019, Trigger@129.9015, Limit@129.6714
+13:45:21 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1932, Trigger@135.7532, Limit@135.5128
+13:45:22 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1762, Trigger@148.8345, Limit@148.5709
+13:45:23 [SOLUSDTUSDT_30m] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+13:45:23 [SOLUSDTUSDT_30m] INFO: ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+13:45:23 [SOLUSDTUSDT_30m] INFO: >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 14:00:01,215 - INFO - =======================================================
+2025-12-22 14:00:01,215 - INFO - =======================================================
+2025-12-22 14:00:01,215 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 14:00:01,215 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 14:00:01,215 - INFO - =======================================================
+2025-12-22 14:00:01,215 - INFO - =======================================================
+2025-12-22 14:00:01,215 - INFO - =======================================================
+2025-12-22 14:00:01,215 - INFO - =======================================================
+2025-12-22 14:00:01,216 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 14:00:01,216 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 14:00:01,216 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3900680).
+2025-12-22 14:00:01,216 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3900680).
+14:00:02 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+14:00:02 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+14:00:02 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 14:00:03,217 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 14:00:03,217 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 14:00:03,218 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3900779).
+2025-12-22 14:00:03,218 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3900779).
+14:00:04 [SOLUSDTUSDT_30m] INFO: Konfiguration geladen für SOL/USDT:USDT (30m).
+14:00:04 [SOLUSDTUSDT_30m] INFO: --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+14:00:04 [SOLUSDTUSDT_30m] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+14:00:05 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+14:00:05 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=158.7600, Average=159.4020
+14:00:05 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+14:00:05 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+14:00:06 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+14:00:06 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+14:00:07 [SOLUSDTUSDT_30m] INFO: ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+14:00:07 [SOLUSDTUSDT_30m] INFO: Aktueller Status: Preis=126.9270, Average=126.9817
+14:00:07 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+14:00:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979140624064513 (buy 0.2 @ Trigger 124.063) storniert.
+14:00:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979143774715904 (buy 0.2 @ Trigger 123.538) storniert.
+14:00:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979145473409027 (buy 0.2 @ Trigger 118.715) storniert.
+14:00:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979148845629440 (buy 0.2 @ Trigger 118.213) storniert.
+14:00:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979150477209605 (buy 0.2 @ Trigger 108.281) storniert.
+14:00:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979153782325249 (buy 0.2 @ Trigger 107.823) storniert.
+14:00:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979155409416192 (sell 0.2 @ Trigger 129.901) storniert.
+14:00:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979158551760896 (sell 0.2 @ Trigger 130.449) storniert.
+14:00:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979160114995200 (sell 0.1 @ Trigger 135.753) storniert.
+14:00:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979163350048769 (sell 0.1 @ Trigger 136.326) storniert.
+14:00:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979165086490624 (sell 0.1 @ Trigger 148.835) storniert.
+14:00:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386979168314859520 (sell 0.1 @ Trigger 149.462) storniert.
+14:00:13 [SOLUSDTUSDT_30m] INFO: 12 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+14:00:13 [SOLUSDTUSDT_30m] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+14:00:13 [SOLUSDTUSDT_30m] INFO: Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+14:00:16 [SOLUSDTUSDT_30m] INFO: Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+14:00:16 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+14:00:16 [SOLUSDTUSDT_30m] INFO: Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+14:00:16 [SOLUSDTUSDT_30m] INFO: Prüfe Long Entry Bands: [124.31562610940087, 118.95692886208748, 108.50161746083816]
+14:00:16 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 1/3 platziert: Amount=0.2106, Trigger@124.0951, Limit@124.3156
+14:00:17 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 2/3 platziert: Amount=0.2201, Trigger@118.7459, Limit@118.9569
+14:00:19 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 3/3 platziert: Amount=0.2413, Trigger@108.3091, Limit@108.5016
+14:00:19 [SOLUSDTUSDT_30m] INFO: Prüfe Short Entry Bands: [129.70501862853456, 135.5478890938041, 148.6094030456052]
+14:00:20 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 1/3 platziert: Amount=0.2018, Trigger@129.9351, Limit@129.7050
+14:00:21 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1931, Trigger@135.7884, Limit@135.5479
+14:00:22 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1761, Trigger@148.8730, Limit@148.6094
+14:00:23 [SOLUSDTUSDT_30m] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+14:00:23 [SOLUSDTUSDT_30m] INFO: ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+14:00:23 [SOLUSDTUSDT_30m] INFO: >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 14:15:01,246 - INFO - =======================================================
+2025-12-22 14:15:01,246 - INFO - =======================================================
+2025-12-22 14:15:01,247 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 14:15:01,247 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 14:15:01,247 - INFO - =======================================================
+2025-12-22 14:15:01,247 - INFO - =======================================================
+2025-12-22 14:15:01,247 - INFO - =======================================================
+2025-12-22 14:15:01,247 - INFO - =======================================================
+2025-12-22 14:15:01,247 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 14:15:01,247 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 14:15:01,248 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3901173).
+2025-12-22 14:15:01,248 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3901173).
+14:15:02 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+14:15:02 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+14:15:02 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 14:15:03,249 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 14:15:03,249 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 14:15:03,250 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3901272).
+2025-12-22 14:15:03,250 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3901272).
+14:15:04 [SOLUSDTUSDT_30m] INFO: Konfiguration geladen für SOL/USDT:USDT (30m).
+14:15:04 [SOLUSDTUSDT_30m] INFO: --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+14:15:04 [SOLUSDTUSDT_30m] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+14:15:05 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+14:15:06 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=158.1900, Average=159.2120
+14:15:06 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+14:15:06 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+14:15:06 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+14:15:06 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+14:15:07 [SOLUSDTUSDT_30m] INFO: ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+14:15:07 [SOLUSDTUSDT_30m] INFO: Aktueller Status: Preis=126.7310, Average=126.9164
+14:15:07 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+14:15:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982914554376194 (buy 0.2 @ Trigger 124.095) storniert.
+14:15:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982918052720640 (buy 0.2 @ Trigger 123.57) storniert.
+14:15:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982919830380544 (buy 0.2 @ Trigger 118.746) storniert.
+14:15:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982923219582976 (buy 0.2 @ Trigger 118.243) storniert.
+14:15:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982924901294081 (buy 0.2 @ Trigger 108.309) storniert.
+14:15:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982928252973056 (buy 0.2 @ Trigger 107.851) storniert.
+14:15:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982929918926852 (sell 0.2 @ Trigger 129.935) storniert.
+14:15:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982933244489728 (sell 0.2 @ Trigger 130.483) storniert.
+14:15:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982934900944896 (sell 0.1 @ Trigger 135.788) storniert.
+14:15:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982938193043457 (sell 0.1 @ Trigger 136.361) storniert.
+14:15:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982939896135680 (sell 0.1 @ Trigger 148.873) storniert.
+14:15:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386982943196848128 (sell 0.1 @ Trigger 149.501) storniert.
+14:15:13 [SOLUSDTUSDT_30m] INFO: 12 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+14:15:13 [SOLUSDTUSDT_30m] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+14:15:14 [SOLUSDTUSDT_30m] INFO: Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+14:15:16 [SOLUSDTUSDT_30m] INFO: Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+14:15:16 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+14:15:16 [SOLUSDTUSDT_30m] INFO: Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+14:15:16 [SOLUSDTUSDT_30m] INFO: Prüfe Long Entry Bands: [124.2516645140915, 118.89572436848322, 108.44579232635077]
+14:15:16 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 1/3 platziert: Amount=0.2107, Trigger@124.0312, Limit@124.2517
+14:15:17 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 2/3 platziert: Amount=0.2202, Trigger@118.6848, Limit@118.8957
+14:15:19 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 3/3 platziert: Amount=0.2414, Trigger@108.2534, Limit@108.4458
+14:15:20 [SOLUSDTUSDT_30m] INFO: Prüfe Short Entry Bands: [129.638284138505, 135.47814839025304, 148.53294206644878]
+14:15:20 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 1/3 platziert: Amount=0.2019, Trigger@129.8683, Limit@129.6383
+14:15:21 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1932, Trigger@135.7185, Limit@135.4781
+14:15:22 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1762, Trigger@148.7964, Limit@148.5329
+14:15:23 [SOLUSDTUSDT_30m] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+14:15:23 [SOLUSDTUSDT_30m] INFO: ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+14:15:23 [SOLUSDTUSDT_30m] INFO: >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 14:30:01,336 - INFO - =======================================================
+2025-12-22 14:30:01,336 - INFO - =======================================================
+2025-12-22 14:30:01,336 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 14:30:01,336 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 14:30:01,336 - INFO - =======================================================
+2025-12-22 14:30:01,336 - INFO - =======================================================
+2025-12-22 14:30:01,337 - INFO - =======================================================
+2025-12-22 14:30:01,337 - INFO - =======================================================
+2025-12-22 14:30:01,337 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 14:30:01,337 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 14:30:01,337 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3901669).
+2025-12-22 14:30:01,337 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3901669).
+14:30:02 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+14:30:02 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+14:30:02 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 14:30:03,338 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 14:30:03,338 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 14:30:03,339 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3901768).
+2025-12-22 14:30:03,339 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3901768).
+14:30:04 [SOLUSDTUSDT_30m] INFO: Konfiguration geladen für SOL/USDT:USDT (30m).
+14:30:04 [SOLUSDTUSDT_30m] INFO: --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+14:30:04 [SOLUSDTUSDT_30m] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+14:30:05 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+14:30:05 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=156.3700, Average=158.6053
+14:30:05 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+14:30:05 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+14:30:06 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+14:30:06 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+14:30:07 [SOLUSDTUSDT_30m] INFO: ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+14:30:07 [SOLUSDTUSDT_30m] INFO: Aktueller Status: Preis=126.7730, Average=126.8839
+14:30:07 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+14:30:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986690389282817 (buy 0.2 @ Trigger 124.031) storniert.
+14:30:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986692120289280 (buy 0.2 @ Trigger 126.916) storniert.
+14:30:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986693769895936 (buy 0.2 @ Trigger 123.506) storniert.
+14:30:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986695396245504 (buy 0.2 @ Trigger 118.685) storniert.
+14:30:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986697145495552 (buy 0.2 @ Trigger 126.916) storniert.
+14:30:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986698835574784 (buy 0.2 @ Trigger 118.182) storniert.
+14:30:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986700529868800 (buy 0.2 @ Trigger 108.253) storniert.
+14:30:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986702341808128 (buy 0.2 @ Trigger 126.916) storniert.
+14:30:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986704326443008 (buy 0.2 @ Trigger 107.795) storniert.
+14:30:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986705890189312 (sell 0.2 @ Trigger 129.868) storniert.
+14:30:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986707865911296 (sell 0.2 @ Trigger 126.916) storniert.
+14:30:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986709569839104 (sell 0.2 @ Trigger 130.416) storniert.
+14:30:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986711209295872 (sell 0.1 @ Trigger 135.718) storniert.
+14:30:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986712869511168 (sell 0.1 @ Trigger 126.916) storniert.
+14:30:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986714485043200 (sell 0.1 @ Trigger 136.291) storniert.
+14:30:15 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986716116627457 (sell 0.1 @ Trigger 148.796) storniert.
+14:30:15 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986717739823105 (sell 0.1 @ Trigger 126.916) storniert.
+14:30:15 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386986719383265280 (sell 0.1 @ Trigger 149.424) storniert.
+14:30:16 [SOLUSDTUSDT_30m] INFO: 18 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+14:30:16 [SOLUSDTUSDT_30m] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+14:30:16 [SOLUSDTUSDT_30m] INFO: Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+14:30:18 [SOLUSDTUSDT_30m] INFO: Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+14:30:18 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+14:30:18 [SOLUSDTUSDT_30m] INFO: Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+14:30:18 [SOLUSDTUSDT_30m] INFO: Prüfe Long Entry Bands: [124.21981425030482, 118.86524702881093, 108.417993687953]
+14:30:19 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 1/3 platziert: Amount=0.2107, Trigger@123.9994, Limit@124.2198
+14:30:20 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 2/3 platziert: Amount=0.2202, Trigger@118.6544, Limit@118.8652
+14:30:21 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 3/3 platziert: Amount=0.2414, Trigger@108.2257, Limit@108.4180
+14:30:22 [SOLUSDTUSDT_30m] INFO: Prüfe Short Entry Bands: [129.60505308632708, 135.443420366444, 148.4948676196852]
+14:30:22 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 1/3 platziert: Amount=0.2020, Trigger@129.8350, Limit@129.6051
+14:30:23 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1933, Trigger@135.6837, Limit@135.4434
+14:30:25 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1763, Trigger@148.7583, Limit@148.4949
+14:30:25 [SOLUSDTUSDT_30m] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+14:30:25 [SOLUSDTUSDT_30m] INFO: ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+14:30:25 [SOLUSDTUSDT_30m] INFO: >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 14:45:01,578 - INFO - =======================================================
+2025-12-22 14:45:01,578 - INFO - =======================================================
+2025-12-22 14:45:01,578 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 14:45:01,578 - INFO - ltbbot Master Runner v1.1 (Cronjob-basiert)
+2025-12-22 14:45:01,578 - INFO - =======================================================
+2025-12-22 14:45:01,578 - INFO - =======================================================
+2025-12-22 14:45:01,579 - INFO - =======================================================
+2025-12-22 14:45:01,579 - INFO - =======================================================
+2025-12-22 14:45:01,579 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 14:45:01,579 - INFO - 
+--- Starte Bot für: AAVE/USDT:USDT (2h) ---
+2025-12-22 14:45:01,580 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3902162).
+2025-12-22 14:45:01,580 - INFO - Prozess für AAVE/USDT:USDT_2h gestartet (PID: 3902162).
+14:45:03 [AAVEUSDTUSDT_2h] INFO: Konfiguration geladen für AAVE/USDT:USDT (2h).
+14:45:03 [AAVEUSDTUSDT_2h] INFO: --- Starte ltbbot (Envelope) für AAVE/USDT:USDT (2h) auf Account 'DeinAccountName' ---
+14:45:03 [AAVEUSDTUSDT_2h] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 14:45:03,580 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 14:45:03,580 - INFO - 
+--- Starte Bot für: SOL/USDT:USDT (30m) ---
+2025-12-22 14:45:03,581 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3902261).
+2025-12-22 14:45:03,581 - INFO - Prozess für SOL/USDT:USDT_30m gestartet (PID: 3902261).
+14:45:05 [SOLUSDTUSDT_30m] INFO: Konfiguration geladen für SOL/USDT:USDT (30m).
+14:45:05 [SOLUSDTUSDT_30m] INFO: --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+14:45:05 [SOLUSDTUSDT_30m] INFO: ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+14:45:06 [AAVEUSDTUSDT_2h] INFO: ===== Starte Handelszyklus für AAVE/USDT:USDT (2h) auf 'DeinAccountName' =====
+14:45:06 [AAVEUSDTUSDT_2h] INFO: Aktueller Status: Preis=155.7700, Average=158.4053
+14:45:06 [AAVEUSDTUSDT_2h] INFO: 📊 Marktregime: STRONG_TREND | Trend: DOWNTREND | Trading: ❌
+14:45:06 [AAVEUSDTUSDT_2h] WARNING: ⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!
+14:45:07 [AAVEUSDTUSDT_2h] INFO: ===== Handelszyklus für AAVE/USDT:USDT (2h) abgeschlossen =====
+14:45:07 [AAVEUSDTUSDT_2h] INFO: >>> ltbbot-Lauf für AAVE/USDT:USDT (2h) normal abgeschlossen <<<
+14:45:07 [SOLUSDTUSDT_30m] INFO: ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+14:45:08 [SOLUSDTUSDT_30m] INFO: Aktueller Status: Preis=126.4610, Average=126.7799
+14:45:08 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+14:45:09 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990474724421632 (buy 0.2 @ Trigger 123.999) storniert.
+14:45:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990476390375424 (buy 0.2 @ Trigger 126.884) storniert.
+14:45:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990478075965440 (buy 0.2 @ Trigger 123.474) storniert.
+14:45:10 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990479774363648 (buy 0.2 @ Trigger 118.654) storniert.
+14:45:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990481457090561 (buy 0.2 @ Trigger 126.884) storniert.
+14:45:11 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990483062992897 (buy 0.2 @ Trigger 118.152) storniert.
+14:45:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990484728647680 (buy 0.2 @ Trigger 108.226) storniert.
+14:45:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990486418141184 (buy 0.2 @ Trigger 126.884) storniert.
+14:45:12 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990488087773184 (buy 0.2 @ Trigger 107.767) storniert.
+14:45:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990489799565312 (sell 0.2 @ Trigger 129.835) storniert.
+14:45:13 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990491485159424 (sell 0.2 @ Trigger 126.884) storniert.
+14:45:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990493128802304 (sell 0.2 @ Trigger 130.383) storniert.
+14:45:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990494765101057 (sell 0.1 @ Trigger 135.684) storniert.
+14:45:14 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990496380424192 (sell 0.1 @ Trigger 126.884) storniert.
+14:45:15 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990498027544576 (sell 0.1 @ Trigger 136.256) storniert.
+14:45:15 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990499811368960 (sell 0.1 @ Trigger 148.758) storniert.
+14:45:16 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990501468119040 (sell 0.1 @ Trigger 126.884) storniert.
+14:45:16 [SOLUSDTUSDT_30m] INFO: Trigger Order 1386990503116476418 (sell 0.1 @ Trigger 149.386) storniert.
+14:45:16 [SOLUSDTUSDT_30m] INFO: 18 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+14:45:16 [SOLUSDTUSDT_30m] INFO: Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+14:45:16 [SOLUSDTUSDT_30m] INFO: Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+14:45:19 [SOLUSDTUSDT_30m] INFO: Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+14:45:19 [SOLUSDTUSDT_30m] INFO: 📊 Marktregime: RANGE | Trend: NEUTRAL
+14:45:19 [SOLUSDTUSDT_30m] INFO: Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+14:45:19 [SOLUSDTUSDT_30m] INFO: Prüfe Long Entry Bands: [124.11799783328176, 118.76781946756334, 108.32912918815676]
+14:45:19 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 1/3 platziert: Amount=0.2109, Trigger@123.8978, Limit@124.1180
+14:45:20 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 2/3 platziert: Amount=0.2204, Trigger@118.5571, Limit@118.7678
+14:45:21 [SOLUSDTUSDT_30m] INFO: ✅ Long Entry 3/3 platziert: Amount=0.2416, Trigger@108.1370, Limit@108.3291
+14:45:22 [SOLUSDTUSDT_30m] INFO: Prüfe Short Entry Bands: [129.49882267362705, 135.33240455262808, 148.37315422429336]
+14:45:23 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 1/3 platziert: Amount=0.2021, Trigger@129.7286, Limit@129.4988
+14:45:24 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 2/3 platziert: Amount=0.1934, Trigger@135.5725, Limit@135.3324
+14:45:25 [SOLUSDTUSDT_30m] INFO: ✅ Short Entry 3/3 platziert: Amount=0.1764, Trigger@148.6364, Limit@148.3732
+14:45:26 [SOLUSDTUSDT_30m] INFO: Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+14:45:26 [SOLUSDTUSDT_30m] INFO: ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+14:45:26 [SOLUSDTUSDT_30m] INFO: >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
