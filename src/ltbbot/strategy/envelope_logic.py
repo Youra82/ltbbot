@@ -16,7 +16,7 @@ def detect_market_regime(df, avg_period=14):
         # ADX für Trendstärke berechnen
         adx = ta.trend.adx(df['high'], df['low'], df['close'], window=14)
         current_adx = adx.iloc[-1] if not adx.empty else 20
-        
+
         # Preis-Position zum gleitenden Durchschnitt
         if 'average' in df.columns and not df['average'].empty:
             current_price = df['close'].iloc[-1]
@@ -24,15 +24,15 @@ def detect_market_regime(df, avg_period=14):
             price_distance_pct = abs(current_price - ma) / ma * 100 if ma > 0 else 0
         else:
             price_distance_pct = 0
-        
+
         # Trend-Richtung bestimmen (für asymmetrisches Trading)
         sma_fast = ta.trend.sma_indicator(df['close'], window=20)
         sma_slow = ta.trend.sma_indicator(df['close'], window=50)
-        
+
         if not sma_fast.empty and not sma_slow.empty:
             fast_val = sma_fast.iloc[-1]
             slow_val = sma_slow.iloc[-1]
-            
+
             if fast_val > slow_val * 1.02:  # 2% über = klarer Uptrend
                 trend_direction = "UPTREND"
             elif fast_val < slow_val * 0.98:  # 2% unter = klarer Downtrend
@@ -41,20 +41,21 @@ def detect_market_regime(df, avg_period=14):
                 trend_direction = "NEUTRAL"
         else:
             trend_direction = "NEUTRAL"
-        
-        # Regime-Entscheidung
+
+        # Regime-Entscheidung mit detailliertem Grund
         if current_adx > 30:  # Sehr starker Trend
+            logger.warning(f"STRONG_TREND: ADX={current_adx:.2f} > 30.0. Trading gesperrt.")
             return "STRONG_TREND", False, trend_direction
         elif current_adx > 25:  # Starker Trend
-            # Erlaube Trading nur in Trend-Richtung
+            logger.info(f"TREND: ADX={current_adx:.2f} > 25.0. Trading nur in Trendrichtung erlaubt.")
             return "TREND", True, trend_direction
         elif current_adx < 20 and price_distance_pct < 3:
-            # Ideal für Mean-Reversion
+            logger.info(f"RANGE: ADX={current_adx:.2f} < 20.0 und price_distance_pct={price_distance_pct:.2f} < 3.0. Mean-Reversion erlaubt.")
             return "RANGE", True, "NEUTRAL"
         else:
-            # Unsicher, vorsichtiges Trading erlaubt
+            logger.info(f"UNCERTAIN: ADX={current_adx:.2f}, price_distance_pct={price_distance_pct:.2f}. Vorsichtiges Trading erlaubt.")
             return "UNCERTAIN", True, trend_direction
-            
+
     except Exception as e:
         logger.warning(f"Fehler bei Marktregime-Erkennung: {e}. Defaulte auf UNCERTAIN.")
         return "UNCERTAIN", True, "NEUTRAL"
@@ -116,10 +117,26 @@ def calculate_indicators_and_signals(df, params):
     
     # Marktregime erkennen
     regime, trade_allowed, trend_direction = detect_market_regime(df_copy, avg_period)
-    
+
+    # ADX und price_distance_pct für Logging extrahieren
+    try:
+        adx = ta.trend.adx(df_copy['high'], df_copy['low'], df_copy['close'], window=14)
+        band_prices['adx'] = float(adx.iloc[-1]) if not adx.empty else None
+    except Exception:
+        band_prices['adx'] = None
+    try:
+        if 'average' in df_copy.columns and not df_copy['average'].empty:
+            current_price = df_copy['close'].iloc[-1]
+            ma = df_copy['average'].iloc[-1]
+            band_prices['price_distance_pct'] = float(abs(current_price - ma) / ma * 100) if ma > 0 else None
+        else:
+            band_prices['price_distance_pct'] = None
+    except Exception:
+        band_prices['price_distance_pct'] = None
+
     # Erweitere band_prices um Regime-Info
     band_prices['regime'] = regime
     band_prices['trade_allowed'] = trade_allowed
     band_prices['trend_direction'] = trend_direction
-    
+
     return df_copy, band_prices

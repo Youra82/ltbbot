@@ -464,11 +464,13 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     # Marktregime prüfen
     regime = band_prices.get('regime', 'UNCERTAIN')
     trend_direction = band_prices.get('trend_direction', 'NEUTRAL')
-    logger.info(f"📊 Marktregime: {regime} | Trend: {trend_direction}")
+    adx = band_prices.get('adx')
+    price_distance_pct = band_prices.get('price_distance_pct')
+    logger.info(f"📊 Marktregime: {regime} | Trend: {trend_direction} | ADX: {adx} | price_distance_pct: {price_distance_pct}")
 
     # NEU: Bei STRONG_TREND sofort abbrechen, keine Trigger platzieren
     if regime == "STRONG_TREND":
-        logger.warning("⚠️ STRONG_TREND erkannt - KEINE neuen Trigger/Entries werden platziert!")
+        logger.warning(f"⚠️ STRONG_TREND erkannt - KEINE neuen Trigger/Entries werden platziert! (ADX={adx})")
         return
 
     # Trend-Bias anwenden (asymmetrisches Trading)
@@ -748,12 +750,14 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         regime = band_prices.get('regime', 'UNCERTAIN')
         trade_allowed = band_prices.get('trade_allowed', True)
         trend_direction = band_prices.get('trend_direction', 'NEUTRAL')
-        
-        logger.info(f"📊 Marktregime: {regime} | Trend: {trend_direction} | Trading: {'✅' if trade_allowed else '❌'}")
-        
+        adx = band_prices.get('adx')
+        price_distance_pct = band_prices.get('price_distance_pct')
+
+        logger.info(f"📊 Marktregime: {regime} | Trend: {trend_direction} | Trading: {'✅' if trade_allowed else '❌'} | ADX: {adx} | price_distance_pct: {price_distance_pct}")
+
         # Bei starkem Trend: Nur bestehende Positionen verwalten
         if regime == "STRONG_TREND" and not trade_allowed:
-            logger.warning(f"⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt!")
+            logger.warning(f"⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt! (ADX={adx})")
             cancel_strategy_orders(exchange, symbol, logger)
             # Prüfe ob Position existiert
             position_list = exchange.fetch_open_positions(symbol)
