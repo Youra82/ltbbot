@@ -49,7 +49,7 @@ def test_setup():
         pytest.fail(f"Exchange konnte nicht initialisiert werden: {e}")
 
     # Test-Symbol und eine Beispiel-Konfiguration für Envelope
-    symbol = 'BTC/USDT:USDT' # Wähle ein Symbol, das du testen möchtest
+    symbol = 'PEPE/USDT:USDT' # Wähle ein Symbol, das du testen möchtest
     params = {
         'market': {'symbol': symbol, 'timeframe': '5m'}, # Zeitrahmen ist hier weniger kritisch
         'strategy': {
@@ -80,7 +80,7 @@ def test_setup():
     except Exception as e:
         pytest.fail(f"Fehler beim initialen Aufräumen: {e}")
 
-    yield exchange, params, symbol # Gib benötigte Objekte an den Test weiter
+    yield exchange, params, symbol, telegram_config # Gib benötigte Objekte an den Test weiter
 
     # --- Teardown ---
     print("\n[Teardown] Räume nach dem Test auf...")
@@ -99,7 +99,7 @@ def test_place_entry_orders_on_bitget(test_setup):
     simuliert und geprüft wird, ob die entsprechenden Orders (Entry, TP, SL)
     an die Börse gesendet werden.
     """
-    exchange, params, symbol = test_setup
+    exchange, params, symbol, telegram_config = test_setup
 
     print("\n[Schritt 1/2] Simuliere Bandpreise und rufe place_entry_orders auf...")
 
