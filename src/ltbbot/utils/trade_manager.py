@@ -458,7 +458,7 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
 
 # --- Entry Order Platzierung ---
 
-def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, balance: float, tracker_file_path: str, logger: logging.Logger):
+def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, balance: float, tracker_file_path: str, telegram_config: dict, logger: logging.Logger):
     """Platziert die gestaffelten Entry-, TP- und SL-Orders basierend auf Risiko."""
     symbol = params['market']['symbol']
     risk_params = params['risk']
@@ -575,6 +575,17 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     trigger_price=entry_trigger_price, price=entry_limit_price
                 )
                 logger.info(f"✅ Long Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
+                
+                # Telegram Benachrichtigung
+                message = f"📈 *LONG Entry* platziert\n" \
+                          f"Symbol: {symbol}\n" \
+                          f"Layer: {i+1}/{num_envelopes}\n" \
+                          f"Menge: {amount_coins:.4f}\n" \
+                          f"Trigger: {entry_trigger_price:.4f}\n" \
+                          f"Limit: {entry_limit_price:.4f}\n" \
+                          f"SL: {sl_price:.4f}"
+                send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), message)
+                
                 time.sleep(0.1)
 
                 # Zugehöriger Take Profit (Trigger Market am Average)
@@ -652,6 +663,17 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     trigger_price=entry_trigger_price, price=entry_limit_price
                 )
                 logger.info(f"✅ Short Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
+                
+                # Telegram Benachrichtigung
+                message = f"📉 *SHORT Entry* platziert\n" \
+                          f"Symbol: {symbol}\n" \
+                          f"Layer: {i+1}/{num_envelopes}\n" \
+                          f"Menge: {amount_coins:.4f}\n" \
+                          f"Trigger: {entry_trigger_price:.4f}\n" \
+                          f"Limit: {entry_limit_price:.4f}\n" \
+                          f"SL: {sl_price:.4f}"
+                send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), message)
+                
                 time.sleep(0.1)
 
                 # Zugehöriger Take Profit (Trigger Market am Average)
@@ -847,7 +869,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
                   logger.warning(f"Konnte Margin Mode/Leverage nicht setzen (evtl. schon korrekt?): {e}")
 
               # Neue Entry Orders platzieren
-              place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, logger)
+              place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger)
 
 
     except ccxt.AuthenticationError as e:
