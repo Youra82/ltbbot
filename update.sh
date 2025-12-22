@@ -73,18 +73,18 @@ if [ -f "$VENV_PATH" ]; then
     # Teste pip und installiere Pakete
     echo -e "${BLUE}Teste pip und installiere Pakete...${NC}"
     
-    # Versuche pip-Update (Exit-Code wird geprüft)
-    python -m pip install --upgrade pip --no-cache-dir -q 2>/dev/null
-    PIP_UPDATE_EXIT=$?
+    # Versuche pip-Update (zeige Fehler wenn vorhanden)
+    python -m pip install --upgrade pip --no-cache-dir -q 2>&1 | grep -v "^$" || true
+    PIP_UPDATE_EXIT=${PIPESTATUS[0]}
     
-    # Versuche requirements Installation
-    python -m pip install -r requirements.txt --no-cache-dir -q 2>/dev/null
-    PIP_INSTALL_EXIT=$?
+    # Versuche requirements Installation (zeige Fehler wenn vorhanden)
+    python -m pip install -r requirements.txt --no-cache-dir -q 2>&1 | grep -v "^$" || true
+    PIP_INSTALL_EXIT=${PIPESTATUS[0]}
     
     # Wenn einer der beiden Befehle fehlgeschlagen ist
     if [ $PIP_UPDATE_EXIT -ne 0 ] || [ $PIP_INSTALL_EXIT -ne 0 ]; then
         deactivate
-        echo -e "${RED}⚠ Pip-Installation fehlgeschlagen. Erstelle virtuelle Umgebung neu...${NC}"
+        echo -e "${RED}⚠ Pip-Installation fehlgeschlagen (Exit: $PIP_UPDATE_EXIT, $PIP_INSTALL_EXIT). Erstelle virtuelle Umgebung neu...${NC}"
         rebuild_venv
         echo -e "${GREEN}✔ Virtuelle Umgebung neu erstellt und Pakete installiert.${NC}"
     else
