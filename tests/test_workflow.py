@@ -134,7 +134,8 @@ def test_place_entry_orders_on_bitget(test_setup):
         if os.path.exists(tracker_file_path): os.remove(tracker_file_path) # Alte löschen
 
         # Rufe die Funktion auf, die die Orders platzieren soll
-        place_entry_orders(exchange, simulated_band_prices, params, simulated_balance, tracker_file_path, test_logger)
+        # Füge telegram_config als Argument hinzu
+        place_entry_orders(exchange, simulated_band_prices, params, simulated_balance, tracker_file_path, telegram_config, test_logger)
 
         print("-> place_entry_orders aufgerufen. Warte 5s auf Order-Platzierung...")
         time.sleep(5)
