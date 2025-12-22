@@ -71,31 +71,25 @@ if [ -f "$VENV_PATH" ]; then
     source "$VENV_PATH"
     
     # Teste pip und installiere Pakete
-    echo -e "${BLUE}Teste pip und installiere Pakete falls nötig...${NC}"
+    echo -e "${BLUE}Teste pip und installiere Pakete...${NC}"
     
-    # Erstelle temporäre Log-Datei
-    TEMP_LOG=$(mktemp)
+    # Versuche pip-Update (Exit-Code wird geprüft)
+    python -m pip install --upgrade pip --no-cache-dir -q 2>/dev/null
+    PIP_UPDATE_EXIT=$?
     
-    # Versuche pip-Update und Installation
-    if python -m pip install --upgrade pip --no-cache-dir -q 2>"$TEMP_LOG" && \
-       python -m pip install -r requirements.txt --no-cache-dir -q 2>>"$TEMP_LOG"; then
-        # Erfolgreich
-        echo -e "${GREEN}✔ Python-Bibliotheken sind aktuell.${NC}"
-        rm -f "$TEMP_LOG"
+    # Versuche requirements Installation
+    python -m pip install -r requirements.txt --no-cache-dir -q 2>/dev/null
+    PIP_INSTALL_EXIT=$?
+    
+    # Wenn einer der beiden Befehle fehlgeschlagen ist
+    if [ $PIP_UPDATE_EXIT -ne 0 ] || [ $PIP_INSTALL_EXIT -ne 0 ]; then
         deactivate
+        echo -e "${RED}⚠ Pip-Installation fehlgeschlagen. Erstelle virtuelle Umgebung neu...${NC}"
+        rebuild_venv
+        echo -e "${GREEN}✔ Virtuelle Umgebung neu erstellt und Pakete installiert.${NC}"
     else
-        # Fehler aufgetreten - prüfe ob es ein pip-Problem ist
-        if grep -q "ERROR:\|Exception:\|ImportError:" "$TEMP_LOG"; then
-            rm -f "$TEMP_LOG"
-            deactivate
-            echo -e "${RED}⚠ Pip ist beschädigt. Erstelle virtuelle Umgebung neu...${NC}"
-            rebuild_venv
-            echo -e "${GREEN}✔ Virtuelle Umgebung neu erstellt und Pakete installiert.${NC}"
-        else
-            rm -f "$TEMP_LOG"
-            echo -e "${YELLOW}⚠ Warnung: Einige Pakete konnten nicht installiert werden.${NC}"
-            deactivate
-        fi
+        echo -e "${GREEN}✔ Python-Bibliotheken sind aktuell.${NC}"
+        deactivate
     fi
 else
     echo -e "${YELLOW}⚠ Virtuelle Umgebung nicht gefunden!${NC}"
