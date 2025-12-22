@@ -1,26 +1,27 @@
-{
-    "market": {
-        "symbol": "ETH/USDT:USDT",
-        "timeframe": "6h"
-    },
-    "strategy": {
-        "average_type": "WMA",
-        "average_period": 5,
-        "envelopes": [
-            0.012769478405091449,
-            0.01835916608239256,
-            0.024127893346731377
-        ],
-        "trigger_price_delta_pct": 0.1341
-    },
-    "risk": {
-        "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.86,
-        "leverage": 9,
-        "stop_loss_pct": 0.51
-    },
-    "behavior": {
-        "use_longs": true,
-        "use_shorts": true
-    }
+﻿{
+    "market":  {
+                   "symbol":  "ETH/USDT:USDT",
+                   "timeframe":  "6h"
+               },
+    "strategy":  {
+                     "average_type":  "WMA",
+                     "average_period":  5,
+                     "envelopes":  [
+                                       0.012769478405091449,
+                                       0.01835916608239256,
+                                       0.024127893346731377
+                                   ],
+                     "trigger_price_delta_pct":  0.1341
+                 },
+    "risk":  {
+                 "margin_mode":  "isolated",
+                 "risk_per_entry_pct":  0.86,
+                 "leverage":  9,
+                 "stop_loss_pct":  0.51,
+                 "trailing_callback_rate_pct":  0.3
+             },
+    "behavior":  {
+                     "use_longs":  true,
+                     "use_shorts":  true
+                 }
 }

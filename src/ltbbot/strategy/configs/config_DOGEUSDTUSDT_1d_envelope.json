@@ -1,26 +1,27 @@
-{
-    "market": {
-        "symbol": "DOGE/USDT:USDT",
-        "timeframe": "1d"
-    },
-    "strategy": {
-        "average_type": "WMA",
-        "average_period": 5,
-        "envelopes": [
-            0.044652251817755804,
-            0.08412397326207528,
-            0.09031082205197227
-        ],
-        "trigger_price_delta_pct": 0.0221
-    },
-    "risk": {
-        "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.87,
-        "leverage": 8,
-        "stop_loss_pct": 4.56
-    },
-    "behavior": {
-        "use_longs": true,
-        "use_shorts": true
-    }
+﻿{
+    "market":  {
+                   "symbol":  "DOGE/USDT:USDT",
+                   "timeframe":  "1d"
+               },
+    "strategy":  {
+                     "average_type":  "WMA",
+                     "average_period":  5,
+                     "envelopes":  [
+                                       0.044652251817755804,
+                                       0.08412397326207528,
+                                       0.09031082205197227
+                                   ],
+                     "trigger_price_delta_pct":  0.0221
+                 },
+    "risk":  {
+                 "margin_mode":  "isolated",
+                 "risk_per_entry_pct":  0.87,
+                 "leverage":  8,
+                 "stop_loss_pct":  4.56,
+                 "trailing_callback_rate_pct":  0.3
+             },
+    "behavior":  {
+                     "use_longs":  true,
+                     "use_shorts":  true
+                 }
 }

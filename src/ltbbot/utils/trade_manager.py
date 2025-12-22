@@ -341,6 +341,8 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
                  return
 
         sl_pct = risk_params['stop_loss_pct'] / 100.0
+        trailing_callback_rate = risk_params.get('trailing_callback_rate_pct', 0.0) / 100.0  # Default 0% = kein Trailing
+        
         if pos_side == 'long':
             sl_price = avg_entry_price * (1 - sl_pct)
             sl_side = 'sell'
@@ -352,8 +354,25 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
         if sl_price <= 0:
              logger.error(f"Ungültiger SL-Preis berechnet ({sl_price:.4f}). Überspringe SL-Platzierung.")
         else:
-            sl_order = exchange.place_trigger_market_order(symbol, sl_side, amount_contracts_float, sl_price, reduce=True)
-            logger.info(f"Neuen SL für {pos_side} @ {sl_price:.4f} gesetzt.")
+            # Verwende Trailing Stop Loss wenn trailing_callback_rate gesetzt ist
+            if trailing_callback_rate > 0:
+                try:
+                    sl_order = exchange.place_trailing_stop_order(
+                        symbol=symbol,
+                        side=sl_side,
+                        amount=amount_contracts_float,
+                        activation_price=sl_price,
+                        callback_rate_decimal=trailing_callback_rate
+                    )
+                    logger.info(f"✅ Trailing Stop Loss für {pos_side} gesetzt: Aktivierung @ {sl_price:.4f}, Callback {trailing_callback_rate*100:.2f}%")
+                except (ccxt.NotSupported, AttributeError) as e:
+                    logger.warning(f"⚠️ Trailing Stop nicht unterstützt, verwende normalen Stop Loss: {e}")
+                    sl_order = exchange.place_trigger_market_order(symbol, sl_side, amount_contracts_float, sl_price, reduce=True)
+                    logger.info(f"Neuen SL für {pos_side} @ {sl_price:.4f} gesetzt.")
+            else:
+                sl_order = exchange.place_trigger_market_order(symbol, sl_side, amount_contracts_float, sl_price, reduce=True)
+                logger.info(f"Neuen SL für {pos_side} @ {sl_price:.4f} gesetzt.")
+            
             if sl_order and 'id' in sl_order:
                 new_sl_ids.append(sl_order['id'])
 

@@ -1,26 +1,27 @@
-{
-    "market": {
-        "symbol": "SOL/USDT:USDT",
-        "timeframe": "2h"
-    },
-    "strategy": {
-        "average_type": "WMA",
-        "average_period": 5,
-        "envelopes": [
-            0.014345656137828976,
-            0.05901862469293021,
-            0.13262206664330017
-        ],
-        "trigger_price_delta_pct": 0.0907
-    },
-    "risk": {
-        "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.83,
-        "leverage": 6,
-        "stop_loss_pct": 0.64
-    },
-    "behavior": {
-        "use_longs": true,
-        "use_shorts": true
-    }
+﻿{
+    "market":  {
+                   "symbol":  "SOL/USDT:USDT",
+                   "timeframe":  "2h"
+               },
+    "strategy":  {
+                     "average_type":  "WMA",
+                     "average_period":  5,
+                     "envelopes":  [
+                                       0.014345656137828976,
+                                       0.05901862469293021,
+                                       0.13262206664330017
+                                   ],
+                     "trigger_price_delta_pct":  0.0907
+                 },
+    "risk":  {
+                 "margin_mode":  "isolated",
+                 "risk_per_entry_pct":  0.83,
+                 "leverage":  6,
+                 "stop_loss_pct":  0.64,
+                 "trailing_callback_rate_pct":  0.3
+             },
+    "behavior":  {
+                     "use_longs":  true,
+                     "use_shorts":  true
+                 }
 }
