@@ -1,4 +1,4 @@
-{
+﻿{
     "market":  {
                    "symbol":  "ADA/USDT:USDT",
                    "timeframe":  "5m"
@@ -7,9 +7,7 @@
                      "average_type":  "WMA",
                      "average_period":  5,
                      "envelopes":  [
-                                       0.00646815543689024,
-                                       0.0166742734259366,
-                                       0.04103657137413812
+                                       0.00646815543689024
                                    ],
                      "trigger_price_delta_pct":  0.188
                  },

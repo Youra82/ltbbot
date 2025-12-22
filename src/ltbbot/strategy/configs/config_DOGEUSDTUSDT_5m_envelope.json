@@ -1,4 +1,4 @@
-{
+﻿{
     "market":  {
                    "symbol":  "DOGE/USDT:USDT",
                    "timeframe":  "5m"
@@ -7,9 +7,7 @@
                      "average_type":  "EMA",
                      "average_period":  50,
                      "envelopes":  [
-                                       0.047163333784918805,
-                                       0.07019373283020022,
-                                       0.10099349703647865
+                                       0.047163333784918805
                                    ],
                      "trigger_price_delta_pct":  0.183
                  },

@@ -1,4 +1,4 @@
-{
+﻿{
     "market":  {
                    "symbol":  "SOL/USDT:USDT",
                    "timeframe":  "5m"
@@ -7,9 +7,7 @@
                      "average_type":  "EMA",
                      "average_period":  13,
                      "envelopes":  [
-                                       0.029836246509534724,
-                                       0.03728014920903925,
-                                       0.05241315520362244
+                                       0.029836246509534724
                                    ],
                      "trigger_price_delta_pct":  0.0399
                  },

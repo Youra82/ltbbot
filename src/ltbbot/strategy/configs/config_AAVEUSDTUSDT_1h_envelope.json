@@ -1,4 +1,4 @@
-{
+﻿{
     "market":  {
                    "symbol":  "AAVE/USDT:USDT",
                    "timeframe":  "1h"
@@ -7,9 +7,7 @@
                      "average_type":  "WMA",
                      "average_period":  5,
                      "envelopes":  [
-                                       0.008277557078460401,
-                                       0.09724785835595054,
-                                       0.10350426168233466
+                                       0.008277557078460401
                                    ],
                      "trigger_price_delta_pct":  0.1448
                  },
