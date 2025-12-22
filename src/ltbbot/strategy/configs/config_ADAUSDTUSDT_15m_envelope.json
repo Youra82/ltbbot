@@ -1,26 +1,27 @@
-{
-    "market": {
-        "symbol": "ADA/USDT:USDT",
-        "timeframe": "15m"
-    },
-    "strategy": {
-        "average_type": "WMA",
-        "average_period": 5,
-        "envelopes": [
-            0.00632144627938197,
-            0.014429455378259848,
-            0.026290807202732004
-        ],
-        "trigger_price_delta_pct": 0.044
-    },
-    "risk": {
-        "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.74,
-        "leverage": 14,
-        "stop_loss_pct": 0.52
-    },
-    "behavior": {
-        "use_longs": true,
-        "use_shorts": true
-    }
+﻿{
+    "market":  {
+                   "symbol":  "ADA/USDT:USDT",
+                   "timeframe":  "15m"
+               },
+    "strategy":  {
+                     "average_type":  "WMA",
+                     "average_period":  5,
+                     "envelopes":  [
+                                       0.00632144627938197,
+                                       0.014429455378259848,
+                                       0.026290807202732004
+                                   ],
+                     "trigger_price_delta_pct":  0.044
+                 },
+    "risk":  {
+                 "margin_mode":  "isolated",
+                 "risk_per_entry_pct":  0.74,
+                 "leverage":  14,
+                 "stop_loss_pct":  0.52,
+                 "trailing_callback_rate_pct":  0.3
+             },
+    "behavior":  {
+                     "use_longs":  true,
+                     "use_shorts":  true
+                 }
 }

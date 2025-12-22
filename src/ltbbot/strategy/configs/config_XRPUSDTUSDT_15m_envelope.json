@@ -1,26 +1,27 @@
-{
-    "market": {
-        "symbol": "XRP/USDT:USDT",
-        "timeframe": "15m"
-    },
-    "strategy": {
-        "average_type": "WMA",
-        "average_period": 5,
-        "envelopes": [
-            0.005508196247455979,
-            0.01177047174213064,
-            0.11854907107031643
-        ],
-        "trigger_price_delta_pct": 0.1166
-    },
-    "risk": {
-        "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.93,
-        "leverage": 14,
-        "stop_loss_pct": 1.51
-    },
-    "behavior": {
-        "use_longs": true,
-        "use_shorts": true
-    }
+﻿{
+    "market":  {
+                   "symbol":  "XRP/USDT:USDT",
+                   "timeframe":  "15m"
+               },
+    "strategy":  {
+                     "average_type":  "WMA",
+                     "average_period":  5,
+                     "envelopes":  [
+                                       0.005508196247455979,
+                                       0.01177047174213064,
+                                       0.11854907107031643
+                                   ],
+                     "trigger_price_delta_pct":  0.1166
+                 },
+    "risk":  {
+                 "margin_mode":  "isolated",
+                 "risk_per_entry_pct":  0.93,
+                 "leverage":  14,
+                 "stop_loss_pct":  1.51,
+                 "trailing_callback_rate_pct":  0.3
+             },
+    "behavior":  {
+                     "use_longs":  true,
+                     "use_shorts":  true
+                 }
 }

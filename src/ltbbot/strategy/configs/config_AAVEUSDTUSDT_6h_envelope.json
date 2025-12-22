@@ -1,26 +1,27 @@
-{
-    "market": {
-        "symbol": "AAVE/USDT:USDT",
-        "timeframe": "6h"
-    },
-    "strategy": {
-        "average_type": "WMA",
-        "average_period": 5,
-        "envelopes": [
-            0.022725497624380007,
-            0.04206889723954768,
-            0.13848553303618896
-        ],
-        "trigger_price_delta_pct": 0.0495
-    },
-    "risk": {
-        "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.88,
-        "leverage": 15,
-        "stop_loss_pct": 0.51
-    },
-    "behavior": {
-        "use_longs": true,
-        "use_shorts": true
-    }
+﻿{
+    "market":  {
+                   "symbol":  "AAVE/USDT:USDT",
+                   "timeframe":  "6h"
+               },
+    "strategy":  {
+                     "average_type":  "WMA",
+                     "average_period":  5,
+                     "envelopes":  [
+                                       0.022725497624380007,
+                                       0.04206889723954768,
+                                       0.13848553303618896
+                                   ],
+                     "trigger_price_delta_pct":  0.0495
+                 },
+    "risk":  {
+                 "margin_mode":  "isolated",
+                 "risk_per_entry_pct":  0.88,
+                 "leverage":  15,
+                 "stop_loss_pct":  0.51,
+                 "trailing_callback_rate_pct":  0.3
+             },
+    "behavior":  {
+                     "use_longs":  true,
+                     "use_shorts":  true
+                 }
 }

@@ -1,26 +1,27 @@
-{
-    "market": {
-        "symbol": "BTC/USDT:USDT",
-        "timeframe": "4h"
-    },
-    "strategy": {
-        "average_type": "WMA",
-        "average_period": 5,
-        "envelopes": [
-            0.012818938099139447,
-            0.08262405752490894,
-            0.13737808716010688
-        ],
-        "trigger_price_delta_pct": 0.1543
-    },
-    "risk": {
-        "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.37,
-        "leverage": 11,
-        "stop_loss_pct": 0.91
-    },
-    "behavior": {
-        "use_longs": true,
-        "use_shorts": true
-    }
+﻿{
+    "market":  {
+                   "symbol":  "BTC/USDT:USDT",
+                   "timeframe":  "4h"
+               },
+    "strategy":  {
+                     "average_type":  "WMA",
+                     "average_period":  5,
+                     "envelopes":  [
+                                       0.012818938099139447,
+                                       0.08262405752490894,
+                                       0.13737808716010688
+                                   ],
+                     "trigger_price_delta_pct":  0.1543
+                 },
+    "risk":  {
+                 "margin_mode":  "isolated",
+                 "risk_per_entry_pct":  0.37,
+                 "leverage":  11,
+                 "stop_loss_pct":  0.91,
+                 "trailing_callback_rate_pct":  0.3
+             },
+    "behavior":  {
+                     "use_longs":  true,
+                     "use_shorts":  true
+                 }
 }
