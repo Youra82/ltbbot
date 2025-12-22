@@ -465,7 +465,12 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     regime = band_prices.get('regime', 'UNCERTAIN')
     trend_direction = band_prices.get('trend_direction', 'NEUTRAL')
     logger.info(f"📊 Marktregime: {regime} | Trend: {trend_direction}")
-    
+
+    # NEU: Bei STRONG_TREND sofort abbrechen, keine Trigger platzieren
+    if regime == "STRONG_TREND":
+        logger.warning("⚠️ STRONG_TREND erkannt - KEINE neuen Trigger/Entries werden platziert!")
+        return
+
     # Trend-Bias anwenden (asymmetrisches Trading)
     if trend_direction == "UPTREND":
         # Im Uptrend: Keine Longs (nur Shorts wenn überhaupt)
