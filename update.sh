@@ -70,32 +70,35 @@ rebuild_venv() {
 if [ -f "$VENV_PATH" ]; then
     source "$VENV_PATH"
     
-    # Teste ob pip funktioniert
-    if python -m pip --version >/dev/null 2>&1; then
-        # Pip funktioniert - prüfe ob requirements erfüllt sind
-        echo -e "${BLUE}Prüfe ob Pakete aktuell sind...${NC}"
-        
-        # Versuche requirements zu überprüfen (leise)
-        if python -m pip check >/dev/null 2>&1 && \
-           python -m pip install -r requirements.txt --dry-run >/dev/null 2>&1; then
-            echo -e "${GREEN}✔ Alle Pakete sind bereits aktuell. Keine Installation nötig.${NC}"
-        else
-            # Nur wenn wirklich nötig, installiere Pakete
-            echo -e "${BLUE}Aktualisiere Pakete...${NC}"
-            python -m pip install --upgrade pip --no-cache-dir -q 2>/dev/null || true
-            python -m pip install -r requirements.txt --no-cache-dir -q
-            echo -e "${GREEN}✔ Python-Bibliotheken aktualisiert.${NC}"
-        fi
+    # Teste pip und installiere Pakete
+    echo -e "${BLUE}Teste pip und installiere Pakete falls nötig...${NC}"
+    
+    # Erstelle temporäre Log-Datei
+    TEMP_LOG=$(mktemp)
+    
+    # Versuche pip-Update und Installation
+    if python -m pip install --upgrade pip --no-cache-dir -q 2>"$TEMP_LOG" && \
+       python -m pip install -r requirements.txt --no-cache-dir -q 2>>"$TEMP_LOG"; then
+        # Erfolgreich
+        echo -e "${GREEN}✔ Python-Bibliotheken sind aktuell.${NC}"
+        rm -f "$TEMP_LOG"
         deactivate
     else
-        # Pip ist kaputt, venv neu erstellen
-        deactivate
-        echo -e "${RED}⚠ Pip ist beschädigt. Erstelle virtuelle Umgebung neu...${NC}"
-        rebuild_venv
-        echo -e "${GREEN}✔ Virtuelle Umgebung neu erstellt und Pakete installiert.${NC}"
+        # Fehler aufgetreten - prüfe ob es ein pip-Problem ist
+        if grep -q "ERROR:\|Exception:\|ImportError:" "$TEMP_LOG"; then
+            rm -f "$TEMP_LOG"
+            deactivate
+            echo -e "${RED}⚠ Pip ist beschädigt. Erstelle virtuelle Umgebung neu...${NC}"
+            rebuild_venv
+            echo -e "${GREEN}✔ Virtuelle Umgebung neu erstellt und Pakete installiert.${NC}"
+        else
+            rm -f "$TEMP_LOG"
+            echo -e "${YELLOW}⚠ Warnung: Einige Pakete konnten nicht installiert werden.${NC}"
+            deactivate
+        fi
     fi
 else
-    echo -e "${RED}⚠ Virtuelle Umgebung nicht gefunden!${NC}"
+    echo -e "${YELLOW}⚠ Virtuelle Umgebung nicht gefunden!${NC}"
     rebuild_venv
     echo -e "${GREEN}✔ Virtuelle Umgebung neu erstellt.${NC}"
 fi
