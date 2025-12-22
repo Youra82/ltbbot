@@ -58,36 +58,51 @@ echo -e "${GREEN}✔ Konfigurationen wiederhergestellt.${NC}"
 # 5. Aktualisiere Python-Abhängigkeiten (falls requirements.txt geändert wurde)
 echo -e "${YELLOW}5/6: Aktualisiere Python-Bibliotheken gemäß requirements.txt...${NC}"
 VENV_PATH="$PROJECT_ROOT/.venv/bin/activate"
+
+# Funktion zum Neuerstellen des venv
+rebuild_venv() {
+    echo -e "${YELLOW}🔄 Erstelle virtuelle Umgebung neu...${NC}"
+    rm -rf .venv
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python -m pip install --upgrade pip --no-cache-dir
+    python -m pip install -r requirements.txt --no-cache-dir
+    deactivate
+}
+
 if [ -f "$VENV_PATH" ]; then
     source "$VENV_PATH"
     
-    # Verwende python -m pip für robusteres Update
-    echo -e "${BLUE}Aktualisiere pip...${NC}"
-    if ! python -m pip install --upgrade pip --no-cache-dir 2>/dev/null; then
-        echo -e "${YELLOW}⚠ Pip-Update fehlgeschlagen. Versuche Reparatur...${NC}"
+    # Teste ob pip funktioniert
+    echo -e "${BLUE}Teste pip...${NC}"
+    if python -m pip --version >/dev/null 2>&1; then
+        # Pip funktioniert, versuche Update
+        echo -e "${BLUE}Aktualisiere pip...${NC}"
+        python -m pip install --upgrade pip --no-cache-dir 2>/dev/null || true
         
-        # Versuche pip zu reparieren
-        if python -m ensurepip --upgrade 2>/dev/null; then
-            echo -e "${BLUE}Pip wurde repariert. Versuche erneut...${NC}"
-            python -m pip install --upgrade --force-reinstall pip --no-cache-dir
+        # Installiere requirements
+        echo -e "${BLUE}Installiere Python-Pakete...${NC}"
+        if python -m pip install -r requirements.txt --no-cache-dir 2>&1; then
+            echo -e "${GREEN}✔ Python-Bibliotheken aktualisiert.${NC}"
+            deactivate
         else
-            echo -e "${RED}⚠ Pip-Reparatur fehlgeschlagen. Installiere Pakete mit altem pip...${NC}"
+            # Installation fehlgeschlagen, venv neu erstellen
+            deactivate
+            echo -e "${RED}⚠ Pip ist beschädigt. Erstelle virtuelle Umgebung neu...${NC}"
+            rebuild_venv
+            echo -e "${GREEN}✔ Virtuelle Umgebung neu erstellt und Pakete installiert.${NC}"
         fi
-    fi
-    
-    # Installiere requirements
-    echo -e "${BLUE}Installiere Python-Pakete...${NC}"
-    if python -m pip install -r requirements.txt --no-cache-dir; then
-        echo -e "${GREEN}✔ Python-Bibliotheken aktualisiert.${NC}"
     else
-        echo -e "${RED}⚠ Warnung: Einige Pakete konnten nicht installiert werden.${NC}"
-        echo -e "${YELLOW}Versuche es manuell mit: source .venv/bin/activate && pip install -r requirements.txt${NC}"
+        # Pip ist kaputt, venv neu erstellen
+        deactivate
+        echo -e "${RED}⚠ Pip ist beschädigt. Erstelle virtuelle Umgebung neu...${NC}"
+        rebuild_venv
+        echo -e "${GREEN}✔ Virtuelle Umgebung neu erstellt und Pakete installiert.${NC}"
     fi
-    
-    deactivate
 else
-    echo -e "${RED}⚠ WARNUNG: Virtuelle Umgebung nicht gefunden!${NC}"
-    echo -e "${YELLOW}Führe './install.sh' aus, um die Umgebung neu zu erstellen.${NC}"
+    echo -e "${RED}⚠ Virtuelle Umgebung nicht gefunden!${NC}"
+    rebuild_venv
+    echo -e "${GREEN}✔ Virtuelle Umgebung neu erstellt.${NC}"
 fi
 
 # 6. Setze die Ausführungsrechte für alle Skripte erneut
