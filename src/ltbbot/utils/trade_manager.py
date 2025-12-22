@@ -569,15 +569,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 )
                 logger.info(f"✅ Long Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 
-                # Telegram Benachrichtigung
-                message = f"📈 *LONG Entry* platziert\n" \
-                          f"Symbol: {symbol}\n" \
-                          f"Layer: {i+1}/{num_envelopes}\n" \
-                          f"Menge: {amount_coins:.4f}\n" \
-                          f"Trigger: {entry_trigger_price:.4f}\n" \
-                          f"Limit: {entry_limit_price:.4f}\n" \
-                          f"SL: {sl_price:.4f}"
-                send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), message)
+                # Keine Telegram-Benachrichtigung mehr beim Platzieren der Entry-Order
                 
                 time.sleep(0.1)
 
@@ -657,15 +649,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 )
                 logger.info(f"✅ Short Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 
-                # Telegram Benachrichtigung
-                message = f"📉 *SHORT Entry* platziert\n" \
-                          f"Symbol: {symbol}\n" \
-                          f"Layer: {i+1}/{num_envelopes}\n" \
-                          f"Menge: {amount_coins:.4f}\n" \
-                          f"Trigger: {entry_trigger_price:.4f}\n" \
-                          f"Limit: {entry_limit_price:.4f}\n" \
-                          f"SL: {sl_price:.4f}"
-                send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), message)
+                # Keine Telegram-Benachrichtigung mehr beim Platzieren der Entry-Order
                 
                 time.sleep(0.1)
 
@@ -825,6 +809,13 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
             # Position ist offen -> TP/SL aktualisieren (auch im Cooldown!)
             manage_existing_position(exchange, position, band_prices, params, tracker_file_path, logger)
             logger.info(f"Position für {symbol} ist offen ({position['side']} {position['contracts']}). Nur TP/SL verwaltet.")
+            # Telegram-Benachrichtigung NUR wenn Position NEU eröffnet wurde
+            tracker_info = read_tracker_file(tracker_file_path)
+            if not tracker_info.get('notified_open', False):
+                message = f"🚀 *TRADE AUSGELÖST*\nSymbol: {symbol}\nRichtung: {position['side']}\nMenge: {position['contracts']}\nEntry: {position['entryPrice']}"
+                send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), message)
+                tracker_info['notified_open'] = True
+                update_tracker_file(tracker_file_path, tracker_info)
             # Keine neuen Entry-Orders platzieren, wenn schon eine Position offen ist
 
         elif cooldown_active:
