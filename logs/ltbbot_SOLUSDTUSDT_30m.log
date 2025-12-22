@@ -1763,3 +1763,379 @@ ccxt.base.errors.DDoSProtection: bitget {"code":"429","msg":"Too Many Requests",
 2025-11-02 10:15:26,145 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
 2025-12-19 10:22:02,872 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
 2025-12-19 10:30:07,757 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 10:30:04,966 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 10:45:05,323 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:00:04,968 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:15:05,420 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:30:05,179 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 11:45:05,584 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 12:00:05,315 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 12:15:05,890 - CRITICAL - Kritische Datei nicht gefunden: Konfigurationsdatei 'config_SOLUSDTUSDT_30m_envelope.json' (oder Fallback) nicht gefunden in /home/matola/ltbbot/src/ltbbot/strategy/configs
+2025-12-22 12:30:05,450 - INFO - Konfiguration geladen für SOL/USDT:USDT (30m).
+2025-12-22 12:30:05,450 - INFO - --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+2025-12-22 12:30:05,451 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 12:30:08,378 - INFO - ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+2025-12-22 12:30:08,814 - INFO - Aktueller Status: Preis=126.7580, Average=126.6734
+2025-12-22 12:30:08,814 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-22 12:30:09,411 - INFO - Einige SL-IDs aus dem Tracker sind nicht mehr offen. Aktualisiere Tracker.
+2025-12-22 12:30:09,999 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-22 12:30:10,286 - INFO - Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+2025-12-22 12:30:12,667 - INFO - Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+2025-12-22 12:30:12,667 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-22 12:30:12,668 - INFO - Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+2025-12-22 12:30:12,668 - INFO - Prüfe Long Entry Bands: [124.01376653970108, 118.66808112441436, 108.23815700471147]
+2025-12-22 12:30:13,008 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.2111, Trigger@123.7938, Limit@124.0138
+2025-12-22 12:30:14,247 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.2206, Trigger@118.4576, Limit@118.6681
+2025-12-22 12:30:15,450 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.2418, Trigger@108.0461, Limit@108.2382
+2025-12-22 12:30:16,331 - INFO - Prüfe Short Entry Bands: [129.39007269344626, 135.21875567143317, 148.24855403683128]
+2025-12-22 12:30:16,621 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.2023, Trigger@129.6196, Limit@129.3901
+2025-12-22 12:30:17,801 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1936, Trigger@135.4586, Limit@135.2188
+2025-12-22 12:30:19,021 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1766, Trigger@148.5115, Limit@148.2486
+2025-12-22 12:30:19,875 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-22 12:30:19,876 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+2025-12-22 12:30:19,905 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 12:45:05,802 - INFO - Konfiguration geladen für SOL/USDT:USDT (30m).
+2025-12-22 12:45:05,803 - INFO - --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+2025-12-22 12:45:05,803 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 12:45:08,299 - INFO - ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+2025-12-22 12:45:08,700 - INFO - Aktueller Status: Preis=127.0070, Average=126.7564
+2025-12-22 12:45:08,701 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-22 12:45:10,097 - INFO - Trigger Order 1386960250343305216 (buy 0.2 @ Trigger 123.794) storniert.
+2025-12-22 12:45:10,493 - INFO - Trigger Order 1386960252155539456 (buy 0.2 @ Trigger 126.673) storniert.
+2025-12-22 12:45:10,864 - INFO - Trigger Order 1386960253984260096 (buy 0.2 @ Trigger 123.27) storniert.
+2025-12-22 12:45:11,242 - INFO - Trigger Order 1386960255658303488 (buy 0.2 @ Trigger 118.458) storniert.
+2025-12-22 12:45:11,609 - INFO - Trigger Order 1386960257338974208 (buy 0.2 @ Trigger 126.673) storniert.
+2025-12-22 12:45:11,984 - INFO - Trigger Order 1386960259013230592 (buy 0.2 @ Trigger 117.956) storniert.
+2025-12-22 12:45:12,393 - INFO - Trigger Order 1386960260699336705 (buy 0.2 @ Trigger 108.046) storniert.
+2025-12-22 12:45:12,764 - INFO - Trigger Order 1386960262306271236 (buy 0.2 @ Trigger 126.673) storniert.
+2025-12-22 12:45:13,158 - INFO - Trigger Order 1386960263978762240 (buy 0.2 @ Trigger 107.589) storniert.
+2025-12-22 12:45:13,527 - INFO - Trigger Order 1386960265584975873 (sell 0.2 @ Trigger 129.62) storniert.
+2025-12-22 12:45:13,921 - INFO - Trigger Order 1386960267255549953 (sell 0.2 @ Trigger 126.673) storniert.
+2025-12-22 12:45:14,309 - INFO - Trigger Order 1386960268899205121 (sell 0.2 @ Trigger 130.166) storniert.
+2025-12-22 12:45:14,685 - INFO - Trigger Order 1386960270560665600 (sell 0.1 @ Trigger 135.459) storniert.
+2025-12-22 12:45:15,064 - INFO - Trigger Order 1386960272271126528 (sell 0.1 @ Trigger 126.673) storniert.
+2025-12-22 12:45:16,048 - INFO - Trigger Order 1386960273873645568 (sell 0.1 @ Trigger 136.03) storniert.
+2025-12-22 12:45:16,452 - INFO - Trigger Order 1386960275584925697 (sell 0.1 @ Trigger 148.512) storniert.
+2025-12-22 12:45:16,828 - INFO - Trigger Order 1386960277317169152 (sell 0.1 @ Trigger 126.673) storniert.
+2025-12-22 12:45:17,209 - INFO - Trigger Order 1386960278860673024 (sell 0.1 @ Trigger 149.138) storniert.
+2025-12-22 12:45:17,310 - INFO - 18 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+2025-12-22 12:45:17,312 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-22 12:45:17,574 - INFO - Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+2025-12-22 12:45:19,855 - INFO - Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+2025-12-22 12:45:19,855 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-22 12:45:19,856 - INFO - Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+2025-12-22 12:45:19,856 - INFO - Prüfe Long Entry Bands: [124.09502387251757, 118.74583581271773, 108.30907771127964]
+2025-12-22 12:45:20,156 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.2109, Trigger@123.8749, Limit@124.0950
+2025-12-22 12:45:21,334 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.2204, Trigger@118.5352, Limit@118.7458
+2025-12-22 12:45:22,470 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.2417, Trigger@108.1169, Limit@108.3091
+2025-12-22 12:45:23,327 - INFO - Prüfe Short Entry Bands: [129.47485273435112, 135.30735483053627, 148.34569068892287]
+2025-12-22 12:45:23,617 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.2022, Trigger@129.7045, Limit@129.4749
+2025-12-22 12:45:24,769 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1935, Trigger@135.5474, Limit@135.3074
+2025-12-22 12:45:25,952 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1765, Trigger@148.6089, Limit@148.3457
+2025-12-22 12:45:26,800 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-22 12:45:26,801 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+2025-12-22 12:45:26,822 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 13:00:05,677 - INFO - Konfiguration geladen für SOL/USDT:USDT (30m).
+2025-12-22 13:00:05,677 - INFO - --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+2025-12-22 13:00:05,677 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 13:00:12,668 - INFO - ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+2025-12-22 13:00:13,110 - INFO - Aktueller Status: Preis=127.0430, Average=126.8786
+2025-12-22 13:00:13,110 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-22 13:00:14,532 - INFO - Trigger Order 1386964055240028163 (buy 0.2 @ Trigger 123.875) storniert.
+2025-12-22 13:00:14,921 - INFO - Trigger Order 1386964056964407296 (buy 0.2 @ Trigger 126.756) storniert.
+2025-12-22 13:00:15,317 - INFO - Trigger Order 1386964058578694145 (buy 0.2 @ Trigger 123.35) storniert.
+2025-12-22 13:00:15,685 - INFO - Trigger Order 1386964060260089856 (buy 0.2 @ Trigger 118.535) storniert.
+2025-12-22 13:00:16,107 - INFO - Trigger Order 1386964061858119680 (buy 0.2 @ Trigger 126.756) storniert.
+2025-12-22 13:00:16,584 - INFO - Trigger Order 1386964063435698176 (buy 0.2 @ Trigger 118.033) storniert.
+2025-12-22 13:00:16,985 - INFO - Trigger Order 1386964065033433088 (buy 0.2 @ Trigger 108.117) storniert.
+2025-12-22 13:00:17,361 - INFO - Trigger Order 1386964066623369216 (buy 0.2 @ Trigger 126.756) storniert.
+2025-12-22 13:00:17,737 - INFO - Trigger Order 1386964068209332224 (buy 0.2 @ Trigger 107.659) storniert.
+2025-12-22 13:00:18,109 - INFO - Trigger Order 1386964069844299776 (sell 0.2 @ Trigger 129.705) storniert.
+2025-12-22 13:00:18,485 - INFO - Trigger Order 1386964071484571648 (sell 0.2 @ Trigger 126.756) storniert.
+2025-12-22 13:00:18,885 - INFO - Trigger Order 1386964073077678080 (sell 0.2 @ Trigger 130.252) storniert.
+2025-12-22 13:00:19,257 - INFO - Trigger Order 1386964074681143297 (sell 0.1 @ Trigger 135.547) storniert.
+2025-12-22 13:00:19,629 - INFO - Trigger Order 1386964076333182976 (sell 0.1 @ Trigger 126.756) storniert.
+2025-12-22 13:00:20,015 - INFO - Trigger Order 1386964077977870336 (sell 0.1 @ Trigger 136.119) storniert.
+2025-12-22 13:00:20,395 - INFO - Trigger Order 1386964079647203328 (sell 0.1 @ Trigger 148.609) storniert.
+2025-12-22 13:00:20,769 - INFO - Trigger Order 1386964081194381312 (sell 0.1 @ Trigger 126.756) storniert.
+2025-12-22 13:00:21,140 - INFO - Trigger Order 1386964082741354497 (sell 0.1 @ Trigger 149.236) storniert.
+2025-12-22 13:00:21,240 - INFO - 18 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+2025-12-22 13:00:21,241 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-22 13:00:21,519 - INFO - Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+2025-12-22 13:00:23,836 - INFO - Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+2025-12-22 13:00:23,837 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-22 13:00:23,837 - INFO - Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+2025-12-22 13:00:23,837 - INFO - Prüfe Long Entry Bands: [124.21465816251968, 118.86031319718364, 108.41349349854023]
+2025-12-22 13:00:24,122 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.2107, Trigger@123.9943, Limit@124.2147
+2025-12-22 13:00:25,280 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.2202, Trigger@118.6495, Limit@118.8603
+2025-12-22 13:00:26,438 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.2415, Trigger@108.2212, Limit@108.4135
+2025-12-22 13:00:27,330 - INFO - Prüfe Short Entry Bands: [129.59967346927368, 135.43779841177, 148.4887039285083]
+2025-12-22 13:00:27,617 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.2020, Trigger@129.8296, Limit@129.5997
+2025-12-22 13:00:28,863 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1933, Trigger@135.6781, Limit@135.4378
+2025-12-22 13:00:30,025 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1763, Trigger@148.7521, Limit@148.4887
+2025-12-22 13:00:30,908 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-22 13:00:30,908 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+2025-12-22 13:00:30,926 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 13:15:04,767 - INFO - Konfiguration geladen für SOL/USDT:USDT (30m).
+2025-12-22 13:15:04,767 - INFO - --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+2025-12-22 13:15:04,768 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 13:15:07,529 - INFO - ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+2025-12-22 13:15:07,917 - INFO - Aktueller Status: Preis=127.0020, Average=126.8649
+2025-12-22 13:15:07,918 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-22 13:15:09,318 - INFO - Trigger Order 1386967846840217600 (buy 0.2 @ Trigger 123.994) storniert.
+2025-12-22 13:15:09,689 - INFO - Trigger Order 1386967850041286656 (buy 0.2 @ Trigger 123.469) storniert.
+2025-12-22 13:15:10,069 - INFO - Trigger Order 1386967851696996352 (buy 0.2 @ Trigger 118.649) storniert.
+2025-12-22 13:15:10,445 - INFO - Trigger Order 1386967854977466371 (buy 0.2 @ Trigger 118.147) storniert.
+2025-12-22 13:15:10,841 - INFO - Trigger Order 1386967856557989889 (buy 0.2 @ Trigger 108.221) storniert.
+2025-12-22 13:15:11,216 - INFO - Trigger Order 1386967859792527360 (buy 0.2 @ Trigger 107.763) storniert.
+2025-12-22 13:15:11,594 - INFO - Trigger Order 1386967861478633479 (sell 0.2 @ Trigger 129.83) storniert.
+2025-12-22 13:15:11,976 - INFO - Trigger Order 1386967864977199104 (sell 0.2 @ Trigger 130.377) storniert.
+2025-12-22 13:15:12,362 - INFO - Trigger Order 1386967866729607168 (sell 0.1 @ Trigger 135.678) storniert.
+2025-12-22 13:15:12,743 - INFO - Trigger Order 1386967870048116736 (sell 0.1 @ Trigger 136.25) storniert.
+2025-12-22 13:15:13,153 - INFO - Trigger Order 1386967871615541248 (sell 0.1 @ Trigger 148.752) storniert.
+2025-12-22 13:15:13,532 - INFO - Trigger Order 1386967874787680256 (sell 0.1 @ Trigger 149.38) storniert.
+2025-12-22 13:15:13,635 - INFO - 12 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+2025-12-22 13:15:13,636 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-22 13:15:13,905 - INFO - Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+2025-12-22 13:15:16,181 - INFO - Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+2025-12-22 13:15:16,182 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-22 13:15:16,182 - INFO - Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+2025-12-22 13:15:16,182 - INFO - Prüfe Long Entry Bands: [124.20127844105191, 118.84751021637867, 108.40181579183624]
+2025-12-22 13:15:16,496 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.2108, Trigger@123.9809, Limit@124.2013
+2025-12-22 13:15:17,649 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.2203, Trigger@118.6367, Limit@118.8475
+2025-12-22 13:15:18,818 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.2415, Trigger@108.2095, Limit@108.4018
+2025-12-22 13:15:19,669 - INFO - Prüfe Short Entry Bands: [129.5857137035022, 135.42320979521085, 148.4727095400113]
+2025-12-22 13:15:19,954 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.2020, Trigger@129.8156, Limit@129.5857
+2025-12-22 13:15:21,102 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1933, Trigger@135.6635, Limit@135.4232
+2025-12-22 13:15:22,239 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1763, Trigger@148.7361, Limit@148.4727
+2025-12-22 13:15:23,106 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-22 13:15:23,107 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+2025-12-22 13:15:23,129 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 13:30:04,862 - INFO - Konfiguration geladen für SOL/USDT:USDT (30m).
+2025-12-22 13:30:04,863 - INFO - --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+2025-12-22 13:30:04,863 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 13:30:07,656 - INFO - ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+2025-12-22 13:30:08,082 - INFO - Aktueller Status: Preis=127.2440, Average=127.0822
+2025-12-22 13:30:08,087 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-22 13:30:09,478 - INFO - Trigger Order 1386971589668904960 (buy 0.2 @ Trigger 123.981) storniert.
+2025-12-22 13:30:09,853 - INFO - Trigger Order 1386971591325859840 (buy 0.2 @ Trigger 126.865) storniert.
+2025-12-22 13:30:10,241 - INFO - Trigger Order 1386971592873353217 (buy 0.2 @ Trigger 123.456) storniert.
+2025-12-22 13:30:10,623 - INFO - Trigger Order 1386971594505367552 (buy 0.2 @ Trigger 118.637) storniert.
+2025-12-22 13:30:10,996 - INFO - Trigger Order 1386971596216643584 (buy 0.2 @ Trigger 126.865) storniert.
+2025-12-22 13:30:11,384 - INFO - Trigger Order 1386971597823873024 (buy 0.2 @ Trigger 118.134) storniert.
+2025-12-22 13:30:11,792 - INFO - Trigger Order 1386971599463849984 (buy 0.2 @ Trigger 108.21) storniert.
+2025-12-22 13:30:12,169 - INFO - Trigger Order 1386971601031274499 (buy 0.2 @ Trigger 126.865) storniert.
+2025-12-22 13:30:12,548 - INFO - Trigger Order 1386971602630549504 (buy 0.2 @ Trigger 107.751) storniert.
+2025-12-22 13:30:12,972 - INFO - Trigger Order 1386971604244541440 (sell 0.2 @ Trigger 129.816) storniert.
+2025-12-22 13:30:13,348 - INFO - Trigger Order 1386971605830799360 (sell 0.2 @ Trigger 126.865) storniert.
+2025-12-22 13:30:13,737 - INFO - Trigger Order 1386971607394463744 (sell 0.2 @ Trigger 130.363) storniert.
+2025-12-22 13:30:14,108 - INFO - Trigger Order 1386971609051213824 (sell 0.1 @ Trigger 135.663) storniert.
+2025-12-22 13:30:14,493 - INFO - Trigger Order 1386971610653732864 (sell 0.1 @ Trigger 126.865) storniert.
+2025-12-22 13:30:14,876 - INFO - Trigger Order 1386971612230496256 (sell 0.1 @ Trigger 136.236) storniert.
+2025-12-22 13:30:15,252 - INFO - Trigger Order 1386971613819707393 (sell 0.1 @ Trigger 148.736) storniert.
+2025-12-22 13:30:15,640 - INFO - Trigger Order 1386971615426555904 (sell 0.1 @ Trigger 126.865) storniert.
+2025-12-22 13:30:16,020 - INFO - Trigger Order 1386971617015971840 (sell 0.1 @ Trigger 149.364) storniert.
+2025-12-22 13:30:16,121 - INFO - 18 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+2025-12-22 13:30:16,121 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-22 13:30:16,386 - INFO - Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+2025-12-22 13:30:18,734 - INFO - Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+2025-12-22 13:30:18,734 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-22 13:30:18,735 - INFO - Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+2025-12-22 13:30:18,735 - INFO - Prüfe Long Entry Bands: [124.4139833789225, 119.05104638439524, 108.58746284621826]
+2025-12-22 13:30:19,031 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.2104, Trigger@124.1933, Limit@124.4140
+2025-12-22 13:30:20,243 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.2199, Trigger@118.8398, Limit@119.0510
+2025-12-22 13:30:21,407 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.2411, Trigger@108.3948, Limit@108.5875
+2025-12-22 13:30:22,379 - INFO - Prüfe Short Entry Bands: [129.80763993105953, 135.6551332165096, 148.72698130641004]
+2025-12-22 13:30:22,670 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.2017, Trigger@130.0379, Limit@129.8076
+2025-12-22 13:30:23,829 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1930, Trigger@135.8958, Limit@135.6551
+2025-12-22 13:30:24,992 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1760, Trigger@148.9908, Limit@148.7270
+2025-12-22 13:30:25,856 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-22 13:30:25,856 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+2025-12-22 13:30:25,873 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 13:45:04,834 - INFO - Konfiguration geladen für SOL/USDT:USDT (30m).
+2025-12-22 13:45:04,835 - INFO - --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+2025-12-22 13:45:04,836 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 13:45:07,705 - INFO - ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+2025-12-22 13:45:08,088 - INFO - Aktueller Status: Preis=126.8440, Average=126.9489
+2025-12-22 13:45:08,088 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-22 13:45:09,489 - INFO - Trigger Order 1386975375230320640 (buy 0.2 @ Trigger 124.193) storniert.
+2025-12-22 13:45:09,937 - INFO - Trigger Order 1386975378514161664 (buy 0.2 @ Trigger 123.667) storniert.
+2025-12-22 13:45:10,324 - INFO - Trigger Order 1386975380325875712 (buy 0.2 @ Trigger 118.84) storniert.
+2025-12-22 13:45:10,709 - INFO - Trigger Order 1386975383606046720 (buy 0.2 @ Trigger 118.337) storniert.
+2025-12-22 13:45:11,123 - INFO - Trigger Order 1386975385199656960 (buy 0.2 @ Trigger 108.395) storniert.
+2025-12-22 13:45:11,493 - INFO - Trigger Order 1386975388865478656 (buy 0.2 @ Trigger 107.936) storniert.
+2025-12-22 13:45:11,897 - INFO - Trigger Order 1386975390497288198 (sell 0.2 @ Trigger 130.038) storniert.
+2025-12-22 13:45:12,293 - INFO - Trigger Order 1386975393710125056 (sell 0.2 @ Trigger 130.586) storniert.
+2025-12-22 13:45:12,666 - INFO - Trigger Order 1386975395346202624 (sell 0.1 @ Trigger 135.896) storniert.
+2025-12-22 13:45:13,042 - INFO - Trigger Order 1386975398587670529 (sell 0.1 @ Trigger 136.469) storniert.
+2025-12-22 13:45:13,448 - INFO - Trigger Order 1386975400240955392 (sell 0.1 @ Trigger 148.991) storniert.
+2025-12-22 13:45:13,825 - INFO - Trigger Order 1386975403424432128 (sell 0.1 @ Trigger 149.619) storniert.
+2025-12-22 13:45:13,935 - INFO - 12 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+2025-12-22 13:45:13,935 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-22 13:45:14,199 - INFO - Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+2025-12-22 13:45:16,487 - INFO - Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+2025-12-22 13:45:16,487 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-22 13:45:16,487 - INFO - Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+2025-12-22 13:45:16,488 - INFO - Prüfe Long Entry Bands: [124.28344951094421, 118.92613925459064, 108.47353400032563]
+2025-12-22 13:45:16,769 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.2106, Trigger@124.0630, Limit@124.2834
+2025-12-22 13:45:17,951 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.2201, Trigger@118.7152, Limit@118.9261
+2025-12-22 13:45:19,116 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.2413, Trigger@108.2811, Limit@108.4735
+2025-12-22 13:45:20,010 - INFO - Prüfe Short Entry Bands: [129.67144709426458, 135.5128052500789, 148.5709384918051]
+2025-12-22 13:45:20,295 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.2019, Trigger@129.9015, Limit@129.6714
+2025-12-22 13:45:21,414 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1932, Trigger@135.7532, Limit@135.5128
+2025-12-22 13:45:22,603 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1762, Trigger@148.8345, Limit@148.5709
+2025-12-22 13:45:23,475 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-22 13:45:23,475 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+2025-12-22 13:45:23,493 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 14:00:04,745 - INFO - Konfiguration geladen für SOL/USDT:USDT (30m).
+2025-12-22 14:00:04,746 - INFO - --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+2025-12-22 14:00:04,746 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 14:00:07,277 - INFO - ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+2025-12-22 14:00:07,673 - INFO - Aktueller Status: Preis=126.9270, Average=126.9817
+2025-12-22 14:00:07,673 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-22 14:00:09,141 - INFO - Trigger Order 1386979140624064513 (buy 0.2 @ Trigger 124.063) storniert.
+2025-12-22 14:00:09,536 - INFO - Trigger Order 1386979143774715904 (buy 0.2 @ Trigger 123.538) storniert.
+2025-12-22 14:00:09,918 - INFO - Trigger Order 1386979145473409027 (buy 0.2 @ Trigger 118.715) storniert.
+2025-12-22 14:00:10,366 - INFO - Trigger Order 1386979148845629440 (buy 0.2 @ Trigger 118.213) storniert.
+2025-12-22 14:00:10,741 - INFO - Trigger Order 1386979150477209605 (buy 0.2 @ Trigger 108.281) storniert.
+2025-12-22 14:00:11,124 - INFO - Trigger Order 1386979153782325249 (buy 0.2 @ Trigger 107.823) storniert.
+2025-12-22 14:00:11,513 - INFO - Trigger Order 1386979155409416192 (sell 0.2 @ Trigger 129.901) storniert.
+2025-12-22 14:00:11,917 - INFO - Trigger Order 1386979158551760896 (sell 0.2 @ Trigger 130.449) storniert.
+2025-12-22 14:00:12,316 - INFO - Trigger Order 1386979160114995200 (sell 0.1 @ Trigger 135.753) storniert.
+2025-12-22 14:00:12,715 - INFO - Trigger Order 1386979163350048769 (sell 0.1 @ Trigger 136.326) storniert.
+2025-12-22 14:00:13,114 - INFO - Trigger Order 1386979165086490624 (sell 0.1 @ Trigger 148.835) storniert.
+2025-12-22 14:00:13,502 - INFO - Trigger Order 1386979168314859520 (sell 0.1 @ Trigger 149.462) storniert.
+2025-12-22 14:00:13,607 - INFO - 12 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+2025-12-22 14:00:13,608 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-22 14:00:13,893 - INFO - Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+2025-12-22 14:00:16,237 - INFO - Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+2025-12-22 14:00:16,237 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-22 14:00:16,237 - INFO - Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+2025-12-22 14:00:16,238 - INFO - Prüfe Long Entry Bands: [124.31562610940087, 118.95692886208748, 108.50161746083816]
+2025-12-22 14:00:16,572 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.2106, Trigger@124.0951, Limit@124.3156
+2025-12-22 14:00:17,803 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.2201, Trigger@118.7459, Limit@118.9569
+2025-12-22 14:00:19,014 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.2413, Trigger@108.3091, Limit@108.5016
+2025-12-22 14:00:19,919 - INFO - Prüfe Short Entry Bands: [129.70501862853456, 135.5478890938041, 148.6094030456052]
+2025-12-22 14:00:20,220 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.2018, Trigger@129.9351, Limit@129.7050
+2025-12-22 14:00:21,410 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1931, Trigger@135.7884, Limit@135.5479
+2025-12-22 14:00:22,602 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1761, Trigger@148.8730, Limit@148.6094
+2025-12-22 14:00:23,493 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-22 14:00:23,493 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+2025-12-22 14:00:23,509 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 14:15:04,951 - INFO - Konfiguration geladen für SOL/USDT:USDT (30m).
+2025-12-22 14:15:04,951 - INFO - --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+2025-12-22 14:15:04,952 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 14:15:07,575 - INFO - ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+2025-12-22 14:15:07,977 - INFO - Aktueller Status: Preis=126.7310, Average=126.9164
+2025-12-22 14:15:07,978 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-22 14:15:09,413 - INFO - Trigger Order 1386982914554376194 (buy 0.2 @ Trigger 124.095) storniert.
+2025-12-22 14:15:09,790 - INFO - Trigger Order 1386982918052720640 (buy 0.2 @ Trigger 123.57) storniert.
+2025-12-22 14:15:10,193 - INFO - Trigger Order 1386982919830380544 (buy 0.2 @ Trigger 118.746) storniert.
+2025-12-22 14:15:10,576 - INFO - Trigger Order 1386982923219582976 (buy 0.2 @ Trigger 118.243) storniert.
+2025-12-22 14:15:10,955 - INFO - Trigger Order 1386982924901294081 (buy 0.2 @ Trigger 108.309) storniert.
+2025-12-22 14:15:11,360 - INFO - Trigger Order 1386982928252973056 (buy 0.2 @ Trigger 107.851) storniert.
+2025-12-22 14:15:11,746 - INFO - Trigger Order 1386982929918926852 (sell 0.2 @ Trigger 129.935) storniert.
+2025-12-22 14:15:12,145 - INFO - Trigger Order 1386982933244489728 (sell 0.2 @ Trigger 130.483) storniert.
+2025-12-22 14:15:12,562 - INFO - Trigger Order 1386982934900944896 (sell 0.1 @ Trigger 135.788) storniert.
+2025-12-22 14:15:12,984 - INFO - Trigger Order 1386982938193043457 (sell 0.1 @ Trigger 136.361) storniert.
+2025-12-22 14:15:13,381 - INFO - Trigger Order 1386982939896135680 (sell 0.1 @ Trigger 148.873) storniert.
+2025-12-22 14:15:13,769 - INFO - Trigger Order 1386982943196848128 (sell 0.1 @ Trigger 149.501) storniert.
+2025-12-22 14:15:13,869 - INFO - 12 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+2025-12-22 14:15:13,870 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-22 14:15:14,149 - INFO - Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+2025-12-22 14:15:16,483 - INFO - Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+2025-12-22 14:15:16,483 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-22 14:15:16,484 - INFO - Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+2025-12-22 14:15:16,484 - INFO - Prüfe Long Entry Bands: [124.2516645140915, 118.89572436848322, 108.44579232635077]
+2025-12-22 14:15:16,789 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.2107, Trigger@124.0312, Limit@124.2517
+2025-12-22 14:15:17,982 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.2202, Trigger@118.6848, Limit@118.8957
+2025-12-22 14:15:19,206 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.2414, Trigger@108.2534, Limit@108.4458
+2025-12-22 14:15:20,197 - INFO - Prüfe Short Entry Bands: [129.638284138505, 135.47814839025304, 148.53294206644878]
+2025-12-22 14:15:20,552 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.2019, Trigger@129.8683, Limit@129.6383
+2025-12-22 14:15:21,752 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1932, Trigger@135.7185, Limit@135.4781
+2025-12-22 14:15:22,918 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1762, Trigger@148.7964, Limit@148.5329
+2025-12-22 14:15:23,794 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-22 14:15:23,794 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+2025-12-22 14:15:23,811 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 14:30:04,896 - INFO - Konfiguration geladen für SOL/USDT:USDT (30m).
+2025-12-22 14:30:04,896 - INFO - --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+2025-12-22 14:30:04,897 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 14:30:07,371 - INFO - ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+2025-12-22 14:30:07,769 - INFO - Aktueller Status: Preis=126.7730, Average=126.8839
+2025-12-22 14:30:07,770 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-22 14:30:09,227 - INFO - Trigger Order 1386986690389282817 (buy 0.2 @ Trigger 124.031) storniert.
+2025-12-22 14:30:09,605 - INFO - Trigger Order 1386986692120289280 (buy 0.2 @ Trigger 126.916) storniert.
+2025-12-22 14:30:10,045 - INFO - Trigger Order 1386986693769895936 (buy 0.2 @ Trigger 123.506) storniert.
+2025-12-22 14:30:10,435 - INFO - Trigger Order 1386986695396245504 (buy 0.2 @ Trigger 118.685) storniert.
+2025-12-22 14:30:10,825 - INFO - Trigger Order 1386986697145495552 (buy 0.2 @ Trigger 126.916) storniert.
+2025-12-22 14:30:11,217 - INFO - Trigger Order 1386986698835574784 (buy 0.2 @ Trigger 118.182) storniert.
+2025-12-22 14:30:11,612 - INFO - Trigger Order 1386986700529868800 (buy 0.2 @ Trigger 108.253) storniert.
+2025-12-22 14:30:12,013 - INFO - Trigger Order 1386986702341808128 (buy 0.2 @ Trigger 126.916) storniert.
+2025-12-22 14:30:12,395 - INFO - Trigger Order 1386986704326443008 (buy 0.2 @ Trigger 107.795) storniert.
+2025-12-22 14:30:12,794 - INFO - Trigger Order 1386986705890189312 (sell 0.2 @ Trigger 129.868) storniert.
+2025-12-22 14:30:13,199 - INFO - Trigger Order 1386986707865911296 (sell 0.2 @ Trigger 126.916) storniert.
+2025-12-22 14:30:13,604 - INFO - Trigger Order 1386986709569839104 (sell 0.2 @ Trigger 130.416) storniert.
+2025-12-22 14:30:14,005 - INFO - Trigger Order 1386986711209295872 (sell 0.1 @ Trigger 135.718) storniert.
+2025-12-22 14:30:14,400 - INFO - Trigger Order 1386986712869511168 (sell 0.1 @ Trigger 126.916) storniert.
+2025-12-22 14:30:14,777 - INFO - Trigger Order 1386986714485043200 (sell 0.1 @ Trigger 136.291) storniert.
+2025-12-22 14:30:15,161 - INFO - Trigger Order 1386986716116627457 (sell 0.1 @ Trigger 148.796) storniert.
+2025-12-22 14:30:15,557 - INFO - Trigger Order 1386986717739823105 (sell 0.1 @ Trigger 126.916) storniert.
+2025-12-22 14:30:15,945 - INFO - Trigger Order 1386986719383265280 (sell 0.1 @ Trigger 149.424) storniert.
+2025-12-22 14:30:16,047 - INFO - 18 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+2025-12-22 14:30:16,048 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-22 14:30:16,338 - INFO - Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+2025-12-22 14:30:18,728 - INFO - Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+2025-12-22 14:30:18,729 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-22 14:30:18,729 - INFO - Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+2025-12-22 14:30:18,729 - INFO - Prüfe Long Entry Bands: [124.21981425030482, 118.86524702881093, 108.417993687953]
+2025-12-22 14:30:19,037 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.2107, Trigger@123.9994, Limit@124.2198
+2025-12-22 14:30:20,250 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.2202, Trigger@118.6544, Limit@118.8652
+2025-12-22 14:30:21,435 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.2414, Trigger@108.2257, Limit@108.4180
+2025-12-22 14:30:22,336 - INFO - Prüfe Short Entry Bands: [129.60505308632708, 135.443420366444, 148.4948676196852]
+2025-12-22 14:30:22,635 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.2020, Trigger@129.8350, Limit@129.6051
+2025-12-22 14:30:23,818 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1933, Trigger@135.6837, Limit@135.4434
+2025-12-22 14:30:25,018 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1763, Trigger@148.7583, Limit@148.4949
+2025-12-22 14:30:25,910 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-22 14:30:25,911 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+2025-12-22 14:30:25,936 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
+2025-12-22 14:45:05,219 - INFO - Konfiguration geladen für SOL/USDT:USDT (30m).
+2025-12-22 14:45:05,219 - INFO - --- Starte ltbbot (Envelope) für SOL/USDT:USDT (30m) auf Account 'DeinAccountName' ---
+2025-12-22 14:45:05,219 - INFO - ✅ Performance Health Check: Zu wenig Trades (0) für Bewertung
+2025-12-22 14:45:07,906 - INFO - ===== Starte Handelszyklus für SOL/USDT:USDT (30m) auf 'DeinAccountName' =====
+2025-12-22 14:45:08,317 - INFO - Aktueller Status: Preis=126.4610, Average=126.7799
+2025-12-22 14:45:08,318 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL | Trading: ✅
+2025-12-22 14:45:09,801 - INFO - Trigger Order 1386990474724421632 (buy 0.2 @ Trigger 123.999) storniert.
+2025-12-22 14:45:10,198 - INFO - Trigger Order 1386990476390375424 (buy 0.2 @ Trigger 126.884) storniert.
+2025-12-22 14:45:10,593 - INFO - Trigger Order 1386990478075965440 (buy 0.2 @ Trigger 123.474) storniert.
+2025-12-22 14:45:10,976 - INFO - Trigger Order 1386990479774363648 (buy 0.2 @ Trigger 118.654) storniert.
+2025-12-22 14:45:11,381 - INFO - Trigger Order 1386990481457090561 (buy 0.2 @ Trigger 126.884) storniert.
+2025-12-22 14:45:11,764 - INFO - Trigger Order 1386990483062992897 (buy 0.2 @ Trigger 118.152) storniert.
+2025-12-22 14:45:12,153 - INFO - Trigger Order 1386990484728647680 (buy 0.2 @ Trigger 108.226) storniert.
+2025-12-22 14:45:12,565 - INFO - Trigger Order 1386990486418141184 (buy 0.2 @ Trigger 126.884) storniert.
+2025-12-22 14:45:12,955 - INFO - Trigger Order 1386990488087773184 (buy 0.2 @ Trigger 107.767) storniert.
+2025-12-22 14:45:13,365 - INFO - Trigger Order 1386990489799565312 (sell 0.2 @ Trigger 129.835) storniert.
+2025-12-22 14:45:13,773 - INFO - Trigger Order 1386990491485159424 (sell 0.2 @ Trigger 126.884) storniert.
+2025-12-22 14:45:14,171 - INFO - Trigger Order 1386990493128802304 (sell 0.2 @ Trigger 130.383) storniert.
+2025-12-22 14:45:14,568 - INFO - Trigger Order 1386990494765101057 (sell 0.1 @ Trigger 135.684) storniert.
+2025-12-22 14:45:14,979 - INFO - Trigger Order 1386990496380424192 (sell 0.1 @ Trigger 126.884) storniert.
+2025-12-22 14:45:15,374 - INFO - Trigger Order 1386990498027544576 (sell 0.1 @ Trigger 136.256) storniert.
+2025-12-22 14:45:15,756 - INFO - Trigger Order 1386990499811368960 (sell 0.1 @ Trigger 148.758) storniert.
+2025-12-22 14:45:16,144 - INFO - Trigger Order 1386990501468119040 (sell 0.1 @ Trigger 126.884) storniert.
+2025-12-22 14:45:16,521 - INFO - Trigger Order 1386990503116476418 (sell 0.1 @ Trigger 149.386) storniert.
+2025-12-22 14:45:16,624 - INFO - 18 offene Order(s) für SOL/USDT:USDT erfolgreich storniert.
+2025-12-22 14:45:16,624 - INFO - Tracker-Status: ok_to_trade, Letzte SL-Seite: None
+2025-12-22 14:45:16,902 - INFO - Keine offene Position für SOL/USDT:USDT und Cooldown nicht aktiv.
+2025-12-22 14:45:19,214 - INFO - Platziere neue Entry-Orders für SOL/USDT:USDT (Risikobasierte Größe). Aktueller Saldo: 15.86 USDT
+2025-12-22 14:45:19,214 - INFO - 📊 Marktregime: RANGE | Trend: NEUTRAL
+2025-12-22 14:45:19,215 - INFO - Risikoberechnung basiert auf initialem Kapital: 15.86 USDT
+2025-12-22 14:45:19,215 - INFO - Prüfe Long Entry Bands: [124.11799783328176, 118.76781946756334, 108.32912918815676]
+2025-12-22 14:45:19,533 - INFO - ✅ Long Entry 1/3 platziert: Amount=0.2109, Trigger@123.8978, Limit@124.1180
+2025-12-22 14:45:20,746 - INFO - ✅ Long Entry 2/3 platziert: Amount=0.2204, Trigger@118.5571, Limit@118.7678
+2025-12-22 14:45:21,951 - INFO - ✅ Long Entry 3/3 platziert: Amount=0.2416, Trigger@108.1370, Limit@108.3291
+2025-12-22 14:45:22,839 - INFO - Prüfe Short Entry Bands: [129.49882267362705, 135.33240455262808, 148.37315422429336]
+2025-12-22 14:45:23,129 - INFO - ✅ Short Entry 1/3 platziert: Amount=0.2021, Trigger@129.7286, Limit@129.4988
+2025-12-22 14:45:24,321 - INFO - ✅ Short Entry 2/3 platziert: Amount=0.1934, Trigger@135.5725, Limit@135.3324
+2025-12-22 14:45:25,533 - INFO - ✅ Short Entry 3/3 platziert: Amount=0.1764, Trigger@148.6364, Limit@148.3732
+2025-12-22 14:45:26,452 - INFO - Tracker mit 6 neuen SL Order IDs aktualisiert (Status: ok_to_trade).
+2025-12-22 14:45:26,452 - INFO - ===== Handelszyklus für SOL/USDT:USDT (30m) abgeschlossen =====
+2025-12-22 14:45:26,473 - INFO - >>> ltbbot-Lauf für SOL/USDT:USDT (30m) normal abgeschlossen <<<
