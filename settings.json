@@ -10,7 +10,7 @@
             {
                 "symbol": "SOL/USDT:USDT",
                 "timeframe": "30m",
-                "active": false
+                "active": true
             },
             {
                 "symbol": "DOGE/USDT:USDT",
