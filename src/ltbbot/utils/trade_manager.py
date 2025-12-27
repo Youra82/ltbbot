@@ -477,6 +477,19 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
     new_tp_ids = []
 
     try:
+        # Entry-Preis frühzeitig ermitteln, damit TP-Berechnung darauf zugreifen kann
+        avg_entry_price_str = position.get('entryPrice', position.get('info', {}).get('avgOpenPrice'))
+        if avg_entry_price_str is None:
+            avg_entry_price_str = position.get('info', {}).get('openPriceAvg')
+        if avg_entry_price_str is None:
+            logger.error("Konnte Einstiegspreis für TP/SL-Berechnung nicht ermitteln!")
+            return
+        try:
+            avg_entry_price = float(avg_entry_price_str)
+        except (ValueError, TypeError):
+            logger.error(f"Konnte Entry Preis '{avg_entry_price_str}' nicht in Float umwandeln.")
+            return
+
         # Neuer Take Profit (Trigger Market am aktuellen Durchschnitt mit Mindestabstand)
         tp_price_base = band_prices.get('average')
         if tp_price_base is None or pd.isna(tp_price_base) or tp_price_base <= 0:
@@ -539,23 +552,6 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
             time.sleep(0.1) # Kleine Pause
 
         # Neuer Stop Loss (basierend auf ursprünglichem Entry und SL-Prozentsatz)
-        # Versuche, den Entry-Preis zu bekommen (kann in 'entryPrice' oder 'info' stehen)
-        avg_entry_price_str = position.get('entryPrice', position.get('info', {}).get('avgOpenPrice')) # Bitget verwendet oft avgOpenPrice
-        if avg_entry_price_str is None:
-             # Fallback, wenn nichts gefunden wurde (unwahrscheinlich, aber sicher)
-             avg_entry_price_str = position.get('info', {}).get('openPriceAvg')
-
-        if avg_entry_price_str is None:
-            logger.error("Konnte Einstiegspreis für SL-Berechnung nicht ermitteln!")
-            # Versuche trotzdem, SL basierend auf Mark Price zu setzen? Eher nicht.
-            return
-        else:
-            try:
-                avg_entry_price = float(avg_entry_price_str)
-            except (ValueError, TypeError):
-                 logger.error(f"Konnte Entry Preis '{avg_entry_price_str}' nicht in Float umwandeln.")
-                 return
-
         sl_pct = risk_params['stop_loss_pct'] / 100.0
         trailing_callback_rate = risk_params.get('trailing_callback_rate_pct', 0.0) / 100.0  # Default 0% = kein Trailing
         
