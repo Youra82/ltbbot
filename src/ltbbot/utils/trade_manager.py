@@ -585,7 +585,7 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
     except Exception as e:
         logger.error(f"Fehler beim Setzen von neuem TP/SL für {symbol}: {e}", exc_info=True)
         # Versuchen aufzuräumen (erneut canceln), falls Teilaufträge platziert wurden
-        cancel_strategy_orders(exchange, symbol, logger)
+        cancel_strategy_orders(exchange, symbol, logger, tracker_file_path)
 
     # Tracker mit neuen SL IDs aktualisieren (alte werden durch cancel überschrieben)
     tracker_info = read_tracker_file(tracker_file_path)
@@ -981,7 +981,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # Bei starkem Trend: Nur bestehende Positionen verwalten
         if regime == "STRONG_TREND" and not trade_allowed:
             logger.warning(f"⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt! (ADX={adx})")
-            cancel_strategy_orders(exchange, symbol, logger)
+            cancel_strategy_orders(exchange, symbol, logger, tracker_file_path)
             # Prüfe ob Position existiert
             position_list = exchange.fetch_open_positions(symbol)
             if position_list:
@@ -997,7 +997,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
 
         # --- 3. Alle alten Orders der Strategie stornieren (wichtig!) ---
         # Storniert Limit- und Trigger-Orders, die von *diesem* Bot für *dieses* Symbol platziert wurden
-        cancel_strategy_orders(exchange, symbol, logger)
+        cancel_strategy_orders(exchange, symbol, logger, tracker_file_path)
 
         # --- 4. Tracker-Status prüfen ("Cooldown" nach SL) ---
         tracker_info = read_tracker_file(tracker_file_path)
