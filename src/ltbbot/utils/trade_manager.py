@@ -490,66 +490,92 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
             logger.error(f"Konnte Entry Preis '{avg_entry_price_str}' nicht in Float umwandeln.")
             return
 
-        # Neuer Take Profit (Trigger Market am aktuellen Durchschnitt mit Mindestabstand)
-        tp_price_base = band_prices.get('average')
-        if tp_price_base is None or pd.isna(tp_price_base) or tp_price_base <= 0:
-            logger.error("Ungültiger Average-Preis für TP. Überspringe TP-Platzierung.")
+        # Neuer Stop Loss (basierend auf ursprünglichem Entry und SL-Prozentsatz)
+        sl_pct = risk_params['stop_loss_pct'] / 100.0
+        trailing_callback_rate = risk_params.get('trailing_callback_rate_pct', 0.0) / 100.0  # Default 0% = kein Trailing
+        if pos_side == 'long':
+            sl_price = avg_entry_price * (1 - sl_pct)
+            sl_side = 'sell'
+        else: # short
+            sl_price = avg_entry_price * (1 + sl_pct)
+            sl_side = 'buy'
+
+        # Stelle sicher, dass SL-Preis gültig ist
+        if sl_price <= 0:
+            logger.error(f"Ungültiger SL-Preis berechnet ({sl_price:.4f}). Überspringe SL/TP-Platzierung.")
         else:
-            # Stelle Mindestabstand von 0.5% zum Entry sicher
-            min_tp_distance_pct = 0.005
-            if pos_side == 'long':
-                tp_price = max(tp_price_base, avg_entry_price * (1 + min_tp_distance_pct))
-            else:  # short
-                tp_price = min(tp_price_base, avg_entry_price * (1 - min_tp_distance_pct))
+            # Berechne minimale TP-Distanz basierend auf gewünschtem Risiko-Verhältnis (1:2 => TP >= 2*SL)
+            sl_distance = abs(avg_entry_price - sl_price)
 
-            tp_side = 'sell' if pos_side == 'long' else 'buy'
-
-            # Native trailing TP falls konfiguriert
-            use_native_tp = params.get('risk', {}).get('use_native_trailing_tp', False)
-            tp_callback_rate = params.get('risk', {}).get('tp_trailing_callback_rate_pct', 0.5) / 100.0
-            tp_activation_delta = params.get('strategy', {}).get('tp_activation_delta_pct', 0.5) / 100.0
-
-            if use_native_tp:
-                # activation price: leicht über/unter dem Entry, oder basierend auf tp_price
+            # Neuer Take Profit (Trigger Market am aktuellen Durchschnitt mit Mindestabstand)
+            tp_price_base = band_prices.get('average')
+            if tp_price_base is None or pd.isna(tp_price_base) or tp_price_base <= 0:
+                logger.error("Ungültiger Average-Preis für TP. Überspringe TP-Platzierung.")
+            else:
+                # Stelle Mindestabstand von 0.5% zum Entry sicher
+                min_tp_distance_pct = 0.005
                 if pos_side == 'long':
-                    activation_price = max(tp_price, avg_entry_price * (1 + tp_activation_delta))
-                else:
-                    activation_price = min(tp_price, avg_entry_price * (1 - tp_activation_delta))
-                try:
-                    resp = exchange.place_trailing_stop_order(
-                        symbol=symbol,
-                        side=tp_side,
-                        amount=amount_contracts_float,
-                        activation_price=activation_price,
-                        callback_rate_decimal=tp_callback_rate,
-                        params={'reduceOnly': True}
-                    )
-                    # Versuche, eine ID aus der Antwort zu extrahieren
-                    tp_id = None
-                    if isinstance(resp, dict):
-                        if 'data' in resp and isinstance(resp['data'], dict):
+                    tp_price = max(tp_price_base, avg_entry_price * (1 + min_tp_distance_pct))
+                    # Sicherstellen, dass TP mindestens 2x SL-Distanz hat
+                    desired_tp_price = avg_entry_price + max(2 * sl_distance, 0)
+                    if tp_price < desired_tp_price:
+                        logger.info(f"TP-Anpassung: Erhöhe TP von {tp_price:.6f} auf {desired_tp_price:.6f} um 1:2 R:R zu gewährleisten.")
+                        tp_price = desired_tp_price
+                else:  # short
+                    tp_price = min(tp_price_base, avg_entry_price * (1 - min_tp_distance_pct))
+                    desired_tp_price = avg_entry_price - max(2 * sl_distance, 0)
+                    if tp_price > desired_tp_price:
+                        logger.info(f"TP-Anpassung: Verringere TP von {tp_price:.6f} auf {desired_tp_price:.6f} um 1:2 R:R zu gewährleisten.")
+                        tp_price = desired_tp_price
+
+                tp_side = 'sell' if pos_side == 'long' else 'buy'
+
+                # Native trailing TP falls konfiguriert
+                use_native_tp = params.get('risk', {}).get('use_native_trailing_tp', False)
+                tp_callback_rate = params.get('risk', {}).get('tp_trailing_callback_rate_pct', 0.5) / 100.0
+                tp_activation_delta = params.get('strategy', {}).get('tp_activation_delta_pct', 0.5) / 100.0
+
+                if use_native_tp:
+                    # activation price: leicht über/unter dem Entry, oder basierend auf tp_price
+                    if pos_side == 'long':
+                        activation_price = max(tp_price, avg_entry_price * (1 + tp_activation_delta))
+                    else:
+                        activation_price = min(tp_price, avg_entry_price * (1 - tp_activation_delta))
+                    try:
+                        resp = exchange.place_trailing_stop_order(
+                            symbol=symbol,
+                            side=tp_side,
+                            amount=amount_contracts_float,
+                            activation_price=activation_price,
+                            callback_rate_decimal=tp_callback_rate,
+                            params={'reduceOnly': True}
+                        )
+                        # Versuche, eine ID aus der Antwort zu extrahieren
+                        tp_id = None
+                        if isinstance(resp, dict):
+                            if 'data' in resp and isinstance(resp['data'], dict):
+                                for key in ('orderId', 'planId', 'id'):
+                                    if key in resp['data']:
+                                        tp_id = resp['data'][key]
+                                        break
                             for key in ('orderId', 'planId', 'id'):
-                                if key in resp['data']:
-                                    tp_id = resp['data'][key]
-                                    break
-                        for key in ('orderId', 'planId', 'id'):
-                            if not tp_id and key in resp:
-                                tp_id = resp[key]
-                    if tp_id:
-                        new_tp_ids.append(tp_id)
-                    logger.info(f"Neuen native Trailing-TP für {pos_side} gesetzt (activation={activation_price:.4f}, callback={tp_callback_rate*100:.2f}%). RespID={tp_id}")
-                except Exception as e:
-                    logger.warning(f"Native Trailing-TP nicht möglich, fallback auf Trigger-TP: {e}")
+                                if not tp_id and key in resp:
+                                    tp_id = resp[key]
+                        if tp_id:
+                            new_tp_ids.append(tp_id)
+                        logger.info(f"Neuen native Trailing-TP für {pos_side} gesetzt (activation={activation_price:.4f}, callback={tp_callback_rate*100:.2f}%). RespID={tp_id}")
+                    except Exception as e:
+                        logger.warning(f"Native Trailing-TP nicht möglich, fallback auf Trigger-TP: {e}")
+                        tp_order = exchange.place_trigger_market_order(symbol, tp_side, amount_contracts_float, tp_price, reduce=True)
+                        if tp_order and 'id' in tp_order:
+                            new_tp_ids.append(tp_order['id'])
+                        logger.info(f"Neuen TP für {pos_side} @ {tp_price:.4f} gesetzt (Entry war @ {avg_entry_price:.4f}).")
+                else:
                     tp_order = exchange.place_trigger_market_order(symbol, tp_side, amount_contracts_float, tp_price, reduce=True)
                     if tp_order and 'id' in tp_order:
                         new_tp_ids.append(tp_order['id'])
                     logger.info(f"Neuen TP für {pos_side} @ {tp_price:.4f} gesetzt (Entry war @ {avg_entry_price:.4f}).")
-            else:
-                tp_order = exchange.place_trigger_market_order(symbol, tp_side, amount_contracts_float, tp_price, reduce=True)
-                if tp_order and 'id' in tp_order:
-                    new_tp_ids.append(tp_order['id'])
-                logger.info(f"Neuen TP für {pos_side} @ {tp_price:.4f} gesetzt (Entry war @ {avg_entry_price:.4f}).")
-            time.sleep(0.1) # Kleine Pause
+                time.sleep(0.1) # Kleine Pause
 
         # Neuer Stop Loss (basierend auf ursprünglichem Entry und SL-Prozentsatz)
         sl_pct = risk_params['stop_loss_pct'] / 100.0
@@ -734,6 +760,13 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 if tp_price is None or pd.isna(tp_price) or tp_price <= 0:
                     logger.error("Ungültiger Average-Preis für TP. Überspringe TP.")
                 else:
+                    # Stelle sicher, dass TP mindestens 1:2 Reward:Risk gegenüber SL ist
+                    min_tp_distance_pct = 0.005
+                    # sl_distance_price wurde vorher berechnet (entry_price_for_calc - sl_price)
+                    desired_tp_by_rr = entry_price_for_calc + 2 * sl_distance_price
+                    min_tp_by_pct = entry_limit_price * (1 + min_tp_distance_pct)
+                    tp_price = max(tp_price, min_tp_by_pct, desired_tp_by_rr)
+
                     # Native trailing TP falls aktiviert
                     use_native_tp = risk_params.get('use_native_trailing_tp', False)
                     tp_callback_rate = risk_params.get('tp_trailing_callback_rate_pct', 0.5) / 100.0
@@ -849,6 +882,16 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 if tp_price is None or pd.isna(tp_price) or tp_price <= 0:
                     logger.error("Ungültiger Average-Preis für TP. Überspringe TP.")
                 else:
+                    # Stelle sicher, dass TP mindestens 1:2 Reward:Risk gegenüber SL ist (für Short ist TP unter Entry)
+                    min_tp_distance_pct = 0.005
+                    desired_tp_by_rr = entry_price_for_calc - 2 * sl_distance_price
+                    min_tp_by_pct = entry_limit_price * (1 - min_tp_distance_pct)
+                    # Für Short wählen wir das kleinere (profitabler) TP
+                    tp_price = min(tp_price, min_tp_by_pct)
+                    if tp_price > desired_tp_by_rr:
+                        logger.info(f"TP-Anpassung für Short: Verringere TP von {tp_price:.6f} auf {desired_tp_by_rr:.6f} um 1:2 R:R zu gewährleisten.")
+                        tp_price = desired_tp_by_rr
+
                     # Native trailing TP falls aktiviert
                     use_native_tp = risk_params.get('use_native_trailing_tp', False)
                     tp_callback_rate = risk_params.get('tp_trailing_callback_rate_pct', 0.5) / 100.0
