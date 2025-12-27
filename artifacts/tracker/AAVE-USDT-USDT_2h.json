@@ -1,5 +1,6 @@
 {
     "status": "ok_to_trade",
     "last_side": null,
-    "stop_loss_ids": []
+    "stop_loss_ids": [],
+    "notified_open": true
 }
