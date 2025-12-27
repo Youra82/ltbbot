@@ -1073,4 +1073,5 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
                 logger.info(f"Preis hat Average gekreuzt nach SL ({last_side_sl}). Setze Status zurück auf 'ok_to_trade'.")
                 tracker_info['status'] = 'ok_to_trade'
                 tracker_info['last_side'] = None # Seite zurücksetzen
-                tracker_info
+                tracker_info['stop_loss_ids'] = [] # Sicherstellen, dass IDs leer sind
+                update_tracker_file(tracker_file_path, tracker_info)
