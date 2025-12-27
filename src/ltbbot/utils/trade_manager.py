@@ -209,8 +209,12 @@ def update_tracker_file(file_path, data):
 
 # --- Order Management ---
 
-def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logger):
-    """Storniert alle offenen Limit- und Trigger-Orders für die Strategie."""
+def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logger, tracker_file_path: str = None):
+    """Storniert alle offenen Limit- und Trigger-Orders für die Strategie.
+
+    Optional: wenn `tracker_file_path` übergeben wird und Orders storniert wurden,
+    werden die im Tracker gespeicherten SL-/TP-IDs gelöscht, um Inkonsistenzen zu vermeiden.
+    """
     cancelled_count = 0
     try:
         # Normale Limit-Orders (könnten Reste sein)
@@ -250,6 +254,18 @@ def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logg
 
         if cancelled_count > 0:
             logger.info(f"{cancelled_count} offene Order(s) für {symbol} erfolgreich storniert.")
+            # Falls ein Tracker-Pfad übergeben wurde, Tracker-Einträge bereinigen
+            try:
+                if tracker_file_path:
+                    tracker_info = read_tracker_file(tracker_file_path)
+                    # Entferne bekannte SL/TP IDs, da Orders gelöscht wurden
+                    if tracker_info.get("stop_loss_ids") or tracker_info.get("take_profit_ids"):
+                        tracker_info["stop_loss_ids"] = []
+                        tracker_info["take_profit_ids"] = []
+                        update_tracker_file(tracker_file_path, tracker_info)
+                        logger.info(f"Tracker ({tracker_file_path}) nach Orderstorno bereinigt.")
+            except Exception as e:
+                logger.debug(f"Konnte Tracker nach Orderstorno nicht bereinigen: {e}")
         else:
             logger.debug(f"Keine offenen Orders für {symbol} zum Stornieren gefunden.")
         return cancelled_count
@@ -585,7 +601,7 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
     except Exception as e:
         logger.error(f"Fehler beim Setzen von neuem TP/SL für {symbol}: {e}", exc_info=True)
         # Versuchen aufzuräumen (erneut canceln), falls Teilaufträge platziert wurden
-        cancel_strategy_orders(exchange, symbol, logger, tracker_file_path)
+        cancel_strategy_orders(exchange, symbol, logger)
 
     # Tracker mit neuen SL IDs aktualisieren (alte werden durch cancel überschrieben)
     tracker_info = read_tracker_file(tracker_file_path)
@@ -981,7 +997,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # Bei starkem Trend: Nur bestehende Positionen verwalten
         if regime == "STRONG_TREND" and not trade_allowed:
             logger.warning(f"⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt! (ADX={adx})")
-            cancel_strategy_orders(exchange, symbol, logger, tracker_file_path)
+            cancel_strategy_orders(exchange, symbol, logger)
             # Prüfe ob Position existiert
             position_list = exchange.fetch_open_positions(symbol)
             if position_list:
@@ -997,7 +1013,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
 
         # --- 3. Alle alten Orders der Strategie stornieren (wichtig!) ---
         # Storniert Limit- und Trigger-Orders, die von *diesem* Bot für *dieses* Symbol platziert wurden
-        cancel_strategy_orders(exchange, symbol, logger, tracker_file_path)
+        cancel_strategy_orders(exchange, symbol, logger)
 
         # --- 4. Tracker-Status prüfen ("Cooldown" nach SL) ---
         tracker_info = read_tracker_file(tracker_file_path)
