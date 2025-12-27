@@ -811,4 +811,4 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                             trigger_price=tp_price, reduce=True
                         )
                         if tp_order and 'id' in tp_order:
-                            new_tp_ids.append(tp_ord
+                            new_tp_ids.append(tp_order['id'])
