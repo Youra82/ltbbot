@@ -261,14 +261,6 @@ def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logg
         logger.debug(f"Gefundene offene Trigger Orders für {symbol}: {len(trigger_orders)}")
         
         for order in trigger_orders:
-<<<<<<< HEAD
-            # WICHTIG: Trigger-Orders, die als reduceOnly markiert sind (TP/SL),
-            # nicht automatisch stornieren — das führt sonst dazu, dass TPs
-            # bei jedem Master-Zyklus verschwinden und wieder neu gesetzt werden.
-            if order.get('reduceOnly'):
-                logger.debug(f"Überspringe reduceOnly Trigger Order {order['id']} ({order.get('side')} {order.get('amount')} @ Trigger {order.get('stopPrice', 'N/A')}).")
-                continue
-=======
             order_id = order.get('id')
             
             # KRITISCH: Wenn Position offen ist, NIE TP/SL stornieren!
