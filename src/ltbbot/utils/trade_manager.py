@@ -295,7 +295,6 @@ def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logg
                 continue
             
             # Storniere nur Entry-Orders (Trigger Limit ohne reduceOnly)
->>>>>>> 271d3275f4e72c932e8fef30ca0b3bc5e1379193
             try:
                 exchange.cancel_trigger_order(order_id, symbol)
                 cancelled_count += 1
