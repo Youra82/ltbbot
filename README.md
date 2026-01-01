@@ -20,6 +20,18 @@
 
 LTBBot ist ein spezialisierter Trading-Bot, der die Envelope-Strategie (Moving Average Envelopes) verwendet, um profitable Trading-Gelegenheiten zu identifizieren. Das System nutzt Optuna zur automatischen Optimierung der Strategie-Parameter und kann mehrere Handelspaare gleichzeitig verwalten.
 
+### 🧭 Trading-Logik (Kurzfassung)
+- **Envelope-Kanal**: Long bei Rücklauf an die untere Hülle, Short/Flat an der oberen; Mittellinie als Trendfilter.
+- **Volumen-Check**: Trades nur bei Mindestvolumen-Ratio zur Vermeidung illiquider Moves.
+- **Risk Layer**: Fester SL/TP + optionaler Trailing-Stop; Positionsgröße abhängig von Risiko je Trade.
+- **Optimizer-Loop**: Optuna sucht Envelope-Bandbreiten, MA-Längen und SL/TP-Kombinationen pro Symbol/Timeframe.
+
+Architektur-Skizze:
+```
+OHLCV → Envelope-Engine → Signal (Long/Flat) → Risk Engine → Order Router (CCXT)
+             ↘ Optuna (Bands, SL/TP, MA) ↗
+```
+
 ### 🎯 Hauptmerkmale
 
 - **📈 Envelope Strategy**: Professionelle Envelope-basierte Trading-Strategie
@@ -216,6 +228,13 @@ Nach der Optimierung:
 ```bash
 # Master Runner starten
 python master_runner.py
+```
+
+### Manuell starten / Cronjob testen
+Sofortige Ausführung ohne 15-Minuten-Cron-Intervall:
+
+```bash
+cd /home/ubuntu/ltbbot && /home/ubuntu/ltbbot/.venv/bin/python3 /home/ubuntu/ltbbot/master_runner.py
 ```
 
 Der Master Runner:
