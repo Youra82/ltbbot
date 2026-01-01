@@ -7,10 +7,10 @@ logger = logging.getLogger(__name__)
 
 def detect_market_regime(df, avg_period=14):
     """
-    Erkennt das aktuelle Marktregime (TREND vs RANGE).
+    Erkennt das aktuelle Marktregime (TREND vs RANGE) mit Supertrend-Filter.
     
     Returns:
-        tuple: (regime_name: str, trade_allowed: bool, trend_direction: str)
+        tuple: (regime_name: str, trade_allowed: bool, trend_direction: str, supertrend_direction: str)
     """
     try:
         # ADX für Trendstärke berechnen
@@ -24,6 +24,39 @@ def detect_market_regime(df, avg_period=14):
             price_distance_pct = abs(current_price - ma) / ma * 100 if ma > 0 else 0
         else:
             price_distance_pct = 0
+
+        # Supertrend-Indikator (übergeordneter Trendfilter)
+        # Periode 10, Multiplier 3 für mittelfristigen Trend
+        supertrend_indicator = ta.trend.STCIndicator(
+            close=df['close'],
+            window_slow=50,
+            window_fast=23,
+            cycle=10,
+            smooth1=3,
+            smooth2=3
+        )
+        
+        # Alternativ: Einfacher Supertrend basierend auf ATR
+        try:
+            atr = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=10)
+            hl2 = (df['high'] + df['low']) / 2
+            multiplier = 3.0
+            
+            upperband = hl2 + (multiplier * atr)
+            lowerband = hl2 - (multiplier * atr)
+            
+            # Supertrend Richtung
+            supertrend_direction = "NEUTRAL"
+            if not upperband.empty and not lowerband.empty:
+                if current_price > upperband.iloc[-1]:
+                    supertrend_direction = "BULLISH"
+                elif current_price < lowerband.iloc[-1]:
+                    supertrend_direction = "BEARISH"
+                else:
+                    supertrend_direction = "NEUTRAL"
+        except Exception as e:
+            logger.debug(f"Supertrend-Berechnung fehlgeschlagen: {e}")
+            supertrend_direction = "NEUTRAL"
 
         # Trend-Richtung bestimmen (für asymmetrisches Trading)
         sma_fast = ta.trend.sma_indicator(df['close'], window=20)
@@ -44,21 +77,21 @@ def detect_market_regime(df, avg_period=14):
 
         # Regime-Entscheidung mit detailliertem Grund
         if current_adx > 30:  # Sehr starker Trend
-            logger.warning(f"STRONG_TREND: ADX={current_adx:.2f} > 30.0. Trading gesperrt.")
-            return "STRONG_TREND", False, trend_direction
+            logger.warning(f"STRONG_TREND: ADX={current_adx:.2f} > 30.0. Supertrend={supertrend_direction}. Trading gesperrt.")
+            return "STRONG_TREND", False, trend_direction, supertrend_direction
         elif current_adx > 25:  # Starker Trend
-            logger.info(f"TREND: ADX={current_adx:.2f} > 25.0. Trading nur in Trendrichtung erlaubt.")
-            return "TREND", True, trend_direction
+            logger.info(f"TREND: ADX={current_adx:.2f} > 25.0. Supertrend={supertrend_direction}. Trading nur in Trendrichtung erlaubt.")
+            return "TREND", True, trend_direction, supertrend_direction
         elif current_adx < 20 and price_distance_pct < 3:
-            logger.info(f"RANGE: ADX={current_adx:.2f} < 20.0 und price_distance_pct={price_distance_pct:.2f} < 3.0. Mean-Reversion erlaubt.")
-            return "RANGE", True, "NEUTRAL"
+            logger.info(f"RANGE: ADX={current_adx:.2f} < 20.0, price_distance_pct={price_distance_pct:.2f} < 3.0. Supertrend={supertrend_direction}. Mean-Reversion erlaubt.")
+            return "RANGE", True, "NEUTRAL", supertrend_direction
         else:
-            logger.info(f"UNCERTAIN: ADX={current_adx:.2f}, price_distance_pct={price_distance_pct:.2f}. Vorsichtiges Trading erlaubt.")
-            return "UNCERTAIN", True, trend_direction
+            logger.info(f"UNCERTAIN: ADX={current_adx:.2f}, price_distance_pct={price_distance_pct:.2f}. Supertrend={supertrend_direction}. Vorsichtiges Trading erlaubt.")
+            return "UNCERTAIN", True, trend_direction, supertrend_direction
 
     except Exception as e:
         logger.warning(f"Fehler bei Marktregime-Erkennung: {e}. Defaulte auf UNCERTAIN.")
-        return "UNCERTAIN", True, "NEUTRAL"
+        return "UNCERTAIN", True, "NEUTRAL", "NEUTRAL"
 
 def calculate_indicators_and_signals(df, params):
     """
@@ -116,7 +149,7 @@ def calculate_indicators_and_signals(df, params):
     df_copy.dropna(inplace=True)
     
     # Marktregime erkennen
-    regime, trade_allowed, trend_direction = detect_market_regime(df_copy, avg_period)
+    regime, trade_allowed, trend_direction, supertrend_direction = detect_market_regime(df_copy, avg_period)
 
     # ADX und price_distance_pct für Logging extrahieren
     try:
@@ -138,5 +171,6 @@ def calculate_indicators_and_signals(df, params):
     band_prices['regime'] = regime
     band_prices['trade_allowed'] = trade_allowed
     band_prices['trend_direction'] = trend_direction
+    band_prices['supertrend_direction'] = supertrend_direction
 
     return df_copy, band_prices

@@ -780,24 +780,26 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     # Marktregime prüfen
     regime = band_prices.get('regime', 'UNCERTAIN')
     trend_direction = band_prices.get('trend_direction', 'NEUTRAL')
+    supertrend_direction = band_prices.get('supertrend_direction', 'NEUTRAL')
     adx = band_prices.get('adx')
     price_distance_pct = band_prices.get('price_distance_pct')
-    logger.info(f"📊 Marktregime: {regime} | Trend: {trend_direction} | ADX: {adx} | price_distance_pct: {price_distance_pct}")
+    logger.info(f"📊 Marktregime: {regime} | Trend: {trend_direction} | Supertrend: {supertrend_direction} | ADX: {adx} | price_distance_pct: {price_distance_pct}")
 
     # NEU: Bei STRONG_TREND sofort abbrechen, keine Trigger platzieren
     if regime == "STRONG_TREND":
         logger.warning(f"⚠️ STRONG_TREND erkannt - KEINE neuen Trigger/Entries werden platziert! (ADX={adx})")
         return
 
-    # Trend-Bias anwenden (asymmetrisches Trading)
+    # Trend-Bias anwenden (asymmetrisches Trading - MIT dem Trend handeln)
+    # Im Uptrend bei Pullbacks kaufen, im Downtrend bei Rallies shorten
     if trend_direction == "UPTREND":
-        # Im Uptrend: Keine Longs (nur Shorts wenn überhaupt)
-        behavior_params['use_longs'] = False
-        logger.warning(f"⚠️ UPTREND erkannt - Long-Entries DEAKTIVIERT")
-    elif trend_direction == "DOWNTREND":
-        # Im Downtrend: Keine Shorts (nur Longs wenn überhaupt)
+        # Im Uptrend: Nur Longs erlaubt (Shorts deaktiviert)
         behavior_params['use_shorts'] = False
-        logger.warning(f"⚠️ DOWNTREND erkannt - Short-Entries DEAKTIVIERT")
+        logger.warning(f"⬆️ UPTREND erkannt - Short-Entries DEAKTIVIERT (Trading MIT dem Trend)")
+    elif trend_direction == "DOWNTREND":
+        # Im Downtrend: Nur Shorts erlaubt (Longs deaktiviert)
+        behavior_params['use_longs'] = False
+        logger.warning(f"⬇️ DOWNTREND erkannt - Long-Entries DEAKTIVIERT (Trading MIT dem Trend)")
 
     # Parameter holen
     leverage = risk_params['leverage']
@@ -1160,10 +1162,11 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         regime = band_prices.get('regime', 'UNCERTAIN')
         trade_allowed = band_prices.get('trade_allowed', True)
         trend_direction = band_prices.get('trend_direction', 'NEUTRAL')
+        supertrend_direction = band_prices.get('supertrend_direction', 'NEUTRAL')
         adx = band_prices.get('adx')
         price_distance_pct = band_prices.get('price_distance_pct')
 
-        logger.info(f"📊 Marktregime: {regime} | Trend: {trend_direction} | Trading: {'✅' if trade_allowed else '❌'} | ADX: {adx} | price_distance_pct: {price_distance_pct}")
+        logger.info(f"📊 Marktregime: {regime} | Trend: {trend_direction} | Supertrend: {supertrend_direction} | Trading: {'✅' if trade_allowed else '❌'} | ADX: {adx:.2f} | Abstand: {price_distance_pct:.2f}%")
 
         # Bei starkem Trend: Nur bestehende Positionen verwalten
         if regime == "STRONG_TREND" and not trade_allowed:
