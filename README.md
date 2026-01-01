@@ -26,6 +26,26 @@ LTBBot ist ein spezialisierter Trading-Bot, der die Envelope-Strategie (Moving A
 - **Risk Layer**: Fester SL/TP + optionaler Trailing-Stop; Positionsgröße abhängig von Risiko je Trade.
 - **Optimizer-Loop**: Optuna sucht Envelope-Bandbreiten, MA-Längen und SL/TP-Kombinationen pro Symbol/Timeframe.
 
+### 🔍 Strategie-Visualisierung
+```mermaid
+flowchart LR
+  A[OHLCV] --> B[Moving Average]
+  A --> C[Envelope +/- Band]
+  B & C --> D[Signal: Reversion
+  (untere Hülle = Long Bias)]
+  D --> E[Volume-Filter]
+  E --> F[Risk Engine
+  SL/TP + optional Trail]
+  F --> G[Order Router (CCXT)]
+```
+
+### 📈 Trade-Beispiel (TP/SL/Trailing)
+- Setup: Preis dippt an die untere Envelope; Volumen ok; MA-Slope leicht steigend.
+- Entry: Long an der unteren Hülle.
+- Initial SL: Unter letztem Swing-Low oder unter der unteren Hülle - x% Puffer.
+- TP: Rückkehr zur Mittellinie oder obere Hülle (konservativ/aggressiv wählbar).
+- Trailing: Nach Erreichen der Mittellinie Trail unter das letzte Higher Low ziehen; lässt Ausdehnung bis zur oberen Hülle zu.
+
 Architektur-Skizze:
 ```
 OHLCV → Envelope-Engine → Signal (Long/Flat) → Risk Engine → Order Router (CCXT)
