@@ -1,368 +1,636 @@
-# ltbbot 🤖
+# 📊 LTBBot - Envelope Trading Strategy Bot
 
-Ein vollautomatischer Trading-Bot für Krypto-Futures auf der Bitget-Börse, basierend auf einer **Mean-Reversion Envelope-Strategie**.
+<div align="center">
 
-Dieses System wurde für den Betrieb auf einem Ubuntu-Server entwickelt und umfasst neben dem Live-Trading-Modul eine automatisierte Pipeline zur Optimierung der Strategie-Parameter mittels Backtesting.
+![LTBBot Logo](https://img.shields.io/badge/LTBBot-v2.0-blue?style=for-the-badge)
+[![Python](https://img.shields.io/badge/Python-3.8+-green?style=for-the-badge&logo=python)](https://www.python.org/)
+[![CCXT](https://img.shields.io/badge/CCXT-4.3.5-red?style=for-the-badge)](https://github.com/ccxt/ccxt)
+[![Optuna](https://img.shields.io/badge/Optuna-Latest-purple?style=for-the-badge)](https://optuna.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-## Kernstrategie: Envelope Mean Reversion
+**Ein hochoptimierter Trading-Bot basierend auf der Envelope-Strategie mit automatischer Parameteroptimierung**
 
-Der Bot implementiert eine Mean-Reversion-Strategie, die darauf abzielt, von Preisbewegungen zu profitieren, die zu einem gleitenden Durchschnitt zurückkehren, nachdem sie vordefinierte Bänder ("Envelopes") berührt haben.
+[Features](#-features) • [Installation](#-installation) • [Optimierung](#-optimierung) • [Live-Trading](#-live-trading) • [Monitoring](#-monitoring) • [Wartung](#-wartung)
 
-* **Indikator-Basis:** Die Strategie verwendet einen zentralen **gleitenden Durchschnitt** (wählbar: SMA, EMA, WMA oder Donchian Channel Mid-Band) und mehrere darum liegende **prozentuale Bänder (Envelopes)**.
-* **Einstiegslogik (Layered):**
-    * Wenn der Preis das **untere Band** einer Envelope berührt oder durchbricht, werden gestaffelte **Long-Einstiegsorders (Trigger Limit)** platziert – eine für jedes konfigurierte Band unterhalb des aktuellen Preises.
-    * Wenn der Preis das **obere Band** einer Envelope berührt oder durchbricht, werden gestaffelte **Short-Einstiegsorders (Trigger Limit)** platziert – eine für jedes konfigurierte Band oberhalb des aktuellen Preises.
-    * Die Orders werden mit einem kleinen **Trigger-Preis-Delta** platziert, um die Ausführungswahrscheinlichkeit bei schnellen Bewegungen zu erhöhen.
-* **Ausstiegslogik:**
-    * **Take Profit (TP):** Für jede eingegangene Position (jeden Layer) wird eine **Take-Profit-Order (Trigger Market)** direkt am **aktuellen gleitenden Durchschnitt** platziert. Die Position wird geschlossen, wenn der Preis zum Durchschnitt zurückkehrt.
-    * **Stop Loss (SL):** Für jede eingegangene Position wird ein **Stop-Loss-Order (Trigger Market)** platziert, der auf einem festen Prozentsatz (`stop_loss_pct`) **unterhalb (für Longs) bzw. oberhalb (für Shorts) des jeweiligen Einstiegspreises** dieses Layers liegt.
-    * **Cooldown nach SL:** Wird ein Stop Loss ausgelöst, wechselt die Strategie für dieses Paar in einen **Cooldown-Status** (`stop_loss_triggered`). Es werden keine neuen Entry-Orders platziert, bis der Preis den gleitenden Durchschnitt wieder über-/unterschreitet (je nach letzter Trade-Richtung). Dies verhindert sofortige Wiedereinstiege in ungünstigen Marktphasen. Der Status wird in einer `tracker_*.json`-Datei pro Strategie verwaltet.
-* **Risikomanagement:**
-    * Die **Gesamtgröße** aller potenziellen Entry-Orders basiert auf einem konfigurierbaren Anteil (`balance_fraction_pct`) des **aktuellen, live von der Börse abgerufenen Kontostandes**, multipliziert mit dem Hebel (`leverage`).
-    * Dieses Gesamtkapital wird gleichmäßig auf die Anzahl der konfigurierten Envelopes (Layers) aufgeteilt.
-    * Der Bot prüft vor dem Platzieren jeder Order, ob die berechnete Menge über dem **Mindesthandelsvolumen** der Börse liegt.
-    * Alle Preise (Entry, TP, SL) werden vor dem Senden an die Börse **automatisch auf die korrekte Anzahl an Nachkommastellen gerundet**, um API-Fehler zu vermeiden.
-
-## Architektur & Arbeitsablauf
-
-Der Bot arbeitet mit einem präzisen, automatisierten und ressourcenschonenden System (übernommen vom JaegerBot-Framework).
-
-1.  **Der Cronjob (Der Wecker):** Ein einziger, simpler Cronjob läuft in einem kurzen Intervall (z.B. alle 5 oder 15 Minuten). Er hat nur eine Aufgabe: den intelligenten Master-Runner zu starten.
-
-2.  **Der Master-Runner (Der Dirigent):** Das `master_runner.py`-Skript ist das Herz der Automatisierung. Bei jedem Aufruf:
-    * Liest es alle **aktiven** Strategien (Symbol/Timeframe-Kombinationen) aus der `settings.json`.
-    * **Überwacht** es für jede aktive Strategie den zugehörigen Handelsprozess (`run.py`).
-    * Wenn ein Prozess nicht läuft oder beendet wurde, **startet es ihn automatisch neu**.
-    * Es stellt sicher, dass für jede in `settings.json` als aktiv markierte Strategie **genau ein** Handelsprozess läuft.
-
-3.  **Der Handelsprozess (Der Agent):**
-    * Die `run.py` wird für eine spezifische Strategie (z.B. BTC/USDT 1h) gestartet.
-    * Der **Guardian-Decorator** führt zuerst eine Reihe von **automatisierten Sicherheits-Checks** durch (Konfiguration vorhanden, Börsenverbindung etc.). Schlägt ein Check fehl, wird der Start verhindert und ein Alarm per Telegram gesendet.
-    * Die Kernlogik in `trade_manager.py` (angepasst für Envelope) wird ausgeführt:
-        * Aktuelle Marktdaten holen und Indikatoren (Average, Bands) berechnen.
-        * Prüfen, ob ein Stop Loss ausgelöst wurde.
-        * Alle **alten** Orders (Entry, TP, SL) stornieren.
-        * Den **Cooldown-Status** aus der `tracker_*.json` prüfen und ggf. aufheben.
-        * Prüfen, ob eine **Position offen** ist:
-            * **Ja:** Nur aktuelle TP- (am Average) und SL-Orders (basierend auf Entry) neu platzieren/aktualisieren.
-            * **Nein & Cooldown vorbei:** Kontostand abrufen, Margin/Leverage setzen und **neue gestaffelte Entry-, TP- und SL-Orders** für alle Bänder platzieren.
+</div>
 
 ---
 
-## Installation 🚀
+## 📊 Übersicht
 
-Führe die folgenden Schritte auf einem frischen Ubuntu-Server aus.
+LTBBot ist ein spezialisierter Trading-Bot, der die Envelope-Strategie (Moving Average Envelopes) verwendet, um profitable Trading-Gelegenheiten zu identifizieren. Das System nutzt Optuna zur automatischen Optimierung der Strategie-Parameter und kann mehrere Handelspaare gleichzeitig verwalten.
 
-#### 1. Projekt klonen
+### 🎯 Hauptmerkmale
+
+- **📈 Envelope Strategy**: Professionelle Envelope-basierte Trading-Strategie
+- **🔧 Auto-Optimization**: Vollautomatische Parameteroptimierung mit Optuna
+- **💰 Multi-Asset**: Handel mehrerer Kryptowährungspaare gleichzeitig
+- **⚡ Optimized**: Fokus auf Performance und Effizienz
+- **📊 Advanced Analytics**: Umfassende Backtest- und Performance-Analysen
+- **🛡️ Risk Management**: Integrierte Risk-Management-Tools
+- **🔔 Notifications**: Telegram-Benachrichtigungen für Trading-Events
+
+---
+
+## 🚀 Features
+
+### Trading Features
+- ✅ Envelope-basierte Ein- und Ausstiegssignale
+- ✅ Multiple Timeframes (5m, 15m, 30m, 1h, 2h, 4h, 6h, 1d)
+- ✅ Unterstützt BTC, ETH, SOL, DOGE und weitere Altcoins
+- ✅ Dynamisches Position Sizing
+- ✅ Stop-Loss und Take-Profit Management
+- ✅ Automatische Trade-Verwaltung
+
+### Technical Features
+- ✅ Optuna Hyperparameter-Optimierung
+- ✅ Moving Average Envelope Indikatoren
+- ✅ Volume-basierte Filter
+- ✅ Backtesting mit realistischer Slippage
+- ✅ Walk-Forward-Analyse
+- ✅ Feature-Engineering
+
+---
+
+## 📋 Systemanforderungen
+
+### Hardware
+- **CPU**: Multi-Core Prozessor empfohlen
+- **RAM**: Minimum 2GB, empfohlen 4GB+
+- **Speicher**: 1GB freier Speicherplatz
+
+### Software
+- **OS**: Linux (Ubuntu 20.04+), macOS, Windows 10/11
+- **Python**: Version 3.8 oder höher
+- **Git**: Für Repository-Verwaltung
+
+---
+
+## 💻 Installation
+
+### 1. Repository klonen
 
 ```bash
-# Ersetze <REPOSITORY_URL> durch deine tatsächliche Git-URL
-git clone https://github.com/Youra82/ltbbot.git
-````
-
-#### 2\. Installations-Skript ausführen
-
-```bash
+git clone <repository-url>
 cd ltbbot
-chmod +x install.sh # Einmalig Ausführungsrechte geben
-bash ./install.sh
 ```
 
-*(Dieses Skript installiert Systempakete wie python3-venv, erstellt die virtuelle Umgebung `.venv` und installiert die Python-Bibliotheken aus `requirements.txt`.)*
-
-#### 3\. API-Schlüssel eintragen
-
-Erstelle die `secret.json` (falls nicht vorhanden) oder bearbeite sie und trage deine Bitget API-Schlüssel und Telegram Bot-Daten ein.
+### 2. Automatische Installation
 
 ```bash
-# Wenn secret.json noch nicht existiert:
-# cp secret.json.example secret.json # Falls eine Vorlage existiert
-nano secret.json
+# Linux/macOS
+chmod +x install.sh
+./install.sh
+
+# Windows (PowerShell)
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-**Struktur der `secret.json`:**
+Das Installations-Script:
+- ✅ Erstellt virtuelle Python-Umgebung (`.venv`)
+- ✅ Installiert alle Dependencies
+- ✅ Erstellt Verzeichnisse (`data/`, `logs/`, `artifacts/`)
+- ✅ Initialisiert Konfigurationsdateien
+
+### 3. API-Credentials konfigurieren
+
+Erstelle `secret.json` im Root-Verzeichnis:
 
 ```json
 {
-    "ltbbot": [
-        {
-            "name": "DeinBitgetAccountName",
-            "apiKey": "DEIN_API_KEY",
-            "secret": "DEIN_SECRET_KEY",
-            "password": "DEIN_API_PASSWORT"
-        }
-    ],
-    "telegram": {
-        "bot_token": "DEIN_TELEGRAM_BOT_TOKEN",
-        "chat_id": "DEINE_TELEGRAM_CHAT_ID"
+  "ltbbot": [
+    {
+      "name": "Binance Account",
+      "exchange": "binance",
+      "apiKey": "DEIN_API_KEY",
+      "secret": "DEIN_SECRET_KEY",
+      "options": {
+        "defaultType": "future"
+      }
     }
+  ]
 }
 ```
 
-Speichere mit `Strg + X`, dann `Y`, dann `Enter`.
+⚠️ **Sicherheitshinweise**:
+- Niemals `secret.json` committen!
+- Nur API-Keys mit Trading-Rechten (keine Withdrawals)
+- IP-Whitelist aktivieren
+- 2FA auf Exchange-Account aktivieren
 
------
+### 4. Trading-Strategien konfigurieren
 
-## Konfiguration & Automatisierung
-
-#### 1\. Strategie-Parameter finden (Optimierung)
-
-Bevor der Bot live handeln kann, müssen die optimalen Parameter (Average-Typ/Periode, Envelope-Prozentsätze, Stop-Loss etc.) für jedes gewünschte Handelspaar und jeden Zeitrahmen gefunden werden. Dies geschieht über die Optimierungs-Pipeline.
-
-```bash
-# Ausführungsrechte geben (einmalig)
-chmod +x run_pipeline.sh
-
-# Interaktive Pipeline starten
-bash ./run_pipeline.sh
-```
-
-Das Skript fragt dich nach Handelspaaren, Zeitrahmen, Backtest-Zeitraum etc. und startet dann mit `Optuna` einen Optimierungsprozess.
-
-Die gefundenen besten Konfigurationen werden als `config_<SYMBOL>_<TIMEFRAME>_envelope.json`-Dateien im Verzeichnis `src/ltbbot/strategy/configs/` gespeichert.
-
-**Optional: Ergebnisse prüfen & senden**
-
-Nach der Pipeline kannst du die Backtest-Ergebnisse analysieren:
-
-```bash
-# Backtest-Analyse starten (interaktiv)
-chmod +x show_results.sh # Einmalig
-bash show_results.sh
-```
-
-Die detaillierten Equity-Kurven werden als CSV-Dateien gespeichert (z.B. `optimal_portfolio_equity.csv`, `manual_portfolio_equity.csv`).
-
-Diese CSV-Dateien kannst du an Telegram senden:
-
-```bash
-chmod +x send_report.sh # Einmalig
-./send_report.sh optimal_portfolio_equity.csv
-./send_report.sh manual_portfolio_equity.csv
-# ./send_report.sh portfolio_equity_curve.csv # Name kann variieren
-```
-
-Grafische Charts der Equity-Kurven an Telegram senden:
-
-```bash
-chmod +x show_chart.sh # Einmalig
-./show_chart.sh optimal_portfolio_equity.csv
-./show_chart.sh manual_portfolio_equity.csv
-```
-
-**Optional: Alte Konfigurationen löschen**
-
-```bash
-# Löscht alle Envelope-Konfigs
-rm -f src/ltbbot/strategy/configs/config_*_envelope.json
-# Kontrolle
-ls -l src/ltbbot/strategy/configs/
-```
-
-#### 2\. Strategien für den Live-Handel aktivieren
-
-Bearbeite die zentrale Steuerungsdatei `settings.json`, um festzulegen, welche der optimierten Strategien der `master_runner` überwachen und ausführen soll.
-
-```bash
-nano settings.json
-```
-
-**Beispiel `settings.json`:**
+Bearbeite `settings.json`:
 
 ```json
 {
-    "live_trading_settings": {
-        "use_auto_optimizer_results": false, // Auf 'true' setzen, wenn Ergebnisse aus portfolio_optimizer.py genutzt werden sollen
-        "active_strategies": [
-            {
-                "symbol": "BTC/USDT:USDT",
-                "timeframe": "1h",
-                "active": true // Diese Strategie wird gehandelt
-            },
-            {
-                "symbol": "ETH/USDT:USDT",
-                "timeframe": "4h",
-                "active": true // Diese Strategie wird gehandelt
-            },
-            {
-                "symbol": "SOL/USDT:USDT",
-                "timeframe": "1h",
-                "active": false // Diese Strategie wird NICHT gehandelt
-            }
-        ]
-    }
-    // "optimization_settings" können hier optional auch drin sein
+  "live_trading_settings": {
+    "use_auto_optimizer_results": false,
+    "active_strategies": [
+      {
+        "symbol": "BTC/USDT:USDT",
+        "timeframe": "1d",
+        "active": true
+      },
+      {
+        "symbol": "SOL/USDT:USDT",
+        "timeframe": "30m",
+        "active": true
+      }
+    ]
+  }
 }
 ```
 
-  * Setze `"active": true` für die Strategien, die live laufen sollen.
-  * Stelle sicher, dass für jede aktive Strategie eine entsprechende `config_..._envelope.json`-Datei existiert.
+**Parameter**:
+- `symbol`: Handelspaar (Format: BASE/QUOTE:SETTLE)
+- `timeframe`: Zeitrahmen für Kerzen
+- `active`: Strategie aktiv/inaktiv
 
-#### 3\. Automatisierung per Cronjob einrichten
+---
 
-Richte den Cronjob ein, der den `master_runner.py` regelmäßig startet.
+## 🎯 Optimierung & Training
 
-```bash
-crontab -e
-```
-
-Füge die folgende **eine Zeile** am Ende der Datei ein. **Passe den Pfad `/home/ubuntu/ltbbot` an dein tatsächliches Installationsverzeichnis an\!**
-
-```crontab
-# Starte den ltbbot Master-Runner alle 5 Minuten (oder anderes Intervall)
-*/15 * * * * /usr/bin/flock -n /home/ubuntu/ltbbot/ltbbot.lock /bin/sh -c "cd /home/ubuntu/ltbbot && /home/ubuntu/ltbbot/.venv/bin/python3 /home/ubuntu/ltbbot/master_runner.py >> /home/ubuntu/ltbbot/logs/master_runner.log 2>&1"
-```
-
-  * `*/5 * * * *`: Führt den Befehl alle 5 Minuten aus. Anpassen nach Bedarf (z.B. `*/1 * * * *` für jede Minute, `*/15 * * * *` für alle 15 Minuten).
-  * `/usr/bin/flock -n /home/ubuntu/ltbbot/ltbbot.lock`: Verhindert, dass der Cronjob mehrfach gleichzeitig läuft, falls ein Lauf länger dauert als das Intervall.
-  * `cd /home/ubuntu/ltbbot`: Wechselt in das Bot-Verzeichnis. **Pfad anpassen\!**
-  * `/home/ubuntu/ltbbot/.venv/bin/python3`: Führt Python aus der virtuellen Umgebung aus. **Pfad anpassen\!**
-  * `/home/ubuntu/ltbbot/master_runner.py`: Startet den Master Runner. **Pfad anpassen\!**
-  * `>> /home/ubuntu/ltbbot/logs/master_runner.log 2>&1`: Leitet alle Ausgaben (Standard und Fehler) in eine Log-Datei um. **Pfad anpassen\!**
-
-Logverzeichnis anlegen (falls noch nicht geschehen):
+### Vollständige Pipeline (Empfohlen)
 
 ```bash
-# Pfad anpassen!
-mkdir -p /home/ubuntu/ltbbot/logs
+# Interaktives Optimierungs-Script
+./run_pipeline.sh
 ```
 
------
+Das Pipeline-Script führt durch:
 
-## Tägliche Verwaltung & Wichtige Befehle ⚙️
+1. **Aufräumen** (Optional): Löscht alte Konfigurationen
+2. **Symbol-Auswahl**: Interaktive Auswahl der Handelspaare
+3. **Timeframe-Auswahl**: Wähle Zeitrahmen für jedes Paar
+4. **Daten-Download**: Lädt historische OHLCV-Daten
+5. **Optimierung**: Findet beste Parameter mit Optuna
+6. **Backtest**: Validiert Strategien
+7. **Config-Generierung**: Erstellt Konfigs für Live-Trading
 
-#### Logs ansehen
-
-Der `master_runner.py` loggt seine Aktionen (Starten/Überwachen von Prozessen) in die `master_runner.log` (oder `cron.log`, je nach Cronjob-Konfiguration). Jeder einzelne Strategie-Prozess (`run.py`) loggt seine detaillierten Aktionen in eine eigene Datei im `logs`-Verzeichnis (z.B. `ltbbot_BTCUSDTUSDT_1h.log`).
-
-  * **Master Runner Logs live mitverfolgen:**
-
-    ```bash
-    # Pfad anpassen!
-    tail -f logs/master_runner.log
-    ```
-
-    *(Mit `Strg + C` beenden)*
-
-  * **Logs einer spezifischen Strategie live mitverfolgen:**
-
-    ```bash
-    # Beispiel für BTC 1h, Pfad anpassen!
-    tail -f logs/ltbbot_BTCUSDTUSDT_1h.log
-    ```
-
-  * **Die letzten 200 Zeilen der Master-Log anzeigen:**
-
-    ```bash
-    # Pfad anpassen!
-    tail -n 200 logs/master_runner.log
-    ```
-
-  * **Master-Log nach Fehlern durchsuchen:**
-
-    ```bash
-    # Pfad anpassen!
-    grep -i "ERROR\|CRITICAL" logs/master_runner.log
-    ```
-
-  * **Logs einer individuellen Strategie nach Fehlern durchsuchen:**
-
-    ```bash
-    # Beispiel, Pfad anpassen!
-    grep -i "ERROR\|CRITICAL" logs/ltbbot_BTCUSDTUSDT_1h.log
-    ```
-
-#### Cronjob manuell testen
-
-Um den `master_runner` sofort auszuführen (z.B. nach einer Konfigurationsänderung), ohne auf das Cron-Intervall zu warten:
+### Manuelle Optimierung
 
 ```bash
-# Pfade anpassen!
-/root/ltbbot/.venv/bin/python3 /root/ltbbot/master_runner.py
-```
-Logverzeichnis anlegen:
+source .venv/bin/activate
 
-```
-mkdir -p /home/ubuntu/jaegerbot/logs
+# Optimierung starten
+python src/ltbbot/analysis/optimizer.py
 ```
 
-*(Die Ausgabe erscheint direkt im Terminal. Mit `Strg + C` beenden, wenn er im Loop läuft.)*
+**Optionen**:
+```bash
+# Spezifische Symbole
+python src/ltbbot/analysis/optimizer.py --symbols BTC ETH SOL
 
-#### Bot aktualisieren
+# Custom Timeframes
+python src/ltbbot/analysis/optimizer.py --timeframes 30m 1h 4h
 
-Um die neueste Version des Codes von deinem Git-Repository zu holen:
+# Mehr Optimierungs-Trials
+python src/ltbbot/analysis/optimizer.py --trials 300
+
+# Walk-Forward Analyse
+python src/ltbbot/analysis/optimizer.py --walk-forward
+```
+
+**Optimierte Parameter**:
+- Moving Average Perioden
+- Envelope Prozentsätze
+- Stop-Loss/Take-Profit Levels
+- Position Sizing Parameter
+
+### Optimierungsergebnisse
+
+Nach der Optimierung:
+- Konfigs in `src/ltbbot/strategy/configs/config_SYMBOL_envelope.json`
+- Optimierungsergebnisse in `artifacts/results/`
+- Backtest-Berichte in `artifacts/backtest/`
+
+---
+
+## 🔴 Live Trading
+
+### Start des Live-Trading
 
 ```bash
-# Ggf. Ausführungsrechte geben (einmalig)
-# chmod +x update.sh
-
-bash ./update.sh
+# Master Runner starten
+python master_runner.py
 ```
 
-*(Dieses Skript holt den neuesten Code, stellt aber deine `secret.json` und `settings.json` wieder her und aktualisiert die Python-Pakete.)*
+Der Master Runner:
+- ✅ Lädt alle aktiven Strategien aus `settings.json`
+- ✅ Startet separate Prozesse für jedes Handelspaar
+- ✅ Überwacht Kontostand und Kapital
+- ✅ Verwaltet Positionen und Orders
+- ✅ Führt detailliertes Logging
 
-**Wichtig:** Nach einem Update solltest du den `master_runner.py` neu starten, falls er lief (z.B. durch Stoppen des Cronjobs, Warten, und Wiederaktivieren, oder durch manuelles Stoppen des Python-Prozesses und Neustart per Cronjob/manuell).
-
-#### Projektstruktur und Code anzeigen
+### Automatischer Start mit Pipeline
 
 ```bash
-# Ggf. Ausführungsrechte geben (einmalig)
-# chmod +x show_status.sh
-
-bash ./show_status.sh
+# Optimierung + Live-Trading in einem Schritt
+./run_pipeline_automated.sh
 ```
 
-*(Zeigt den Inhalt aller relevanten Code-Dateien und die Projektstruktur an.)*
+Führt automatisch aus:
+1. Neue Optimierung
+2. Backtest-Validierung
+3. Live-Trading Start
 
------
-
-## Qualitätssicherung & Tests 🛡️
-
-Um sicherzustellen, dass alle Kernfunktionen des Bots nach jeder Code-Änderung wie erwartet funktionieren, verfügt das Projekt über ein (rudimentäres, anzupassendes) Test-System.
-
-Dieses "Sicherheitsnetz" sollte idealerweise prüfen:
-
-1.  **Struktur-Tests:** Ob alle benötigten Funktionen importierbar sind.
-2.  **Workflow-Tests:** Einen Live-Zyklus auf der Bitget-API (ggf. Sandbox/Demo): Daten holen, Indikatoren berechnen, Orders (Entry/TP/SL) platzieren, Orders stornieren, Positionen prüfen/schließen.
-
-#### Das Test-System ausführen
-
-*(Die Tests müssen für die Envelope-Strategie angepasst/neu geschrieben werden\!)*
+### Als Systemd Service (Linux)
 
 ```bash
-# Ggf. Ausführungsrechte geben (einmalig)
-# chmod +x run_tests.sh
-
-bash ./run_tests.sh
+# Service-Datei erstellen
+sudo nano /etc/systemd/system/ltbbot.service
 ```
 
-  * **Erfolgreiches Ergebnis:** Alle Tests `PASSED`.
-  * **Fehlerhaftes Ergebnis:** Mindestens ein Test `FAILED`. **Bot nicht live einsetzen, bis der Fehler behoben ist.**
+```ini
+[Unit]
+Description=LTBBot Trading System
+After=network.target
 
------
+[Service]
+Type=simple
+User=your-user
+WorkingDirectory=/path/to/ltbbot
+ExecStart=/path/to/ltbbot/.venv/bin/python master_runner.py
+Restart=always
+RestartSec=10
 
-### ⚠️ Disclaimer
+[Install]
+WantedBy=multi-user.target
+```
 
-Dieses Material dient ausschließlich zu Bildungs- und Unterhaltungszwecken. Es handelt sich nicht um eine Finanzberatung. Der Nutzer trägt die alleinige Verantwortung für alle Handlungen. Der Autor haftet nicht für etwaige Verluste. Handel mit Hebelwirkung birgt erhebliche Risiken.
-
+```bash
+# Service aktivieren und starten
+sudo systemctl enable ltbbot
+sudo systemctl start ltbbot
+sudo systemctl status ltbbot
 ```
 
 ---
 
-**Zusammenfassung der Änderungen:**
+## 📊 Monitoring & Status
 
-* Alle Vorkommen von `JaegerBot` durch `ltbbot` ersetzt.
-* Strategiebeschreibung komplett auf **Envelope Mean Reversion** umgestellt (Layered Entry, Average Exit, SL%, Cooldown).
-* Architektur-Beschreibung angepasst (Master Runner überwacht Prozesse).
-* Installationsanleitung aktualisiert (`git clone` Platzhalter, `secret.json` Struktur).
-* Konfigurations-Abschnitt angepasst:
-    * Fokus auf `run_pipeline.sh` nur für **Optimierung**.
-    * Erwähnung der `config_*_envelope.json` Dateien.
-    * Beispiel `settings.json` ohne Budget und mit `active`-Flag.
-    * Cronjob-Befehl und Pfade für `ltbbot` angepasst, Logdatei für Master Runner geändert.
-* Verwaltungs-Befehle aktualisiert (Log-Dateinamen, Pfade).
-* Test-Abschnitt beibehalten, aber darauf hingewiesen, dass die Tests **angepasst werden müssen**.
-* Alle Befehle und Pfade konsistent auf `ltbbot` geändert.
+### Status-Dashboard
 
-Diese README sollte nun den `ltbbot` korrekt beschreiben.
+```bash
+# Vollständiger Status
+./show_status.sh
 ```
+
+Zeigt:
+- 📊 Aktuelle Konfiguration
+- 📈 Offene Positionen
+- 💰 Kontostand
+- 📝 Recent Logs
+
+### Performance-Monitoring
+
+```bash
+# Performance anzeigen
+python show_performance.py
+
+# Ergebnisse anzeigen
+./show_results.sh
+
+# Charts generieren
+./show_chart.sh
+```
+
+### Equity-Curve Charts
+
+```bash
+# Chart generieren und anzeigen
+./show_chart.sh
+
+# Chart per Telegram senden
+python generate_and_send_chart.py
+```
+
+### Log-Files überwachen
+
+```bash
+# Live-Trading Logs
+tail -f logs/live_trading_*.log
+
+# Fehler-Logs
+tail -f logs/error_*.log
+
+# Spezifisches Symbol
+grep "BTC/USDT" logs/*.log
+
+# Nur Trades
+grep -i "opened position\|closed position" logs/*.log
+```
+
+### Analysis-Summaries
+
+Das System erstellt automatisch CSV-Summaries:
+- `single_analysis_summary_YYYY-MM-DD.csv`
+
+```bash
+# Letzte Summary anzeigen
+cat single_analysis_summary_*.csv | tail -20
+```
+
+---
+
+## 🛠️ Wartung & Pflege
+
+### Regelmäßige Wartung
+
+#### 1. Updates installieren
+
+```bash
+# Automatisches Update
+./update.sh
+```
+
+Das Update-Script:
+- ✅ Pulled Git-Changes
+- ✅ Updated Dependencies
+- ✅ Migriert Konfigurationen
+- ✅ Führt Tests aus
+
+#### 2. Log-Rotation
+
+```bash
+# Alte Logs komprimieren (>30 Tage)
+find logs/ -name "*.log" -type f -mtime +30 -exec gzip {} \;
+
+# Archivierte Logs löschen (>90 Tage)
+find logs/ -name "*.log.gz" -type f -mtime +90 -delete
+```
+
+#### 3. Performance-Check
+
+```bash
+# Regelmäßig Performance prüfen
+python show_performance.py
+
+# Trade-History analysieren
+cat logs/trades_*.log | grep "Profit:" | awk '{sum+=$NF} END {print sum}'
+```
+
+### Vollständiges Aufräumen
+
+#### Konfigurationen zurücksetzen
+
+```bash
+# Generierte Envelope-Configs löschen
+rm -f src/ltbbot/strategy/configs/config_*_envelope.json
+
+# Prüfen
+ls -la src/ltbbot/strategy/configs/
+
+# Optimierungsergebnisse löschen
+rm -rf artifacts/results/*
+
+# Verification
+ls -la artifacts/results/
+```
+
+#### Cache und Daten löschen
+
+```bash
+# Heruntergeladene Marktdaten
+rm -rf data/raw/*
+rm -rf data/processed/*
+
+# Backtest-Cache
+rm -rf data/backtest_cache/*
+
+# Prüfen
+du -sh data/*
+```
+
+#### Kompletter Neustart
+
+```bash
+# Backup erstellen
+tar -czf ltbbot_backup_$(date +%Y%m%d).tar.gz \
+    secret.json settings.json artifacts/ logs/
+
+# Alles zurücksetzen
+rm -rf artifacts/* data/* logs/*
+mkdir -p artifacts/{results,backtest} data/{raw,processed} logs/
+
+# Re-Installation
+./install.sh
+
+# Konfiguration wiederherstellen
+cp settings.json.backup settings.json
+```
+
+### Tests ausführen
+
+```bash
+# Alle Tests
+./run_tests.sh
+
+# Spezifische Tests
+pytest tests/test_envelope_strategy.py
+pytest tests/test_exchange.py -v
+
+# Mit Coverage
+pytest --cov=src tests/
+```
+
+---
+
+## 🔧 Nützliche Befehle
+
+### Konfiguration
+
+```bash
+# Settings validieren
+python -c "import json; print(json.load(open('settings.json')))"
+
+# Envelope-Configs auflisten
+ls -lh src/ltbbot/strategy/configs/config_*_envelope.json
+
+# Config-Inhalt anzeigen
+cat src/ltbbot/strategy/configs/config_BTC_30m_envelope.json | python -m json.tool
+```
+
+### Prozess-Management
+
+```bash
+# Laufende Prozesse finden
+ps aux | grep python | grep ltbbot
+
+# Master Runner PID
+pgrep -f "python.*master_runner"
+
+# Sauber beenden
+pkill -f master_runner.py
+
+# Erzwungen beenden
+pkill -9 -f master_runner.py
+
+# Alle ltbbot-Prozesse
+pkill -f ltbbot
+```
+
+### Exchange-Verbindung testen
+
+```bash
+# API-Verbindung prüfen
+python -c "from src.ltbbot.utils.exchange import Exchange; \
+    e = Exchange('binance'); print(e.fetch_balance())"
+
+# Marktdaten abrufen
+python -c "from src.ltbbot.utils.exchange import Exchange; \
+    e = Exchange('binance'); \
+    print(e.fetch_ohlcv('BTC/USDT:USDT', '1h', limit=10))"
+
+# Offene Positionen
+python -c "from src.ltbbot.utils.exchange import Exchange; \
+    e = Exchange('binance'); print(e.fetch_positions())"
+```
+
+### Performance-Analyse
+
+```bash
+# Equity-Curves vergleichen
+python -c "
+import pandas as pd
+manual = pd.read_csv('manual_portfolio_equity.csv')
+optimal = pd.read_csv('optimal_portfolio_equity.csv')
+print('Manual ROI:', (manual['equity'].iloc[-1] / manual['equity'].iloc[0] - 1) * 100, '%')
+print('Optimal ROI:', (optimal['equity'].iloc[-1] / optimal['equity'].iloc[0] - 1) * 100, '%')
+"
+
+# Backtest-Ergebnisse analysieren
+find artifacts/backtest/ -name "*.json" -exec cat {} \; | python -m json.tool
+```
+
+### Debugging
+
+```bash
+# Debug-Modus aktivieren
+export LTBBOT_DEBUG=1
+python master_runner.py
+
+# Strategie-Signale verfolgen
+tail -f logs/live_trading_*.log | grep -i "signal\|buy\|sell"
+
+# Mit Python Debugger
+python -m pdb src/ltbbot/strategy/run.py
+```
+
+---
+
+## 📂 Projekt-Struktur
+
+```
+ltbbot/
+├── src/
+│   └── ltbbot/
+│       ├── analysis/              # Optimierung & Analyse
+│       │   └── optimizer.py
+│       ├── strategy/              # Trading-Strategie
+│       │   ├── run.py
+│       │   ├── envelope_strategy.py
+│       │   └── configs/           # Generierte Configs
+│       ├── backtest/              # Backtesting
+│       │   └── backtester.py
+│       └── utils/                 # Utilities
+│           ├── exchange.py
+│           └── indicators.py
+├── tests/                         # Unit-Tests
+├── data/                          # Marktdaten
+│   ├── raw/
+│   └── processed/
+├── logs/                          # Log-Files
+├── artifacts/                     # Ergebnisse
+│   ├── results/                   # Optimierungsergebnisse
+│   └── backtest/                  # Backtest-Berichte
+├── master_runner.py              # Main Entry-Point
+├── settings.json                 # Haupt-Konfiguration
+├── secret.json                   # API-Credentials
+└── requirements.txt              # Python-Dependencies
+```
+
+---
+
+## ⚠️ Wichtige Hinweise
+
+### Risiko-Disclaimer
+
+⚠️ **Kryptowährungs-Trading ist hochriskant!**
+
+- Nur Geld einsetzen, dessen Verlust Sie verkraften können
+- Keine Gewinn-Garantien
+- Vergangene Performance ≠ Zukünftige Ergebnisse
+- Umfangreiches Testing empfohlen
+- Mit kleinen Beträgen starten
+
+### Security Best Practices
+
+- 🔐 Niemals API-Keys mit Withdrawal-Rechten
+- 🔐 IP-Whitelist aktivieren
+- 🔐 2FA für Exchange-Account
+- 🔐 `secret.json` in `.gitignore`
+- 🔐 Regelmäßige Security-Updates
+
+### Performance-Tipps
+
+- 💡 Starten Sie mit 1-2 Handelspaaren
+- 💡 Längere Timeframes = Stabilere Signale
+- 💡 Regelmäßige Re-Optimierung (alle 2-4 Wochen)
+- 💡 Monitoring ist essentiell
+- 💡 Backtest vor Live-Trading
+
+---
+
+## 🤝 Support
+
+### Bei Problemen
+
+1. Logs prüfen: `logs/`
+2. Tests ausführen: `./run_tests.sh`
+3. GitHub Issue mit:
+   - Problembeschreibung
+   - Log-Auszüge
+   - System-Info
+   - Reproduktions-Schritte
+
+### Updates
+
+```bash
+# Updates prüfen
+git fetch origin
+git status
+
+# Installieren
+./update.sh
+```
+
+---
+
+## 📜 Lizenz
+
+MIT License - siehe [LICENSE](LICENSE)
+
+---
+
+## 🙏 Credits
+
+- [CCXT](https://github.com/ccxt/ccxt) - Exchange Integration
+- [Optuna](https://optuna.org/) - Hyperparameter Optimization
+- [Pandas](https://pandas.pydata.org/) - Data Analysis
+- [TA-Lib](https://github.com/mrjbq7/ta-lib) - Technical Analysis
+
+---
+
+<div align="center">
+
+**Made with ❤️ for Algorithmic Trading**
+
+⭐ Star this repo if you find it useful!
+
+[🔝 Nach oben](#-ltbbot---envelope-trading-strategy-bot)
+
+</div>
