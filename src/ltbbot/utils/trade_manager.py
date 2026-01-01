@@ -209,6 +209,128 @@ def update_tracker_file(file_path, data):
 
 # --- Order Management ---
 
+def check_and_notify_new_position(exchange: Exchange, position: dict, params: dict, tracker_file_path: str, telegram_config: dict, logger: logging.Logger):
+    """
+    Prüft, ob eine Position NEU eröffnet wurde und sendet eine detaillierte Telegram-Benachrichtigung.
+    Diese Funktion wird jedes Mal aufgerufen, wenn eine offene Position gefunden wird.
+    Sie prüft den Tracker-Status, um festzustellen, ob es sich um eine NEUE Position handelt.
+    
+    Args:
+        exchange: Exchange-Instanz
+        position: Die aktuelle offene Position (dict)
+        params: Trading-Parameter
+        tracker_file_path: Pfad zur Tracker-Datei
+        telegram_config: Telegram-Konfiguration
+        logger: Logger-Instanz
+    """
+    try:
+        tracker_info = read_tracker_file(tracker_file_path)
+        symbol = params['market']['symbol']
+        timeframe = params['market']['timeframe']
+        account_name = exchange.account.get('name', 'Standard-Account')
+        
+        # Prüfe ob diese Position bereits gemeldet wurde
+        # Verwende Entry-Preis und Seite als Identifikator
+        current_entry_price = float(position.get('entryPrice', 0))
+        current_side = position.get('side', '')
+        current_contracts = float(position.get('contracts', 0))
+        
+        # Hole die zuletzt gemeldete Position aus dem Tracker
+        last_notified_entry = tracker_info.get('last_notified_entry_price')
+        last_notified_side = tracker_info.get('last_notified_side')
+        
+        # Wenn die Position neu ist (anderer Entry-Preis oder andere Seite)
+        is_new_position = (
+            last_notified_entry is None or 
+            last_notified_side is None or
+            abs(current_entry_price - last_notified_entry) > (current_entry_price * 0.001) or  # 0.1% Toleranz
+            current_side != last_notified_side
+        )
+        
+        if is_new_position:
+            # Hole zusätzliche Position-Informationen
+            unrealized_pnl = position.get('unrealizedPnl', 0)
+            liquidation_price = position.get('liquidationPrice', 0)
+            leverage = position.get('leverage', params['risk'].get('leverage', 1))
+            margin_used = position.get('initialMargin', 0)
+            
+            # Hole TP und SL Preise aus offenen Orders
+            tp_price = None
+            sl_price = None
+            try:
+                open_triggers = exchange.fetch_open_trigger_orders(symbol)
+                for order in open_triggers:
+                    if order.get('reduceOnly'):
+                        trigger_price = order.get('triggerPrice') or order.get('stopPrice')
+                        order_side = order.get('side', '')
+                        # Für Long-Position: TP=sell (über Entry), SL=sell (unter Entry)
+                        # Für Short-Position: TP=buy (unter Entry), SL=buy (über Entry)
+                        if trigger_price:
+                            trigger_price = float(trigger_price)
+                            if current_side == 'long' and order_side == 'sell':
+                                if trigger_price > current_entry_price:
+                                    tp_price = trigger_price
+                                elif trigger_price < current_entry_price:
+                                    sl_price = trigger_price
+                            elif current_side == 'short' and order_side == 'buy':
+                                if trigger_price < current_entry_price:
+                                    tp_price = trigger_price
+                                elif trigger_price > current_entry_price:
+                                    sl_price = trigger_price
+            except Exception as e:
+                logger.warning(f"Konnte TP/SL-Preise nicht abrufen: {e}")
+            
+            # Erstelle detaillierte Nachricht
+            side_emoji = "🟢" if current_side == 'long' else "🔴"
+            message = f"{side_emoji} *NEUE POSITION ERÖFFNET*\n\n"
+            message += f"💼 Account: {account_name}\n"
+            message += f"📊 Symbol: {symbol}\n"
+            message += f"⏱ Timeframe: {timeframe}\n"
+            message += f"📈 Richtung: {current_side.upper()}\n"
+            message += f"📦 Menge: {current_contracts:.4f} Kontrakte\n"
+            message += f"💵 Entry-Preis: {current_entry_price:.6f} USDT\n"
+            message += f"⚡️ Hebel: {leverage}x\n"
+            message += f"💰 Margin verwendet: {margin_used:.2f} USDT\n"
+            
+            if tp_price:
+                tp_distance_pct = abs((tp_price - current_entry_price) / current_entry_price * 100)
+                message += f"🎯 Take-Profit: {tp_price:.6f} USDT (+{tp_distance_pct:.2f}%)\n"
+            else:
+                message += f"🎯 Take-Profit: Nicht gefunden\n"
+            
+            if sl_price:
+                sl_distance_pct = abs((sl_price - current_entry_price) / current_entry_price * 100)
+                message += f"🛑 Stop-Loss: {sl_price:.6f} USDT (-{sl_distance_pct:.2f}%)\n"
+            else:
+                message += f"🛑 Stop-Loss: Nicht gefunden\n"
+            
+            if tp_price and sl_price:
+                risk_reward = abs(tp_price - current_entry_price) / abs(current_entry_price - sl_price)
+                message += f"⚖️ Risk/Reward: 1:{risk_reward:.2f}\n"
+            
+            message += f"\n📉 Unreal. P&L: {unrealized_pnl:.2f} USDT\n"
+            
+            if liquidation_price and liquidation_price > 0:
+                message += f"⚠️ Liquidation: {liquidation_price:.6f} USDT\n"
+            
+            message += f"\n🕐 Zeit: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            
+            # Sende Telegram-Nachricht
+            send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), message)
+            logger.info(f"✅ Telegram-Benachrichtigung für NEUE Position gesendet: {current_side} {current_contracts:.4f} @ {current_entry_price:.6f}")
+            
+            # Aktualisiere Tracker mit der gemeldeten Position
+            tracker_info['last_notified_entry_price'] = current_entry_price
+            tracker_info['last_notified_side'] = current_side
+            tracker_info['last_notified_timestamp'] = datetime.now().isoformat()
+            update_tracker_file(tracker_file_path, tracker_info)
+        else:
+            logger.debug(f"Position bereits gemeldet. Keine neue Benachrichtigung erforderlich.")
+            
+    except Exception as e:
+        logger.error(f"Fehler beim Prüfen/Benachrichtigen neuer Position: {e}", exc_info=True)
+
+
 def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logger, tracker_file_path: str = None):
     """Storniert alle offenen Limit- und Trigger-Orders für die Strategie.
 
@@ -333,11 +455,16 @@ def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: 
 
         if triggered_sl_found:
             # Update Tracker: Setze Status auf 'stop_loss_triggered' und merke dir die Seite
-            update_tracker_file(tracker_file_path, {
-                "status": "stop_loss_triggered",
-                "last_side": pos_side,
-                "stop_loss_ids": [] # IDs löschen, da SL ausgelöst/geschlossen
-            })
+            tracker_info = read_tracker_file(tracker_file_path)
+            tracker_info["status"] = "stop_loss_triggered"
+            tracker_info["last_side"] = pos_side
+            tracker_info["stop_loss_ids"] = []  # IDs löschen, da SL ausgelöst/geschlossen
+            # Position wurde geschlossen, lösche gemeldete Position aus Tracker
+            if 'last_notified_entry_price' in tracker_info:
+                del tracker_info['last_notified_entry_price']
+            if 'last_notified_side' in tracker_info:
+                del tracker_info['last_notified_side']
+            update_tracker_file(tracker_file_path, tracker_info)
             return True
         else:
             # Wenn keiner der bekannten SLs als 'closed' gefunden wurde,
@@ -408,6 +535,11 @@ def check_take_profit_trigger(exchange: Exchange, symbol: str, tracker_file_path
                 "status": "take_profit_triggered",
                 "take_profit_ids": [],
             })
+            # Position wurde geschlossen, lösche gemeldete Position aus Tracker
+            if 'last_notified_entry_price' in tracker_info:
+                del tracker_info['last_notified_entry_price']
+            if 'last_notified_side' in tracker_info:
+                del tracker_info['last_notified_side']
             update_tracker_file(tracker_file_path, tracker_info)
             return True
         else:
@@ -1093,13 +1225,10 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
             # Position ist offen -> TP/SL aktualisieren (auch im Cooldown!)
             manage_existing_position(exchange, position, band_prices, params, tracker_file_path, logger)
             logger.info(f"Position für {symbol} ist offen ({position['side']} {position['contracts']}). Nur TP/SL verwaltet.")
-            # Telegram-Benachrichtigung NUR wenn Position NEU eröffnet wurde
-            tracker_info = read_tracker_file(tracker_file_path)
-            if not tracker_info.get('notified_open', False):
-                message = f"🚀 *TRADE AUSGELÖST*\nSymbol: {symbol}\nRichtung: {position['side']}\nMenge: {position['contracts']}\nEntry: {position['entryPrice']}"
-                send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), message)
-                tracker_info['notified_open'] = True
-                update_tracker_file(tracker_file_path, tracker_info)
+            
+            # Prüfe ob dies eine NEUE Position ist und sende detaillierte Telegram-Benachrichtigung
+            check_and_notify_new_position(exchange, position, params, tracker_file_path, telegram_config, logger)
+            
             # Keine neuen Entry-Orders platzieren, wenn schon eine Position offen ist
 
         elif cooldown_active:
@@ -1107,6 +1236,11 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
               # Sicherstellen, dass keine SL IDs im Tracker sind
               if tracker_info.get("stop_loss_ids"):
                    tracker_info["stop_loss_ids"] = []
+                   # Position wurde geschlossen, lösche gemeldete Position aus Tracker
+                   if 'last_notified_entry_price' in tracker_info:
+                       del tracker_info['last_notified_entry_price']
+                   if 'last_notified_side' in tracker_info:
+                       del tracker_info['last_notified_side']
                    update_tracker_file(tracker_file_path, tracker_info)
 
         elif sl_triggered_this_cycle:
