@@ -150,8 +150,21 @@ def run_envelope_backtest(data, params, start_capital=1000):
     positions = [] # [{entry_price, amount_coins, side, sl_price, tp_price, leverage}, ...]
     closed_trades = [] # [{pnl, side}, ...]
     equity_curve_data = [] # Für Drawdown-Berechnung am Ende
+    
+    # Progress Bar Setup
+    total_candles = len(df)
+    logger.info(f"Starte Backtest mit {total_candles} Kerzen...")
+    progress_interval = max(1, total_candles // 20)  # 20 Updates (5% Schritte)
 
     for i in range(len(df)):
+        # Progress Bar Update
+        if i % progress_interval == 0 or i == total_candles - 1:
+            progress_pct = (i + 1) / total_candles * 100
+            bar_length = 30
+            filled = int(bar_length * (i + 1) / total_candles)
+            bar = '█' * filled + '░' * (bar_length - filled)
+            print(f"\r  Progress: [{bar}] {progress_pct:.1f}% ({i+1}/{total_candles})", end='', flush=True)
+        
         current_candle = df.iloc[i]
         timestamp = current_candle.name # Zeitstempel der Kerze
 
@@ -254,7 +267,7 @@ def run_envelope_backtest(data, params, start_capital=1000):
             try:
                 df_until_now = df.iloc[:i+1].copy()
                 if len(df_until_now) >= 50:  # Mindestens 50 Kerzen für SMA50
-                    regime, trade_allowed, trend_direction, supertrend_direction = detect_market_regime(df_until_now)
+                    regime, trade_allowed, trend_direction, supertrend_direction = detect_market_regime(df_until_now, silent=True)
                 else:
                     # Zu wenig Daten, default auf UNCERTAIN
                     regime = "UNCERTAIN"
@@ -397,17 +410,11 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
 
         # --- Abbruch bei Totalverlust (basierend auf Equity Curve Start) ---
-        # Verwende den letzten Equity-Wert, falls vorhanden, sonst start_capital
-        equity_check_value = equity_curve_data[-1]['equity'] if equity_curve_data else start_capital
-        if equity_check_value <= 0:
-            logger.warning(f"Simuliertes Equity <= 0 ({equity_check_value:.2f}). Backtest abgebrochen bei Kerze {i}.")
-            capital = 0
-            # Fülle Rest der Equity Curve mit 0
-            remaining_indices = range(i + 1, len(df))
-            for rem_idx in remaining_indices:
-                 equity_curve_data.append({'timestamp': df.index[rem_idx], 'equity': 0.0})
-            break
-
+    
+    # Progress Bar abschließen
+    print()  # Newline nach Progress Bar
+    logger.info("Backtest abgeschlossen. Berechne Metriken...")
+    
     # --- Endauswertung ---
     final_equity = capital # KORREKTUR: Verwende die Variable 'capital'
     final_unrealized_pnl = 0.0

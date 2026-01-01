@@ -5,9 +5,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def detect_market_regime(df, avg_period=14):
+def detect_market_regime(df, avg_period=14, silent=False):
     """
     Erkennt das aktuelle Marktregime (TREND vs RANGE) mit Supertrend-Filter.
+    
+    Args:
+        df: DataFrame mit OHLC-Daten
+        avg_period: Periode für Durchschnittsberechnung
+        silent: Wenn True, keine Log-Ausgaben (für Backtest)
     
     Returns:
         tuple: (regime_name: str, trade_allowed: bool, trend_direction: str, supertrend_direction: str)
@@ -77,20 +82,25 @@ def detect_market_regime(df, avg_period=14):
 
         # Regime-Entscheidung mit detailliertem Grund
         if current_adx > 30:  # Sehr starker Trend
-            logger.warning(f"STRONG_TREND: ADX={current_adx:.2f} > 30.0. Supertrend={supertrend_direction}. Trading gesperrt.")
+            if not silent:
+                logger.warning(f"STRONG_TREND: ADX={current_adx:.2f} > 30.0. Supertrend={supertrend_direction}. Trading gesperrt.")
             return "STRONG_TREND", False, trend_direction, supertrend_direction
         elif current_adx > 25:  # Starker Trend
-            logger.info(f"TREND: ADX={current_adx:.2f} > 25.0. Supertrend={supertrend_direction}. Trading nur in Trendrichtung erlaubt.")
+            if not silent:
+                logger.info(f"TREND: ADX={current_adx:.2f} > 25.0. Supertrend={supertrend_direction}. Trading nur in Trendrichtung erlaubt.")
             return "TREND", True, trend_direction, supertrend_direction
         elif current_adx < 20 and price_distance_pct < 3:
-            logger.info(f"RANGE: ADX={current_adx:.2f} < 20.0, price_distance_pct={price_distance_pct:.2f} < 3.0. Supertrend={supertrend_direction}. Mean-Reversion erlaubt.")
+            if not silent:
+                logger.info(f"RANGE: ADX={current_adx:.2f} < 20.0, price_distance_pct={price_distance_pct:.2f} < 3.0. Supertrend={supertrend_direction}. Mean-Reversion erlaubt.")
             return "RANGE", True, "NEUTRAL", supertrend_direction
         else:
-            logger.info(f"UNCERTAIN: ADX={current_adx:.2f}, price_distance_pct={price_distance_pct:.2f}. Supertrend={supertrend_direction}. Vorsichtiges Trading erlaubt.")
+            if not silent:
+                logger.info(f"UNCERTAIN: ADX={current_adx:.2f}, price_distance_pct={price_distance_pct:.2f}. Supertrend={supertrend_direction}. Vorsichtiges Trading erlaubt.")
             return "UNCERTAIN", True, trend_direction, supertrend_direction
 
     except Exception as e:
-        logger.warning(f"Fehler bei Marktregime-Erkennung: {e}. Defaulte auf UNCERTAIN.")
+        if not silent:
+            logger.warning(f"Fehler bei Marktregime-Erkennung: {e}. Defaulte auf UNCERTAIN.")
         return "UNCERTAIN", True, "NEUTRAL", "NEUTRAL"
 
 def calculate_indicators_and_signals(df, params):
