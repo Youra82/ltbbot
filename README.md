@@ -29,14 +29,17 @@ LTBBot ist ein spezialisierter Trading-Bot, der die Envelope-Strategie (Moving A
 ### 🔍 Strategie-Visualisierung
 ```mermaid
 flowchart LR
-  A[OHLCV] --> B[Moving Average]
-  A --> C[Envelope +/- Band]
-  B & C --> D[Signal: Reversion
-  (untere Hülle = Long Bias)]
-  D --> E[Volume-Filter]
-  E --> F[Risk Engine
-  SL/TP + optional Trail]
-  F --> G[Order Router (CCXT)]
+    A["OHLCV"]
+    B["Moving Average"]
+    C["Envelope +/- Band"]
+    D["Signal: Reversion<br/>untere Huelle = Long Bias"]
+    E["Volume-Filter"]
+    F["Risk Engine<br/>SL/TP + optional Trail"]
+    G["Order Router (CCXT)"]
+
+    A --> B
+    A --> C
+    B & C --> D --> E --> F --> G
 ```
 
 ### 📈 Trade-Beispiel (TP/SL/Trailing)
