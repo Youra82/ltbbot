@@ -13,7 +13,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange # Für load_data
-from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
+from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals, detect_market_regime
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION (Anpassen!) ---
 SLIPPAGE_PCT_PER_TRADE = 0.0005 # Beispiel: 0.05% Slippage pro Ausführung (Market Order TP/SL)
@@ -127,9 +127,16 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
     # --- Indikatoren berechnen ---
     try:
-        df, _ = calculate_indicators_and_signals(data.copy(), params)
+        df, band_prices = calculate_indicators_and_signals(data.copy(), params)
         if df.empty:
             raise ValueError("Indikatorberechnung ergab leeres DataFrame.")
+        
+        # Extrahiere Regime-Informationen für spätere Verwendung
+        # Die calculate_indicators_and_signals Funktion gibt band_prices mit regime/trend_direction zurück
+        # Aber da wir Kerze für Kerze durchgehen, müssen wir das Regime für jede Kerze neu bestimmen
+        # Das Regime ist bereits im df als Spalten vorhanden (falls detect_market_regime es setzt)
+        # Alternativ: Wir berechnen es pro Kerze neu im Loop
+        
     except Exception as e:
         logger.warning(f"Fehler bei Indikatorberechnung im Backtest: {e}")
         # Rückgabeformat beibehalten
@@ -241,6 +248,45 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
         # --- Einstiege prüfen ---
         if capital > 0: # Nur wenn Kapital verfügbar (realisiert)
+            
+            # **NEU: Marktregime prüfen für diese Kerze**
+            # Berechne Regime basierend auf den Daten BIS zu dieser Kerze (inklusiv)
+            try:
+                df_until_now = df.iloc[:i+1].copy()
+                if len(df_until_now) >= 50:  # Mindestens 50 Kerzen für SMA50
+                    regime, trade_allowed, trend_direction, supertrend_direction = detect_market_regime(df_until_now)
+                else:
+                    # Zu wenig Daten, default auf UNCERTAIN
+                    regime = "UNCERTAIN"
+                    trade_allowed = True
+                    trend_direction = "NEUTRAL"
+                    supertrend_direction = "NEUTRAL"
+            except Exception as e:
+                # Fallback bei Fehler
+                regime = "UNCERTAIN"
+                trade_allowed = True
+                trend_direction = "NEUTRAL"
+                supertrend_direction = "NEUTRAL"
+            
+            # **STRONG_TREND Filter: Kein Trading wenn ADX > 30**
+            if not trade_allowed:
+                # Kein Trading in diesem Zyklus
+                positions = remaining_positions
+                capital += exit_pnl_current_candle
+                continue  # Nächste Kerze
+            
+            # **Trend-Bias anwenden: Im Uptrend nur Longs, im Downtrend nur Shorts**
+            current_use_longs = use_longs
+            current_use_shorts = use_shorts
+            
+            if trend_direction == "UPTREND":
+                # Im Uptrend: Nur Longs erlaubt (Shorts deaktiviert)
+                current_use_shorts = False
+            elif trend_direction == "DOWNTREND":
+                # Im Downtrend: Nur Shorts erlaubt (Longs deaktiviert)
+                current_use_longs = False
+            # Bei NEUTRAL bleiben beide Richtungen wie konfiguriert
+            
             # Aktuellen Gesamtwert der offenen Positionen berechnen für Limit-Check
             current_total_pos_value_usd = 0.0
             current_price_for_limit = current_candle['close']
@@ -264,7 +310,7 @@ def run_envelope_backtest(data, params, start_capital=1000):
                  current_total_pos_value_usd = MAX_TOTAL_POSITION_SIZE_USD + 1 # Verhindert Entries
 
             # Long Entries
-            if use_longs:
+            if current_use_longs:
                 side = 'long'
                 for k in range(1, num_envelopes + 1):
                     low_band_col = f'band_low_{k}'
@@ -309,7 +355,7 @@ def run_envelope_backtest(data, params, start_capital=1000):
                         current_total_pos_value_usd += new_layer_value_usd
 
             # Short Entries
-            if use_shorts:
+            if current_use_shorts:
                 side = 'short'
                 for k in range(1, num_envelopes + 1):
                     high_band_col = f'band_high_{k}'
