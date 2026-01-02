@@ -658,7 +658,7 @@ Nach erfolgreicher Parameter-Optimierung können die Konfigurationsdateien auf d
 # Konfigurationsdateien auf Repository hochladen
 git add src/ltbbot/strategy/configs/*.json
 git commit -m "Update: Optimierte Strategie-Konfigurationen"
-git push origin main
+git push origin main --force
 ```
 
 Dies sichert:
