@@ -22,38 +22,13 @@ python3 "$RESULTS_SCRIPT" --mode "$MODE"
 
 # --- OPTION 4: INTERAKTIVE CHARTS ---
 if [ "$MODE" == "4" ]; then
-    echo -e "\n${YELLOW}========== INTERAKTIVE CHARTS ===========${NC}"
-    echo ""
-    read -p "Symbol (z.B. DOGE/USDT): " SYMBOL
-    read -p "Timeframe (z.B. 4h, 1h) [Standard: 4h]: " TIMEFRAME
-    TIMEFRAME=${TIMEFRAME:-4h}
-    read -p "Start-Kapital [Standard: 1000]: " START_CAPITAL
-    START_CAPITAL=${START_CAPITAL:-1000}
-    read -p "Letzte N Tage anzeigen (oder leer für alle): " WINDOW
-    read -p "Telegram versenden? (j/n) [Standard: n]: " SEND_TELEGRAM
-    
-    TELEGRAM_FLAG=""
-    if [[ "$SEND_TELEGRAM" =~ ^[jJyY]$ ]]; then
-        TELEGRAM_FLAG="--send-telegram"
-    fi
-    
-    WINDOW_FLAG=""
-    if [ ! -z "$WINDOW" ]; then
-        WINDOW_FLAG="--window $WINDOW"
-    fi
-    
-    echo -e "\n${BLUE}Generiere Chart...${NC}"
-    python3 src/ltbbot/analysis/interactive_status.py \
-        --symbol "$SYMBOL" \
-        --timeframe "$TIMEFRAME" \
-        --start-capital "$START_CAPITAL" \
-        $WINDOW_FLAG \
-        $TELEGRAM_FLAG
+    echo -e "\n${BLUE}Generiere interaktive Charts...${NC}"
+    python3 src/ltbbot/analysis/interactive_status.py
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ Chart wurde generiert!${NC}"
+        echo -e "${GREEN}✅ Charts wurden generiert!${NC}"
     else
-        echo -e "${RED}❌ Fehler beim Generieren des Charts.${NC}"
+        echo -e "${RED}❌ Fehler beim Generieren der Charts.${NC}"
     fi
     
     deactivate

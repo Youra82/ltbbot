@@ -11,5 +11,6 @@ joblib
 pytest
 aiofiles==24.1.0 # Version aus Envelope-Beispiel
 seaborn==0.13.2 # Version aus Envelope-Beispiel (für Analyse/Notebooks)
+plotly
 # tensorflow-cpu==2.16.1 # Entfernt
 scikit-learn # Behalten für StandardScaler im Optimizer/Backtester, falls noch genutzt
