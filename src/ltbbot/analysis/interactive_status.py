@@ -276,7 +276,7 @@ def main():
                     continue
                 
                 logger.info(f"Lade Daten für {symbol} {timeframe}...")
-                df = exchange.get_ohlcv(symbol, timeframe, limit=500)
+                df = exchange.fetch_recent_ohlcv(symbol, timeframe, limit=500)
                 
                 logger.info("Berechne Indikatoren...")
                 df = add_ltbbot_indicators(df)
