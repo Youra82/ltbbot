@@ -2,12 +2,12 @@
 """
 Interactive Status für LTBBot - Envelope Strategy
 Zeigt Candlestick-Chart mit Envelopes und simulierten Trades
+Nutzt durchnummerierte Konfigurationsdateien zum Auswählen
 """
 
 import os
 import sys
 import json
-import argparse
 from datetime import datetime, timedelta
 import logging
 
@@ -33,21 +33,64 @@ def setup_logging():
 
 logger = setup_logging()
 
-def load_config(symbol, timeframe):
-    """Lädt Konfiguration für LTBBot"""
+def get_config_files():
+    """Sucht alle Konfigurationsdateien auf"""
     configs_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
-    safe_filename_base = f"{symbol.replace('/', '').replace(':', '')}_{timeframe}"
-    config_filename = f"config_{safe_filename_base}_envelope.json"
-    config_path = os.path.join(configs_dir, config_filename)
+    if not os.path.exists(configs_dir):
+        return []
     
-    if not os.path.exists(config_path):
-        config_filename = f"config_{safe_filename_base}.json"
-        config_path = os.path.join(configs_dir, config_filename)
+    configs = []
+    for filename in sorted(os.listdir(configs_dir)):
+        if filename.startswith('config_') and filename.endswith('.json'):
+            filepath = os.path.join(configs_dir, filename)
+            configs.append((filename, filepath))
     
-    if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Config nicht gefunden für {symbol} {timeframe}")
+    return configs
+
+def select_configs():
+    """Zeigt durchnummerierte Konfigurationsdateien und lässt User wählen"""
+    configs = get_config_files()
     
-    with open(config_path, 'r') as f:
+    if not configs:
+        logger.error("Keine Konfigurationsdateien gefunden!")
+        sys.exit(1)
+    
+    print("\n" + "="*60)
+    print("Verfügbare Konfigurationen:")
+    print("="*60)
+    for idx, (filename, _) in enumerate(configs, 1):
+        # Extrahiere Symbol/Timeframe aus Dateiname
+        clean_name = filename.replace('config_', '').replace('.json', '')
+        print(f"{idx:2d}) {clean_name}")
+    print("="*60)
+    
+    print("\nWähle Konfiguration(en) zum Anzeigen:")
+    print("  Einzeln: z.B. '1' oder '5'")
+    print("  Mehrfach: z.B. '1,3,5' oder '1 3 5'")
+    
+    selection = input("\nAuswahl: ").strip()
+    
+    # Parse Eingabe
+    selected_indices = []
+    for part in selection.replace(',', ' ').split():
+        try:
+            idx = int(part)
+            if 1 <= idx <= len(configs):
+                selected_indices.append(idx - 1)
+            else:
+                logger.warning(f"Index {idx} außerhalb des Bereichs")
+        except ValueError:
+            logger.warning(f"Ungültige Eingabe: {part}")
+    
+    if not selected_indices:
+        logger.error("Keine gültigen Konfigurationen gewählt!")
+        sys.exit(1)
+    
+    return [configs[i] for i in selected_indices]
+
+def load_config(filepath):
+    """Lädt eine Konfiguration"""
+    with open(filepath, 'r') as f:
         return json.load(f)
 
 def add_ltbbot_indicators(df):
@@ -188,63 +231,89 @@ def create_interactive_chart(symbol, timeframe, df, trades, start_date, end_date
     return fig
 
 def main():
-    parser = argparse.ArgumentParser(description="LTBBot Interactive Status")
-    parser.add_argument('--symbol', required=True, type=str)
-    parser.add_argument('--timeframe', default='4h', type=str)
-    parser.add_argument('--start', type=str, help='Start date (YYYY-MM-DD)')
-    parser.add_argument('--end', type=str, help='End date (YYYY-MM-DD)')
-    parser.add_argument('--start-capital', type=float, default=1000)
-    parser.add_argument('--window', type=int, help='Letzten N Tage anzeigen')
-    parser.add_argument('--send-telegram', action='store_true')
+    """Hauptfunktion: Config-basiertes interaktives Menü für Charts"""
     
-    args = parser.parse_args()
+    print("\n" + "="*60)
+    print("LTBBot - Interactive Charts (Envelope Strategy)")
+    print("="*60)
     
     try:
-        logger.info(f"Lade Config für {args.symbol} {args.timeframe}...")
-        config = load_config(args.symbol, args.timeframe)
+        # Schritt 1: Config Auswahl
+        selected_configs = select_configs()
         
-        # Hole Daten vom Exchange
-        logger.info("Verbinde mit Exchange...")
+        # Schritt 2: Chart-Optionen
+        print("\n" + "="*60)
+        print("Chart-Optionen:")
+        print("="*60)
+        
+        start_date = input("\nStart Datum (YYYY-MM-DD, leer = auto): ").strip()
+        end_date = input("End Datum (YYYY-MM-DD, leer = auto): ").strip()
+        window = input("Letzten N Tage anzeigen (leer = alle): ").strip()
+        send_telegram = input("Via Telegram versenden? (j/n, leer = nein): ").strip().lower() == 'j'
+        
+        window = int(window) if window else None
+        
+        # Schritt 3: Load secrets
         with open(os.path.join(PROJECT_ROOT, 'secret.json'), 'r') as f:
             secrets = json.load(f)
         
         account = secrets['ltbbot'][0]
         exchange = Exchange(account)
         
-        logger.info(f"Lade OHLCV Daten für {args.symbol}...")
-        df = exchange.get_ohlcv(args.symbol, args.timeframe, limit=500)
+        # Schritt 4: Chart für jede Konfiguration erstellen
+        for filename, config_path in selected_configs:
+            try:
+                logger.info(f"\n{'='*60}")
+                logger.info(f"Verarbeite: {filename}")
+                logger.info(f"{'='*60}")
+                
+                config = load_config(config_path)
+                symbol = config.get('symbol')
+                timeframe = config.get('timeframe')
+                
+                if not symbol or not timeframe:
+                    logger.warning(f"Konfiguration fehlen Symbol oder Timeframe!")
+                    continue
+                
+                logger.info(f"Lade Daten für {symbol} {timeframe}...")
+                df = exchange.get_ohlcv(symbol, timeframe, limit=500)
+                
+                logger.info("Berechne Indikatoren...")
+                df = add_ltbbot_indicators(df)
+                
+                # Vereinachter Backtest
+                trades = []
+                
+                logger.info("Erstelle Chart...")
+                fig = create_interactive_chart(
+                    symbol,
+                    timeframe,
+                    df,
+                    trades,
+                    start_date if start_date else None,
+                    end_date if end_date else None,
+                    window
+                )
+                
+                # Speichere HTML
+                safe_symbol = symbol.replace('/', '_').replace(':', '')
+                output_file = f"/tmp/ltbbot_{safe_symbol}_{timeframe}.html"
+                fig.write_html(output_file)
+                logger.info(f"✅ Chart gespeichert: {output_file}")
+                
+                # Telegram versenden (optional)
+                if send_telegram:
+                    logger.info("Sende Chart via Telegram...")
+                    telegram_config = secrets.get('telegram', {})
+                    if telegram_config and os.path.exists(output_file):
+                        from ltbbot.utils.telegram import send_file
+                        send_file(output_file, telegram_config)
+                
+            except Exception as e:
+                logger.error(f"Fehler bei {filename}: {e}", exc_info=True)
+                continue
         
-        logger.info("Berechne Indikatoren...")
-        df = add_ltbbot_indicators(df)
-        
-        # Vereinachter Backtest
-        trades = []
-        
-        logger.info("Erstelle Chart...")
-        fig = create_interactive_chart(
-            args.symbol,
-            args.timeframe,
-            df,
-            trades,
-            args.start,
-            args.end,
-            args.window
-        )
-        
-        # Speichere HTML
-        output_file = f"/tmp/ltbbot_{args.symbol.replace('/', '_')}_{args.timeframe}.html"
-        fig.write_html(output_file)
-        logger.info(f"✅ Chart gespeichert: {output_file}")
-        
-        # Telegram versenden (optional)
-        if args.send_telegram:
-            logger.info("Sende Chart via Telegram...")
-            telegram_config = secrets.get('telegram', {})
-            if telegram_config and os.path.exists(output_file):
-                from ltbbot.utils.telegram import send_file
-                send_file(output_file, telegram_config)
-        
-        logger.info("✅ Fertig!")
+        logger.info("\n✅ Alle Charts erstellt!")
         
     except Exception as e:
         logger.error(f"Fehler: {e}", exc_info=True)
