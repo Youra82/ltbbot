@@ -306,8 +306,13 @@ def main():
                     logger.info("Sende Chart via Telegram...")
                     telegram_config = secrets.get('telegram', {})
                     if telegram_config and os.path.exists(output_file):
-                        from ltbbot.utils.telegram import send_file
-                        send_file(output_file, telegram_config)
+                        from ltbbot.utils.telegram import send_document
+                        bot_token = telegram_config.get('bot_token')
+                        chat_id = telegram_config.get('chat_id')
+                        if bot_token and chat_id:
+                            send_document(bot_token, chat_id, output_file, caption=f"Chart: {symbol} {timeframe}")
+                        else:
+                            logger.warning("Telegram bot_token oder chat_id nicht konfiguriert")
                 
             except Exception as e:
                 logger.error(f"Fehler bei {filename}: {e}", exc_info=True)
