@@ -8,7 +8,7 @@ Nutzt durchnummerierte Konfigurationsdateien zum Auswählen
 import os
 import sys
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 
 import pandas as pd
@@ -119,14 +119,14 @@ def create_interactive_chart(symbol, timeframe, df, trades, start_date, end_date
     
     # Filter auf Fenster
     if window:
-        cutoff_date = datetime.now() - timedelta(days=window)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=window)
         df = df[df.index >= cutoff_date].copy()
     
     # Filter auf Start/End Datum
     if start_date:
-        df = df[df.index >= pd.to_datetime(start_date)]
+        df = df[df.index >= pd.to_datetime(start_date, utc=True)]
     if end_date:
-        df = df[df.index <= pd.to_datetime(end_date)]
+        df = df[df.index <= pd.to_datetime(end_date, utc=True)]
     
     fig = go.Figure()
     
