@@ -333,53 +333,88 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
 
 def extract_trades_from_backtest(df, config):
     """
-    Extrahiere Trade-Signale durch einen Mini-Backtest (Entry/Exit Punkte).
-    Gibt Liste von Trades mit entry_long, exit_long, entry_short, exit_short zurück.
+    Extrahiere Trade-Signale basierend auf Envelope-Bändern.
+    Entry: wenn Preis touch/cross band (high >= upper or low <= lower)
+    Exit: Signalwechsel oder Pullback
     """
     try:
         # Berechne Indikatoren und Signale
-        df_with_indicators, _ = calculate_indicators_and_signals(df.copy(), config)
+        df_with_indicators, band_prices = calculate_indicators_and_signals(df.copy(), config)
         
+        # Falls keine Envelopes berechnet wurden, return leere Liste
+        if df_with_indicators.empty:
+            return [], df_with_indicators
+        
+        # Extrahiere die Bandnamen
+        envelopes = config['strategy']['envelopes']
         trades = []
+        
+        # Wir nutzen die erste (wichtigste) Envelope für Signale
+        high_col = 'band_high_1'
+        low_col = 'band_low_1'
+        
+        if high_col not in df_with_indicators.columns or low_col not in df_with_indicators.columns:
+            logger.warning(f"Envelope-Bänder nicht gefunden. Verfügbare Spalten: {list(df_with_indicators.columns)}")
+            return [], df_with_indicators
+        
+        # Für die Anzeige: erstelle Upper/Lower Band Spalten für den Chart
+        df_with_indicators['upper_band'] = df_with_indicators[high_col]
+        df_with_indicators['lower_band'] = df_with_indicators[low_col]
+        
+        # Extrahiere Signale basierend auf Band-Crosses
         current_long_entry = None
         current_short_entry = None
         
-        for i in range(len(df_with_indicators)):
+        for i in range(1, len(df_with_indicators)):
             row = df_with_indicators.iloc[i]
+            prev_row = df_with_indicators.iloc[i-1]
             timestamp = row.name
             close_price = row['close']
+            high_price = row['high']
+            low_price = row['low']
             
-            # Prüfe auf Entry-Signale
-            if pd.notna(row.get('signal', 0)) and row['signal'] != 0:
-                if row['signal'] == 1 and not current_long_entry:  # Entry Long
-                    current_long_entry = {
-                        'time': timestamp,
-                        'price': close_price
-                    }
-                elif row['signal'] == -1 and not current_short_entry:  # Entry Short
-                    current_short_entry = {
-                        'time': timestamp,
-                        'price': close_price
-                    }
+            upper_band = row[high_col]
+            lower_band = row[low_col]
+            prev_upper = prev_row[high_col]
+            prev_lower = prev_row[low_col]
             
-            # Prüfe auf Exit-Signale (Signalwechsel)
-            if i > 0:
-                prev_signal = df_with_indicators.iloc[i-1].get('signal', 0)
-                curr_signal = row.get('signal', 0)
-                
-                if current_long_entry and prev_signal == 1 and curr_signal != 1:  # Exit Long
-                    trade = {'entry_long': current_long_entry, 'exit_long': {'time': timestamp, 'price': close_price}}
+            # Entry Long: Wenn Preis von oben die untere Band kreuzt (nach oben)
+            if not current_long_entry and low_price <= lower_band:
+                current_long_entry = {
+                    'time': timestamp,
+                    'price': close_price
+                }
+            
+            # Entry Short: Wenn Preis von unten die obere Band kreuzt (nach unten)
+            if not current_short_entry and high_price >= upper_band:
+                current_short_entry = {
+                    'time': timestamp,
+                    'price': close_price
+                }
+            
+            # Exit Long: wenn Preis die obere Band nach oben kreuzt oder zurückgeht
+            if current_long_entry:
+                if high_price >= upper_band:
+                    trade = {
+                        'entry_long': current_long_entry, 
+                        'exit_long': {'time': timestamp, 'price': close_price}
+                    }
                     trades.append(trade)
                     current_long_entry = None
-                
-                if current_short_entry and prev_signal == -1 and curr_signal != -1:  # Exit Short
-                    trade = {'entry_short': current_short_entry, 'exit_short': {'time': timestamp, 'price': close_price}}
+            
+            # Exit Short: wenn Preis die untere Band nach unten kreuzt oder zurückgeht
+            if current_short_entry:
+                if low_price <= lower_band:
+                    trade = {
+                        'entry_short': current_short_entry,
+                        'exit_short': {'time': timestamp, 'price': close_price}
+                    }
                     trades.append(trade)
                     current_short_entry = None
         
         return trades, df_with_indicators
     except Exception as e:
-        logger.warning(f"Fehler beim Extrahieren von Trades: {e}")
+        logger.warning(f"Fehler beim Extrahieren von Trades: {e}", exc_info=True)
         return [], df
 
 def main():
