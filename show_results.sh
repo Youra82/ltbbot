@@ -9,32 +9,37 @@ NC='\033[0m'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 cd "$SCRIPT_DIR"
 
-VENV_PATH=".venv/bin/activate"
-VENV_PYTHON=".venv/bin/python"
-VENV_PIP=".venv/bin/pip"
+VENV_PATH=".venv"
+VENV_ACTIVATE="$VENV_PATH/bin/activate"
+VENV_PYTHON="$VENV_PATH/bin/python"
+VENV_PIP="$VENV_PATH/bin/pip"
 RESULTS_SCRIPT="src/ltbbot/analysis/show_results.py"
 
-# Überprüfe, ob die virtuelle Umgebung vollständig ist
-if [ ! -f "$VENV_PYTHON" ] || [ ! -f "$VENV_PIP" ]; then
+# Überprüfe mit test -x (existiert UND ist ausführbar)
+if ! test -x "$VENV_PYTHON" || ! test -x "$VENV_PIP"; then
     echo -e "${YELLOW}⚠️  Virtuelle Umgebung nicht vollständig - wird neu erstellt...${NC}"
-    rm -rf .venv 2>/dev/null || true
-    python3 -m venv .venv --upgrade-deps
+    rm -rf "$VENV_PATH" 2>/dev/null || true
+    echo -e "${YELLOW}Erstelle neue virtuelle Umgebung...${NC}"
+    python3 -m venv "$VENV_PATH" --upgrade-deps
     echo -e "${GREEN}✔ Neue virtuelle Umgebung erstellt.${NC}"
 fi
 
 # Aktiviere die virtuelle Umgebung
-source "$VENV_PATH"
+if ! source "$VENV_ACTIVATE"; then
+    echo -e "${RED}❌ Fehler beim Aktivieren der venv!${NC}"
+    exit 1
+fi
 
 # Upgrade pip, setuptools, wheel
 echo -e "${YELLOW}Überprüfe Python-Abhängigkeiten...${NC}"
-"$VENV_PIP" install --upgrade pip setuptools wheel --quiet
+"$VENV_PIP" install --upgrade pip setuptools wheel --quiet 2>/dev/null || true
 
 # Versuche, requirements.txt zu installieren wenn noch nicht vorhanden
 if ! "$VENV_PYTHON" -c "import pandas, plotly" 2>/dev/null; then
     echo -e "${YELLOW}Installiere fehlende Pakete...${NC}"
     if ! "$VENV_PIP" install -r requirements.txt --quiet 2>/dev/null; then
         echo -e "${YELLOW}Versuche mit --break-system-packages (PEP 668 Kompatibilität)...${NC}"
-        "$VENV_PIP" install --break-system-packages -r requirements.txt --quiet
+        "$VENV_PIP" install --break-system-packages -r requirements.txt --quiet 2>/dev/null || true
     fi
     echo -e "${GREEN}✔ Pakete installiert.${NC}"
 fi
