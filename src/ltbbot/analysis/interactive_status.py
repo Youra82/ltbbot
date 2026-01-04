@@ -22,7 +22,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange
-from ltbbot.analysis.backtester import run_envelope_backtest, load_data
+from ltbbot.analysis.backtester import run_envelope_backtest, load_data, calculate_indicators_and_signals
 
 def setup_logging():
     logger = logging.getLogger('interactive_status')
@@ -331,6 +331,57 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
     
     return fig
 
+def extract_trades_from_backtest(df, config):
+    """
+    Extrahiere Trade-Signale durch einen Mini-Backtest (Entry/Exit Punkte).
+    Gibt Liste von Trades mit entry_long, exit_long, entry_short, exit_short zurück.
+    """
+    try:
+        # Berechne Indikatoren und Signale
+        df_with_indicators, _ = calculate_indicators_and_signals(df.copy(), config)
+        
+        trades = []
+        current_long_entry = None
+        current_short_entry = None
+        
+        for i in range(len(df_with_indicators)):
+            row = df_with_indicators.iloc[i]
+            timestamp = row.name
+            close_price = row['close']
+            
+            # Prüfe auf Entry-Signale
+            if pd.notna(row.get('signal', 0)) and row['signal'] != 0:
+                if row['signal'] == 1 and not current_long_entry:  # Entry Long
+                    current_long_entry = {
+                        'time': timestamp,
+                        'price': close_price
+                    }
+                elif row['signal'] == -1 and not current_short_entry:  # Entry Short
+                    current_short_entry = {
+                        'time': timestamp,
+                        'price': close_price
+                    }
+            
+            # Prüfe auf Exit-Signale (Signalwechsel)
+            if i > 0:
+                prev_signal = df_with_indicators.iloc[i-1].get('signal', 0)
+                curr_signal = row.get('signal', 0)
+                
+                if current_long_entry and prev_signal == 1 and curr_signal != 1:  # Exit Long
+                    trade = {'entry_long': current_long_entry, 'exit_long': {'time': timestamp, 'price': close_price}}
+                    trades.append(trade)
+                    current_long_entry = None
+                
+                if current_short_entry and prev_signal == -1 and curr_signal != -1:  # Exit Short
+                    trade = {'entry_short': current_short_entry, 'exit_short': {'time': timestamp, 'price': close_price}}
+                    trades.append(trade)
+                    current_short_entry = None
+        
+        return trades, df_with_indicators
+    except Exception as e:
+        logger.warning(f"Fehler beim Extrahieren von Trades: {e}")
+        return [], df
+
 def main():
     selected_configs = select_configs()
     
@@ -391,6 +442,11 @@ def main():
                 logger.warning(f"Keine Daten für {symbol} {timeframe}")
                 continue
             
+            # ===== BERECHNE INDIKATOREN & ENVELOPE-BÄNDER =====
+            logger.info("Berechne Envelope-Bänder und Signale...")
+            trades, df_with_indicators = extract_trades_from_backtest(df.copy(), config)
+            logger.info(f"Gefundene Trade-Signale: {len(trades)}")
+            
             # ===== BACKTEST AUSFÜHREN =====
             logger.info("Führe Backtest durch...")
             backtest_result = None
@@ -406,8 +462,8 @@ def main():
             fig = create_interactive_chart(
                 symbol,
                 timeframe,
-                df,
-                [],  # Keine Trades für diese Version
+                df_with_indicators,  # Nutze df mit berechneten Indikatoren
+                trades,  # Übergebe extrahierte Trades
                 config,
                 backtest_result=backtest_result,
                 start_date=start_date,
