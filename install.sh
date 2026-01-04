@@ -24,16 +24,26 @@ echo -e "\n${YELLOW}2/4: Erstelle eine isolierte Python-Umgebung (.venv)...${NC}
 # Stelle sicher, dass wir im richtigen Verzeichnis sind (wo install.sh liegt)
 INSTALL_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 cd "$INSTALL_DIR"
-python3 -m venv .venv
+
+# Entferne alte venv falls sie existiert
+if [ -d ".venv" ]; then
+    echo -e "${YELLOW}Entferne alte virtuelle Umgebung...${NC}"
+    rm -rf .venv
+fi
+
+# Erstelle neue venv mit --upgrade-deps für bessere Kompatibilität
+python3 -m venv .venv --upgrade-deps
 echo -e "${GREEN}✔ Virtuelle Umgebung wurde erstellt.${NC}"
 
 # --- Python-Bibliotheken installieren ---
 echo -e "\n${YELLOW}3/4: Aktiviere die virtuelle Umgebung und installiere die notwendigen Python-Bibliotheken...${NC}"
 source .venv/bin/activate
-pip install --upgrade pip
+
+# Verwende python3 -m pip für bessere Kompatibilität
+python3 -m pip install --upgrade pip setuptools wheel
 # Stelle sicher, dass requirements.txt im selben Verzeichnis ist
 if [ -f "requirements.txt" ]; then
-    pip install -r requirements.txt
+    python3 -m pip install -r requirements.txt
     echo -e "${GREEN}✔ Alle Python-Bibliotheken wurden erfolgreich installiert.${NC}"
 else
     echo -e "${RED}FEHLER: requirements.txt nicht gefunden! Überspringe Python-Bibliotheken.${NC}"
