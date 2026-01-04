@@ -2,9 +2,22 @@
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 NC='\033[0m'
+
+# Stelle sicher, dass wir im richtigen Verzeichnis sind
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+cd "$SCRIPT_DIR"
+
 VENV_PATH=".venv/bin/activate"
-RESULTS_SCRIPT="src/ltbbot/analysis/show_results.py" # Pfad angepasst
+RESULTS_SCRIPT="src/ltbbot/analysis/show_results.py"
+
+# Überprüfe, ob die virtuelle Umgebung existiert
+if [ ! -f "$VENV_PATH" ]; then
+    echo -e "${RED}❌ Fehler: Virtuelle Umgebung nicht gefunden!${NC}"
+    echo -e "${YELLOW}Bitte führe zuerst './install.sh' aus.${NC}"
+    exit 1
+fi
 
 source "$VENV_PATH"
 
@@ -20,4 +33,5 @@ MODE=${MODE:-1}
 # Rufe das (angepasste) Python-Skript auf
 python3 "$RESULTS_SCRIPT" --mode "$MODE"
 
+# Deaktiviere die virtuelle Umgebung
 deactivate
