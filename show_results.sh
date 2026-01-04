@@ -56,11 +56,7 @@ MODE=${MODE:-1}
 # Rufe das (angepasste) Python-Skript auf
 "$VENV_PYTHON" "$RESULTS_SCRIPT" --mode "$MODE"
 
-# Deaktiviere die virtuelle Umgebung
-deactivate
-
-# Rufe das (angepasste) Python-Skript auf
-python3 "$RESULTS_SCRIPT" --mode "$MODE"
-
-# Deaktiviere die virtuelle Umgebung
-deactivate
+# Deaktiviere die virtuelle Umgebung (falls noch aktiv)
+if command -v deactivate &> /dev/null; then
+    deactivate
+fi
