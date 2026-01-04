@@ -347,6 +347,16 @@ if __name__ == "__main__":
                         help="Analysemodus: 1=Einzel, 2=Manuell Portfolio, 3=Auto Portfolio, 4=Interaktive Charts")
     args = parser.parse_args()
 
+    # Mode 4 (Interaktive Charts) hat eigenes Input-System
+    if args.mode == '4':
+        try:
+            from ltbbot.analysis.interactive_status import main as interactive_main
+            interactive_main()
+        except Exception as e:
+            logger.critical(f"Fehler beim Ausführen der interaktiven Charts: {e}", exc_info=True)
+        sys.exit(0)  # Beende sauber nach Mode 4
+
+    # Für Modi 1, 2, 3: Frage Backtest-Konfiguration ab
     print("\n--- Bitte Konfiguration für den Backtest festlegen ---")
     try:
         start_date_input = input(f"Startdatum (JJJJ-MM-TT) [Standard: 2023-01-01]: ") or "2023-01-01"
@@ -361,10 +371,6 @@ if __name__ == "__main__":
             run_portfolio_mode(is_auto=False, start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input)
         elif args.mode == '3':
             run_portfolio_mode(is_auto=True, start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input)
-        elif args.mode == '4':
-            # Importiere interactive_status und führe main aus
-            from ltbbot.analysis.interactive_status import main as interactive_main
-            interactive_main()
         else: # mode == '1'
             run_single_analysis(start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input)
 
