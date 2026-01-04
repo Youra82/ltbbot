@@ -343,8 +343,8 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
 # --- Main Execution ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ltbbot Backtest Ergebnis-Analyse")
-    parser.add_argument('--mode', default='1', type=str, choices=['1', '2', '3'],
-                        help="Analysemodus: 1=Einzel, 2=Manuell Portfolio, 3=Auto Portfolio")
+    parser.add_argument('--mode', default='1', type=str, choices=['1', '2', '3', '4'],
+                        help="Analysemodus: 1=Einzel, 2=Manuell Portfolio, 3=Auto Portfolio, 4=Interaktive Charts")
     args = parser.parse_args()
 
     print("\n--- Bitte Konfiguration für den Backtest festlegen ---")
@@ -361,6 +361,10 @@ if __name__ == "__main__":
             run_portfolio_mode(is_auto=False, start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input)
         elif args.mode == '3':
             run_portfolio_mode(is_auto=True, start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input)
+        elif args.mode == '4':
+            # Importiere interactive_status und führe main aus
+            from ltbbot.analysis.interactive_status import main as interactive_main
+            interactive_main()
         else: # mode == '1'
             run_single_analysis(start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input)
 
