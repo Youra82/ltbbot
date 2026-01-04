@@ -487,6 +487,7 @@ def run_envelope_backtest(data, params, start_capital=1000):
         "win_rate": round(win_rate, 2),
         "max_drawdown_pct": round(calculated_max_dd_pct, 2), # Verwende berechneten DD
         "end_capital": round(final_total_equity, 2), # Verwende finales Gesamtkapital
-        "start_capital": start_capital
+        "start_capital": start_capital,
+        "equity_curve": equity_curve_data  # Füge Equity Curve hinzu für Chart-Darstellung
     }
     return results

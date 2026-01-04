@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
@@ -95,11 +96,9 @@ def load_config(filepath):
 
 def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_result=None, start_date=None, end_date=None, window=None):
     """
-    Erstellt interaktiven Chart mit:
-    - Candlesticks
-    - Envelope-Bändern (Upper/Lower)
-    - Trade-Signalen (Entry/Exit Long/Short mit großen Symbolen)
-    - Backtest-Metriken oberhalb (Start Capital, End Capital, PnL%, Max DD%, Trades, Win Rate%)
+    Erstellt interaktiven Chart mit 2 Subplots:
+    1. Hauptchart: Candlesticks + Envelope-Bänder + Trade-Signale
+    2. Unterer Chart: Equity Curve (Kontostand über Zeit)
     """
     
     # Filter auf Fenster
@@ -113,9 +112,16 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
     if end_date:
         df = df[df.index <= pd.to_datetime(end_date, utc=True)]
     
-    fig = go.Figure()
+    # Erstelle Subplots: 2 Reihen (Hauptchart 70%, Equity 30%)
+    fig = make_subplots(
+        rows=2, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.05,
+        row_heights=[0.7, 0.3],
+        subplot_titles=('', 'Kontostand (USDT)')
+    )
     
-    # ===== 1. CANDLESTICK CHART =====
+    # ===== 1. CANDLESTICK CHART (Row 1) =====
     fig.add_trace(
         go.Candlestick(
             x=df.index,
@@ -127,10 +133,11 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
             increasing_line_color="#16a34a",
             decreasing_line_color="#dc2626",
             showlegend=True
-        )
+        ),
+        row=1, col=1
     )
     
-    # ===== 2. ENVELOPE-BÄNDER (falls vorhanden) =====
+    # ===== 2. ENVELOPE-BÄNDER (Row 1) =====
     if 'upper_band' in df.columns and 'lower_band' in df.columns:
         # Upper Band
         fig.add_trace(go.Scatter(
@@ -140,7 +147,7 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
             line=dict(color='#9333ea', width=2, dash='dot'),
             showlegend=True,
             hovertemplate='Upper Band: %{y:.8f}<extra></extra>'
-        ))
+        ), row=1, col=1)
         
         # Lower Band
         fig.add_trace(go.Scatter(
@@ -150,21 +157,21 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
             line=dict(color='#ec4899', width=2, dash='dot'),
             showlegend=True,
             hovertemplate='Lower Band: %{y:.8f}<extra></extra>'
-        ))
+        ), row=1, col=1)
         
-        # Gefüllter Bereich zwischen Bändern (optional)
+        # Gefüllter Bereich zwischen Bändern
         fig.add_trace(go.Scatter(
             x=df.index.tolist() + df.index.tolist()[::-1],
             y=df['upper_band'].tolist() + df['lower_band'].tolist()[::-1],
             fill='toself',
-            fillcolor='rgba(147, 51, 234, 0.1)',  # Purple with low opacity
+            fillcolor='rgba(147, 51, 234, 0.1)',
             line=dict(color='rgba(255,255,255,0)'),
             showlegend=False,
             name='Envelope Zone',
             hoverinfo='skip'
-        ))
+        ), row=1, col=1)
     
-    # ===== 3. TRADE-SIGNALE =====
+    # ===== 3. TRADE-SIGNALE (Row 1) =====
     entry_long_x, entry_long_y = [], []
     exit_long_x, exit_long_y = [], []
     entry_short_x, entry_short_y = [], []
@@ -206,13 +213,13 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
             marker=dict(
                 color="#16a34a", 
                 symbol="triangle-up", 
-                size=18,  # Größer
+                size=18,
                 line=dict(width=2.5, color="#0f5132")
             ),
             name="Entry Long",
             showlegend=True,
             hovertemplate='<b>Entry Long</b><br>Price: %{y:.8f}<br>Time: %{x}<extra></extra>'
-        ))
+        ), row=1, col=1)
     
     # Exit Long: cyan Kreis (größer)
     if exit_long_x:
@@ -221,13 +228,13 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
             marker=dict(
                 color="#22d3ee", 
                 symbol="circle", 
-                size=16,  # Größer
+                size=16,
                 line=dict(width=2.2, color="#0e7490")
             ),
             name="Exit Long",
             showlegend=True,
             hovertemplate='<b>Exit Long</b><br>Price: %{y:.8f}<br>Time: %{x}<extra></extra>'
-        ))
+        ), row=1, col=1)
     
     # Entry Short: oranges Dreieck nach unten (größer)
     if entry_short_x:
@@ -236,13 +243,13 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
             marker=dict(
                 color="#f59e0b", 
                 symbol="triangle-down", 
-                size=18,  # Größer
+                size=18,
                 line=dict(width=2.5, color="#92400e")
             ),
             name="Entry Short",
             showlegend=True,
             hovertemplate='<b>Entry Short</b><br>Price: %{y:.8f}<br>Time: %{x}<extra></extra>'
-        ))
+        ), row=1, col=1)
     
     # Exit Short: rotes Diamant (größer)
     if exit_short_x:
@@ -251,15 +258,53 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
             marker=dict(
                 color="#ef4444", 
                 symbol="diamond", 
-                size=16,  # Größer
+                size=16,
                 line=dict(width=2.2, color="#7f1d1d")
             ),
             name="Exit Short",
             showlegend=True,
             hovertemplate='<b>Exit Short</b><br>Price: %{y:.8f}<br>Time: %{x}<extra></extra>'
-        ))
+        ), row=1, col=1)
     
-    # ===== 4. TITEL MIT METRIKEN =====
+    # ===== 4. EQUITY CURVE (Row 2) =====
+    if backtest_result and 'equity_curve' in backtest_result:
+        equity_data = backtest_result['equity_curve']
+        if equity_data and len(equity_data) > 0:
+            equity_df = pd.DataFrame(equity_data)
+            if 'timestamp' in equity_df.columns and 'equity' in equity_df.columns:
+                fig.add_trace(go.Scatter(
+                    x=equity_df['timestamp'],
+                    y=equity_df['equity'],
+                    mode='lines',
+                    name='Kontostand',
+                    line=dict(color='#2563eb', width=2),
+                    fill='tozeroy',
+                    fillcolor='rgba(37, 99, 235, 0.2)',
+                    showlegend=False,
+                    hovertemplate='<b>Kontostand</b><br>%{y:,.2f} USDT<br>%{x}<extra></extra>'
+                ), row=2, col=1)
+    else:
+        # Fallback: Berechne einfache Equity basierend auf Start Capital
+        start_capital = backtest_result.get('start_capital', 1000) if backtest_result else 1000
+        end_capital = backtest_result.get('end_capital', start_capital) if backtest_result else start_capital
+        
+        # Erstelle lineare Equity zwischen Start und End
+        equity_x = [df.index[0], df.index[-1]]
+        equity_y = [start_capital, end_capital]
+        
+        fig.add_trace(go.Scatter(
+            x=equity_x,
+            y=equity_y,
+            mode='lines',
+            name='Kontostand',
+            line=dict(color='#2563eb', width=2),
+            fill='tozeroy',
+            fillcolor='rgba(37, 99, 235, 0.2)',
+            showlegend=False,
+            hovertemplate='<b>Kontostand</b><br>%{y:,.2f} USDT<br>%{x}<extra></extra>'
+        ), row=2, col=1)
+    
+    # ===== 5. TITEL MIT METRIKEN =====
     title = f"{symbol} {timeframe} - LTBBot"
     subtitle = ""
     
@@ -306,28 +351,25 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
             xanchor='center',
             font=dict(size=14)
         ),
-        height=700,
+        height=900,  # Größer wegen 2 Subplots
         hovermode='x unified',
         template='plotly_white',
-        dragmode='zoom',  # Nur Zoom-Tool, kein Box-Select
-        xaxis=dict(
-            rangeslider=dict(visible=False),  # Entferne Rangeslider für sauberen Look
-            fixedrange=False
-        ),
-        yaxis=dict(fixedrange=False),
+        dragmode='zoom',
         legend=dict(
             orientation="h", 
             yanchor="bottom", 
-            y=1.12,  # Höher um Platz für Metriken zu geben
+            y=1.08,
             xanchor="right", 
             x=1
         ),
         showlegend=True,
-        margin=dict(t=150, b=60)  # Mehr Platz oben für Metriken
+        margin=dict(t=150, b=60)
     )
     
-    fig.update_yaxes(title_text="Preis (USDT)")
-    fig.update_xaxes(fixedrange=False, title_text="Zeit")
+    # Update axes
+    fig.update_xaxes(title_text="Zeit", row=2, col=1)
+    fig.update_yaxes(title_text="Preis (USDT)", row=1, col=1)
+    fig.update_yaxes(title_text="USDT", row=2, col=1)
     
     return fig
 
