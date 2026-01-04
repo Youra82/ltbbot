@@ -259,7 +259,24 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
             hovertemplate='<b>Exit Short</b><br>Price: %{y:.8f}<br>Time: %{x}<extra></extra>'
         ))
     
-    # ===== 4. TITEL MIT METRIKEN =====
+    # ===== 4. EQUITY CURVE (sekundäre Y-Achse rechts) =====
+    if backtest_result and 'equity_curve' in backtest_result:
+        equity_data = backtest_result['equity_curve']
+        if equity_data and len(equity_data) > 0:
+            equity_df = pd.DataFrame(equity_data)
+            if 'timestamp' in equity_df.columns and 'equity' in equity_df.columns:
+                fig.add_trace(go.Scatter(
+                    x=equity_df['timestamp'],
+                    y=equity_df['equity'],
+                    mode='lines',
+                    name='Kontostand',
+                    line=dict(color='#2563eb', width=2),
+                    yaxis='y2',
+                    showlegend=True,
+                    hovertemplate='<b>Kontostand</b><br>%{y:,.2f} USDT<br>%{x}<extra></extra>'
+                ))
+    
+    # ===== 5. TITEL MIT METRIKEN =====
     title = f"{symbol} {timeframe} - LTBBot"
     subtitle = ""
     
@@ -314,7 +331,13 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
             rangeslider=dict(visible=False),
             fixedrange=False
         ),
-        yaxis=dict(fixedrange=False),
+        yaxis=dict(fixedrange=False, title_text="Preis (USDT)"),
+        yaxis2=dict(
+            title_text="Kontostand (USDT)",
+            overlaying="y",
+            side="right",
+            fixedrange=False
+        ),
         legend=dict(
             orientation="h", 
             yanchor="bottom", 
@@ -326,7 +349,6 @@ def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_res
         margin=dict(t=150, b=60)
     )
     
-    fig.update_yaxes(title_text="Preis (USDT)")
     fig.update_xaxes(fixedrange=False, title_text="Zeit")
     
     return fig
