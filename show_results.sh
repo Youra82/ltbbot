@@ -5,14 +5,12 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# Beende das Skript sofort bei Fehlern
-set -e
-
 # Stelle sicher, dass wir im richtigen Verzeichnis sind
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 cd "$SCRIPT_DIR"
 
 VENV_PATH=".venv/bin/activate"
+VENV_PIP=".venv/bin/pip"
 RESULTS_SCRIPT="src/ltbbot/analysis/show_results.py"
 
 # Überprüfe, ob die virtuelle Umgebung existiert
@@ -31,12 +29,15 @@ source "$VENV_PATH"
 
 # Überprüfe, ob alle erforderlichen Pakete installiert sind
 echo -e "${YELLOW}Überprüfe Python-Abhängigkeiten...${NC}"
-python3 -m pip install --quiet --upgrade pip setuptools wheel 2>/dev/null || true
+"$VENV_PIP" install --quiet --upgrade pip setuptools wheel 2>/dev/null || true
 
-# Versuche, requirements.txt zu installieren wenn noch nicht done
+# Versuche, requirements.txt zu installieren wenn noch nicht vorhanden
 if ! python3 -c "import pandas, plotly" 2>/dev/null; then
     echo -e "${YELLOW}Installiere fehlende Pakete...${NC}"
-    python3 -m pip install --quiet -r requirements.txt
+    "$VENV_PIP" install --quiet -r requirements.txt || {
+        echo -e "${RED}Fehler beim Installieren von Paketen. Versuche mit --break-system-packages...${NC}"
+        "$VENV_PIP" install --quiet --break-system-packages -r requirements.txt
+    }
 fi
 
 # --- ERWEITERTES MODUS-MENÜ ---

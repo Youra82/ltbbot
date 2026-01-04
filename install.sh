@@ -39,11 +39,17 @@ echo -e "${GREEN}✔ Virtuelle Umgebung wurde erstellt.${NC}"
 echo -e "\n${YELLOW}3/4: Aktiviere die virtuelle Umgebung und installiere die notwendigen Python-Bibliotheken...${NC}"
 source .venv/bin/activate
 
-# Verwende python3 -m pip für bessere Kompatibilität
-python3 -m pip install --upgrade pip setuptools wheel
+# Verwende direkten Pfad zum venv-pip für bessere Kompatibilität
+VENV_PIP=".venv/bin/pip"
+$VENV_PIP install --upgrade pip setuptools wheel
+
 # Stelle sicher, dass requirements.txt im selben Verzeichnis ist
 if [ -f "requirements.txt" ]; then
-    python3 -m pip install -r requirements.txt
+    # Versuche zuerst normales Install
+    if ! $VENV_PIP install -r requirements.txt 2>/dev/null; then
+        echo -e "${YELLOW}Versuche mit --break-system-packages (PEP 668 Kompatibilität)...${NC}"
+        $VENV_PIP install --break-system-packages -r requirements.txt
+    fi
     echo -e "${GREEN}✔ Alle Python-Bibliotheken wurden erfolgreich installiert.${NC}"
 else
     echo -e "${RED}FEHLER: requirements.txt nicht gefunden! Überspringe Python-Bibliotheken.${NC}"
