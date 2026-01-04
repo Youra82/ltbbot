@@ -10,34 +10,33 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 cd "$SCRIPT_DIR"
 
 VENV_PATH=".venv/bin/activate"
+VENV_PYTHON=".venv/bin/python"
 VENV_PIP=".venv/bin/pip"
 RESULTS_SCRIPT="src/ltbbot/analysis/show_results.py"
 
-# Überprüfe, ob die virtuelle Umgebung existiert
-if [ ! -f "$VENV_PATH" ]; then
-    echo -e "${RED}❌ Fehler: Virtuelle Umgebung nicht gefunden!${NC}"
-    echo -e "${YELLOW}Installiere LTBBot...${NC}"
-    ./install.sh
-    if [ ! -f "$VENV_PATH" ]; then
-        echo -e "${RED}❌ Installation fehlgeschlagen!${NC}"
-        exit 1
-    fi
+# Überprüfe, ob die virtuelle Umgebung vollständig ist
+if [ ! -f "$VENV_PYTHON" ] || [ ! -f "$VENV_PIP" ]; then
+    echo -e "${YELLOW}⚠️  Virtuelle Umgebung nicht vollständig - wird neu erstellt...${NC}"
+    rm -rf .venv 2>/dev/null || true
+    python3 -m venv .venv --upgrade-deps
+    echo -e "${GREEN}✔ Neue virtuelle Umgebung erstellt.${NC}"
 fi
 
 # Aktiviere die virtuelle Umgebung
 source "$VENV_PATH"
 
-# Überprüfe, ob alle erforderlichen Pakete installiert sind
+# Upgrade pip, setuptools, wheel
 echo -e "${YELLOW}Überprüfe Python-Abhängigkeiten...${NC}"
-"$VENV_PIP" install --quiet --upgrade pip setuptools wheel 2>/dev/null || true
+"$VENV_PIP" install --upgrade pip setuptools wheel --quiet
 
 # Versuche, requirements.txt zu installieren wenn noch nicht vorhanden
-if ! python3 -c "import pandas, plotly" 2>/dev/null; then
+if ! "$VENV_PYTHON" -c "import pandas, plotly" 2>/dev/null; then
     echo -e "${YELLOW}Installiere fehlende Pakete...${NC}"
-    "$VENV_PIP" install --quiet -r requirements.txt || {
-        echo -e "${RED}Fehler beim Installieren von Paketen. Versuche mit --break-system-packages...${NC}"
-        "$VENV_PIP" install --quiet --break-system-packages -r requirements.txt
-    }
+    if ! "$VENV_PIP" install -r requirements.txt --quiet 2>/dev/null; then
+        echo -e "${YELLOW}Versuche mit --break-system-packages (PEP 668 Kompatibilität)...${NC}"
+        "$VENV_PIP" install --break-system-packages -r requirements.txt --quiet
+    fi
+    echo -e "${GREEN}✔ Pakete installiert.${NC}"
 fi
 
 # --- ERWEITERTES MODUS-MENÜ ---
@@ -48,6 +47,12 @@ echo "  3) Automatische Portfolio-Optimierung (der Bot wählt das beste Team)"
 echo "  4) Interaktive Charts (Entry/Exit-Signale nur, keine Indikatoren)"
 read -p "Auswahl (1-4) [Standard: 1]: " MODE
 MODE=${MODE:-1}
+
+# Rufe das (angepasste) Python-Skript auf
+"$VENV_PYTHON" "$RESULTS_SCRIPT" --mode "$MODE"
+
+# Deaktiviere die virtuelle Umgebung
+deactivate
 
 # Rufe das (angepasste) Python-Skript auf
 python3 "$RESULTS_SCRIPT" --mode "$MODE"
