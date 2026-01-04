@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
 Interactive Charts für LTBBot
-Zeigt Candlestick-Chart mit Trade-Signalen (Entry/Exit Long/Short)
+Zeigt Candlestick-Chart mit:
+- Trade-Signalen (Entry/Exit Long/Short mit großen farbigen Symbolen)
+- Envelope-Bändern (Upper/Lower Bands)
+- Backtest-Metriken (Startkapital, Endkapital, PnL%, Max DD%, Trades, Win Rate%, Status)
 Nutzt durchnummerierte Konfigurationsdateien zum Auswählen
 """
 
@@ -19,6 +22,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange
+from ltbbot.analysis.backtester import run_envelope_backtest, load_data
 
 def setup_logging():
     logger = logging.getLogger('interactive_status')
@@ -89,8 +93,14 @@ def load_config(filepath):
     with open(filepath, 'r') as f:
         return json.load(f)
 
-def create_interactive_chart(symbol, timeframe, df, trades, start_date, end_date, window=None):
-    """Erstellt interaktiven Chart mit Candlesticks und Trade-Signalen (Entry/Exit)"""
+def create_interactive_chart(symbol, timeframe, df, trades, config, backtest_result=None, start_date=None, end_date=None, window=None):
+    """
+    Erstellt interaktiven Chart mit:
+    - Candlesticks
+    - Envelope-Bändern (Upper/Lower)
+    - Trade-Signalen (Entry/Exit Long/Short mit großen Symbolen)
+    - Backtest-Metriken oberhalb (Start Capital, End Capital, PnL%, Max DD%, Trades, Win Rate%)
+    """
     
     # Filter auf Fenster
     if window:
@@ -105,7 +115,7 @@ def create_interactive_chart(symbol, timeframe, df, trades, start_date, end_date
     
     fig = go.Figure()
     
-    # Candlestick Chart
+    # ===== 1. CANDLESTICK CHART =====
     fig.add_trace(
         go.Candlestick(
             x=df.index,
@@ -120,7 +130,41 @@ def create_interactive_chart(symbol, timeframe, df, trades, start_date, end_date
         )
     )
     
-    # Trade-Signale extrahieren
+    # ===== 2. ENVELOPE-BÄNDER (falls vorhanden) =====
+    if 'upper_band' in df.columns and 'lower_band' in df.columns:
+        # Upper Band
+        fig.add_trace(go.Scatter(
+            x=df.index, y=df['upper_band'],
+            mode='lines',
+            name='Upper Band',
+            line=dict(color='#9333ea', width=2, dash='dot'),
+            showlegend=True,
+            hovertemplate='Upper Band: %{y:.8f}<extra></extra>'
+        ))
+        
+        # Lower Band
+        fig.add_trace(go.Scatter(
+            x=df.index, y=df['lower_band'],
+            mode='lines',
+            name='Lower Band',
+            line=dict(color='#ec4899', width=2, dash='dot'),
+            showlegend=True,
+            hovertemplate='Lower Band: %{y:.8f}<extra></extra>'
+        ))
+        
+        # Gefüllter Bereich zwischen Bändern (optional)
+        fig.add_trace(go.Scatter(
+            x=df.index.tolist() + df.index.tolist()[::-1],
+            y=df['upper_band'].tolist() + df['lower_band'].tolist()[::-1],
+            fill='toself',
+            fillcolor='rgba(147, 51, 234, 0.1)',  # Purple with low opacity
+            line=dict(color='rgba(255,255,255,0)'),
+            showlegend=False,
+            name='Envelope Zone',
+            hoverinfo='skip'
+        ))
+    
+    # ===== 3. TRADE-SIGNALE =====
     entry_long_x, entry_long_y = [], []
     exit_long_x, exit_long_y = [], []
     entry_short_x, entry_short_y = [], []
@@ -155,57 +199,135 @@ def create_interactive_chart(symbol, timeframe, df, trades, start_date, end_date
                 exit_short_x.append(pd.to_datetime(exit_time))
                 exit_short_y.append(exit_price)
     
-    # Entry Long: grünes Dreieck nach oben
+    # Entry Long: grünes Dreieck nach oben (größer)
     if entry_long_x:
         fig.add_trace(go.Scatter(
             x=entry_long_x, y=entry_long_y, mode="markers",
-            marker=dict(color="#16a34a", symbol="triangle-up", size=14, line=dict(width=1.2, color="#0f5132")),
+            marker=dict(
+                color="#16a34a", 
+                symbol="triangle-up", 
+                size=18,  # Größer
+                line=dict(width=2.5, color="#0f5132")
+            ),
             name="Entry Long",
-            showlegend=True
+            showlegend=True,
+            hovertemplate='<b>Entry Long</b><br>Price: %{y:.8f}<br>Time: %{x}<extra></extra>'
         ))
     
-    # Exit Long: cyan Kreis
+    # Exit Long: cyan Kreis (größer)
     if exit_long_x:
         fig.add_trace(go.Scatter(
             x=exit_long_x, y=exit_long_y, mode="markers",
-            marker=dict(color="#22d3ee", symbol="circle", size=12, line=dict(width=1.1, color="#0e7490")),
+            marker=dict(
+                color="#22d3ee", 
+                symbol="circle", 
+                size=16,  # Größer
+                line=dict(width=2.2, color="#0e7490")
+            ),
             name="Exit Long",
-            showlegend=True
+            showlegend=True,
+            hovertemplate='<b>Exit Long</b><br>Price: %{y:.8f}<br>Time: %{x}<extra></extra>'
         ))
     
-    # Entry Short: oranges Dreieck nach unten
+    # Entry Short: oranges Dreieck nach unten (größer)
     if entry_short_x:
         fig.add_trace(go.Scatter(
             x=entry_short_x, y=entry_short_y, mode="markers",
-            marker=dict(color="#f59e0b", symbol="triangle-down", size=14, line=dict(width=1.2, color="#92400e")),
+            marker=dict(
+                color="#f59e0b", 
+                symbol="triangle-down", 
+                size=18,  # Größer
+                line=dict(width=2.5, color="#92400e")
+            ),
             name="Entry Short",
-            showlegend=True
+            showlegend=True,
+            hovertemplate='<b>Entry Short</b><br>Price: %{y:.8f}<br>Time: %{x}<extra></extra>'
         ))
     
-    # Exit Short: rotes Diamant
+    # Exit Short: rotes Diamant (größer)
     if exit_short_x:
         fig.add_trace(go.Scatter(
             x=exit_short_x, y=exit_short_y, mode="markers",
-            marker=dict(color="#ef4444", symbol="diamond", size=12, line=dict(width=1.1, color="#7f1d1d")),
+            marker=dict(
+                color="#ef4444", 
+                symbol="diamond", 
+                size=16,  # Größer
+                line=dict(width=2.2, color="#7f1d1d")
+            ),
             name="Exit Short",
-            showlegend=True
+            showlegend=True,
+            hovertemplate='<b>Exit Short</b><br>Price: %{y:.8f}<br>Time: %{x}<extra></extra>'
         ))
     
+    # ===== 4. TITEL MIT METRIKEN =====
     title = f"{symbol} {timeframe} - LTBBot"
+    subtitle = ""
+    
+    if backtest_result:
+        start_capital = backtest_result.get('start_capital', 'N/A')
+        end_capital = backtest_result.get('end_capital', 'N/A')
+        total_pnl_pct = backtest_result.get('total_pnl_pct', 0)
+        max_dd_pct = backtest_result.get('max_drawdown_pct', 0)
+        trades_count = backtest_result.get('trades_count', 0)
+        win_rate = backtest_result.get('win_rate', 0)
+        status = backtest_result.get('status', 'Unknown')
+        
+        # Formatiere Metriken
+        if isinstance(start_capital, (int, float)):
+            start_cap_str = f"${start_capital:,.2f}"
+        else:
+            start_cap_str = str(start_capital)
+        
+        if isinstance(end_capital, (int, float)):
+            end_cap_str = f"${end_capital:,.2f}"
+        else:
+            end_cap_str = str(end_capital)
+        
+        pnl_color = '#16a34a' if total_pnl_pct >= 0 else '#dc2626'
+        
+        subtitle = (
+            f"<sub>"
+            f"<b>Start Capital:</b> {start_cap_str} | "
+            f"<b>End Capital:</b> {end_cap_str} | "
+            f"<b style='color:{pnl_color}'>PnL:</b> <b style='color:{pnl_color}'>{total_pnl_pct:+.2f}%</b> | "
+            f"<b>Max DD:</b> {max_dd_pct:.2f}% | "
+            f"<b>Trades:</b> {trades_count} | "
+            f"<b>Win Rate:</b> {win_rate:.1f}% | "
+            f"<b>Status:</b> {status}"
+            f"</sub>"
+        )
+    
+    title_text = title + subtitle if subtitle else title
+    
     fig.update_layout(
-        title=title,
-        height=600,
+        title=dict(
+            text=title_text,
+            x=0.5,
+            xanchor='center',
+            font=dict(size=14)
+        ),
+        height=700,
         hovermode='x unified',
         template='plotly_white',
-        dragmode='zoom',
-        xaxis=dict(rangeslider=dict(visible=True), fixedrange=False),
+        dragmode='zoom',  # Nur Zoom-Tool, kein Box-Select
+        xaxis=dict(
+            rangeslider=dict(visible=False),  # Entferne Rangeslider für sauberen Look
+            fixedrange=False
+        ),
         yaxis=dict(fixedrange=False),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        showlegend=True
+        legend=dict(
+            orientation="h", 
+            yanchor="bottom", 
+            y=1.12,  # Höher um Platz für Metriken zu geben
+            xanchor="right", 
+            x=1
+        ),
+        showlegend=True,
+        margin=dict(t=150, b=60)  # Mehr Platz oben für Metriken
     )
     
-    fig.update_yaxes(title_text="Preis")
-    fig.update_xaxes(fixedrange=False)
+    fig.update_yaxes(title_text="Preis (USDT)")
+    fig.update_xaxes(fixedrange=False, title_text="Zeit")
     
     return fig
 
@@ -220,6 +342,8 @@ def main():
     end_date = input("Enddatum (YYYY-MM-DD) [leer=heute]: ").strip() or None
     window_input = input("Letzten N Tage anzeigen [leer=alle]: ").strip()
     window = int(window_input) if window_input.isdigit() else None
+    start_capital_input = input("Startkapital für Backtest (USDT) [leer=1000]: ").strip()
+    start_capital = int(start_capital_input) if start_capital_input.isdigit() else 1000
     send_telegram = input("Telegram versenden? (j/n) [Standard: n]: ").strip().lower() in ['j', 'y', 'yes']
     
     try:
@@ -267,15 +391,28 @@ def main():
                 logger.warning(f"Keine Daten für {symbol} {timeframe}")
                 continue
             
+            # ===== BACKTEST AUSFÜHREN =====
+            logger.info("Führe Backtest durch...")
+            backtest_result = None
+            try:
+                backtest_result = run_envelope_backtest(df, config, start_capital=start_capital)
+                logger.info(f"Backtest abgeschlossen: PnL={backtest_result.get('total_pnl_pct', 0):.2f}%, "
+                           f"Trades={backtest_result.get('trades_count', 0)}, "
+                           f"Win Rate={backtest_result.get('win_rate', 0):.1f}%")
+            except Exception as e:
+                logger.warning(f"Konnte Backtest nicht ausführen: {e}. Zeige Chart ohne Metriken...")
+            
             logger.info("Erstelle Chart...")
             fig = create_interactive_chart(
                 symbol,
                 timeframe,
                 df,
                 [],  # Keine Trades für diese Version
-                start_date,
-                end_date,
-                window
+                config,
+                backtest_result=backtest_result,
+                start_date=start_date,
+                end_date=end_date,
+                window=window
             )
             
             safe_name = f"{symbol.replace('/', '_')}_{timeframe}"
