@@ -151,6 +151,11 @@ def run_envelope_backtest(data, params, start_capital=1000):
     closed_trades = [] # [{pnl, side}, ...]
     equity_curve_data = [] # Für Drawdown-Berechnung am Ende
     
+    # Starte Equity Curve mit Start Capital
+    if not df.empty:
+        first_timestamp = df.index[0]
+        equity_curve_data.append({'timestamp': first_timestamp, 'equity': start_capital})
+    
     # Progress Bar Setup
     total_candles = len(df)
     logger.info(f"Starte Backtest mit {total_candles} Kerzen...")
@@ -167,37 +172,6 @@ def run_envelope_backtest(data, params, start_capital=1000):
         
         current_candle = df.iloc[i]
         timestamp = current_candle.name # Zeitstempel der Kerze
-
-        # --- Unrealisierten PnL zu Beginn der Kerze berechnen ---
-        unrealized_pnl_start = 0.0
-        # current_portfolio_value_usd = 0.0 # Gehebelter Wert aller offenen Positionen (nicht unbedingt nötig)
-        for pos in positions:
-            current_price_for_pnl = current_candle['open'] # PnL zu Beginn der Kerze
-            # Sicherstellen, dass Preis gültig ist
-            if pd.isna(current_price_for_pnl) or current_price_for_pnl <= 0:
-                 logger.warning(f"Ungültiger Open-Preis ({current_price_for_pnl}) bei Kerze {i}. PnL-Berechnung könnte ungenau sein.")
-                 current_price_for_pnl = pos['entry_price'] # Fallback auf Entry-Preis
-
-            pos_lev = pos.get('leverage', 1)
-            pos_amount = pos['amount_coins']
-            pos_entry = pos['entry_price']
-            layer_pnl = 0
-            if pos['side'] == 'long':
-                layer_pnl = (current_price_for_pnl - pos_entry) * pos_amount * pos_lev
-            else: # short
-                layer_pnl = (pos_entry - current_price_for_pnl) * pos_amount * pos_lev
-            unrealized_pnl_start += layer_pnl
-            # current_portfolio_value_usd += pos_amount * current_price_for_pnl * pos_lev
-
-        equity_at_candle_start = capital + unrealized_pnl_start
-        # Nur gültige Equity-Werte hinzufügen
-        if not pd.isna(equity_at_candle_start):
-             equity_curve_data.append({'timestamp': timestamp, 'equity': equity_at_candle_start})
-        else:
-             # Versuche, den letzten gültigen Wert zu nehmen oder start_capital
-             last_valid_equity = equity_curve_data[-1]['equity'] if equity_curve_data else start_capital
-             equity_curve_data.append({'timestamp': timestamp, 'equity': last_valid_equity})
-             logger.warning(f"Ungültiger Equity-Wert (NaN) bei Kerze {i}. Verwende letzten gültigen Wert: {last_valid_equity}")
 
 
         # --- Ausstiege prüfen (TP und SL) ---
@@ -258,6 +232,10 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
         positions = remaining_positions
         capital += exit_pnl_current_candle # Realisiertes Kapital nach Ausstiegen aktualisieren
+        
+        # --- Equity Curve aktualisieren (nur bei Trade-Exit) ---
+        if exit_pnl_current_candle != 0.0:
+            equity_curve_data.append({'timestamp': timestamp, 'equity': capital})
 
         # --- Einstiege prüfen ---
         if capital > 0: # Nur wenn Kapital verfügbar (realisiert)
