@@ -235,7 +235,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         if current_candle['low'] <= entry_trigger_price:
                             entry_price = entry_trigger_price
                             if entry_price > 0:
-                                risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0) # Basiert auf Startkapital
+                                # COMPOUNDING: Risiko basiert auf aktueller Equity (wächst mit Gewinnen)
+                                risk_amount_usd = equity * (risk_per_entry_pct / 100.0)
                                 if risk_amount_usd <= 0: continue
                                 sl_price = entry_price * (1 - stop_loss_pct_param)
                                 sl_distance_price = abs(entry_price - sl_price)
@@ -276,7 +277,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         if current_candle['high'] >= entry_trigger_price:
                             entry_price = entry_trigger_price
                             if entry_price > 0:
-                                risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0) # Basiert auf Startkapital
+                                # COMPOUNDING: Risiko basiert auf aktueller Equity (wächst mit Gewinnen)
+                                risk_amount_usd = equity * (risk_per_entry_pct / 100.0)
                                 if risk_amount_usd <= 0: continue
                                 sl_price = entry_price * (1 + stop_loss_pct_param)
                                 sl_distance_price = abs(entry_price - sl_price)

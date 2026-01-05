@@ -313,8 +313,8 @@ def run_envelope_backtest(data, params, start_capital=1000):
                     if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
                         entry_price = entry_trigger_price # Vereinfacht: Einstieg zum Triggerpreis
 
-                        # KORRIGIERTE POSITIONSGRÖSSENBERECHNUNG
-                        risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0) # <--- BASIERT AUF STARTKAPITAL
+                        # COMPOUNDING: Risiko basiert auf aktuellem Kapital (wächst mit Gewinnen)
+                        risk_amount_usd = capital * (risk_per_entry_pct / 100.0)
                         if risk_amount_usd <= 0: continue
 
                         sl_price = entry_price * (1 - stop_loss_pct_param)
@@ -356,8 +356,8 @@ def run_envelope_backtest(data, params, start_capital=1000):
                     if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
                         entry_price = entry_trigger_price
 
-                        # KORRIGIERTE POSITIONSGRÖSSENBERECHNUNG
-                        risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0) # <--- BASIERT AUF STARTKAPITAL
+                        # COMPOUNDING: Risiko basiert auf aktuellem Kapital (wächst mit Gewinnen)
+                        risk_amount_usd = capital * (risk_per_entry_pct / 100.0)
                         if risk_amount_usd <= 0: continue
 
                         sl_price = entry_price * (1 + stop_loss_pct_param)
