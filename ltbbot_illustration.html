@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LTBBot - Envelope Mean Reversion Trading</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            height: 500px;
+        }
+        .chart-container h2 { margin-bottom: 15px; color: #333; }
+        .chart-container canvas { max-height: 420px; }
+        .diagram-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .diagram-section h2 { color: #333; margin-bottom: 20px; }
+        footer { text-align: center; color: white; margin-top: 40px; padding: 20px; opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 LTBBot - Envelope Mean Reversion Trading</h1>
+            <p>Moving Average Envelopes mit Volume-Filter</p>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h2>Envelope Bands</h2>
+                <canvas id="envelopeChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>Volume-Check</h2>
+                <canvas id="volumeChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>Mean Reversion Signals</h2>
+                <canvas id="signalChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>Backtest Performance</h2>
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <h2>🎯 Envelope-Strategie</h2>
+            <p style="margin: 15px 0;">
+                <strong>Entry-Signal:</strong> Preis berührt untere Envelope → Long (Mean Reversion)<br>
+                <strong>MA-Filter:</strong> Nur Long wenn MA steigend (Uptrend-Bias)<br>
+                <strong>Volume-Check:</strong> Volumen-Ratio > 1.2x (liquide Move)<br>
+                <strong>Exit:</strong> TP at Mittellinie oder obere Envelope<br>
+                <strong>Trailing:</strong> Nach Mittellinie wird Trail unter Higher Low nachgezogen
+            </p>
+        </div>
+    </div>
+
+    <footer>
+        <p>LTBBot © 2025 | Envelope-basierte Mean Reversion | Optuna-optimiert</p>
+    </footer>
+
+    <script>
+        const envelopeCtx = document.getElementById('envelopeChart').getContext('2d');
+        new Chart(envelopeCtx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 50}, (_, i) => i),
+                datasets: [
+                    {
+                        label: 'Obere Envelope',
+                        data: Array.from({length: 50}, (_, i) => 46000 + Math.sin(i/10)*1000 + 500),
+                        borderColor: '#f44336',
+                        borderWidth: 2,
+                        fill: false
+                    },
+                    {
+                        label: 'MA (20)',
+                        data: Array.from({length: 50}, (_, i) => 46000 + Math.sin(i/10)*1000),
+                        borderColor: '#4caf50',
+                        borderWidth: 2.5,
+                        fill: false
+                    },
+                    {
+                        label: 'Untere Envelope',
+                        data: Array.from({length: 50}, (_, i) => 46000 + Math.sin(i/10)*1000 - 500),
+                        borderColor: '#f44336',
+                        borderWidth: 2,
+                        fill: false
+                    },
+                    {
+                        label: 'Preis',
+                        data: Array.from({length: 50}, (_, i) => 46000 + Math.sin(i/10)*1000 + (Math.random()-0.5)*300),
+                        borderColor: '#3f51b5',
+                        borderWidth: 2.5,
+                        fill: false
+                    }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        const volumeCtx = document.getElementById('volumeChart').getContext('2d');
+        new Chart(volumeCtx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: 30}, (_, i) => i),
+                datasets: [{
+                    label: 'Volume (mit Ratio)',
+                    data: Array.from({length: 30}, (_, i) => Math.random() * 100000 + 50000),
+                    backgroundColor: Array.from({length: 30}, (_, i) => i % 2 === 0 ? '#4caf50' : '#f44336'),
+                    borderColor: '#333',
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
+
+        const signalCtx = document.getElementById('signalChart').getContext('2d');
+        new Chart(signalCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Long Signals (untere Envelope)',
+                        data: [{x: 5, y: 45500}, {x: 15, y: 45700}, {x: 25, y: 45800}],
+                        backgroundColor: '#4caf50',
+                        borderColor: '#388e3c',
+                        borderWidth: 2,
+                        pointRadius: 8
+                    },
+                    {
+                        label: 'Exit Signals (Mittellinie)',
+                        data: [{x: 8, y: 46000}, {x: 18, y: 46000}, {x: 28, y: 46000}],
+                        backgroundColor: '#ffc107',
+                        borderColor: '#f57f17',
+                        borderWidth: 2,
+                        pointRadius: 8
+                    }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
+        });
+
+        const perfCtx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(perfCtx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 50}, (_, i) => i),
+                datasets: [{
+                    label: 'Portfolio Value',
+                    data: Array.from({length: 50}, (_, i) => 1000 * (1 + Math.sin(i/10)*0.15 + i*0.02 + (Math.random()-0.5)*0.05)),
+                    borderColor: '#4caf50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                    borderWidth: 2.5,
+                    fill: true
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    </script>
+</body>
+</html>
