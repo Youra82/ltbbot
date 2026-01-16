@@ -221,40 +221,7 @@ Logverzeichnis anlegen:
 mkdir -p /home/ubuntu/ltbbot/logs
 ```
 
-### Als Systemd Service (Linux)
 
-Für 24/7 Betrieb:
-
-```bash
-# Service-Datei erstellen
-sudo nano /etc/systemd/system/ltbbot.service
-```
-
-```ini
-[Unit]
-Description=LTBBot Trading System
-After=network.target
-
-[Service]
-Type=simple
-User=your-user
-WorkingDirectory=/path/to/ltbbot
-ExecStart=/path/to/ltbbot/.venv/bin/python master_runner.py
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-# Service aktivieren
-sudo systemctl enable ltbbot
-sudo systemctl start ltbbot
-
-# Status prüfen
-sudo systemctl status ltbbot
-```
 
 ---
 
@@ -437,15 +404,7 @@ chmod +x update.sh
 bash ./update.sh
 ```
 
-### Log-Rotation
 
-```bash
-# Alte Logs archivieren
-find logs/ -name "*.log" -type f -mtime +30 -exec gzip {} \;
-
-# Archivierte Logs löschen
-find logs/ -name "*.log.gz" -type f -mtime +90 -delete
-```
 
 ### Tests ausführen
 
@@ -459,53 +418,6 @@ pytest tests/test_envelope.py -v
 
 # Mit Coverage
 pytest --cov=src tests/
-```
-
----
-
-## 🔧 Nützliche Befehle
-
-### Konfiguration
-
-```bash
-# Settings validieren
-python -c "import json; print(json.load(open('settings.json')))"
-
-# Backup erstellen
-cp settings.json settings.json.backup.$(date +%Y%m%d)
-
-# Diff zwischen Versionen
-diff settings.json settings.json.backup
-```
-
-### Prozess-Management
-
-```bash
-# Alle Python-Prozesse anzeigen
-ps aux | grep python | grep ltbbot
-
-# Master Runner Process-ID finden
-pgrep -f master_runner.py
-
-# Prozess sauber beenden
-pkill -f master_runner.py
-
-# Erzwungenes Beenden
-pkill -9 -f master_runner.py
-```
-
-### Debugging
-
-```bash
-# Verbose-Modus
-export LTBBOT_DEBUG=1
-python master_runner.py
-
-# Nur Strategie-Logs
-tail -f logs/cron.log | grep -i "envelope\|signal\|trade"
-
-# Fehler im Detail
-python -m pdb master_runner.py
 ```
 
 ---
