@@ -397,6 +397,22 @@ grep -i "ERROR" logs/cron.log
 cd /home/ubuntu/ltbbot && /home/ubuntu/ltbbot/.venv/bin/python3 /home/ubuntu/ltbbot/master_runner.py
 ```
 
+### 🔧 Config-Management
+
+#### Konfigurationsdateien löschen
+
+Bei Bedarf können alle generierten Konfigurationen gelöscht werden:
+
+```bash
+rm -f src/ltbbot/strategy/configs/config_*.json
+```
+
+#### Löschung verifizieren
+
+```bash
+ls -la src/ltbbot/strategy/configs/config_*.json 2>&1 || echo "✅ Alle Konfigurationsdateien wurden gelöscht"
+```
+
 ### Bot aktualisieren
 
 ```bash
