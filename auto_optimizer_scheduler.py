@@ -141,7 +141,12 @@ def send_telegram(message: str) -> bool:
         
         if bot_token and chat_id:
             send_message(bot_token, chat_id, message)
+            log(f"✅ Telegram-Nachricht gesendet")
             return True
+        else:
+            log(f"⚠️ Telegram nicht konfiguriert (bot_token oder chat_id fehlt)")
+    except ImportError as e:
+        log(f"Telegram Import-Fehler: {e}")
     except Exception as e:
         log(f"Telegram-Fehler: {e}")
     return False
