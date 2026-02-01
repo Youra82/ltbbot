@@ -88,14 +88,23 @@ def check_and_run_optimizer():
         
         python_executable = os.path.join(SCRIPT_DIR, '.venv', 'bin', 'python3')
         optimizer_script = os.path.join(SCRIPT_DIR, 'auto_optimizer_scheduler.py')
+        log_file = os.path.join(SCRIPT_DIR, 'logs', 'optimizer_output.log')
         
         if os.path.exists(optimizer_script):
-            subprocess.Popen(
-                [python_executable, optimizer_script, '--force'],
-                stdout=open(os.path.join(SCRIPT_DIR, 'logs', 'optimizer_output.log'), 'a'),
-                stderr=subprocess.STDOUT,
-                start_new_session=True
-            )
+            # Stelle sicher, dass logs/ Verzeichnis existiert
+            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+            
+            # Starte den Optimizer SYNCHRON (wartet auf Ende)
+            # So wird die Telegram-Nachricht garantiert gesendet bevor wir weitermachen
+            logging.info(f"    Starte Optimizer synchron (warte auf Abschluss)...")
+            with open(log_file, 'a') as log:
+                result = subprocess.run(
+                    [python_executable, optimizer_script, '--force'],
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    cwd=SCRIPT_DIR  # Wichtig: Arbeitsverzeichnis setzen!
+                )
+            logging.info(f"    Optimizer beendet mit Exit-Code: {result.returncode}")
             return True
         else:
             logging.error(f"Fehler: {optimizer_script} nicht gefunden!")
