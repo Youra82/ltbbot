@@ -523,6 +523,71 @@ git push origin main
 
 ---
 
+## 🤖 Auto-Optimizer Scheduler
+
+Automatische Optimierung der Strategie-Konfigurationen nach Zeitplan mit Telegram-Benachrichtigungen.
+
+### Schnellstart-Befehle
+
+```bash
+# Status prüfen (wann ist die nächste Optimierung fällig?)
+python3 auto_optimizer_scheduler.py --check-only
+
+# Sofort optimieren (ignoriert Zeitplan)
+python3 auto_optimizer_scheduler.py --force
+
+# Als Daemon laufen (prüft alle 60 Sekunden)
+python3 auto_optimizer_scheduler.py --daemon
+
+# Daemon mit längerem Intervall (alle 5 Minuten)
+python3 auto_optimizer_scheduler.py --daemon --interval 300
+```
+
+### Konfiguration (settings.json)
+
+```json
+{
+    "optimization_settings": {
+        "enabled": true,
+        "schedule": {
+            "_info": "day_of_week: 0=Montag, 6=Sonntag | hour: 0-23 (24h Format)",
+            "day_of_week": 0,
+            "hour": 3,
+            "minute": 0,
+            "interval_days": 7
+        },
+        "symbols_to_optimize": "auto",
+        "timeframes_to_optimize": "auto",
+        "lookback_days": 365,
+        "num_trials": 500,
+        "send_telegram_on_completion": true
+    }
+}
+```
+
+| Parameter | Beschreibung |
+|-----------|--------------|
+| `enabled` | Automatische Optimierung aktivieren |
+| `day_of_week` | 0=Montag, 1=Dienstag, ..., 6=Sonntag |
+| `hour` | Stunde (0-23) |
+| `interval_days` | Mindestabstand in Tagen |
+| `symbols_to_optimize` | `"auto"` = aus active_strategies, oder `["BTC", "ETH"]` |
+| `timeframes_to_optimize` | `"auto"` = aus active_strategies, oder `["1h", "4h"]` |
+
+### Auto-Modus
+
+Bei `"auto"` werden Symbole und Timeframes automatisch aus den aktiven Strategien extrahiert:
+
+```json
+"active_strategies": [
+    {"symbol": "BTC/USDT:USDT", "timeframe": "4h", "active": true},
+    {"symbol": "ETH/USDT:USDT", "timeframe": "1h", "active": false}
+]
+```
+→ Optimiert nur: **BTC** mit **4h** (ETH ist nicht aktiv)
+
+---
+
 ## 📜 Lizenz
 
 Dieses Projekt ist lizenziert unter der MIT License.
