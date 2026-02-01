@@ -147,8 +147,9 @@ def run_envelope_backtest(data, params, start_capital=1000):
     # peak_capital = start_capital # Höchststand inkl. unreal. PnL (wird jetzt aus equity_curve berechnet)
     # max_drawdown_pct = 0.0 # (wird jetzt aus equity_curve berechnet)
 
-    positions = [] # [{entry_price, amount_coins, side, sl_price, tp_price, leverage}, ...]
+    positions = [] # [{entry_price, amount_coins, side, sl_price, tp_price, leverage, entry_time}, ...]
     closed_trades = [] # [{pnl, side}, ...]
+    trades_list = []  # Für Chart-Visualisierung: [{entry_long: {time, price}, exit_long: {time, price}}, ...]
     equity_curve_data = [] # Für Drawdown-Berechnung am Ende
     
     # Starte Equity Curve mit Start Capital
@@ -227,6 +228,16 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
                 exit_pnl_current_candle += pnl
                 closed_trades.append({'pnl': pnl, 'side': pos_side})
+                
+                # Trade für Visualisierung speichern
+                entry_time = pos.get('entry_time')
+                entry_time_str = entry_time.isoformat() if hasattr(entry_time, 'isoformat') else str(entry_time)
+                exit_time_str = timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)
+                trade_record = {
+                    f'entry_{pos_side}': {'time': entry_time_str, 'price': pos_entry},
+                    f'exit_{pos_side}': {'time': exit_time_str, 'price': exit_price}
+                }
+                trades_list.append(trade_record)
             else:
                 remaining_positions.append(pos) # Position bleibt offen
 
@@ -340,7 +351,8 @@ def run_envelope_backtest(data, params, start_capital=1000):
                             'side': side,
                             'sl_price': sl_price,
                             'tp_price': tp_price_target, # Speichere Ziel-TP
-                            'leverage': leverage
+                            'leverage': leverage,
+                            'entry_time': timestamp  # Für Visualisierung
                         })
                         # Aktualisiere den Gesamtwert für nachfolgende Layer in dieser Kerze
                         current_total_pos_value_usd += new_layer_value_usd
@@ -382,7 +394,8 @@ def run_envelope_backtest(data, params, start_capital=1000):
                             'side': side,
                             'sl_price': sl_price,
                             'tp_price': tp_price_target,
-                            'leverage': leverage
+                            'leverage': leverage,
+                            'entry_time': timestamp  # Für Visualisierung
                         })
                         current_total_pos_value_usd += new_layer_value_usd
 
@@ -466,6 +479,7 @@ def run_envelope_backtest(data, params, start_capital=1000):
         "max_drawdown_pct": round(calculated_max_dd_pct, 2), # Verwende berechneten DD
         "end_capital": round(final_total_equity, 2), # Verwende finales Gesamtkapital
         "start_capital": start_capital,
-        "equity_curve": equity_curve_data  # Füge Equity Curve hinzu für Chart-Darstellung
+        "equity_curve": equity_curve_data,  # Füge Equity Curve hinzu für Chart-Darstellung
+        "trades_list": trades_list  # Für Chart-Visualisierung mit Entry/Exit Markern
     }
     return results
