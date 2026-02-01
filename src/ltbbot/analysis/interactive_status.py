@@ -499,21 +499,23 @@ def main():
                 logger.warning(f"Keine Daten für {symbol} {timeframe}")
                 continue
             
-            # ===== BERECHNE INDIKATOREN & ENVELOPE-BÄNDER =====
-            logger.info("Berechne Envelope-Bänder und Signale...")
-            trades, df_with_indicators = extract_trades_from_backtest(df.copy(), config)
-            logger.info(f"Gefundene Trade-Signale: {len(trades)}")
-            
             # ===== BACKTEST AUSFÜHREN =====
             logger.info("Führe Backtest durch...")
             backtest_result = None
+            trades = []  # Trades kommen jetzt vom Backtester
             try:
                 backtest_result = run_envelope_backtest(df, config, start_capital=start_capital)
+                # Trades direkt vom Backtester (konsistent mit Stats!)
+                trades = backtest_result.get('trades_list', [])
                 logger.info(f"Backtest abgeschlossen: PnL={backtest_result.get('total_pnl_pct', 0):.2f}%, "
                            f"Trades={backtest_result.get('trades_count', 0)}, "
                            f"Win Rate={backtest_result.get('win_rate', 0):.1f}%")
             except Exception as e:
                 logger.warning(f"Konnte Backtest nicht ausführen: {e}. Zeige Chart ohne Metriken...")
+            
+            # ===== BERECHNE INDIKATOREN FÜR ENVELOPE-BÄNDER =====
+            logger.info("Berechne Envelope-Bänder...")
+            _, df_with_indicators = extract_trades_from_backtest(df.copy(), config)
             
             logger.info("Erstelle Chart...")
             fig = create_interactive_chart(
