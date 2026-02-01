@@ -4,7 +4,8 @@ import subprocess
 import sys
 import os
 import time
-import logging # Logging hinzufügen
+import logging
+from datetime import datetime, timedelta
 
 # Pfad anpassen, damit die utils importiert werden können
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,6 +22,89 @@ log_file = os.path.join(log_dir, 'master_runner.log')
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     handlers=[logging.FileHandler(log_file), logging.StreamHandler()])
+
+
+def check_and_run_optimizer():
+    """
+    Prüft ob die automatische Optimierung fällig ist und führt sie ggf. aus.
+    
+    Wird bei jedem Cron-Job Aufruf einmal geprüft. Die Logik ist tolerant gegenüber
+    Cron-Intervallen: Wenn der geplante Zeitpunkt in der Vergangenheit liegt (aber
+    noch am selben Tag in der geplanten Stunde), wird die Optimierung gestartet.
+    """
+    now = datetime.now()
+    
+    try:
+        settings_file = os.path.join(SCRIPT_DIR, 'settings.json')
+        with open(settings_file, 'r') as f:
+            settings = json.load(f)
+        
+        opt_settings = settings.get('optimization_settings', {})
+        
+        # Prüfe ob aktiviert
+        if not opt_settings.get('enabled', False):
+            return False
+        
+        schedule = opt_settings.get('schedule', {})
+        day_of_week = schedule.get('day_of_week', 0)
+        hour = schedule.get('hour', 3)
+        minute = schedule.get('minute', 0)
+        interval_days = schedule.get('interval_days', 7)
+        
+        # Prüfe ob heute der richtige Tag ist
+        if now.weekday() != day_of_week:
+            return False
+        
+        # Prüfe ob wir in der geplanten Stunde sind (oder danach, aber am gleichen Tag)
+        if now.hour < hour:
+            return False
+        
+        # Wenn wir in der richtigen Stunde sind, prüfe ob die Minute erreicht wurde
+        if now.hour == hour and now.minute < minute:
+            return False
+        
+        # Ab hier: Wir sind am richtigen Tag und der geplante Zeitpunkt ist erreicht oder überschritten
+        
+        # Prüfe ob heute schon gelaufen (oder innerhalb des Intervalls)
+        cache_dir = os.path.join(SCRIPT_DIR, 'data', 'cache')
+        cache_file = os.path.join(cache_dir, '.last_optimization_run')
+        
+        if os.path.exists(cache_file):
+            with open(cache_file, 'r') as f:
+                last_run = datetime.fromtimestamp(int(f.read().strip()))
+                
+                # Wenn heute schon gelaufen, nicht nochmal
+                if last_run.date() == now.date():
+                    return False
+                
+                # Wenn innerhalb des Intervalls, nicht nochmal
+                if (now - last_run).days < interval_days:
+                    return False
+        
+        # Zeit für Optimierung!
+        logging.info(f"🔄 Auto-Optimizer: Geplanter Zeitpunkt erreicht!")
+        logging.info(f"    Geplant war: {['Mo','Di','Mi','Do','Fr','Sa','So'][day_of_week]} {hour:02d}:{minute:02d}")
+        logging.info(f"    Starte Optimierung...")
+        
+        python_executable = os.path.join(SCRIPT_DIR, '.venv', 'bin', 'python3')
+        optimizer_script = os.path.join(SCRIPT_DIR, 'auto_optimizer_scheduler.py')
+        
+        if os.path.exists(optimizer_script):
+            subprocess.Popen(
+                [python_executable, optimizer_script, '--force'],
+                stdout=open(os.path.join(SCRIPT_DIR, 'logs', 'optimizer_output.log'), 'a'),
+                stderr=subprocess.STDOUT,
+                start_new_session=True
+            )
+            return True
+        else:
+            logging.error(f"Fehler: {optimizer_script} nicht gefunden!")
+            return False
+        
+    except Exception as e:
+        logging.error(f"Optimizer-Check Fehler: {e}")
+        return False
+
 
 def main():
     """
@@ -119,4 +203,8 @@ def main():
         logging.critical(f"Ein unerwarteter Fehler im Master Runner ist aufgetreten: {e}", exc_info=True)
 
 if __name__ == "__main__":
+    # EINMALIGER Auto-Optimizer Check beim Start (cron-kompatibel)
+    check_and_run_optimizer()
+    
+    # Dann normale Bot-Starts
     main()
