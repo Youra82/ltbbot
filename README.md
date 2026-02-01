@@ -461,27 +461,27 @@ Um eine sofortige Optimierung zu starten (ignoriert das Zeitintervall):
 
 ```bash
 # Letzten Optimierungszeitpunkt löschen (erzwingt Neustart)
-rm /home/ubuntu/ltbbot/data/cache/.last_optimization_run
+rm ~/ltbbot/data/cache/.last_optimization_run
 
 # Master Runner starten (prüft ob Optimierung fällig ist)
-cd /home/ubuntu/ltbbot && .venv/bin/python3 master_runner.py
+cd ~/ltbbot && .venv/bin/python3 master_runner.py
 ```
 
 ### Optimizer-Logs überwachen
 
 ```bash
 # Optimizer-Log live mitverfolgen
-tail -f /home/ubuntu/ltbbot/logs/optimizer_output.log
+tail -f ~/ltbbot/logs/optimizer_output.log
 
 # Letzte 50 Zeilen des Optimizer-Logs anzeigen
-tail -50 /home/ubuntu/ltbbot/logs/optimizer_output.log
+tail -50 ~/ltbbot/logs/optimizer_output.log
 ```
 
 ### Optimierungsergebnisse ansehen
 
 ```bash
 # Beste gefundene Parameter anzeigen (erste 50 Zeilen)
-cat /home/ubuntu/ltbbot/artifacts/results/optimization_results.json | head -50
+cat ~/ltbbot/artifacts/results/optimization_results.json | head -50
 ```
 
 ### Optimizer-Prozess überwachen

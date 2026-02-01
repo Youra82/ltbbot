@@ -68,7 +68,10 @@ if [ "$(id -u)" -eq 0 ] && [ -d "$UBUNTU_HOME" ]; then
         if [ -L "$TARGET_LINK" ]; then
             echo -e "${YELLOW}  → Symlink $TARGET_LINK existiert bereits${NC}"
         elif [ -d "$TARGET_LINK" ]; then
-            echo -e "${YELLOW}  → Verzeichnis $TARGET_LINK existiert - überspringe Symlink${NC}"
+            echo -e "${YELLOW}  → Lösche existierendes Verzeichnis $TARGET_LINK und erstelle Symlink...${NC}"
+            rm -rf "$TARGET_LINK"
+            ln -s "$CURRENT_DIR" "$TARGET_LINK"
+            echo -e "${GREEN}✔ Symlink erstellt: $TARGET_LINK -> $CURRENT_DIR${NC}"
         else
             ln -s "$CURRENT_DIR" "$TARGET_LINK"
             echo -e "${GREEN}✔ Symlink erstellt: $TARGET_LINK -> $CURRENT_DIR${NC}"
