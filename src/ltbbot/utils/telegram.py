@@ -6,18 +6,16 @@ import os # Added for file path check
 logger = logging.getLogger(__name__)
 
 def send_message(bot_token, chat_id, message):
-    """Sends a plain text message to a Telegram chat, escaping MarkdownV2 characters."""
+    """Sends a plain text message to a Telegram chat."""
     if not bot_token or not chat_id:
         logger.warning("Telegram Bot-Token or Chat-ID not configured. Message not sent.")
         return
 
-    # Escape characters for MarkdownV2
-    # Note: This is a basic escape, might need adjustment for complex messages
-    escape_chars = r'_*[]()~`>#+-=|{}.!'
-    escaped_message = message
-    for char in escape_chars:
-        escaped_message = escaped_message.replace(char, f'\\{char}')
-
+    api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        'chat_id': chat_id, 
+        'text': message, 
+        'parse_mode': 'HTML'
     api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {'chat_id': chat_id, 'text': escaped_message, 'parse_mode': 'MarkdownV2'}
 
