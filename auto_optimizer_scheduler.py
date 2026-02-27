@@ -223,27 +223,31 @@ def _send_end_telegram(elapsed_seconds: float):
     dur = _format_elapsed(elapsed_seconds)
 
     if not os.path.exists(OPTIMIZER_RESULTS_FILE):
-        _send_telegram_plain(f"\u2705 ltbbot Auto-Optimizer abgeschlossen\nDauer: {dur}")
+        _log(f"TELEGRAM_WARN results file not found: {OPTIMIZER_RESULTS_FILE}")
+        _send_telegram_plain(f"\u2705 Auto-Optimizer abgeschlossen\nDauer: {dur}")
         return
 
     try:
         with open(OPTIMIZER_RESULTS_FILE, encoding='utf-8') as f:
             results = json.load(f)
-    except Exception:
-        _send_telegram_plain(f"\u2705 ltbbot Auto-Optimizer abgeschlossen (Dauer: {dur})")
+    except Exception as e:
+        _log(f"TELEGRAM_WARN cannot read results file: {e}")
+        _send_telegram_plain(f"\u2705 Auto-Optimizer abgeschlossen (Dauer: {dur})")
         return
 
     saved  = results.get('saved', [])
     failed = results.get('failed', [])
     total  = len(saved) + len(failed)
+    _log(f"TELEGRAM_RESULTS saved={len(saved)} failed={len(failed)} total={total}")
 
-    lines = [f"\u2705 ltbbot Auto-Optimizer abgeschlossen (Dauer: {dur})"]
+    lines = [f"\u2705 Auto-Optimizer abgeschlossen (Dauer: {dur})"]
 
     if saved:
         lines.append(f"\n\u2714 Gespeichert ({len(saved)}/{total}):")
         for s in saved:
             sym_short = s['symbol'].split('/')[0]
-            lines.append(f"\u2022 {sym_short}/{s['timeframe']}: +{s['pnl_pct']}% \u2192 {s['config_file']}")
+            sign = '+' if s['pnl_pct'] >= 0 else ''
+            lines.append(f"\u2022 {sym_short}/{s['timeframe']}: {sign}{s['pnl_pct']}% \u2192 {s['config_file']}")
 
     if failed:
         lines.append(f"\n\u274c Fehlgeschlagen ({len(failed)}/{total}):")
