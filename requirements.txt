@@ -1,4 +1,5 @@
 ccxt==4.3.5
+cryptography==46.0.3
 numpy
 optuna
 pandas==2.1.3 # Version aus Envelope-Beispiel
