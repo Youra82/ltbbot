@@ -187,9 +187,6 @@ def main():
 
 
         # --- Optuna Studie ---
-        DB_FILE = os.path.join(PROJECT_ROOT, 'artifacts', 'db', 'optuna_studies_ltbbot.db')
-        os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
-        STORAGE_URL = f"sqlite:///{DB_FILE}?timeout=60"
         safe_filename = create_safe_filename(symbol, timeframe)
         study_name = f"{safe_filename}{CONFIG_SUFFIX}_{OPTIM_MODE}"
 
@@ -206,7 +203,7 @@ def main():
             lg.setLevel(logging.ERROR)
 
         try:
-            study = optuna.create_study(storage=STORAGE_URL, study_name=study_name, direction="maximize", load_if_exists=True)
+            study = optuna.create_study(study_name=study_name, direction="maximize")
 
             n_jobs = args.jobs
             logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)... (Mit Standard show_progress_bar)")

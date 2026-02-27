@@ -29,4 +29,8 @@ find . -type d -name "__pycache__" -delete
 echo "6. Setze Ausführungsrechte für alle .sh-Skripte..."
 chmod +x *.sh
 
+# 7. Python-Bibliotheken aktualisieren (falls requirements.txt geändert wurde)
+echo "7. Aktualisiere Python-Bibliotheken..."
+.venv/bin/pip install --break-system-packages -q -r requirements.txt
+
 echo "✅ Update erfolgreich abgeschlossen. Dein Bot ist jetzt auf dem neuesten Stand."
