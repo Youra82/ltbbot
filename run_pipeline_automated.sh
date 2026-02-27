@@ -38,7 +38,7 @@ ENABLED=$(get_setting "['optimization_settings']['enabled']")
 if [ "$ENABLED" != "True" ]; then
     echo "Automatische Optimierung ist in settings.json deaktiviert. Breche ab."
     deactivate
-    exit 0
+    exit 2
 fi
 
 # --- Einstellungen lesen ---
