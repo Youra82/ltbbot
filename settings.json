@@ -1,5 +1,6 @@
 {
     "live_trading_settings": {
+        "use_auto_optimizer_results": false,
         "active_strategies": [
             {
                 "symbol": "SOL/USDT:USDT",
@@ -19,26 +20,33 @@
         ]
     },
     "optimization_settings": {
-        "enabled": true,
+        "enabled": false,
+        "_info": "symbols_to_optimize/timeframes_to_optimize: 'auto' liest active_strategies aus, oder explizite Liste wie ['BTC', 'ETH']",
+        "symbols_to_optimize": "auto",
+        "timeframes_to_optimize": "auto",
+        "lookback_days": "auto",
+        "start_capital": 1000,
+        "num_trials": 100,
+        "cpu_cores": -1,
+        "mode": "strict",
+        "config_suffix": "_envelope",
+        "auto_clear_cache_days": 30,
+        "send_telegram_on_completion": true,
+        "constraints": {
+            "max_drawdown_pct": 30,
+            "min_win_rate_pct": 0,
+            "min_pnl_pct": 0,
+            "min_trades": 20
+        },
         "schedule": {
             "_info": "day_of_week: 0=Montag, 6=Sonntag | hour: 0-23 (24h Format)",
             "day_of_week": 0,
             "hour": 3,
             "minute": 0,
-            "interval_days": 7
-        },
-        "symbols_to_optimize": "auto",
-        "timeframes_to_optimize": "auto",
-        "lookback_days": 365,
-        "start_capital": 1000,
-        "cpu_cores": -1,
-        "num_trials": 500,
-        "constraints": {
-            "max_drawdown_pct": 30,
-            "min_win_rate_pct": 50,
-            "min_pnl_pct": 0
-        },
-        "auto_clear_cache_days": 0,
-        "send_telegram_on_completion": true
+            "interval": {
+                "value": 7,
+                "unit": "days"
+            }
+        }
     }
 }

@@ -8,6 +8,7 @@ import argparse
 import logging
 import warnings
 from joblib import Parallel, delayed # Für Parallelisierung
+from datetime import datetime as _dt
 # KEINE Tqdm Imports
 
 # Logging konfigurieren
@@ -20,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
+
+RESULTS_FILE = os.path.join(PROJECT_ROOT, 'artifacts', 'results', 'last_optimizer_run.json')
 
 # Verwende den Backtester für Envelope
 from ltbbot.analysis.backtester import load_data, run_envelope_backtest
@@ -140,6 +143,19 @@ def main():
 
     optuna_results = []
 
+    # last_optimizer_run.json: lesen falls vorhanden (Scheduler initialisiert vor Pipeline-Start)
+    os.makedirs(os.path.dirname(RESULTS_FILE), exist_ok=True)
+    if os.path.exists(RESULTS_FILE):
+        try:
+            with open(RESULTS_FILE, 'r', encoding='utf-8') as f:
+                run_results = json.load(f)
+            run_results.setdefault('saved', [])
+            run_results.setdefault('failed', [])
+        except Exception:
+            run_results = {'run_start': _dt.now().isoformat(timespec='seconds'), 'run_end': None, 'saved': [], 'failed': []}
+    else:
+        run_results = {'run_start': _dt.now().isoformat(timespec='seconds'), 'run_end': None, 'saved': [], 'failed': []}
+
     for task in TASKS:
         symbol, timeframe = task['symbol'], task['timeframe']
         CURRENT_SYMBOL = symbol
@@ -152,9 +168,11 @@ def main():
             HISTORICAL_DATA = load_data(symbol, timeframe, args.start_date, args.end_date)
             if HISTORICAL_DATA is None or HISTORICAL_DATA.empty:
                 logger.warning(f"Keine Daten für {symbol} ({timeframe}) geladen. Überspringe.")
+                run_results['failed'].append({'symbol': symbol, 'timeframe': timeframe, 'reason': 'no_data'})
                 continue
         except Exception as e:
             logger.error(f"Fehler beim Laden der Daten für {symbol} ({timeframe}): {e}", exc_info=True)
+            run_results['failed'].append({'symbol': symbol, 'timeframe': timeframe, 'reason': 'no_data'})
             continue
 
         # --- Datenqualität bewerten ---
@@ -211,6 +229,7 @@ def main():
         valid_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
         if not valid_trials:
             logger.error(f"\n❌ FEHLER: Für {symbol} ({timeframe}) konnte keine gültige Konfiguration gefunden werden.")
+            run_results['failed'].append({'symbol': symbol, 'timeframe': timeframe, 'reason': 'no_valid_trials'})
             continue
 
         best_trial = study.best_trial
@@ -262,6 +281,7 @@ def main():
         config_filename = f'config_{safe_filename}{CONFIG_SUFFIX}.json'
         config_output_path = os.path.join(config_dir, config_filename)
         config_output = {
+            "_meta": {"pnl_pct": round(final_pnl, 2)},
             "market": {"symbol": symbol, "timeframe": timeframe},
             "strategy": final_params_dict['strategy'],
             "risk": final_params_dict['risk'],
@@ -270,6 +290,21 @@ def main():
         with open(config_output_path, 'w') as f: json.dump(config_output, f, indent=4)
         logger.info(f"✔ Beste Konfiguration wurde in '{config_output_path}' gespeichert.")
 
+        run_results['saved'].append({
+            'symbol': symbol,
+            'timeframe': timeframe,
+            'pnl_pct': round(final_pnl, 2),
+            'config_file': config_filename,
+        })
+
+
+    # --- last_optimizer_run.json aktualisieren ---
+    run_results['run_end'] = _dt.now().isoformat(timespec='seconds')
+    try:
+        with open(RESULTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(run_results, f, indent=2)
+    except Exception as e:
+        logger.warning(f"Konnte last_optimizer_run.json nicht schreiben: {e}")
 
     # --- Zusammenfassung ---
     if optuna_results:
