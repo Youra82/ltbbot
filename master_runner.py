@@ -5,7 +5,6 @@ import sys
 import os
 import time
 import logging
-from datetime import datetime, timedelta
 
 # Pfad anpassen, damit die utils importiert werden können
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -23,99 +22,6 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     handlers=[logging.FileHandler(log_file), logging.StreamHandler()])
 
-
-def check_and_run_optimizer():
-    """
-    Prüft ob die automatische Optimierung fällig ist und führt sie ggf. aus.
-    
-    Wird bei jedem Cron-Job Aufruf einmal geprüft. Die Logik ist tolerant gegenüber
-    Cron-Intervallen: Wenn der geplante Zeitpunkt in der Vergangenheit liegt (aber
-    noch am selben Tag in der geplanten Stunde), wird die Optimierung gestartet.
-    """
-    now = datetime.now()
-    
-    try:
-        settings_file = os.path.join(SCRIPT_DIR, 'settings.json')
-        with open(settings_file, 'r') as f:
-            settings = json.load(f)
-        
-        opt_settings = settings.get('optimization_settings', {})
-        
-        # Prüfe ob aktiviert
-        if not opt_settings.get('enabled', False):
-            return False
-        
-        schedule = opt_settings.get('schedule', {})
-        day_of_week = schedule.get('day_of_week', 0)
-        hour = schedule.get('hour', 3)
-        minute = schedule.get('minute', 0)
-        interval_days = schedule.get('interval_days', 7)
-        
-        # Prüfe ob heute der richtige Tag ist
-        if now.weekday() != day_of_week:
-            return False
-        
-        # Prüfe ob wir in der geplanten Stunde sind (oder danach, aber am gleichen Tag)
-        if now.hour < hour:
-            return False
-        
-        # Wenn wir in der richtigen Stunde sind, prüfe ob die Minute erreicht wurde
-        if now.hour == hour and now.minute < minute:
-            return False
-        
-        # Ab hier: Wir sind am richtigen Tag und der geplante Zeitpunkt ist erreicht oder überschritten
-        
-        # Prüfe ob heute schon gelaufen (oder innerhalb des Intervalls)
-        cache_dir = os.path.join(SCRIPT_DIR, 'data', 'cache')
-        cache_file = os.path.join(cache_dir, '.last_optimization_run')
-        
-        if os.path.exists(cache_file):
-            with open(cache_file, 'r') as f:
-                last_run = datetime.fromtimestamp(int(f.read().strip()))
-                
-                # Wenn heute schon gelaufen, nicht nochmal
-                if last_run.date() == now.date():
-                    return False
-                
-                # Wenn innerhalb des Intervalls, nicht nochmal
-                if (now - last_run).days < interval_days:
-                    return False
-        
-        # Zeit für Optimierung!
-        logging.info(f"🔄 Auto-Optimizer: Geplanter Zeitpunkt erreicht!")
-        logging.info(f"    Geplant war: {['Mo','Di','Mi','Do','Fr','Sa','So'][day_of_week]} {hour:02d}:{minute:02d}")
-        logging.info(f"    Starte Optimierung...")
-        
-        python_executable = os.path.join(SCRIPT_DIR, '.venv', 'bin', 'python3')
-        optimizer_script = os.path.join(SCRIPT_DIR, 'auto_optimizer_scheduler.py')
-        log_file = os.path.join(SCRIPT_DIR, 'logs', 'optimizer_output.log')
-        
-        if os.path.exists(optimizer_script):
-            # Stelle sicher, dass logs/ Verzeichnis existiert
-            os.makedirs(os.path.dirname(log_file), exist_ok=True)
-            
-            # Starte den Optimizer SYNCHRON (wartet auf Ende)
-            # So wird die Telegram-Nachricht garantiert gesendet bevor wir weitermachen
-            logging.info(f"    Starte Optimizer im Hintergrund...")
-            with open(log_file, 'a') as log:
-                # Starte als Hintergrundprozess - Bots haben Priorität!
-                subprocess.Popen(
-                    [python_executable, optimizer_script, '--force'],
-                    stdout=log,
-                    stderr=subprocess.STDOUT,
-                    cwd=SCRIPT_DIR,  # Wichtig: Arbeitsverzeichnis setzen!
-                    start_new_session=True  # Läuft unabhängig weiter
-                )
-            return True
-        else:
-            logging.error(f"Fehler: {optimizer_script} nicht gefunden!")
-            return False
-        
-    except Exception as e:
-        logging.error(f"Optimizer-Check Fehler: {e}")
-        return False
-
-
 def main():
     """
     Der Master Runner für den ltbbot (Envelope Strategie).
@@ -123,9 +29,10 @@ def main():
     - Startet für jede als "active" markierte Strategie einen separaten run.py Prozess.
     - Dieser Runner läuft EINMAL durch und wird durch den Cronjob regelmäßig neu aufgerufen.
     """
-    settings_file = os.path.join(SCRIPT_DIR, 'settings.json')
-    bot_runner_script = os.path.join(SCRIPT_DIR, 'src', 'ltbbot', 'strategy', 'run.py')
-    secret_file = os.path.join(SCRIPT_DIR, 'secret.json')
+    settings_file           = os.path.join(SCRIPT_DIR, 'settings.json')
+    last_optimizer_run_file = os.path.join(SCRIPT_DIR, 'artifacts', 'results', 'last_optimizer_run.json')
+    bot_runner_script       = os.path.join(SCRIPT_DIR, 'src', 'ltbbot', 'strategy', 'run.py')
+    secret_file             = os.path.join(SCRIPT_DIR, 'secret.json')
 
     # Finde den Python-Interpreter in der venv
     python_executable = os.path.join(SCRIPT_DIR, '.venv', 'bin', 'python3')
@@ -149,7 +56,32 @@ def main():
             return
 
         live_settings = settings.get('live_trading_settings', {})
-        strategy_list = live_settings.get('active_strategies', [])
+        use_autopilot = live_settings.get('use_auto_optimizer_results', False)
+
+        strategy_list = []
+        if use_autopilot:
+            logging.info("Modus: Autopilot. Lese Strategien aus den Optimierungs-Ergebnissen...")
+            if os.path.exists(last_optimizer_run_file):
+                with open(last_optimizer_run_file, 'r') as f:
+                    run_data = json.load(f)
+                saved = run_data.get('saved', [])
+                strategy_list = [
+                    {
+                        'symbol': entry['symbol'],
+                        'timeframe': entry['timeframe'],
+                        'active': True,
+                    }
+                    for entry in saved
+                ]
+                if not strategy_list:
+                    logging.warning("  → Keine gespeicherten Optimierungsergebnisse. Falle auf manuellen Modus zurück.")
+                    strategy_list = live_settings.get('active_strategies', [])
+            else:
+                logging.warning("  → Keine Optimierungsdatei gefunden. Falle auf manuellen Modus zurück.")
+                strategy_list = live_settings.get('active_strategies', [])
+        else:
+            logging.info("Modus: Manuell. Lese Strategien aus den manuellen Einstellungen...")
+            strategy_list = live_settings.get('active_strategies', [])
 
         if not strategy_list:
             logging.warning("Keine aktiven Strategien zum Ausführen gefunden.")
@@ -205,6 +137,18 @@ def main():
         # === SCHLEIFE ENTFERNT ===
         # Das Skript beendet sich hier, der Cronjob startet es neu.
 
+        # --- Auto-Optimizer im Hintergrund starten ---
+        auto_opt_script = os.path.join(SCRIPT_DIR, 'auto_optimizer_scheduler.py')
+        if os.path.exists(auto_opt_script):
+            logging.info("[Auto-Optimizer] Prüfe ob Optimierung fällig...")
+            logs_dir = os.path.join(SCRIPT_DIR, 'logs')
+            os.makedirs(logs_dir, exist_ok=True)
+            subprocess.Popen(
+                [python_executable, auto_opt_script],
+                stdout=open(os.path.join(logs_dir, 'auto_optimizer_trigger.log'), 'a'),
+                stderr=subprocess.STDOUT,
+            )
+
     except FileNotFoundError as e:
         logging.critical(f"Fehler: Eine wichtige Datei wurde nicht gefunden: {e}")
     except json.JSONDecodeError as e:
@@ -213,8 +157,4 @@ def main():
         logging.critical(f"Ein unerwarteter Fehler im Master Runner ist aufgetreten: {e}", exc_info=True)
 
 if __name__ == "__main__":
-    # ZUERST: Normale Bot-Starts (Trades haben Priorität!)
     main()
-    
-    # DANACH: Auto-Optimizer Check (läuft im Hintergrund)
-    check_and_run_optimizer()

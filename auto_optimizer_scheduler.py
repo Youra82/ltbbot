@@ -1,440 +1,424 @@
 #!/usr/bin/env python3
 """
-LTBBot Auto-Optimizer Scheduler
+auto_optimizer_scheduler.py
 
-Dieses Skript läuft als Hintergrund-Service und startet die Optimierung
-automatisch gemäß dem in settings.json definierten Zeitplan.
+Prueft bei jedem Aufruf ob eine Optimierung faellig ist und fuehrt
+die Hyperparameter-Optimierung (Envelope-Strategie) aus.
+Sendet Telegram-Benachrichtigungen bei Start und Ende.
 
-Verwendung:
-    python3 auto_optimizer_scheduler.py                # Normal starten
-    python3 auto_optimizer_scheduler.py --daemon       # Als Daemon im Hintergrund
-    python3 auto_optimizer_scheduler.py --check-only   # Nur prüfen ob Optimierung fällig ist
-    python3 auto_optimizer_scheduler.py --force        # Sofort optimieren (ignoriert Zeitplan)
+Aufruf:
+  python3 auto_optimizer_scheduler.py           # normale Pruefung
+  python3 auto_optimizer_scheduler.py --force   # sofort erzwingen
 """
 
 import os
 import sys
 import json
 import time
-import argparse
 import subprocess
-from datetime import datetime, timedelta
-from pathlib import Path
+import argparse
+from datetime import datetime, date, timedelta
+
+PROJECT_ROOT     = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
+
+CACHE_DIR        = os.path.join(PROJECT_ROOT, 'data', 'cache')
+LOG_DIR          = os.path.join(PROJECT_ROOT, 'logs')
+SETTINGS_FILE    = os.path.join(PROJECT_ROOT, 'settings.json')
+OPTIMIZER_SCRIPT = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'analysis', 'optimizer.py')
+SECRET_FILE      = os.path.join(PROJECT_ROOT, 'secret.json')
+LAST_RUN_FILE    = os.path.join(CACHE_DIR, '.last_optimization_run')
+IN_PROGRESS_FILE = os.path.join(CACHE_DIR, '.optimization_in_progress')
+TRIGGER_LOG      = os.path.join(LOG_DIR, 'auto_optimizer_trigger.log')
+OPTIMIZER_RESULTS_FILE = os.path.join(
+    PROJECT_ROOT, 'artifacts', 'results', 'last_optimizer_run.json')
+
+# Lookback je Timeframe (Tage)
+LOOKBACK_MAP = {
+    '5m': 60,  '15m': 60,
+    '30m': 365, '1h': 365,
+    '2h': 730,  '4h': 730,
+    '6h': 1095, '1d': 1095, '1w': 1095,
+}
 
 
-# Pfade
-SCRIPT_DIR = Path(__file__).parent.absolute()
-SETTINGS_FILE = SCRIPT_DIR / "settings.json"
-SECRET_FILE = SCRIPT_DIR / "secret.json"
-CACHE_DIR = SCRIPT_DIR / "data" / "cache"
-LAST_RUN_FILE = CACHE_DIR / ".last_optimization_run"
-LOG_FILE = SCRIPT_DIR / "logs" / "scheduler.log"
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
 
-# Python-Interpreter aus venv (falls vorhanden)
-if sys.platform == "win32":
-    VENV_PYTHON = SCRIPT_DIR / ".venv" / "Scripts" / "python.exe"
-else:
-    VENV_PYTHON = SCRIPT_DIR / ".venv" / "bin" / "python3"
-
-def get_python_executable() -> str:
-    """Gibt den korrekten Python-Interpreter zurück (venv bevorzugt)."""
-    if VENV_PYTHON.exists():
-        return str(VENV_PYTHON)
-    return sys.executable
-
-# Stellt sicher, dass der src-Ordner im Pfad ist
-sys.path.insert(0, str(SCRIPT_DIR / "src"))
-
-
-def log(message: str, also_print: bool = True):
-    """Loggt eine Nachricht in die Logdatei und optional auf die Konsole."""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_entry = f"[{timestamp}] {message}"
-    
-    if also_print:
-        print(log_entry)
-    
+def _log(msg: str):
+    os.makedirs(LOG_DIR, exist_ok=True)
+    line = f"{datetime.now().isoformat()} AUTO-OPTIMIZER {msg}"
+    with open(TRIGGER_LOG, 'a', encoding='utf-8') as f:
+        f.write(line + '\n')
     try:
-        LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(log_entry + "\n")
-    except Exception as e:
-        print(f"Warnung: Konnte nicht in Logdatei schreiben: {e}")
+        print(line, flush=True)
+    except (OSError, ValueError):
+        pass
 
 
-def load_settings() -> dict:
-    """Lädt die settings.json Datei."""
-    if not SETTINGS_FILE.exists():
-        log(f"Fehler: {SETTINGS_FILE} nicht gefunden!")
-        return {}
-    
-    with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+# ---------------------------------------------------------------------------
+# Hilfsfunktionen
+# ---------------------------------------------------------------------------
+
+def _format_elapsed(seconds: float) -> str:
+    s = int(seconds)
+    if s < 60:
+        return f"{s}s"
+    m, s = divmod(s, 60)
+    if m < 60:
+        return f"{m}m {s:02d}s"
+    h, m = divmod(m, 60)
+    return f"{h}h {m:02d}m {s:02d}s"
 
 
-def load_secrets() -> dict:
-    """Lädt die secret.json Datei."""
-    if not SECRET_FILE.exists():
-        log(f"⚠️ secret.json nicht gefunden: {SECRET_FILE}")
-        return {}
-    
-    try:
-        # Debug: Zeige den rohen Dateiinhalt
-        with open(SECRET_FILE, "r", encoding="utf-8") as f:
-            raw_content = f.read()
-            log(f"DEBUG secret.json Pfad: {SECRET_FILE}")
-            log(f"DEBUG secret.json Größe: {len(raw_content)} Bytes")
-        
-        with open(SECRET_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            log(f"✓ secret.json geladen, Keys: {list(data.keys())}")
-            # Debug: Zeige ob telegram-Werte existieren
-            if "telegram" in data:
-                tg = data["telegram"]
-                log(f"DEBUG telegram.bot_token Länge: {len(tg.get('bot_token', ''))}")
-                log(f"DEBUG telegram.chat_id Länge: {len(tg.get('chat_id', ''))}")
-            return data
-    except Exception as e:
-        log(f"Fehler beim Laden von secret.json: {e}")
-        return {}
-
-
-def extract_symbols_timeframes(settings: dict, extract_type: str) -> list:
-    """
-    Extrahiert Symbole oder Timeframes aus active_strategies wenn 'auto' gesetzt ist.
-    
-    Args:
-        settings: Die geladenen Settings
-        extract_type: "symbols" oder "timeframes"
-    
-    Returns:
-        Liste der Symbole oder Timeframes
-    """
-    opt_settings = settings.get("optimization_settings", {})
-    live_settings = settings.get("live_trading_settings", {})
-    strategies = live_settings.get("active_strategies", [])
-    
-    if extract_type == "symbols":
-        setting_value = opt_settings.get("symbols_to_optimize", "auto")
-        if setting_value == "auto" or not setting_value:
-            # Extrahiere aus active_strategies
-            symbols = set()
-            for s in strategies:
-                if s.get("active", False):
-                    sym = s.get("symbol", "").split("/")[0]
-                    if sym:
-                        symbols.add(sym)
-            return sorted(symbols) if symbols else ["BTC", "ETH"]
-        return setting_value if isinstance(setting_value, list) else ["BTC", "ETH"]
-    
-    elif extract_type == "timeframes":
-        setting_value = opt_settings.get("timeframes_to_optimize", "auto")
-        if setting_value == "auto" or not setting_value:
-            # Extrahiere aus active_strategies
-            timeframes = set()
-            for s in strategies:
-                if s.get("active", False):
-                    tf = s.get("timeframe", "")
-                    if tf:
-                        timeframes.add(tf)
-            # Sortiere nach Dauer
-            tf_order = {"1m": 1, "5m": 5, "15m": 15, "30m": 30, "1h": 60, 
-                       "2h": 120, "4h": 240, "6h": 360, "12h": 720, "1d": 1440}
-            sorted_tf = sorted(timeframes, key=lambda x: tf_order.get(x, 999))
-            return sorted_tf if sorted_tf else ["1h", "4h"]
-        return setting_value if isinstance(setting_value, list) else ["1h", "4h"]
-    
-    return []
-
-
-def send_telegram(message: str) -> bool:
-    """Sendet eine Telegram-Nachricht."""
-    try:
-        from ltbbot.utils.telegram import send_message
-        
-        secrets = load_secrets()
-        telegram = secrets.get("telegram", {})
-        bot_token = telegram.get("bot_token")
-        chat_id = telegram.get("chat_id")
-        
-        if bot_token and chat_id:
-            send_message(bot_token, chat_id, message)
-            log(f"✅ Telegram-Nachricht gesendet")
-            return True
-        else:
-            log(f"⚠️ Telegram nicht konfiguriert (bot_token oder chat_id fehlt)")
-    except ImportError as e:
-        log(f"Telegram Import-Fehler: {e}")
-    except Exception as e:
-        log(f"Telegram-Fehler: {e}")
-    return False
-
-
-def get_last_run_time() -> datetime | None:
-    """Gibt den Zeitpunkt der letzten Optimierung zurück."""
-    if not LAST_RUN_FILE.exists():
+def _get_last_run() -> datetime | None:
+    if not os.path.exists(LAST_RUN_FILE):
         return None
-    
+    with open(LAST_RUN_FILE, 'r') as f:
+        s = f.read().strip()
     try:
-        with open(LAST_RUN_FILE, "r") as f:
-            timestamp = int(f.read().strip())
-            return datetime.fromtimestamp(timestamp)
-    except:
+        return datetime.fromisoformat(s)
+    except ValueError:
         return None
 
 
-def save_last_run_time():
-    """Speichert den aktuellen Zeitpunkt als letzte Ausführung."""
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    with open(LAST_RUN_FILE, "w") as f:
-        f.write(str(int(time.time())))
+def _set_last_run():
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    now_str = datetime.now().isoformat()
+    with open(LAST_RUN_FILE, 'w') as f:
+        f.write(now_str)
+    _log(f"LAST_RUN updated={now_str}")
 
 
-def should_run_now(settings: dict, force: bool = False) -> tuple[bool, str]:
-    """
-    Prüft ob die Optimierung jetzt ausgeführt werden soll.
-    
-    Returns:
-        tuple: (should_run: bool, reason: str)
-    """
-    opt_settings = settings.get("optimization_settings", {})
-    
-    # Prüfe ob aktiviert
-    if not opt_settings.get("enabled", False):
-        return False, "Automatische Optimierung ist deaktiviert"
-    
-    if force:
-        return True, "Erzwungene Ausführung (--force)"
-    
-    schedule = opt_settings.get("schedule", {})
-    day_of_week = schedule.get("day_of_week", 0)  # 0 = Montag
-    hour = schedule.get("hour", 3)
-    minute = schedule.get("minute", 0)
-    interval_days = schedule.get("interval_days", 7)
-    
-    now = datetime.now()
-    current_day = now.weekday()  # 0 = Montag
-    current_hour = now.hour
-    current_minute = now.minute
-    
-    # Prüfe Tag und Stunde
-    if current_day != day_of_week:
-        return False, f"Falscher Tag (heute: {current_day}, geplant: {day_of_week})"
-    
-    if current_hour != hour:
-        return False, f"Falsche Stunde (jetzt: {current_hour}:xx, geplant: {hour}:{minute:02d})"
-    
-    # Prüfe Minute (mit 5 Minuten Toleranz)
-    if abs(current_minute - minute) > 5:
-        return False, f"Falsche Minute (jetzt: xx:{current_minute:02d}, geplant: xx:{minute:02d})"
-    
-    # Prüfe Intervall
-    last_run = get_last_run_time()
-    if last_run:
-        days_since = (now - last_run).days
-        if days_since < interval_days:
-            return False, f"Intervall nicht erreicht ({days_since} von {interval_days} Tagen)"
-    
-    return True, "Geplanter Zeitpunkt erreicht"
+def _is_due(schedule: dict) -> tuple[bool, str]:
+    if os.path.exists(IN_PROGRESS_FILE):
+        _log("SKIP already_in_progress")
+        return False, None
+
+    last_run = _get_last_run()
+    if last_run is None:
+        return True, 'forced'
+
+    interval_cfg     = schedule.get('interval', {})
+    value            = int(interval_cfg.get('value', 7))
+    unit             = interval_cfg.get('unit', 'days')
+    multipliers      = {'minutes': 60, 'hours': 3600, 'days': 86400, 'weeks': 604800}
+    interval_seconds = value * multipliers.get(unit, 86400)
+
+    if (datetime.now() - last_run).total_seconds() >= interval_seconds:
+        return True, 'interval'
+
+    now    = datetime.now()
+    dow    = int(schedule.get('day_of_week', 0))
+    hour   = int(schedule.get('hour', 3))
+    minute = int(schedule.get('minute', 0))
+    if now.weekday() == dow and now.hour == hour and minute <= now.minute < minute + 15:
+        if last_run.date() < now.date():
+            return True, 'scheduled'
+
+    return False, None
 
 
-def run_optimization() -> bool:
-    """Führt die Optimierung aus."""
-    log("Starte Optimierung...")
-    
-    # Nutze immer Python direkt für konsistenten Live-Output
-    return run_optimization_python()
+# ---------------------------------------------------------------------------
+# Paare / Symbole / Timeframes aufloesen
+# ---------------------------------------------------------------------------
+
+def _resolve_pairs_auto(live_settings: dict) -> list:
+    """[(full_symbol, timeframe)] aus aktiven Strategien."""
+    pairs, seen = [], set()
+    for s in live_settings.get('active_strategies', []):
+        if not s.get('active', True):
+            continue
+        sym = s.get('symbol', '')
+        tf  = s.get('timeframe', '')
+        if sym and tf and (sym, tf) not in seen:
+            pairs.append((sym, tf))
+            seen.add((sym, tf))
+    return pairs or [('BTC/USDT:USDT', '4h')]
 
 
-def run_optimization_python() -> bool:
-    """Führt die Optimierung direkt via Python aus (plattformunabhängig)."""
-    settings = load_settings()
-    opt_settings = settings.get("optimization_settings", {})
-    
-    symbols = extract_symbols_timeframes(settings, "symbols")
-    timeframes = extract_symbols_timeframes(settings, "timeframes")
-    lookback_days = opt_settings.get("lookback_days", 365)
-    start_capital = opt_settings.get("start_capital", 1000)
-    n_cores = opt_settings.get("cpu_cores", -1)
-    n_trials = opt_settings.get("num_trials", 200)
-    
-    constraints = opt_settings.get("constraints", {})
-    max_dd = constraints.get("max_drawdown_pct", 30)
-    min_wr = constraints.get("min_win_rate_pct", 55)
-    min_pnl = constraints.get("min_pnl_pct", 0)
-    
-    start_time = time.time()
-    end_date = datetime.now().strftime("%Y-%m-%d")
-    start_date = (datetime.now() - timedelta(days=lookback_days)).strftime("%Y-%m-%d")
-    
-    optimizer_path = SCRIPT_DIR / "src" / "ltbbot" / "analysis" / "optimizer.py"
-    
-    if not optimizer_path.exists():
-        log(f"Fehler: {optimizer_path} nicht gefunden!")
-        return False
-    
-    python_exe = get_python_executable()
-    log(f"Python: {python_exe}")
-    
-    cmd = [
-        python_exe, str(optimizer_path),
-        "--symbols", " ".join(symbols),
-        "--timeframes", " ".join(timeframes),
-        "--start_date", start_date,
-        "--end_date", end_date,
-        "--jobs", str(n_cores),
-        "--max_drawdown", str(max_dd),
-        "--start_capital", str(start_capital),
-        "--min_win_rate", str(min_wr),
-        "--trials", str(n_trials),
-        "--min_pnl", str(min_pnl),
-        "--mode", "strict"
-    ]
-    
-    log(f"Führe aus: {' '.join(cmd[:5])}...")
-    log(f"")
-    log(f"╔══════════════════════════════════════════════════════════════╗")
-    log(f"║  AUTO-OPTIMIZER: {len(symbols)} Symbole × {len(timeframes)} Timeframes = {len(symbols) * len(timeframes)} Kombinationen")
-    log(f"║  Symbole: {', '.join(symbols)}")
-    log(f"║  Timeframes: {', '.join(timeframes)}")
-    log(f"║  Trials pro Kombination: {n_trials}")
-    log(f"║  Lookback: {lookback_days} Tage ({start_date} bis {end_date})")
-    log(f"╚══════════════════════════════════════════════════════════════╝")
-    log(f"")
-    
+def _resolve_symbols(value, live_settings: dict) -> list:
+    if value != 'auto':
+        return value if isinstance(value, list) else [value]
+    seen, syms = set(), []
+    for sym, _ in _resolve_pairs_auto(live_settings):
+        base = sym.split('/')[0]
+        if base not in seen:
+            syms.append(base)
+            seen.add(base)
+    return syms or ['BTC']
+
+
+def _resolve_timeframes(value, live_settings: dict) -> list:
+    if value != 'auto':
+        return value if isinstance(value, list) else [value]
+    seen, tfs = set(), []
+    for _, tf in _resolve_pairs_auto(live_settings):
+        if tf not in seen:
+            tfs.append(tf)
+            seen.add(tf)
+    return tfs or ['4h']
+
+
+def _resolve_lookback(value, timeframes: list) -> int:
+    if value != 'auto':
+        return int(value)
+    return max((LOOKBACK_MAP.get(tf, 365) for tf in timeframes), default=365)
+
+
+# ---------------------------------------------------------------------------
+# Telegram
+# ---------------------------------------------------------------------------
+
+def _get_telegram_credentials():
     try:
-        # Starte Prozess mit direkter Terminal-Ausgabe (für korrekte Progress-Bar)
-        # Kein PIPE - Output geht direkt ans Terminal
-        process = subprocess.Popen(
-            cmd,
-            cwd=str(SCRIPT_DIR)
-            # stdout/stderr nicht umleiten = direkter Terminal-Output
-        )
-        
-        process.wait()
-        returncode = process.returncode
-        
-        duration = int((time.time() - start_time) / 60)
-        save_last_run_time()
-        
-        if returncode == 0:
-            log(f"")
-            log(f"╔══════════════════════════════════════════════════════════════╗")
-            log(f"║  ✅ OPTIMIERUNG ERFOLGREICH ABGESCHLOSSEN")
-            log(f"║  Dauer: {duration} Minuten")
-            log(f"╚══════════════════════════════════════════════════════════════╝")
-            
-            # Telegram senden
-            if opt_settings.get("send_telegram_on_completion", True):
-                config_dir = SCRIPT_DIR / "src" / "ltbbot" / "strategy" / "configs"
-                config_count = len(list(config_dir.glob("config_*.json"))) if config_dir.exists() else 0
-                
-                send_telegram(f"""✅ LTBBot Auto-Optimierung ABGESCHLOSSEN
+        with open(SECRET_FILE, 'r') as f:
+            secrets = json.load(f)
+        tg = secrets.get('telegram', {})
+        return tg.get('bot_token'), tg.get('chat_id')
+    except Exception:
+        return None, None
 
-Dauer: {duration} Minuten
-Symbole: {', '.join(symbols)}
-Zeitfenster: {', '.join(timeframes)}
-Generierte Configs: {config_count}
-Trials pro Kombination: {n_trials}
-Lookback: {lookback_days} Tage""")
-            
-            return True
-        else:
-            log(f"")
-            log(f"╔══════════════════════════════════════════════════════════════╗")
-            log(f"║  ❌ OPTIMIERUNG FEHLGESCHLAGEN (Exit-Code: {returncode})")
-            log(f"╚══════════════════════════════════════════════════════════════╝")
-            
-            if opt_settings.get("send_telegram_on_completion", True):
-                send_telegram(f"""❌ LTBBot Auto-Optimierung FEHLGESCHLAGEN
 
-Dauer: {duration} Minuten
-Fehlercode: {returncode}
-Details in logs/scheduler.log""")
-            
-            return False
+def _send_telegram_plain(message: str):
+    bot_token, chat_id = _get_telegram_credentials()
+    if not bot_token or not chat_id:
+        _log("TELEGRAM SKIP kein token/chat_id in secret.json")
+        return
+    try:
+        import requests
+        api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        requests.post(api_url, data={'chat_id': chat_id, 'text': message}, timeout=10)
+        _log("TELEGRAM sent")
     except Exception as e:
-        log(f"Fehler bei der Ausführung: {e}")
-        return False
+        _log(f"TELEGRAM ERROR {e}")
 
 
-def run_daemon(check_interval: int = 60):
-    """Läuft als Daemon und prüft regelmäßig ob Optimierung fällig ist."""
-    log("Starte Scheduler-Daemon...")
-    log(f"Prüfe alle {check_interval} Sekunden")
-    
-    settings = load_settings()
-    opt_settings = settings.get("optimization_settings", {})
-    schedule = opt_settings.get("schedule", {})
-    
-    log(f"Geplant: Tag {schedule.get('day_of_week', 0)} (0=Mo), "
-        f"{schedule.get('hour', 3)}:{schedule.get('minute', 0):02d} Uhr, "
-        f"alle {schedule.get('interval_days', 7)} Tage")
-    
-    while True:
-        try:
-            settings = load_settings()
-            should_run, reason = should_run_now(settings)
-            
-            if should_run:
-                log(f"Optimierung wird gestartet: {reason}")
-                run_optimization()
-            
-            time.sleep(check_interval)
-        except KeyboardInterrupt:
-            log("Scheduler durch Benutzer beendet")
-            break
-        except Exception as e:
-            log(f"Fehler im Daemon: {e}")
-            time.sleep(check_interval)
+def _init_results_file(start_time: datetime):
+    """Initialisiert last_optimizer_run.json vor dem Pipeline-Start.
+    optimizer.py haengt pro Paar Ergebnisse an statt die Datei zu ueberschreiben."""
+    os.makedirs(os.path.dirname(OPTIMIZER_RESULTS_FILE), exist_ok=True)
+    init_data = {
+        'run_start': start_time.isoformat(timespec='seconds'),
+        'run_end': None,
+        'saved': [],
+        'failed': [],
+    }
+    with open(OPTIMIZER_RESULTS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(init_data, f, indent=2)
 
+
+def _send_start_telegram(pair_display: list, num_trials: int, start_time: datetime):
+    msg = (
+        f"\U0001f680 ltbbot Auto-Optimizer GESTARTET\n"
+        f"Paare: {', '.join(pair_display)}\n"
+        f"Trials: {num_trials}\n"
+        f"Start: {start_time.strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+    _send_telegram_plain(msg)
+
+
+def _send_end_telegram(elapsed_seconds: float):
+    dur = _format_elapsed(elapsed_seconds)
+
+    if not os.path.exists(OPTIMIZER_RESULTS_FILE):
+        _send_telegram_plain(f"\u2705 ltbbot Auto-Optimizer abgeschlossen\nDauer: {dur}")
+        return
+
+    try:
+        with open(OPTIMIZER_RESULTS_FILE, encoding='utf-8') as f:
+            results = json.load(f)
+    except Exception:
+        _send_telegram_plain(f"\u2705 ltbbot Auto-Optimizer abgeschlossen (Dauer: {dur})")
+        return
+
+    saved  = results.get('saved', [])
+    failed = results.get('failed', [])
+    total  = len(saved) + len(failed)
+
+    lines = [f"\u2705 ltbbot Auto-Optimizer abgeschlossen (Dauer: {dur})"]
+
+    if saved:
+        lines.append(f"\n\u2714 Gespeichert ({len(saved)}/{total}):")
+        for s in saved:
+            sym_short = s['symbol'].split('/')[0]
+            lines.append(f"\u2022 {sym_short}/{s['timeframe']}: +{s['pnl_pct']}% \u2192 {s['config_file']}")
+
+    if failed:
+        lines.append(f"\n\u274c Fehlgeschlagen ({len(failed)}/{total}):")
+        for fi in failed:
+            sym_short = fi['symbol'].split('/')[0]
+            lines.append(f"\u2022 {sym_short}/{fi['timeframe']}: {fi['reason']}")
+
+    _send_telegram_plain('\n'.join(lines))
+
+
+# ---------------------------------------------------------------------------
+# Pipeline-Ausfuehrung
+# ---------------------------------------------------------------------------
+
+def _run_bash_pipeline() -> int:
+    bash_root = PROJECT_ROOT.replace('\\', '/')
+    if len(bash_root) > 1 and bash_root[1] == ':':
+        bash_root = '/' + bash_root[0].lower() + bash_root[2:]
+    cmd = ['bash', '-lc', f"cd '{bash_root}' && ./run_pipeline_automated.sh"]
+    _log(f"PIPELINE_EXEC method=bash cmd={cmd}")
+    result = subprocess.run(cmd)
+    rc = result.returncode
+    _log(f"PIPELINE_EXIT rc={rc}")
+    return rc
+
+
+def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
+    """Direkter Python-Aufruf pro Paar: nur optimizer.py (kein Trainer/Threshold)."""
+    python_exe  = sys.executable
+    end_date    = date.today().strftime('%Y-%m-%d')
+    constraints = opt_settings.get('constraints', {})
+    config_suffix = opt_settings.get('config_suffix', '_envelope')
+
+    _log(f"FALLBACK method=python interpreter={python_exe} pairs={pairs}")
+
+    any_failed = False
+    for sym, tf in pairs:
+        lookback_tf = LOOKBACK_MAP.get(tf, lookback)
+        start_date  = (date.today() - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
+
+        _log(f"PAIR_START sym={sym} tf={tf} start={start_date} end={end_date}")
+
+        optimizer_cmd = [
+            python_exe, OPTIMIZER_SCRIPT,
+            '--symbols',       sym,
+            '--timeframes',    tf,
+            '--start_date',    start_date,
+            '--end_date',      end_date,
+            '--jobs',          str(opt_settings.get('cpu_cores', -1)),
+            '--max_drawdown',  str(constraints.get('max_drawdown_pct', 30)),
+            '--start_capital', str(opt_settings.get('start_capital', 1000)),
+            '--min_win_rate',  str(constraints.get('min_win_rate_pct', 0)),
+            '--trials',        str(opt_settings.get('num_trials', 100)),
+            '--min_pnl',       str(constraints.get('min_pnl_pct', 0)),
+            '--mode',          opt_settings.get('mode', 'strict'),
+            '--config_suffix', config_suffix,
+            '--min_trades',    str(constraints.get('min_trades', 20)),
+        ]
+        _log(f"OPTIMIZER_EXEC sym={sym} tf={tf}")
+        rc = subprocess.run(optimizer_cmd).returncode
+        _log(f"OPTIMIZER_EXIT sym={sym} tf={tf} rc={rc}")
+        if rc != 0:
+            any_failed = True
+
+    return 1 if any_failed else 0
+
+
+# ---------------------------------------------------------------------------
+# Haupt-Ablauf
+# ---------------------------------------------------------------------------
+
+def run_optimization(schedule: dict, opt_settings: dict,
+                     live_settings: dict, reason: str):
+    os.makedirs(CACHE_DIR, exist_ok=True)
+
+    is_auto = (opt_settings.get('symbols_to_optimize') == 'auto'
+               or opt_settings.get('timeframes_to_optimize') == 'auto')
+
+    if is_auto:
+        pairs_full   = _resolve_pairs_auto(live_settings)
+        pair_display = [f"{sym.split('/')[0]}/{tf}" for sym, tf in pairs_full]
+        timeframes   = list(dict.fromkeys(tf for _, tf in pairs_full))
+    else:
+        symbols    = _resolve_symbols(opt_settings.get('symbols_to_optimize'), live_settings)
+        timeframes = _resolve_timeframes(opt_settings.get('timeframes_to_optimize'), live_settings)
+        pairs_full = [(f"{sym}/USDT:USDT", tf) for sym in symbols for tf in timeframes]
+        pair_display = [f"{sym}/{tf}" for sym in symbols for tf in timeframes]
+
+    # Für Python-Fallback: nur Basisname des Symbols
+    pairs_base = [(sym.split('/')[0], tf) for sym, tf in pairs_full]
+
+    lookback   = _resolve_lookback(opt_settings.get('lookback_days', 'auto'), timeframes)
+    start_time = datetime.now()
+    num_trials = int(opt_settings.get('num_trials', 100))
+
+    _log(f"START reason={reason} scheduled={json.dumps(schedule)} last_run={_get_last_run()}")
+    _log(f"CONFIG pairs={pair_display} lookback_days={lookback} trials={num_trials}")
+
+    with open(IN_PROGRESS_FILE, 'w') as f:
+        f.write(start_time.isoformat())
+
+    send_tg = opt_settings.get('send_telegram_on_completion', False)
+    if send_tg:
+        _send_start_telegram(pair_display, num_trials, start_time)
+
+    start_perf = time.time()
+    success    = False
+
+    # Ergebnisdatei leeren, damit optimizer.py pro Paar anhängen kann
+    _init_results_file(start_time)
+
+    try:
+        rc = _run_bash_pipeline()
+        if rc != 0:
+            _log("PIPELINE_WARNING Bash exit != 0 — attempting Python fallback")
+            rc = _run_python_pipeline(pairs_base, lookback, opt_settings)
+        success = (rc == 0)
+    except Exception as e:
+        _log(f"ERROR {e}")
+    finally:
+        if os.path.exists(IN_PROGRESS_FILE):
+            os.remove(IN_PROGRESS_FILE)
+            _log("IN_PROGRESS marker removed")
+
+    elapsed = round(time.time() - start_perf, 1)
+
+    if success:
+        _set_last_run()
+        _log(f"FINISH result=success elapsed_s={elapsed}")
+        if send_tg:
+            _send_end_telegram(elapsed)
+    else:
+        _log(f"FINISH result=failed elapsed_s={elapsed}")
+
+
+# ---------------------------------------------------------------------------
+# Einstiegspunkt
+# ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="LTBBot Auto-Optimizer Scheduler")
-    parser.add_argument("--daemon", action="store_true", 
-                       help="Als Hintergrund-Service laufen")
-    parser.add_argument("--check-only", action="store_true",
-                       help="Nur prüfen ob Optimierung fällig ist")
-    parser.add_argument("--force", action="store_true",
-                       help="Optimierung sofort starten (ignoriert Zeitplan)")
-    parser.add_argument("--interval", type=int, default=60,
-                       help="Prüf-Intervall in Sekunden (nur für --daemon)")
-    
+    parser = argparse.ArgumentParser(description='ltbbot Auto-Optimizer Scheduler')
+    parser.add_argument('--force', action='store_true',
+                        help='Optimierung sofort erzwingen (ignoriert Zeitplan)')
     args = parser.parse_args()
-    
-    settings = load_settings()
-    
-    if args.check_only:
-        should_run, reason = should_run_now(settings)
-        log(f"Optimierung fällig: {should_run}")
-        log(f"Grund: {reason}")
-        
-        last_run = get_last_run_time()
-        if last_run:
-            log(f"Letzte Ausführung: {last_run.strftime('%Y-%m-%d %H:%M:%S')}")
-        else:
-            log("Noch keine Optimierung ausgeführt")
-        
-        sys.exit(0 if should_run else 1)
-    
+
+    try:
+        with open(SETTINGS_FILE, 'r') as f:
+            settings = json.load(f)
+    except Exception as e:
+        print(f"Fehler beim Lesen der settings.json: {e}")
+        return
+
+    opt_settings  = settings.get('optimization_settings', {})
+    live_settings = settings.get('live_trading_settings', {})
+
+    if not opt_settings.get('enabled', False) and not args.force:
+        print("Optimierung noch nicht faellig.")
+        return
+
+    schedule = opt_settings.get('schedule', {
+        '_info':       'day_of_week: 0=Montag, 6=Sonntag | hour: 0-23 (24h Format)',
+        'day_of_week': 0, 'hour': 3, 'minute': 0,
+        'interval':    {'value': 7, 'unit': 'days'},
+    })
+
     if args.force:
-        log("Erzwinge sofortige Optimierung...")
-        success = run_optimization()
-        sys.exit(0 if success else 1)
-    
-    if args.daemon:
-        run_daemon(args.interval)
+        reason = 'forced'
     else:
-        # Einmaliger Check und ggf. Ausführung
-        should_run, reason = should_run_now(settings)
-        log(f"Status: {reason}")
-        
-        if should_run:
-            run_optimization()
-        else:
-            log("Optimierung nicht fällig. Nutze --force für sofortige Ausführung "
-                "oder --daemon für kontinuierlichen Betrieb.")
+        due, reason = _is_due(schedule)
+        if not due:
+            print("Optimierung noch nicht faellig.")
+            return
+
+    run_optimization(schedule, opt_settings, live_settings, reason)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
