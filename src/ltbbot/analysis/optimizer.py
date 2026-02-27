@@ -223,8 +223,7 @@ def main():
 
         except Exception as e:
             logger.error(f"Schwerwiegender Fehler während der Optuna-Studie für {symbol} ({timeframe}): {e}", exc_info=True)
-            for lg, lvl in zip(_noisy_loggers, _original_levels):
-                lg.setLevel(lvl)
+            run_results['failed'].append({'symbol': symbol, 'timeframe': timeframe, 'reason': f'study_error: {str(e)[:100]}'})
             continue # Nächsten Task versuchen
         finally:
             # Stelle sicher, dass Level immer zurückgesetzt wird
