@@ -145,8 +145,8 @@ def main():
             os.makedirs(logs_dir, exist_ok=True)
             subprocess.Popen(
                 [python_executable, auto_opt_script],
-                stdout=open(os.path.join(logs_dir, 'auto_optimizer_trigger.log'), 'a'),
-                stderr=subprocess.STDOUT,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
 
     except FileNotFoundError as e:

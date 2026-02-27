@@ -317,6 +317,10 @@ def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
 
 def run_optimization(schedule: dict, opt_settings: dict,
                      live_settings: dict, reason: str):
+    if not opt_settings.get('enabled', False) and reason != 'forced':
+        _log("SKIP optimization disabled in settings.json")
+        return
+
     os.makedirs(CACHE_DIR, exist_ok=True)
 
     is_auto = (opt_settings.get('symbols_to_optimize') == 'auto'
