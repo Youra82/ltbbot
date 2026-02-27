@@ -338,21 +338,8 @@ Das Script lädt die optimalen Parameter:
 ### Status-Dashboard
 
 ```bash
-# Einmalig ausführbar machen
-chmod +x show_status.sh
-
-# Status anzeigen
+# Zeigt alle wichtigen Informationen
 ./show_status.sh
-```
-
-### Trading-Ergebnisse anzeigen
-
-```bash
-# Einmalig ausführbar machen
-chmod +x show_results.sh
-
-# Ergebnisse anzeigen
-./show_results.sh
 ```
 
 **Angezeigt**:
@@ -451,101 +438,6 @@ pytest --cov=src tests/
 
 ---
 
-## 🔄 Auto-Optimizer Verwaltung
-
-Der Bot verfügt über einen automatischen Optimizer, der wöchentlich die besten Parameter für alle aktiven Strategien sucht.
-
-### Optimizer manuell triggern
-
-Um eine sofortige Optimierung zu starten (ignoriert das Zeitintervall):
-
-```bash
-# Letzten Optimierungszeitpunkt löschen (erzwingt Neustart)
-rm ~/ltbbot/data/cache/.last_optimization_run
-
-# Master Runner starten (prüft ob Optimierung fällig ist)
-cd ~/ltbbot && .venv/bin/python3 master_runner.py
-```
-
-### Optimizer-Logs überwachen
-
-```bash
-# Optimizer-Log live mitverfolgen
-tail -f ~/ltbbot/logs/optimizer_output.log
-
-# Letzte 50 Zeilen des Optimizer-Logs anzeigen
-tail -50 ~/ltbbot/logs/optimizer_output.log
-```
-
-### Optimierungsergebnisse ansehen
-
-```bash
-# Beste gefundene Parameter anzeigen (erste 50 Zeilen)
-cat ~/ltbbot/artifacts/results/optimization_results.json | head -50
-```
-
-### Optimizer-Prozess überwachen
-
-```bash
-# Prüfen ob Optimizer gerade läuft (aktualisiert jede Sekunde)
-watch -n 1 "ps aux | grep optimizer"
-```
-
-### ⚡ Paralleler Betrieb: Trading & Optimizer
-
-Der Optimizer läuft **vollständig parallel** zum Trading und blockiert keine Trades:
-
-```
-Cron (jede Stunde)
-│
-├─► master_runner.py startet
-│   │
-│   ├─► main() → Startet Bot-Prozesse (z.B. 7 Strategien)
-│   │            Jeder Bot ist ein eigener Prozess
-│   │
-│   └─► check_and_run_optimizer() → Startet Optimizer im Hintergrund
-│
-└─► master_runner.py BEENDET SICH (nach ~15 Sekunden)
-
-═══════════════════════════════════════════════════════════════
-
-Jetzt laufen PARALLEL und UNABHÄNGIG:
-
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│ Bot: BTC/USDT   │  │ Bot: ETH/USDT   │  │ Bot: SOL/USDT   │
-│ (Prozess 1234)  │  │ (Prozess 1235)  │  │ (Prozess 1236)  │
-│                 │  │                 │  │                 │
-│ ✅ Handelt      │  │ ✅ Handelt      │  │ ✅ Handelt      │
-│ ✅ Öffnet Pos.  │  │ ✅ Öffnet Pos.  │  │ ✅ Öffnet Pos.  │
-│ ✅ Schließt     │  │ ✅ Schließt     │  │ ✅ Schließt     │
-└─────────────────┘  └─────────────────┘  └─────────────────┘
-        ↑                    ↑                    ↑
-        │                    │                    │
-        └────────────────────┴────────────────────┘
-                    Handeln weiter normal!
-
-┌─────────────────────────────────────────────────────────────┐
-│              OPTIMIZER (Prozess 9999)                       │
-│                                                             │
-│  Läuft im Hintergrund (kann 1-3 Stunden dauern)            │
-│  - Testet Parameter                                         │
-│  - Berechnet Backtests                                      │
-│  - Nutzt CPU, aber stört Trading nicht                     │
-│                                                             │
-│  ➡️ Sendet Telegram wenn fertig                            │
-└─────────────────────────────────────────────────────────────┘
-```
-
-| Aspekt | Trading-Bots | Optimizer |
-|--------|--------------|-----------|  
-| **Prozess** | Eigene Prozesse pro Strategie | Eigener Hintergrundprozess |
-| **API-Calls** | Ja (Exchange API) | Nur historische Daten |
-| **Blockiert?** | Nein | Nein |
-| **Dauer** | Läuft und beendet sich schnell | Kann Stunden dauern |
-| **Nächster Cron** | Startet neue Bot-Instanzen | Prüft ob schon läuft |
-
----
-
 ## 📂 Projekt-Struktur
 
 ```
@@ -628,71 +520,6 @@ git add artifacts/optimal_configs/*.json
 git commit -m "Update: Optimierte Parameter"
 git push origin main
 ```
-
----
-
-## 🤖 Auto-Optimizer Scheduler
-
-Automatische Optimierung der Strategie-Konfigurationen nach Zeitplan mit Telegram-Benachrichtigungen.
-
-### Schnellstart-Befehle
-
-```bash
-# Status prüfen (wann ist die nächste Optimierung fällig?)
-python3 auto_optimizer_scheduler.py --check-only
-
-# Sofort optimieren (ignoriert Zeitplan)
-python3 auto_optimizer_scheduler.py --force
-
-# Als Daemon laufen (prüft alle 60 Sekunden)
-python3 auto_optimizer_scheduler.py --daemon
-
-# Daemon mit längerem Intervall (alle 5 Minuten)
-python3 auto_optimizer_scheduler.py --daemon --interval 300
-```
-
-### Konfiguration (settings.json)
-
-```json
-{
-    "optimization_settings": {
-        "enabled": true,
-        "schedule": {
-            "_info": "day_of_week: 0=Montag, 6=Sonntag | hour: 0-23 (24h Format)",
-            "day_of_week": 0,
-            "hour": 3,
-            "minute": 0,
-            "interval_days": 7
-        },
-        "symbols_to_optimize": "auto",
-        "timeframes_to_optimize": "auto",
-        "lookback_days": 365,
-        "num_trials": 500,
-        "send_telegram_on_completion": true
-    }
-}
-```
-
-| Parameter | Beschreibung |
-|-----------|--------------|
-| `enabled` | Automatische Optimierung aktivieren |
-| `day_of_week` | 0=Montag, 1=Dienstag, ..., 6=Sonntag |
-| `hour` | Stunde (0-23) |
-| `interval_days` | Mindestabstand in Tagen |
-| `symbols_to_optimize` | `"auto"` = aus active_strategies, oder `["BTC", "ETH"]` |
-| `timeframes_to_optimize` | `"auto"` = aus active_strategies, oder `["1h", "4h"]` |
-
-### Auto-Modus
-
-Bei `"auto"` werden Symbole und Timeframes automatisch aus den aktiven Strategien extrahiert:
-
-```json
-"active_strategies": [
-    {"symbol": "BTC/USDT:USDT", "timeframe": "4h", "active": true},
-    {"symbol": "ETH/USDT:USDT", "timeframe": "1h", "active": false}
-]
-```
-→ Optimiert nur: **BTC** mit **4h** (ETH ist nicht aktiv)
 
 ---
 
