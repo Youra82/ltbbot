@@ -306,7 +306,8 @@ def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
             '--config_suffix', config_suffix,
             '--min_trades',    str(constraints.get('min_trades', 20)),
         ]
-        rc = subprocess.run(optimizer_cmd).returncode
+        with open(TRIGGER_LOG, 'a', encoding='utf-8') as _lf:
+            rc = subprocess.run(optimizer_cmd, stdout=_lf, stderr=_lf).returncode
         _log(f"PAIR_EXIT sym={sym} tf={tf} rc={rc}")
         if rc != 0:
             any_failed = True
