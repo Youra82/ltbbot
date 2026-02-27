@@ -277,7 +277,7 @@ def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
     constraints = opt_settings.get('constraints', {})
     config_suffix = opt_settings.get('config_suffix', '_envelope')
 
-    _log(f"FALLBACK method=python interpreter={python_exe} pairs={pairs}")
+    _log(f"PIPELINE_EXEC method=python_pairs interpreter={python_exe} pairs={pairs}")
 
     any_failed = False
     for sym, tf in pairs:
@@ -302,13 +302,14 @@ def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
             '--config_suffix', config_suffix,
             '--min_trades',    str(constraints.get('min_trades', 20)),
         ]
-        _log(f"OPTIMIZER_EXEC sym={sym} tf={tf}")
         rc = subprocess.run(optimizer_cmd).returncode
-        _log(f"OPTIMIZER_EXIT sym={sym} tf={tf} rc={rc}")
+        _log(f"PAIR_EXIT sym={sym} tf={tf} rc={rc}")
         if rc != 0:
             any_failed = True
 
-    return 1 if any_failed else 0
+    final_rc = 1 if any_failed else 0
+    _log(f"PIPELINE_EXIT rc={final_rc}")
+    return final_rc
 
 
 # ---------------------------------------------------------------------------
@@ -317,10 +318,6 @@ def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
 
 def run_optimization(schedule: dict, opt_settings: dict,
                      live_settings: dict, reason: str):
-    if not opt_settings.get('enabled', False) and reason != 'forced':
-        _log("SKIP optimization disabled in settings.json")
-        return
-
     os.makedirs(CACHE_DIR, exist_ok=True)
 
     is_auto = (opt_settings.get('symbols_to_optimize') == 'auto'
@@ -336,15 +333,14 @@ def run_optimization(schedule: dict, opt_settings: dict,
         pairs_full = [(f"{sym}/USDT:USDT", tf) for sym in symbols for tf in timeframes]
         pair_display = [f"{sym}/{tf}" for sym in symbols for tf in timeframes]
 
-    # Für Python-Fallback: nur Basisname des Symbols
+    # Basisname des Symbols für optimizer.py (z.B. "SOL" statt "SOL/USDT:USDT")
     pairs_base = [(sym.split('/')[0], tf) for sym, tf in pairs_full]
 
     lookback   = _resolve_lookback(opt_settings.get('lookback_days', 'auto'), timeframes)
     start_time = datetime.now()
     num_trials = int(opt_settings.get('num_trials', 100))
 
-    _log(f"START reason={reason} scheduled={json.dumps(schedule)} last_run={_get_last_run()}")
-    _log(f"CONFIG pairs={pair_display} lookback_days={lookback} trials={num_trials}")
+    _log(f"START reason={reason} pairs={pair_display} lookback_days={lookback} trials={num_trials}")
 
     with open(IN_PROGRESS_FILE, 'w') as f:
         f.write(start_time.isoformat())
@@ -360,10 +356,15 @@ def run_optimization(schedule: dict, opt_settings: dict,
     _init_results_file(start_time)
 
     try:
-        rc = _run_bash_pipeline()
-        if rc != 0:
-            _log("PIPELINE_WARNING Bash exit != 0 — attempting Python fallback")
+        if is_auto:
+            # Auto-Modus: direkt Python pro Paar (kein Bash nötig)
             rc = _run_python_pipeline(pairs_base, lookback, opt_settings)
+        else:
+            # Expliziter Modus: Bash-Pipeline mit Python-Fallback
+            rc = _run_bash_pipeline()
+            if rc != 0:
+                _log("PIPELINE_WARNING Bash exit != 0 — attempting Python fallback")
+                rc = _run_python_pipeline(pairs_base, lookback, opt_settings)
         success = (rc == 0)
     except Exception as e:
         _log(f"ERROR {e}")
@@ -404,7 +405,7 @@ def main():
     live_settings = settings.get('live_trading_settings', {})
 
     if not opt_settings.get('enabled', False) and not args.force:
-        print("Optimierung noch nicht faellig.")
+        _log("SKIP optimization disabled (enabled=false in settings.json)")
         return
 
     schedule = opt_settings.get('schedule', {
@@ -418,7 +419,7 @@ def main():
     else:
         due, reason = _is_due(schedule)
         if not due:
-            print("Optimierung noch nicht faellig.")
+            _log("SKIP not due yet (interval not reached)")
             return
 
     run_optimization(schedule, opt_settings, live_settings, reason)
