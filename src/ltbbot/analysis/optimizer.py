@@ -194,9 +194,16 @@ def main():
         study_name = f"{safe_filename}{CONFIG_SUFFIX}_{OPTIM_MODE}"
 
         # Vor dem Optimize-Aufruf Logger holen und Level merken/setzen
-        backtester_logger = logging.getLogger('ltbbot.analysis.backtester')
-        original_level = backtester_logger.level
-        backtester_logger.setLevel(logging.ERROR) # Warnings unterdrücken
+        # Unterdrücke alle per-Kerzen-Logs während der Optimierung
+        _noisy_loggers = [
+            logging.getLogger('ltbbot.analysis.backtester'),
+            logging.getLogger('ltbbot.strategy.envelope_logic'),
+            logging.getLogger('ltbbot.strategy.envelope_detector'),
+            logging.getLogger('ltbbot.utils.exchange'),
+        ]
+        _original_levels = [lg.level for lg in _noisy_loggers]
+        for lg in _noisy_loggers:
+            lg.setLevel(logging.ERROR)
 
         try:
             study = optuna.create_study(storage=STORAGE_URL, study_name=study_name, direction="maximize", load_if_exists=True)
@@ -216,13 +223,13 @@ def main():
 
         except Exception as e:
             logger.error(f"Schwerwiegender Fehler während der Optuna-Studie für {symbol} ({timeframe}): {e}", exc_info=True)
-            # Level trotzdem zurücksetzen
-            backtester_logger.setLevel(original_level)
+            for lg, lvl in zip(_noisy_loggers, _original_levels):
+                lg.setLevel(lvl)
             continue # Nächsten Task versuchen
         finally:
-             # Stelle sicher, dass Level immer zurückgesetzt wird
-             backtester_logger.setLevel(original_level)
-             logger.info("Backtester-Logging-Level wiederhergestellt.")
+            # Stelle sicher, dass Level immer zurückgesetzt wird
+            for lg, lvl in zip(_noisy_loggers, _original_levels):
+                lg.setLevel(lvl)
 
 
         # --- Bestes Ergebnis ---
