@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": -0.15
+    },
+    "market": {
+        "symbol": "XRP/USDT:USDT",
+        "timeframe": "30m"
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 19,
+        "envelopes": [
+            0.028328873567399944,
+            0.037997526868057976,
+            0.08572607693192373
+        ],
+        "trigger_price_delta_pct": 0.1136
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.1,
+        "leverage": 2,
+        "stop_loss_pct": 4.64
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

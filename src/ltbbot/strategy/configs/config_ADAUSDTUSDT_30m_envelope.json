@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": 2.41
+    },
+    "market": {
+        "symbol": "ADA/USDT:USDT",
+        "timeframe": "30m"
+    },
+    "strategy": {
+        "average_type": "SMA",
+        "average_period": 37,
+        "envelopes": [
+            0.029501399569028856,
+            0.09083404032995979,
+            0.10706502192366771
+        ],
+        "trigger_price_delta_pct": 0.136
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.51,
+        "leverage": 15,
+        "stop_loss_pct": 4.78
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

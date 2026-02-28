@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": 82.88
+    },
+    "market": {
+        "symbol": "SOL/USDT:USDT",
+        "timeframe": "15m"
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 34,
+        "envelopes": [
+            0.013503163640572767,
+            0.06568422909694041,
+            0.12074410049739417
+        ],
+        "trigger_price_delta_pct": 0.1878
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.98,
+        "leverage": 14,
+        "stop_loss_pct": 1.19
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

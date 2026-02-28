@@ -1,26 +1,26 @@
 {
     "_meta": {
-        "pnl_pct": 6967.19
+        "pnl_pct": 399.29
     },
     "market": {
-        "symbol": "AAVE/USDT:USDT",
+        "symbol": "ETH/USDT:USDT",
         "timeframe": "2h"
     },
     "strategy": {
         "average_type": "EMA",
-        "average_period": 6,
+        "average_period": 5,
         "envelopes": [
-            0.01937893407733463,
-            0.04719260857371686,
-            0.10195149266209515
+            0.01136391203656048,
+            0.07970350646732131,
+            0.1381984737187949
         ],
-        "trigger_price_delta_pct": 0.1488
+        "trigger_price_delta_pct": 0.0881
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 1.0,
+        "risk_per_entry_pct": 0.48,
         "leverage": 14,
-        "stop_loss_pct": 0.5
+        "stop_loss_pct": 3.81
     },
     "behavior": {
         "use_longs": true,
