@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": 10339.64
+    },
+    "market": {
+        "symbol": "SOL/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 5,
+        "envelopes": [
+            0.022295986565380864,
+            0.0734107779158428,
+            0.08914392497101568
+        ],
+        "trigger_price_delta_pct": 0.1405
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.99,
+        "leverage": 15,
+        "stop_loss_pct": 0.5
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

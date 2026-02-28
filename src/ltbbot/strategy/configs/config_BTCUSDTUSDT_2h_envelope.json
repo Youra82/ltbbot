@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": 123.45
+    },
+    "market": {
+        "symbol": "BTC/USDT:USDT",
+        "timeframe": "2h"
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 40,
+        "envelopes": [
+            0.03298039665087986,
+            0.04613841194076664,
+            0.08944403439256386
+        ],
+        "trigger_price_delta_pct": 0.1817
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.97,
+        "leverage": 14,
+        "stop_loss_pct": 4.65
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

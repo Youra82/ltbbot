@@ -1,25 +1,25 @@
 {
     "_meta": {
-        "pnl_pct": 6967.19
+        "pnl_pct": 2769.4
     },
     "market": {
-        "symbol": "AAVE/USDT:USDT",
+        "symbol": "ADA/USDT:USDT",
         "timeframe": "2h"
     },
     "strategy": {
         "average_type": "EMA",
-        "average_period": 6,
+        "average_period": 5,
         "envelopes": [
-            0.01937893407733463,
-            0.04719260857371686,
-            0.10195149266209515
+            0.032793491815225895,
+            0.09582025324150219,
+            0.10280074256970201
         ],
-        "trigger_price_delta_pct": 0.1488
+        "trigger_price_delta_pct": 0.0291
     },
     "risk": {
         "margin_mode": "isolated",
         "risk_per_entry_pct": 1.0,
-        "leverage": 14,
+        "leverage": 15,
         "stop_loss_pct": 0.5
     },
     "behavior": {

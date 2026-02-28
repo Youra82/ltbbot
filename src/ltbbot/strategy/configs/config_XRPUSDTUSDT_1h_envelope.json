@@ -1,26 +1,26 @@
 {
     "_meta": {
-        "pnl_pct": 2686.8
+        "pnl_pct": 382.47
     },
     "market": {
-        "symbol": "BTC/USDT:USDT",
-        "timeframe": "1d"
+        "symbol": "XRP/USDT:USDT",
+        "timeframe": "1h"
     },
     "strategy": {
         "average_type": "WMA",
         "average_period": 5,
         "envelopes": [
-            0.023939501664540012,
-            0.030583920736553964,
-            0.04575330501830893
+            0.009125446232340812,
+            0.0486057581495406,
+            0.05586613201825445
         ],
-        "trigger_price_delta_pct": 0.011
+        "trigger_price_delta_pct": 0.0468
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.98,
+        "risk_per_entry_pct": 0.92,
         "leverage": 15,
-        "stop_loss_pct": 0.77
+        "stop_loss_pct": 1.59
     },
     "behavior": {
         "use_longs": true,

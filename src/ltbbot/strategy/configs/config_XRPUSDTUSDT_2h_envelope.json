@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": 2712.56
+    },
+    "market": {
+        "symbol": "XRP/USDT:USDT",
+        "timeframe": "2h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 5,
+        "envelopes": [
+            0.023978669413791218,
+            0.08501800140033947,
+            0.09229435060121467
+        ],
+        "trigger_price_delta_pct": 0.1825
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.92,
+        "leverage": 15,
+        "stop_loss_pct": 0.63
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

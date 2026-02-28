@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": 1867.07
+    },
+    "market": {
+        "symbol": "DOGE/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 5,
+        "envelopes": [
+            0.017694343373380127,
+            0.0922463272814541,
+            0.1317794374877459
+        ],
+        "trigger_price_delta_pct": 0.0126
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.78,
+        "leverage": 8,
+        "stop_loss_pct": 0.62
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

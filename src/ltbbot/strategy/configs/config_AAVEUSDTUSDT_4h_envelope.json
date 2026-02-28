@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": 1729.83
+    },
+    "market": {
+        "symbol": "AAVE/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 5,
+        "envelopes": [
+            0.02423992508356094,
+            0.07546692754322332,
+            0.10382902904308948
+        ],
+        "trigger_price_delta_pct": 0.1876
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.96,
+        "leverage": 9,
+        "stop_loss_pct": 1.16
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

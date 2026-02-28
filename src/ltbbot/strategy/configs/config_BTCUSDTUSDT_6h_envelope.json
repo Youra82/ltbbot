@@ -1,24 +1,24 @@
 {
     "_meta": {
-        "pnl_pct": 6967.19
+        "pnl_pct": 1553.19
     },
     "market": {
-        "symbol": "AAVE/USDT:USDT",
-        "timeframe": "2h"
+        "symbol": "BTC/USDT:USDT",
+        "timeframe": "6h"
     },
     "strategy": {
         "average_type": "EMA",
-        "average_period": 6,
+        "average_period": 5,
         "envelopes": [
-            0.01937893407733463,
-            0.04719260857371686,
-            0.10195149266209515
+            0.037627280076820514,
+            0.04408587685626278,
+            0.10121906892581098
         ],
-        "trigger_price_delta_pct": 0.1488
+        "trigger_price_delta_pct": 0.0262
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 1.0,
+        "risk_per_entry_pct": 0.86,
         "leverage": 14,
         "stop_loss_pct": 0.5
     },
