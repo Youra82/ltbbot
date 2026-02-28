@@ -150,11 +150,12 @@ def main():
             with open(RESULTS_FILE, 'r', encoding='utf-8') as f:
                 run_results = json.load(f)
             run_results.setdefault('saved', [])
+            run_results.setdefault('skipped', [])
             run_results.setdefault('failed', [])
         except Exception:
-            run_results = {'run_start': _dt.now().isoformat(timespec='seconds'), 'run_end': None, 'saved': [], 'failed': []}
+            run_results = {'run_start': _dt.now().isoformat(timespec='seconds'), 'run_end': None, 'saved': [], 'skipped': [], 'failed': []}
     else:
-        run_results = {'run_start': _dt.now().isoformat(timespec='seconds'), 'run_end': None, 'saved': [], 'failed': []}
+        run_results = {'run_start': _dt.now().isoformat(timespec='seconds'), 'run_end': None, 'saved': [], 'skipped': [], 'failed': []}
 
     for task in TASKS:
         symbol, timeframe = task['symbol'], task['timeframe']
@@ -278,27 +279,51 @@ def main():
                 'trades': final_trades, 'params': best_params_optuna, 'config_dict': final_params_dict
         })
 
-        # --- Konfig speichern ---
+        # --- Konfig speichern (nur wenn besser als bestehende) ---
         config_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
         os.makedirs(config_dir, exist_ok=True)
         config_filename = f'config_{safe_filename}{CONFIG_SUFFIX}.json'
         config_output_path = os.path.join(config_dir, config_filename)
-        config_output = {
-            "_meta": {"pnl_pct": round(final_pnl, 2)},
-            "market": {"symbol": symbol, "timeframe": timeframe},
-            "strategy": final_params_dict['strategy'],
-            "risk": final_params_dict['risk'],
-            "behavior": final_params_dict['behavior']
-        }
-        with open(config_output_path, 'w') as f: json.dump(config_output, f, indent=4)
-        logger.info(f"✔ Beste Konfiguration wurde in '{config_output_path}' gespeichert.")
 
-        run_results['saved'].append({
-            'symbol': symbol,
-            'timeframe': timeframe,
-            'pnl_pct': round(final_pnl, 2),
-            'config_file': config_filename,
-        })
+        # Bestehende Config prüfen
+        existing_pnl = None
+        if os.path.exists(config_output_path):
+            try:
+                with open(config_output_path, 'r') as f:
+                    existing_cfg = json.load(f)
+                existing_pnl = existing_cfg.get('_meta', {}).get('pnl_pct')
+            except Exception:
+                existing_pnl = None
+
+        if existing_pnl is not None and final_pnl <= existing_pnl:
+            logger.info(f"⏭ Konfiguration NICHT gespeichert: Neuer PnL ({final_pnl:.2f}%) ist nicht besser als bestehender ({existing_pnl:.2f}%).")
+            run_results.setdefault('skipped', []).append({
+                'symbol': symbol,
+                'timeframe': timeframe,
+                'new_pnl_pct': round(final_pnl, 2),
+                'existing_pnl_pct': round(existing_pnl, 2),
+                'reason': 'no_improvement',
+            })
+        else:
+            config_output = {
+                "_meta": {"pnl_pct": round(final_pnl, 2)},
+                "market": {"symbol": symbol, "timeframe": timeframe},
+                "strategy": final_params_dict['strategy'],
+                "risk": final_params_dict['risk'],
+                "behavior": final_params_dict['behavior']
+            }
+            with open(config_output_path, 'w') as f: json.dump(config_output, f, indent=4)
+            if existing_pnl is not None:
+                logger.info(f"✔ Konfiguration gespeichert (Verbesserung: {existing_pnl:.2f}% → {final_pnl:.2f}%): '{config_output_path}'")
+            else:
+                logger.info(f"✔ Neue Konfiguration gespeichert ({final_pnl:.2f}% PnL): '{config_output_path}'")
+
+            run_results['saved'].append({
+                'symbol': symbol,
+                'timeframe': timeframe,
+                'pnl_pct': round(final_pnl, 2),
+                'config_file': config_filename,
+            })
 
 
     # --- last_optimizer_run.json aktualisieren ---
