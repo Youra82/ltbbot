@@ -1,6 +1,7 @@
-# src/ltbbp/analysis/portfolio_simulator.py
+# src/ltbbot/analysis/portfolio_simulator.py
 import pandas as pd
 import numpy as np
+import ta as _ta
 from tqdm import tqdm
 import logging
 import os
@@ -14,20 +15,22 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 # Import necessary functions
 from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
 
-# --- KONSTANTEN FÜR REALISTISCHERE SIMULATION (Anpassen!) ---
-# Werte sollten mit backtester.py übereinstimmen
-SLIPPAGE_PCT_PER_TRADE = 0.0005 # Beispiel: 0.05% Slippage pro Ausführung (Market Order TP/SL)
-MAX_TOTAL_POSITION_SIZE_USD_PER_STRATEGY = 50000 # Beispiel: Max. gehebelte Positionsgröße PRO STRATEGIE in USDT
+# --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
+SLIPPAGE_PCT_PER_TRADE = 0.0005  # 0.05% Slippage pro Ausführung (Market Order TP/SL)
 # --- ENDE KONSTANTEN ---
 
 
 def run_portfolio_simulation(start_capital, strategies_data, start_date, end_date):
     """
     Führt eine chronologische Portfolio-Simulation mit mehreren Envelope-Strategien durch.
-    VERWENDET RISIKOBASIERTE POSITIONSGRÖSSENBERECHNUNG (BASIEREND AUF STARTKAPITAL),
-    MARGIN TRACKING, SLIPPAGE und MAX POSITION SIZE PRO STRATEGIE.
+    EINHEITLICHE LOGIK mit backtester.py:
+    - Max. 1 offene Position pro Strategie (wie Live Bot)
+    - Statisches Startkapital für Risiko-Berechnung (kein Compounding)
+    - SL 1.5x breiter im TREND (ADX 25-30)
+    - Trend-Bias: Im Uptrend nur Longs, im Downtrend nur Shorts
+    - Kein Trading bei STRONG_TREND (ADX > 30)
     """
-    logger.info("\n--- Starte Portfolio-Simulation (RISIKO, MARGIN, SLIPPAGE, MAX_POS)... ---")
+    logger.info("\n--- Starte Portfolio-Simulation (Live-Bot-Logik, max. 1 Pos/Strategie)... ---")
 
     if not strategies_data:
         logger.error("Keine Strategie-Daten für die Simulation übergeben.")
@@ -41,10 +44,9 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     logger.info("1/4: Berechne Indikatoren für alle Strategien...")
     for strategy_id, strat_info in strategies_data.items():
         try:
-            # Stelle sicher, dass 'params' existiert
             if 'params' not in strat_info:
-                 logger.error(f"Fehlende 'params' in strat_info für {strategy_id}. Überspringe.")
-                 continue
+                logger.error(f"Fehlende 'params' in strat_info für {strategy_id}. Überspringe.")
+                continue
             df_with_indicators, _ = calculate_indicators_and_signals(strat_info['data'].copy(), strat_info['params'])
             if df_with_indicators.empty:
                 logger.warning(f"Keine Indikatordaten für Strategie {strategy_id}. Wird ignoriert.")
@@ -60,9 +62,22 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
         logger.error("Konnte für keine Strategie Indikatoren berechnen. Breche Simulation ab.")
         return None
 
+    # Regime-Indikatoren vorab berechnen (O(n) statt O(n²)) – wie backtester.py
+    strategy_pre_indicators = {}
+    for strategy_id, df in strategy_dfs.items():
+        _atr = _ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=10)
+        _hl2 = (df['high'] + df['low']) / 2
+        strategy_pre_indicators[strategy_id] = {
+            'adx':   _ta.trend.adx(df['high'], df['low'], df['close'], window=14),
+            'sma20': _ta.trend.sma_indicator(df['close'], window=20),
+            'sma50': _ta.trend.sma_indicator(df['close'], window=50),
+            'upper': _hl2 + (3.0 * _atr),
+            'lower': _hl2 - (3.0 * _atr),
+        }
+
     sorted_timestamps = sorted(list(all_timestamps))
     sim_start_ts = pd.to_datetime(start_date + " 00:00:00+00:00", utc=True)
-    sim_end_ts = pd.to_datetime(end_date + " 23:59:59+00:00", utc=True)
+    sim_end_ts   = pd.to_datetime(end_date   + " 23:59:59+00:00", utc=True)
     simulation_timestamps = [ts for ts in sorted_timestamps if sim_start_ts <= ts <= sim_end_ts]
 
     if not simulation_timestamps:
@@ -73,15 +88,12 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     logger.info("2/4: Starte chronologische Simulation...")
 
     # --- Simulationsvariablen initialisieren ---
-    equity = start_capital # Aktuelles REALISIERTES Kapital
-    total_margin_used = 0.0 # Verfolgt die gesamte verwendete Margin über alle Strategien
+    equity = start_capital
     liquidation_date = None
 
-    # Verfolgt offene Positionen pro Strategie
     open_portfolio_positions = {strategy_id: [] for strategy_id in strategy_dfs.keys()}
-    # Verfolgt PnL und Drawdown
     closed_trades_portfolio = []
-    equity_curve = [] # Speichert {'timestamp': ts, 'equity': total_equity_at_candle_start}
+    equity_curve = []
     peak_equity_curve = start_capital
     max_drawdown_pct = 0.0
     max_drawdown_date = None
@@ -91,35 +103,35 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
 
     # --- Simulations-Loop ---
     for ts in tqdm(simulation_timestamps, desc="Simuliere Portfolio"):
-        if liquidation_date: break
+        if liquidation_date:
+            break
 
-        # --- Unrealisierten PnL zu Beginn der Kerze berechnen ---
+        # --- Unrealisierten PnL berechnen ---
         unrealized_pnl_start = 0.0
         for strategy_id_pnl, open_layers_pnl in open_portfolio_positions.items():
-             if strategy_id_pnl not in strategy_dfs or ts not in strategy_dfs[strategy_id_pnl].index: continue
-             current_candle_pnl = strategy_dfs[strategy_id_pnl].loc[ts]
-             current_price_for_pnl = current_candle_pnl['open']
-             for layer_pnl_calc in open_layers_pnl:
-                 pos_lev_pnl = layer_pnl_calc.get('leverage', 1)
-                 pos_amount_pnl = layer_pnl_calc['amount_coins']
-                 pos_entry_pnl = layer_pnl_calc['entry_price']
-                 layer_pnl_val = 0
-                 if layer_pnl_calc['side'] == 'long':
-                     layer_pnl_val = (current_price_for_pnl - pos_entry_pnl) * pos_amount_pnl * pos_lev_pnl
-                 else: # short
-                     layer_pnl_val = (pos_entry_pnl - current_price_for_pnl) * pos_amount_pnl * pos_lev_pnl
-                 unrealized_pnl_start += layer_pnl_val
+            if strategy_id_pnl not in strategy_dfs or ts not in strategy_dfs[strategy_id_pnl].index:
+                continue
+            current_candle_pnl = strategy_dfs[strategy_id_pnl].loc[ts]
+            current_price_for_pnl = current_candle_pnl['open']
+            for layer_pnl_calc in open_layers_pnl:
+                pos_lev_pnl    = layer_pnl_calc.get('leverage', 1)
+                pos_amount_pnl = layer_pnl_calc['amount_coins']
+                pos_entry_pnl  = layer_pnl_calc['entry_price']
+                if layer_pnl_calc['side'] == 'long':
+                    unrealized_pnl_start += (current_price_for_pnl - pos_entry_pnl) * pos_amount_pnl * pos_lev_pnl
+                else:
+                    unrealized_pnl_start += (pos_entry_pnl - current_price_for_pnl) * pos_amount_pnl * pos_lev_pnl
 
         total_equity_at_candle_start = equity + unrealized_pnl_start
         equity_curve.append({'timestamp': ts, 'equity': total_equity_at_candle_start})
 
-        # --- Liquidation / Drawdown Check zu Beginn ---
+        # --- Liquidation / Drawdown Check ---
         peak_equity_curve = max(peak_equity_curve, total_equity_at_candle_start)
         current_drawdown = (peak_equity_curve - total_equity_at_candle_start) / peak_equity_curve if peak_equity_curve > 0 else 0
         current_dd_pct_val = current_drawdown * 100
         if current_dd_pct_val > max_drawdown_pct:
-             max_drawdown_pct = current_dd_pct_val
-             max_drawdown_date = ts
+            max_drawdown_pct = current_dd_pct_val
+            max_drawdown_date = ts
 
         min_equity_during_sim = min(min_equity_during_sim, total_equity_at_candle_start)
 
@@ -127,204 +139,203 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
             liquidation_date = ts
             logger.warning(f"PORTFOLIO LIQUIDIERT (Sim Equity <= 0) am {ts.strftime('%Y-%m-%d')}!")
             equity = 0
-            total_margin_used = 0
-            # Fülle Rest der Equity Curve
             remaining_timestamps = [t for t in simulation_timestamps if t > ts]
             for rem_ts in remaining_timestamps:
-                 equity_curve.append({'timestamp': rem_ts, 'equity': 0.0})
-            break # Simulation beenden
+                equity_curve.append({'timestamp': rem_ts, 'equity': 0.0})
+            break
 
-        # --- Ausstiege prüfen ---
+        # --- Ausstiege prüfen (SL / TP) ---
         total_exit_pnl_this_step = 0.0
-        margin_freed_this_step = 0.0
 
         for strategy_id, open_layers in open_portfolio_positions.items():
-            if strategy_id not in strategy_dfs or ts not in strategy_dfs[strategy_id].index: continue
+            if strategy_id not in strategy_dfs or ts not in strategy_dfs[strategy_id].index:
+                continue
             current_candle = strategy_dfs[strategy_id].loc[ts]
             remaining_layers = []
 
             for layer in open_layers:
-                exited = False
+                exited    = False
                 exit_price = None
-                pnl = 0.0
-                leverage = layer.get('leverage', 1)
-                pos_side = layer['side']
-                pos_entry = layer['entry_price']
-                pos_sl = layer['sl_price']
-                pos_amount_coins = layer['amount_coins']
+                pnl       = 0.0
+                leverage      = layer.get('leverage', 1)
+                pos_side      = layer['side']
+                pos_entry     = layer['entry_price']
+                pos_sl        = layer['sl_price']
+                pos_amount    = layer['amount_coins']
 
-                # SL Prüfung
+                # SL
                 if pos_side == 'long' and current_candle['low'] <= pos_sl:
                     exit_price = pos_sl; exited = True
                 elif pos_side == 'short' and current_candle['high'] >= pos_sl:
                     exit_price = pos_sl; exited = True
 
-                # TP Prüfung
+                # TP
                 if not exited:
                     tp_price_current = current_candle['average']
-                    if pos_side == 'long' and current_candle['high'] >= tp_price_current:
-                        if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
-                            exit_price = tp_price_current; exited = True
-                    elif pos_side == 'short' and current_candle['low'] <= tp_price_current:
-                        if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
-                            exit_price = tp_price_current; exited = True
+                    if not pd.isna(tp_price_current) and tp_price_current > 0:
+                        if pos_side == 'long' and current_candle['high'] >= tp_price_current:
+                            if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
+                                exit_price = tp_price_current; exited = True
+                        elif pos_side == 'short' and current_candle['low'] <= tp_price_current:
+                            if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
+                                exit_price = tp_price_current; exited = True
 
-                # PnL berechnen, Margin freigeben, Slippage anwenden
                 if exited and exit_price is not None:
                     if pos_side == 'long':
-                        pnl = (exit_price - pos_entry) * pos_amount_coins * leverage
-                    else: # short
-                        pnl = (pos_entry - exit_price) * pos_amount_coins * leverage
+                        pnl = (exit_price - pos_entry) * pos_amount * leverage
+                    else:
+                        pnl = (pos_entry - exit_price) * pos_amount * leverage
 
-                    entry_value = pos_entry * pos_amount_coins * leverage
-                    exit_value = exit_price * pos_amount_coins * leverage
+                    entry_value = pos_entry * pos_amount * leverage
+                    exit_value  = exit_price * pos_amount * leverage
                     fees = (entry_value * fee_pct) + (exit_value * fee_pct)
                     pnl -= fees
-
-                    # *** NEU: Slippage hinzufügen ***
-                    slippage_cost = abs(exit_value * SLIPPAGE_PCT_PER_TRADE)
-                    pnl -= slippage_cost
+                    pnl -= abs(exit_value * SLIPPAGE_PCT_PER_TRADE)
 
                     total_exit_pnl_this_step += pnl
                     closed_trades_portfolio.append({'pnl': pnl, 'side': pos_side, 'strategy_id': strategy_id})
-
-                    # Margin dieses Layers freigeben
-                    margin_freed = (pos_entry * pos_amount_coins) / leverage
-                    margin_freed_this_step += margin_freed
                 else:
-                    remaining_layers.append(layer) # Position bleibt offen
+                    remaining_layers.append(layer)
 
             open_portfolio_positions[strategy_id] = remaining_layers
 
-        # Realisiertes Kapital und verwendete Margin nach allen Ausstiegen aktualisieren
         equity += total_exit_pnl_this_step
-        total_margin_used -= margin_freed_this_step
-        total_margin_used = max(0, total_margin_used)
 
         # --- Einstiege prüfen ---
-        if equity > 0: # Nur wenn Kapital verfügbar
-            available_equity_for_margin = equity - total_margin_used # Verfügbares Equity für neue Margin
-
+        # Wie Live Bot: Nur einsteigen wenn KEINE offene Position für diese Strategie
+        if equity > 0:
             for strategy_id, strat_df in strategy_dfs.items():
-                if ts not in strat_df.index: continue
+                if ts not in strat_df.index:
+                    continue
+
+                # Max. 1 Position pro Strategie (wie Live Bot)
+                if len(open_portfolio_positions[strategy_id]) > 0:
+                    continue
+
                 current_candle = strat_df.loc[ts]
-                params = strategies_data[strategy_id]['params']
+                params         = strategies_data[strategy_id]['params']
                 strategy_params = params['strategy']
-                risk_params = params['risk']
+                risk_params     = params['risk']
                 behavior_params = params['behavior']
-                leverage = risk_params['leverage']
-                num_envelopes = len(strategy_params['envelopes'])
+                leverage            = risk_params['leverage']
+                num_envelopes       = len(strategy_params['envelopes'])
                 stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0
-                risk_per_entry_pct = risk_params.get('risk_per_entry_pct', 0.5)
+                risk_per_entry_pct  = risk_params.get('risk_per_entry_pct', 0.5)
+                use_longs  = behavior_params.get('use_longs', True)
+                use_shorts = behavior_params.get('use_shorts', True)
 
-                # *** NEU: Aktuellen Positionswert DIESER Strategie berechnen ***
-                current_strat_pos_value_usd = 0.0
-                current_price_for_strat_limit = current_candle['close']
-                for existing_layer in open_portfolio_positions[strategy_id]:
-                     lev_limit_strat = existing_layer.get('leverage', 1)
-                     current_strat_pos_value_usd += existing_layer['amount_coins'] * current_price_for_strat_limit * lev_limit_strat
+                # Marktregime aus vorab berechneten Arrays lesen (O(1))
+                pre = strategy_pre_indicators[strategy_id]
+                try:
+                    df_idx = strat_df.index.get_loc(ts)
+                except KeyError:
+                    continue
 
-                # Long Entries
-                if behavior_params.get('use_longs', True):
-                    side = 'long'
+                if df_idx >= 49:
+                    _adx_v    = pre['adx'].iloc[df_idx]
+                    _cur_adx  = float(_adx_v) if pd.notna(_adx_v) else 20.0
+                    _cur_price = current_candle['close']
+                    _cur_avg  = current_candle.get('average', float('nan'))
+                    _price_dist = (abs(_cur_price - _cur_avg) / _cur_avg * 100
+                                   if (pd.notna(_cur_avg) and _cur_avg > 0) else 0.0)
+                    _f = pre['sma20'].iloc[df_idx]
+                    _s = pre['sma50'].iloc[df_idx]
+                    _td = ("UPTREND"   if (pd.notna(_f) and pd.notna(_s) and _s > 0 and _f > _s * 1.02)
+                           else "DOWNTREND" if (pd.notna(_f) and pd.notna(_s) and _s > 0 and _f < _s * 0.98)
+                           else "NEUTRAL")
+                    if _cur_adx > 30:
+                        regime, trade_allowed, trend_direction = "STRONG_TREND", False, _td
+                    elif _cur_adx > 25:
+                        regime, trade_allowed, trend_direction = "TREND", True, _td
+                    elif _cur_adx < 20 and _price_dist < 3:
+                        regime, trade_allowed, trend_direction = "RANGE", True, "NEUTRAL"
+                    else:
+                        regime, trade_allowed, trend_direction = "UNCERTAIN", True, _td
+                else:
+                    regime, trade_allowed, trend_direction = "UNCERTAIN", True, "NEUTRAL"
+
+                # STRONG_TREND: kein Einstieg (wie Live Bot)
+                if not trade_allowed:
+                    continue
+
+                # Trend-Bias (wie Live Bot)
+                current_use_longs  = use_longs
+                current_use_shorts = use_shorts
+                if trend_direction == "UPTREND":
+                    current_use_shorts = False
+                elif trend_direction == "DOWNTREND":
+                    current_use_longs = False
+
+                # SL-Multiplikator im TREND (wie Live Bot)
+                sl_multiplier  = 1.5 if regime in ("TREND", "STRONG_TREND") else 1.0
+                effective_sl_pct = stop_loss_pct_param * sl_multiplier
+
+                # Risiko basiert auf STARTKAPITAL (statisch – wie Live Bot)
+                risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0)
+                if risk_amount_usd <= 0:
+                    continue
+
+                # Long Entry: ersten getriggerten Layer nehmen, dann stoppen
+                entered = False
+                if current_use_longs:
                     for k in range(1, num_envelopes + 1):
                         low_band_col = f'band_low_{k}'
-                        if low_band_col not in current_candle: continue
+                        if low_band_col not in current_candle or pd.isna(current_candle[low_band_col]) or current_candle[low_band_col] <= 0:
+                            continue
                         entry_trigger_price = current_candle[low_band_col]
-
-                        if current_candle['low'] <= entry_trigger_price:
+                        if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
                             entry_price = entry_trigger_price
-                            if entry_price > 0:
-                                # COMPOUNDING: Risiko basiert auf aktueller Equity (wächst mit Gewinnen)
-                                risk_amount_usd = equity * (risk_per_entry_pct / 100.0)
-                                if risk_amount_usd <= 0: continue
-                                sl_price = entry_price * (1 - stop_loss_pct_param)
-                                sl_distance_price = abs(entry_price - sl_price)
-                                if sl_distance_price <= 0: continue
-                                amount_coins = risk_amount_usd / sl_distance_price
+                            sl_price = entry_price * (1 - effective_sl_pct)
+                            if sl_price <= 0: continue
+                            sl_distance_price = abs(entry_price - sl_price)
+                            if sl_distance_price <= 0: continue
+                            amount_coins = risk_amount_usd / sl_distance_price
+                            tp_price = current_candle['average']
+                            open_portfolio_positions[strategy_id].append({
+                                'entry_price': entry_price, 'amount_coins': amount_coins,
+                                'side': 'long', 'sl_price': sl_price,
+                                'tp_price': tp_price, 'leverage': leverage
+                            })
+                            entered = True
+                            break  # Nur EINEN Einstieg pro Kerze (wie Live Bot)
 
-                                # Max Position Size Check FÜR DIESE STRATEGIE
-                                new_layer_value_usd = amount_coins * entry_price * leverage
-                                if (current_strat_pos_value_usd + new_layer_value_usd) > MAX_TOTAL_POSITION_SIZE_USD_PER_STRATEGY:
-                                     # logger.debug(f"Sim Portfolio Long {strategy_id} Layer {k}: Skip wg Max Strat Pos Size")
-                                     continue
-
-                                # Margin Check
-                                margin_required = (amount_coins * entry_price) / leverage
-                                if margin_required > available_equity_for_margin:
-                                     # logger.warning(f"Sim Portfolio: Insufficient AVAILABLE equity ({available_equity_for_margin:.2f}) for margin ({margin_required:.2f}) on long {strategy_id}. Skipping.")
-                                     continue # Diesen Layer überspringen, aber andere Strategien weiter prüfen
-
-                                # Layer hinzufügen und verfügbare Margin / Strat Pos Value aktualisieren
-                                tp_price = current_candle['average']
-                                open_portfolio_positions[strategy_id].append({
-                                    'entry_price': entry_price, 'amount_coins': amount_coins, 'side': side,
-                                    'sl_price': sl_price, 'tp_price': tp_price, 'leverage': leverage
-                                })
-                                total_margin_used += margin_required
-                                available_equity_for_margin -= margin_required
-                                current_strat_pos_value_usd += new_layer_value_usd
-
-
-                # Short Entries
-                if behavior_params.get('use_shorts', True):
-                    side = 'short'
+                # Short Entry: nur wenn kein Long-Einstieg erfolgte
+                if not entered and current_use_shorts:
                     for k in range(1, num_envelopes + 1):
                         high_band_col = f'band_high_{k}'
-                        if high_band_col not in current_candle: continue
+                        if high_band_col not in current_candle or pd.isna(current_candle[high_band_col]) or current_candle[high_band_col] <= 0:
+                            continue
                         entry_trigger_price = current_candle[high_band_col]
-
-                        if current_candle['high'] >= entry_trigger_price:
+                        if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
                             entry_price = entry_trigger_price
-                            if entry_price > 0:
-                                # COMPOUNDING: Risiko basiert auf aktueller Equity (wächst mit Gewinnen)
-                                risk_amount_usd = equity * (risk_per_entry_pct / 100.0)
-                                if risk_amount_usd <= 0: continue
-                                sl_price = entry_price * (1 + stop_loss_pct_param)
-                                sl_distance_price = abs(entry_price - sl_price)
-                                if sl_distance_price <= 0: continue
-                                amount_coins = risk_amount_usd / sl_distance_price
-
-                                # Max Position Size Check FÜR DIESE STRATEGIE
-                                new_layer_value_usd = amount_coins * entry_price * leverage
-                                if (current_strat_pos_value_usd + new_layer_value_usd) > MAX_TOTAL_POSITION_SIZE_USD_PER_STRATEGY:
-                                     # logger.debug(f"Sim Portfolio Short {strategy_id} Layer {k}: Skip wg Max Strat Pos Size")
-                                     continue
-
-                                # Margin Check
-                                margin_required = (amount_coins * entry_price) / leverage
-                                if margin_required > available_equity_for_margin:
-                                     # logger.warning(f"Sim Portfolio: Insufficient AVAILABLE equity ({available_equity_for_margin:.2f}) for margin ({margin_required:.2f}) on short {strategy_id}. Skipping.")
-                                     continue
-
-                                # Layer hinzufügen
-                                tp_price = current_candle['average']
-                                open_portfolio_positions[strategy_id].append({
-                                    'entry_price': entry_price, 'amount_coins': amount_coins, 'side': side,
-                                    'sl_price': sl_price, 'tp_price': tp_price, 'leverage': leverage
-                                })
-                                total_margin_used += margin_required
-                                available_equity_for_margin -= margin_required
-                                current_strat_pos_value_usd += new_layer_value_usd
-
+                            sl_price = entry_price * (1 + effective_sl_pct)
+                            if sl_price <= 0: continue
+                            sl_distance_price = abs(entry_price - sl_price)
+                            if sl_distance_price <= 0: continue
+                            amount_coins = risk_amount_usd / sl_distance_price
+                            tp_price = current_candle['average']
+                            open_portfolio_positions[strategy_id].append({
+                                'entry_price': entry_price, 'amount_coins': amount_coins,
+                                'side': 'short', 'sl_price': sl_price,
+                                'tp_price': tp_price, 'leverage': leverage
+                            })
+                            break  # Nur EINEN Einstieg pro Kerze (wie Live Bot)
 
     # --- Endauswertung ---
     logger.info("3/4: Bereite Analyse-Ergebnisse vor...")
-    # Finales Equity ist der letzte Wert der Equity Curve
     final_equity_curve_val = equity_curve[-1]['equity'] if equity_curve else start_capital
-    final_equity_curve_val = max(0, final_equity_curve_val) # Sicherstellen, nicht negativ
+    final_equity_curve_val = max(0, final_equity_curve_val)
 
     total_pnl_pct = (final_equity_curve_val / start_capital - 1) * 100 if start_capital > 0 else 0
     trade_count = len(closed_trades_portfolio)
     wins = sum(1 for t in closed_trades_portfolio if t['pnl'] > 0)
     win_rate = (wins / trade_count * 100) if trade_count > 0 else 0
 
-    pnl_per_strategy_df = pd.DataFrame(closed_trades_portfolio).groupby('strategy_id')['pnl'].sum().reset_index() if closed_trades_portfolio else pd.DataFrame(columns=['strategy_id', 'pnl'])
+    pnl_per_strategy_df    = pd.DataFrame(closed_trades_portfolio).groupby('strategy_id')['pnl'].sum().reset_index() if closed_trades_portfolio else pd.DataFrame(columns=['strategy_id', 'pnl'])
     trades_per_strategy_df = pd.DataFrame(closed_trades_portfolio).groupby('strategy_id').size().reset_index(name='trades') if closed_trades_portfolio else pd.DataFrame(columns=['strategy_id', 'trades'])
 
     equity_df = pd.DataFrame(equity_curve)
-    # Neuberechnung des Drawdowns aus dem DataFrame am Ende (konsistenter)
-    calculated_max_dd_pct_final = 0.0
+    calculated_max_dd_pct_final  = 0.0
     calculated_max_dd_date_final = None
     if not equity_df.empty:
         equity_df.set_index('timestamp', inplace=True)
@@ -333,24 +344,22 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
         if not equity_df['drawdown_pct'].empty:
             max_dd_idx = equity_df['drawdown_pct'].idxmax()
             if pd.notna(max_dd_idx):
-                 max_dd_row = equity_df.loc[max_dd_idx]
-                 calculated_max_dd_date_final = max_dd_idx # Ist bereits der Timestamp
-                 calculated_max_dd_pct_final = max_dd_row['drawdown_pct']
-
+                calculated_max_dd_date_final = max_dd_idx
+                calculated_max_dd_pct_final  = equity_df.loc[max_dd_idx, 'drawdown_pct']
 
     logger.info("4/4: Portfolio-Simulation abgeschlossen.")
 
     return {
-        "start_capital": start_capital,
-        "end_capital": final_equity_curve_val,
-        "total_pnl_pct": total_pnl_pct,
-        "trade_count": trade_count,
-        "win_rate": win_rate,
-        "max_drawdown_pct": calculated_max_dd_pct_final, # Verwende den neu berechneten Wert
-        "max_drawdown_date": calculated_max_dd_date_final, # Verwende das neu berechnete Datum
-        "min_equity": min_equity_during_sim,
-        "liquidation_date": liquidation_date,
-        "pnl_per_strategy": pnl_per_strategy_df,
+        "start_capital":      start_capital,
+        "end_capital":        final_equity_curve_val,
+        "total_pnl_pct":      total_pnl_pct,
+        "trade_count":        trade_count,
+        "win_rate":           win_rate,
+        "max_drawdown_pct":   calculated_max_dd_pct_final,
+        "max_drawdown_date":  calculated_max_dd_date_final,
+        "min_equity":         min_equity_during_sim,
+        "liquidation_date":   liquidation_date,
+        "pnl_per_strategy":   pnl_per_strategy_df,
         "trades_per_strategy": trades_per_strategy_df,
-        "equity_curve": equity_df # Gib das DataFrame mit DD% zurück
+        "equity_curve":       equity_df
     }
