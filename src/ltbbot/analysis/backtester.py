@@ -18,7 +18,6 @@ from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION (Anpassen!) ---
 SLIPPAGE_PCT_PER_TRADE = 0.0005 # Beispiel: 0.05% Slippage pro Ausführung (Market Order TP/SL)
-MAX_TOTAL_POSITION_SIZE_USD = 50000 # Beispiel: Max. gehebelte Positionsgröße pro Symbol in USDT
 # --- ENDE KONSTANTEN ---
 
 def load_data(symbol, timeframe, start_date_str, end_date_str):
@@ -248,9 +247,10 @@ def run_envelope_backtest(data, params, start_capital=1000):
             equity_curve_data.append({'timestamp': timestamp, 'equity': capital})
 
         # --- Einstiege prüfen ---
-        if capital > 0: # Nur wenn Kapital verfügbar (realisiert)
-            
-            # Marktregime aus vorab berechneten Arrays lesen (O(1) statt O(n))
+        # Live Bot: Nur einsteigen wenn KEINE offene Position vorhanden
+        if capital > 0 and len(positions) == 0:
+
+            # Marktregime aus vorab berechneten Arrays lesen (O(1) statt O(n²))
             if i >= 49:
                 _adx_v = _adx_pre.iloc[i]
                 _cur_adx = float(_adx_v) if pd.notna(_adx_v) else 20.0
@@ -267,142 +267,88 @@ def run_envelope_backtest(data, params, start_capital=1000):
                        else "BEARISH" if (pd.notna(_l) and _cur_price < _l)
                        else "NEUTRAL")
                 if _cur_adx > 30:
-                    regime, trade_allowed, trend_direction, supertrend_direction = "STRONG_TREND", False, _td, _st
+                    regime, trade_allowed, trend_direction = "STRONG_TREND", False, _td
                 elif _cur_adx > 25:
-                    regime, trade_allowed, trend_direction, supertrend_direction = "TREND", True, _td, _st
+                    regime, trade_allowed, trend_direction = "TREND", True, _td
                 elif _cur_adx < 20 and _price_dist < 3:
-                    regime, trade_allowed, trend_direction, supertrend_direction = "RANGE", True, "NEUTRAL", _st
+                    regime, trade_allowed, trend_direction = "RANGE", True, "NEUTRAL"
                 else:
-                    regime, trade_allowed, trend_direction, supertrend_direction = "UNCERTAIN", True, _td, _st
+                    regime, trade_allowed, trend_direction = "UNCERTAIN", True, _td
             else:
-                regime, trade_allowed, trend_direction, supertrend_direction = "UNCERTAIN", True, "NEUTRAL", "NEUTRAL"
-            
-            # **STRONG_TREND Filter: Kein Trading wenn ADX > 30**
+                regime, trade_allowed, trend_direction = "UNCERTAIN", True, "NEUTRAL"
+
+            # STRONG_TREND: Kein Einstieg (wie Live Bot)
             if not trade_allowed:
-                # Kein Trading in diesem Zyklus
-                positions = remaining_positions
-                capital += exit_pnl_current_candle
-                continue  # Nächste Kerze
-            
-            # **Trend-Bias anwenden: Im Uptrend nur Longs, im Downtrend nur Shorts**
+                continue
+
+            # Trend-Bias: Im Uptrend nur Longs, im Downtrend nur Shorts (wie Live Bot)
             current_use_longs = use_longs
             current_use_shorts = use_shorts
-            
             if trend_direction == "UPTREND":
-                # Im Uptrend: Nur Longs erlaubt (Shorts deaktiviert)
                 current_use_shorts = False
             elif trend_direction == "DOWNTREND":
-                # Im Downtrend: Nur Shorts erlaubt (Longs deaktiviert)
                 current_use_longs = False
-            # Bei NEUTRAL bleiben beide Richtungen wie konfiguriert
-            
-            # Aktuellen Gesamtwert der offenen Positionen berechnen für Limit-Check
-            current_total_pos_value_usd = 0.0
-            current_price_for_limit = current_candle['close']
-            if pd.isna(current_price_for_limit) or current_price_for_limit <= 0:
-                # logger.warning(f"Ungültiger Close-Preis ({current_price_for_limit}) bei Kerze {i} für Limit-Check. Verwende Open.")
-                current_price_for_limit = current_candle['open'] # Fallback
-            # Prüfe nochmal, falls Open auch ungültig ist
-            if pd.isna(current_price_for_limit) or current_price_for_limit <= 0:
-                 # logger.warning(f"Auch Open-Preis ungültig. Verwende letzten gültigen Close (Approximation).")
-                 # Finde letzten gültigen Close (ineffizient, aber selten nötig)
-                 prev_closes = df['close'].iloc[:i+1].dropna()
-                 current_price_for_limit = prev_closes.iloc[-1] if not prev_closes.empty else 0
 
-            # Nur fortfahren, wenn wir einen gültigen Preis haben
-            if current_price_for_limit > 0:
-                for existing_pos in positions:
-                     pos_lev_limit = existing_pos.get('leverage', 1)
-                     current_total_pos_value_usd += existing_pos['amount_coins'] * current_price_for_limit * pos_lev_limit
-            else:
-                 # logger.error(f"Konnte keinen gültigen Preis für Positionslimit-Check bei Kerze {i} finden. Überspringe Entries.")
-                 current_total_pos_value_usd = MAX_TOTAL_POSITION_SIZE_USD + 1 # Verhindert Entries
+            # SL-Multiplikator: Im TREND 1.5x breiter (wie Live Bot)
+            sl_multiplier = 1.5 if regime in ("TREND", "STRONG_TREND") else 1.0
+            effective_sl_pct = stop_loss_pct_param * sl_multiplier
 
-            # Long Entries
+            # Risiko basiert auf STARTKAPITAL (statisch, kein Compounding - wie Live Bot)
+            risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0)
+            if risk_amount_usd <= 0:
+                continue
+
+            # Long Entry: ersten getriggerten Layer nehmen, dann stoppen (max. 1 Position)
+            entered = False
             if current_use_longs:
-                side = 'long'
                 for k in range(1, num_envelopes + 1):
                     low_band_col = f'band_low_{k}'
-                    # Sicherstellen, dass Spalte existiert und Wert gültig ist
-                    if low_band_col not in current_candle or pd.isna(current_candle[low_band_col]) or current_candle[low_band_col] <= 0: continue
+                    if low_band_col not in current_candle or pd.isna(current_candle[low_band_col]) or current_candle[low_band_col] <= 0:
+                        continue
                     entry_trigger_price = current_candle[low_band_col]
-
-                    # Trigger-Bedingung: Kerzen-Low berührt/unterschreitet das Band
                     if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
-                        entry_price = entry_trigger_price # Vereinfacht: Einstieg zum Triggerpreis
-
-                        # COMPOUNDING: Risiko basiert auf aktuellem Kapital (wächst mit Gewinnen)
-                        risk_amount_usd = capital * (risk_per_entry_pct / 100.0)
-                        if risk_amount_usd <= 0: continue
-
-                        sl_price = entry_price * (1 - stop_loss_pct_param)
-                        if sl_price <= 0: continue # Ungültiger SL-Preis
-                        sl_distance_price = abs(entry_price - sl_price)
-                        if sl_distance_price <= 0: continue
-
-                        amount_coins = risk_amount_usd / sl_distance_price
-                        # Mindestmenge prüfen (vereinfacht) - Optional, da live geprüft
-                        # if amount_coins < MIN_TRADE_AMOUNT_FROM_CONFIG: continue
-
-                        # Max Position Size Check
-                        new_layer_value_usd = amount_coins * entry_price * leverage
-                        if (current_total_pos_value_usd + new_layer_value_usd) > MAX_TOTAL_POSITION_SIZE_USD:
-                            # logger.debug(f"Sim Long Layer {k}: Überspringt wg Max Pos Size")
-                            continue
-
-                        tp_price_target = current_candle['average'] # Ziel-TP
-
-                        positions.append({
-                            'entry_price': entry_price,
-                            'amount_coins': amount_coins,
-                            'side': side,
-                            'sl_price': sl_price,
-                            'tp_price': tp_price_target, # Speichere Ziel-TP
-                            'leverage': leverage
-                        })
-                        # Aktualisiere den Gesamtwert für nachfolgende Layer in dieser Kerze
-                        current_total_pos_value_usd += new_layer_value_usd
-
-            # Short Entries
-            if current_use_shorts:
-                side = 'short'
-                for k in range(1, num_envelopes + 1):
-                    high_band_col = f'band_high_{k}'
-                    if high_band_col not in current_candle or pd.isna(current_candle[high_band_col]) or current_candle[high_band_col] <= 0: continue
-                    entry_trigger_price = current_candle[high_band_col]
-
-                    if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
                         entry_price = entry_trigger_price
-
-                        # COMPOUNDING: Risiko basiert auf aktuellem Kapital (wächst mit Gewinnen)
-                        risk_amount_usd = capital * (risk_per_entry_pct / 100.0)
-                        if risk_amount_usd <= 0: continue
-
-                        sl_price = entry_price * (1 + stop_loss_pct_param)
+                        sl_price = entry_price * (1 - effective_sl_pct)
                         if sl_price <= 0: continue
                         sl_distance_price = abs(entry_price - sl_price)
                         if sl_distance_price <= 0: continue
-
                         amount_coins = risk_amount_usd / sl_distance_price
-                        # if amount_coins < MIN_TRADE_AMOUNT_FROM_CONFIG: continue
-
-                        # Max Position Size Check
-                        new_layer_value_usd = amount_coins * entry_price * leverage
-                        if (current_total_pos_value_usd + new_layer_value_usd) > MAX_TOTAL_POSITION_SIZE_USD:
-                            # logger.debug(f"Sim Short Layer {k}: Überspringt wg Max Pos Size")
-                            continue
-
                         tp_price_target = current_candle['average']
-
                         positions.append({
                             'entry_price': entry_price,
                             'amount_coins': amount_coins,
-                            'side': side,
+                            'side': 'long',
                             'sl_price': sl_price,
                             'tp_price': tp_price_target,
                             'leverage': leverage
                         })
-                        current_total_pos_value_usd += new_layer_value_usd
+                        entered = True
+                        break  # Nur EINEN Einstieg pro Kerze (wie Live Bot)
+
+            # Short Entry: nur wenn kein Long-Einstieg erfolgte (max. 1 Position)
+            if not entered and current_use_shorts:
+                for k in range(1, num_envelopes + 1):
+                    high_band_col = f'band_high_{k}'
+                    if high_band_col not in current_candle or pd.isna(current_candle[high_band_col]) or current_candle[high_band_col] <= 0:
+                        continue
+                    entry_trigger_price = current_candle[high_band_col]
+                    if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
+                        entry_price = entry_trigger_price
+                        sl_price = entry_price * (1 + effective_sl_pct)
+                        if sl_price <= 0: continue
+                        sl_distance_price = abs(entry_price - sl_price)
+                        if sl_distance_price <= 0: continue
+                        amount_coins = risk_amount_usd / sl_distance_price
+                        tp_price_target = current_candle['average']
+                        positions.append({
+                            'entry_price': entry_price,
+                            'amount_coins': amount_coins,
+                            'side': 'short',
+                            'sl_price': sl_price,
+                            'tp_price': tp_price_target,
+                            'leverage': leverage
+                        })
+                        break  # Nur EINEN Einstieg pro Kerze (wie Live Bot)
 
 
         # --- Abbruch bei Totalverlust (basierend auf Equity Curve Start) ---
