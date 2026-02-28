@@ -6,6 +6,7 @@ from datetime import timedelta
 import json
 import sys
 import logging
+import ta as _ta
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange # Für load_data
-from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals, detect_market_regime
+from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION (Anpassen!) ---
 SLIPPAGE_PCT_PER_TRADE = 0.0005 # Beispiel: 0.05% Slippage pro Ausführung (Market Order TP/SL)
@@ -156,6 +157,15 @@ def run_envelope_backtest(data, params, start_capital=1000):
         first_timestamp = df.index[0]
         equity_curve_data.append({'timestamp': first_timestamp, 'equity': start_capital})
     
+    # Regime-Indikatoren einmalig vorab berechnen (O(n) statt O(n²))
+    _adx_pre   = _ta.trend.adx(df['high'], df['low'], df['close'], window=14)
+    _sma20_pre = _ta.trend.sma_indicator(df['close'], window=20)
+    _sma50_pre = _ta.trend.sma_indicator(df['close'], window=50)
+    _atr_pre   = _ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=10)
+    _hl2_pre   = (df['high'] + df['low']) / 2
+    _upper_pre = _hl2_pre + (3.0 * _atr_pre)
+    _lower_pre = _hl2_pre - (3.0 * _atr_pre)
+
     # Progress Bar Setup
     total_candles = len(df)
     logger.info(f"Starte Backtest mit {total_candles} Kerzen...")
@@ -240,24 +250,32 @@ def run_envelope_backtest(data, params, start_capital=1000):
         # --- Einstiege prüfen ---
         if capital > 0: # Nur wenn Kapital verfügbar (realisiert)
             
-            # **NEU: Marktregime prüfen für diese Kerze**
-            # Berechne Regime basierend auf den Daten BIS zu dieser Kerze (inklusiv)
-            try:
-                df_until_now = df.iloc[:i+1].copy()
-                if len(df_until_now) >= 50:  # Mindestens 50 Kerzen für SMA50
-                    regime, trade_allowed, trend_direction, supertrend_direction = detect_market_regime(df_until_now, silent=True)
+            # Marktregime aus vorab berechneten Arrays lesen (O(1) statt O(n))
+            if i >= 49:
+                _adx_v = _adx_pre.iloc[i]
+                _cur_adx = float(_adx_v) if pd.notna(_adx_v) else 20.0
+                _cur_price = df['close'].iloc[i]
+                _cur_avg = current_candle.get('average', float('nan'))
+                _price_dist = (abs(_cur_price - _cur_avg) / _cur_avg * 100
+                               if (pd.notna(_cur_avg) and _cur_avg > 0) else 0.0)
+                _f = _sma20_pre.iloc[i]; _s = _sma50_pre.iloc[i]
+                _td = ("UPTREND" if (pd.notna(_f) and pd.notna(_s) and _s > 0 and _f > _s * 1.02)
+                       else "DOWNTREND" if (pd.notna(_f) and pd.notna(_s) and _s > 0 and _f < _s * 0.98)
+                       else "NEUTRAL")
+                _u = _upper_pre.iloc[i]; _l = _lower_pre.iloc[i]
+                _st = ("BULLISH" if (pd.notna(_u) and _cur_price > _u)
+                       else "BEARISH" if (pd.notna(_l) and _cur_price < _l)
+                       else "NEUTRAL")
+                if _cur_adx > 30:
+                    regime, trade_allowed, trend_direction, supertrend_direction = "STRONG_TREND", False, _td, _st
+                elif _cur_adx > 25:
+                    regime, trade_allowed, trend_direction, supertrend_direction = "TREND", True, _td, _st
+                elif _cur_adx < 20 and _price_dist < 3:
+                    regime, trade_allowed, trend_direction, supertrend_direction = "RANGE", True, "NEUTRAL", _st
                 else:
-                    # Zu wenig Daten, default auf UNCERTAIN
-                    regime = "UNCERTAIN"
-                    trade_allowed = True
-                    trend_direction = "NEUTRAL"
-                    supertrend_direction = "NEUTRAL"
-            except Exception as e:
-                # Fallback bei Fehler
-                regime = "UNCERTAIN"
-                trade_allowed = True
-                trend_direction = "NEUTRAL"
-                supertrend_direction = "NEUTRAL"
+                    regime, trade_allowed, trend_direction, supertrend_direction = "UNCERTAIN", True, _td, _st
+            else:
+                regime, trade_allowed, trend_direction, supertrend_direction = "UNCERTAIN", True, "NEUTRAL", "NEUTRAL"
             
             # **STRONG_TREND Filter: Kein Trading wenn ADX > 30**
             if not trade_allowed:
