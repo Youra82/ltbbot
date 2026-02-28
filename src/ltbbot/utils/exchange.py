@@ -99,7 +99,7 @@ class Exchange:
                 all_ohlcv.extend(ohlcv)
                 current_ts = ohlcv[-1][0] + timeframe_duration_in_ms
                 last_date = pd.to_datetime(ohlcv[-1][0], unit='ms', utc=True).strftime('%Y-%m-%d')
-                logger.info(f"Daten bis {last_date} heruntergeladen...")
+                logger.debug(f"Daten bis {last_date} heruntergeladen...")
                 time.sleep(self.exchange.rateLimit / 1000)
             except ccxt.RateLimitExceeded as e:
                 logger.warning(f"Rate limit exceeded during historical fetch: {e}. Waiting...")
@@ -119,7 +119,7 @@ class Exchange:
         df = df[~df.index.duplicated(keep='last')]
         df = df[(df.index >= pd.to_datetime(start_date_str, utc=True)) & (df.index <= pd.to_datetime(end_date_str + 'T23:59:59Z', utc=True))]
 
-        logger.info(f"Historischer Download abgeschlossen. {len(df)} Kerzen geladen.")
+        logger.info(f"Daten geladen: {symbol} ({timeframe}) | {start_date_str} → {end_date_str} | {len(df)} Kerzen")
         return df
 
     # --- Getter Methoden ---
