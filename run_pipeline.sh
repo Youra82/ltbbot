@@ -11,6 +11,7 @@ echo -e "=======================================================${NC}"
 
 # --- Pfade definieren ---
 VENV_PATH=".venv/bin/activate"
+PYTHON=".venv/bin/python"
 OPTIMIZER="src/ltbbot/analysis/optimizer.py" # Nur noch der Optimizer wird gebraucht
 
 # --- Umgebung aktivieren ---
@@ -84,7 +85,7 @@ for symbol in $SYMBOLS; do
         # --- Nur noch Stufe: Optimierung ---
         echo -e "\n${GREEN}>>> Starte Optimierung für $symbol ($timeframe)...${NC}"
         # Führe den Optimizer aus
-        python3 "$OPTIMIZER" \
+        "$PYTHON" "$OPTIMIZER" \
             --symbols "$symbol" \
             --timeframes "$timeframe" \
             --start_date "$CURRENT_START_DATE" \
@@ -199,9 +200,9 @@ PYTHON_SCRIPT
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✔ settings.json wurde erfolgreich aktualisiert!${NC}"
         echo -e "\n${YELLOW}📝 Nächste Schritte:${NC}"
-        echo -e "   1. Öffne settings.json"
-        echo -e "   2. Prüfe settings.json bei Bedarf"
-        echo -e "   2
+        echo -e "   1. Öffne und prüfe settings.json bei Bedarf"
+        echo -e "   2. Starte den Bot neu: .venv/bin/python master_runner.py"
+    else
         echo -e "${RED}❌ Fehler beim Aktualisieren der settings.json${NC}"
     fi
 else
