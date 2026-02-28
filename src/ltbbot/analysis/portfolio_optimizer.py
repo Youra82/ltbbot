@@ -156,6 +156,24 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
             logger.info("Keine weitere Verbesserung durch Hinzufügen von Strategien gefunden (unter Berücksichtigung der Symbol-Exklusivität und DD-Constraint). Optimierung beendet.")
             break
 
+    # --- Vergleich: Ist eine Einzelstrategie besser als das Portfolio? ---
+    # (Mehrere Strategien addieren Gewinne auf dieselbe Kapitalbasis → PnL% steigt künstlich.)
+    # Falls eine Einzelstrategie nach absolutem PnL% besser ist UND den DD-Constraint einhält,
+    # wird sie als optimales Ergebnis bevorzugt.
+    best_single_by_pnl = max(single_strategy_results, key=lambda x: x['pnl_pct'])
+    portfolio_pnl = best_portfolio_result.get('total_pnl_pct', -9999)
+
+    if (len(best_portfolio_ids) > 1
+            and best_single_by_pnl['pnl_pct'] > portfolio_pnl
+            and best_single_by_pnl['max_dd_pct'] <= max_portfolio_dd_constraint * 100):
+        logger.info(
+            f"⚡ Einzelstrategie '{best_single_by_pnl['strategy_id']}' übertrifft Portfolio: "
+            f"{best_single_by_pnl['pnl_pct']:.2f}% > {portfolio_pnl:.2f}% PnL → Wähle Einzelstrategie."
+        )
+        best_portfolio_ids = [best_single_by_pnl['strategy_id']]
+        best_portfolio_result = best_single_by_pnl['result']
+        best_portfolio_score = best_single_by_pnl['score']
+
     # --- Endergebnis zurückgeben ---
     logger.info(f"Optimierung abgeschlossen. Bestes Portfolio hat {len(best_portfolio_ids)} Strategien mit Score {best_portfolio_score:.2f}.")
 
