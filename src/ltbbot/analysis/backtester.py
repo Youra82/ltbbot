@@ -95,7 +95,7 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
     return pd.DataFrame()
 
 # --- NEUER BACKTESTER FÜR ENVELOPE (MIT KORREKTUREN) ---
-def run_envelope_backtest(data, params, start_capital=1000):
+def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
     """
     Führt einen Backtest für die Envelope-Strategie durch.
     KORRIGIERT: Verwendet Startkapital für Positionsgrößen, simuliert Slippage und Max Position Size.
@@ -167,12 +167,13 @@ def run_envelope_backtest(data, params, start_capital=1000):
 
     # Progress Bar Setup
     total_candles = len(df)
-    logger.info(f"Starte Backtest mit {total_candles} Kerzen...")
+    if show_progress:
+        logger.info(f"Starte Backtest mit {total_candles} Kerzen...")
     progress_interval = max(1, total_candles // 20)  # 20 Updates (5% Schritte)
 
     for i in range(len(df)):
         # Progress Bar Update
-        if i % progress_interval == 0 or i == total_candles - 1:
+        if show_progress and (i % progress_interval == 0 or i == total_candles - 1):
             progress_pct = (i + 1) / total_candles * 100
             bar_length = 30
             filled = int(bar_length * (i + 1) / total_candles)
@@ -354,8 +355,9 @@ def run_envelope_backtest(data, params, start_capital=1000):
         # --- Abbruch bei Totalverlust (basierend auf Equity Curve Start) ---
     
     # Progress Bar abschließen
-    print()  # Newline nach Progress Bar
-    logger.info("Backtest abgeschlossen. Berechne Metriken...")
+    if show_progress:
+        print()  # Newline nach Progress Bar
+        logger.info("Backtest abgeschlossen. Berechne Metriken...")
     
     # --- Endauswertung ---
     final_equity = capital # KORREKTUR: Verwende die Variable 'capital'

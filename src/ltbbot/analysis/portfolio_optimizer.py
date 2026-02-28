@@ -13,8 +13,8 @@ logger = logging.getLogger("show_results") # Verwende denselben Logger-Namen
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
-# Import the portfolio simulator which internally uses the envelope backtester
 from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
+from ltbbot.analysis.backtester import run_envelope_backtest
 
 # --- Portfolio Optimizer Logic (Greedy Approach) ---
 def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date, max_portfolio_dd_constraint=0.3): # NEU: max_portfolio_dd_constraint hinzugefügt
@@ -157,22 +157,52 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
             break
 
     # --- Vergleich: Ist eine Einzelstrategie besser als das Portfolio? ---
-    # (Mehrere Strategien addieren Gewinne auf dieselbe Kapitalbasis → PnL% steigt künstlich.)
-    # Falls eine Einzelstrategie nach absolutem PnL% besser ist UND den DD-Constraint einhält,
-    # wird sie als optimales Ergebnis bevorzugt.
-    best_single_by_pnl = max(single_strategy_results, key=lambda x: x['pnl_pct'])
-    portfolio_pnl = best_portfolio_result.get('total_pnl_pct', -9999)
+    # Wichtig: portfolio_simulator erfasst unrealisierten PnL bei jeder Kerze → DD höher als im
+    # Backtester (der nur bei Trade-Exits aufzeichnet). Deshalb nutzen wir run_envelope_backtest()
+    # für die akkurate DD-Prüfung – konsistent mit den Ergebnissen aus Option 1 (Einzel-Analyse).
+    if len(best_portfolio_ids) > 1:
+        portfolio_pnl = best_portfolio_result.get('total_pnl_pct', -9999)
+        logger.info("Prüfe ob eine Einzelstrategie das Portfolio übertrifft (Backtester-Verifikation)...")
 
-    if (len(best_portfolio_ids) > 1
-            and best_single_by_pnl['pnl_pct'] > portfolio_pnl
-            and best_single_by_pnl['max_dd_pct'] <= max_portfolio_dd_constraint * 100):
-        logger.info(
-            f"⚡ Einzelstrategie '{best_single_by_pnl['strategy_id']}' übertrifft Portfolio: "
-            f"{best_single_by_pnl['pnl_pct']:.2f}% > {portfolio_pnl:.2f}% PnL → Wähle Einzelstrategie."
-        )
-        best_portfolio_ids = [best_single_by_pnl['strategy_id']]
-        best_portfolio_result = best_single_by_pnl['result']
-        best_portfolio_score = best_single_by_pnl['score']
+        best_bt_pnl = portfolio_pnl  # Muss diesen Wert übertreffen
+        best_bt_dd = 100.0
+        best_bt_candidate_id = None
+
+        for strategy_id, strat_data in tqdm(strategies_data.items(), desc="Verifiziere Einzelstrategien"):
+            try:
+                bt_result = run_envelope_backtest(
+                    strat_data['data'].copy(), strat_data['params'], start_capital,
+                    show_progress=False
+                )
+                if not bt_result:
+                    continue
+                bt_pnl = bt_result.get('total_pnl_pct', -100.0)
+                bt_dd  = bt_result.get('max_drawdown_pct', 100.0)
+                bt_end = bt_result.get('end_capital', 0)
+
+                if (bt_end > 0
+                        and bt_pnl > best_bt_pnl
+                        and bt_dd <= max_portfolio_dd_constraint * 100):
+                    best_bt_pnl = bt_pnl
+                    best_bt_dd  = bt_dd
+                    best_bt_candidate_id = strategy_id
+            except Exception as e:
+                logger.debug(f"Backtester-Fehler für {strategy_id}: {e}")
+                continue
+
+        if best_bt_candidate_id:
+            logger.info(
+                f"⚡ Einzelstrategie '{best_bt_candidate_id}' übertrifft Portfolio: "
+                f"{best_bt_pnl:.2f}% > {portfolio_pnl:.2f}% PnL (DD: {best_bt_dd:.2f}%) → Wähle Einzelstrategie."
+            )
+            sim_data_winner = {best_bt_candidate_id: strategies_data[best_bt_candidate_id]}
+            winner_result = run_portfolio_simulation(start_capital, sim_data_winner, start_date, end_date)
+            if winner_result:
+                best_portfolio_ids   = [best_bt_candidate_id]
+                best_portfolio_result = winner_result
+                best_portfolio_score  = best_bt_pnl / max(0.1, best_bt_dd)
+        else:
+            logger.info("Keine Einzelstrategie übertrifft das Portfolio nach Backtester-Verifikation.")
 
     # --- Endergebnis zurückgeben ---
     logger.info(f"Optimierung abgeschlossen. Bestes Portfolio hat {len(best_portfolio_ids)} Strategien mit Score {best_portfolio_score:.2f}.")
