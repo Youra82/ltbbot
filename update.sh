@@ -31,9 +31,9 @@ chmod +x *.sh
 
 # 7. Python-Bibliotheken aktualisieren (falls requirements.txt geändert wurde)
 echo "7. Aktualisiere Python-Bibliotheken..."
-# Prüfe ob venv/pip noch funktioniert (kann nach User-Wechsel kaputt sein)
-if ! .venv/bin/pip --version > /dev/null 2>&1; then
-    echo "⚠️  venv/pip ist beschädigt (z.B. falscher Interpreter-Pfad). Erstelle venv neu..."
+# Prüfe ob venv/pip wirklich funktioniert (pip --version reicht nicht, da Resolver nicht geladen wird)
+if ! .venv/bin/python3 -c "from pip._vendor.resolvelib import BaseReporter" > /dev/null 2>&1; then
+    echo "⚠️  venv/pip ist beschädigt (inkonsistente pip-Pakete). Erstelle venv neu..."
     rm -rf .venv
     python3 -m venv .venv --upgrade-deps
     .venv/bin/pip install --upgrade pip setuptools wheel -q
