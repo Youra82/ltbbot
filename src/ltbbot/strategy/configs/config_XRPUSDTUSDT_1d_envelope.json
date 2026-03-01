@@ -20,8 +20,7 @@
         "margin_mode": "isolated",
         "risk_per_entry_pct": 0.84,
         "leverage": 12,
-        "stop_loss_pct": 0.5,
-        "trailing_callback_rate_pct": 1.0
+        "stop_loss_pct": 0.5
     },
     "behavior": {
         "use_longs": true,
