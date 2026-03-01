@@ -396,8 +396,8 @@ python compare_real_vs_backtest.py
 # Logs live mitverfolgen
 tail -f logs/cron.log
 
-# Letzten 200 Zeilen anzeigen
-tail -n 200 logs/cron.log
+# Letzten 500 Zeilen anzeigen
+tail -n 500 logs/*.log
 
 # Nach Fehlern durchsuchen
 grep -i "ERROR" logs/cron.log
