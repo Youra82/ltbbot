@@ -1,6 +1,6 @@
 {
     "live_trading_settings": {
-        "use_auto_optimizer_results": false,
+        "use_auto_optimizer_results": true,
         "active_strategies": [
             {
                 "symbol": "SOL/USDT:USDT",
@@ -25,8 +25,8 @@
         "symbols_to_optimize": "auto",
         "timeframes_to_optimize": "auto",
         "lookback_days": "auto",
-        "start_capital": 1000,
-        "num_trials": 10,
+        "start_capital": 50,
+        "num_trials": 500,
         "cpu_cores": -1,
         "mode": "strict",
         "config_suffix": "_envelope",
@@ -40,8 +40,8 @@
         },
         "schedule": {
             "_info": "day_of_week: 0=Montag, 6=Sonntag | hour: 0-23 (24h Format)",
-            "day_of_week": 0,
-            "hour": 3,
+            "day_of_week": 5,
+            "hour": 15,
             "minute": 0,
             "interval": {
                 "value": 7,
