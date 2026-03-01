@@ -67,9 +67,12 @@ flowchart LR
 - ✅ CCXT Integration für mehrere Börsen
 - ✅ Moving Average Envelope Indikatoren
 - ✅ Optuna Hyperparameter-Optimierung
-- ✅ Backtesting mit realistischer Slippage-Simulation
+- ✅ Backtesting mit realistischer Slippage-Simulation (Live-Bot-Aligned)
 - ✅ Robust Error-Handling und Logging
 - ✅ Walk-Forward-Analyse für robuste Parameter
+- ✅ Portfolio-Optimierung (Greedy Calmar-Ratio + Einzelstrategie-Verifikation)
+- ✅ Regime-Filter (ADX-basiert: TREND, STRONG_TREND, NEUTRAL)
+- ✅ Konditionelles Config-Speichern (nur besser → überschreiben)
 
 ---
 
@@ -284,37 +287,36 @@ Mit wieviel USD starten? (Standard: 100)
 
 ### Optimierte Konfigurationen
 
-Nach erfolgreicher Optimierung werden die besten Parameter gespeichert:
+Nach erfolgreicher Optimierung werden die besten Parameter gespeichert unter:
 
 ```
-artifacts/optimal_configs/
-├── optimal_BTCUSDT_1d.json
-├── optimal_BTCUSDT_4h.json
-├── optimal_ETHUSDT_1d.json
-└── optimal_ETHUSDT_4h.json
+src/ltbbot/strategy/configs/
+├── config_BTCUSDTUSDT_1d_envelope.json
+├── config_BTCUSDTUSDT_4h_envelope.json
+├── config_ETHUSDTUSDT_1h_envelope.json
+└── config_AAVEUSDTUSDT_2h_envelope.json
 ```
 
-**Beispiel-Konfiguration** (`optimal_BTCUSDT_1d.json`):
+**Beispiel-Konfiguration** (`config_BTCUSDTUSDT_4h_envelope.json`):
 
 ```json
 {
-  "symbol": "BTCUSDT",
-  "timeframe": "1d",
-  "parameters": {
+  "market": {
+    "symbol": "BTC/USDT:USDT",
+    "timeframe": "4h"
+  },
+  "strategy": {
     "ma_period": 20,
-    "envelope_std": 2.0,
-    "volume_threshold": 1.2,
-    "sl_percent": 2.0,
-    "tp_percent": 3.0
+    "envelope_pct": 2.5,
+    "sl_pct": 2.0,
+    "tp_pct": 4.0
   },
-  "performance": {
-    "total_return": 5.25,
-    "win_rate": 65.0,
-    "num_trades": 20,
-    "max_drawdown": -6.15,
-    "end_capital": 605.25
-  },
-  "timestamp": "2025-01-01T20:17:35.833000"
+  "_meta": {
+    "pnl_pct": 124.5,
+    "max_drawdown_pct": 18.3,
+    "win_rate": 62.0,
+    "num_trades": 45
+  }
 }
 ```
 
@@ -326,10 +328,20 @@ Die optimierten Konfigurationen werden **automatisch geladen**:
 ./show_results.sh
 ```
 
-Das Script lädt die optimalen Parameter:
-- ✅ Bessere Ergebnisse durch optimierte Parameter
-- ✅ Konsistente Strategie-Ausführung
-- ✅ Einfaches A/B-Testing
+**`show_results.sh` bietet 4 Analyse-Modi:**
+
+| Option | Beschreibung |
+|--------|-------------|
+| 1 | Einzelne Strategie backtesten (Backtester) |
+| 2 | Portfolio-Simulation mehrerer Strategien |
+| 3 | Portfolio-Optimierung (Greedy Calmar-Ratio) |
+| 4 | Walk-Forward-Analyse |
+
+Alle Modi nutzen denselben einheitlichen Backtesting-Engine:
+- ✅ Max. 1 offene Position pro Strategie (Live-Bot-Alignment)
+- ✅ Statisches Startkapital (kein Compounding) für realistische Risikobewertung
+- ✅ SL 1.5× breiter im TREND-Regime (ADX 25–30)
+- ✅ Trend-Bias: UPTREND = nur Longs, DOWNTREND = nur Shorts
 
 ---
 
@@ -499,29 +511,60 @@ rm -f ~/ltbbot/data/cache/.optimization_in_progress
 
 ---
 
+## 🆕 Aktuelle Verbesserungen
+
+### Backtester & Live-Bot Alignment
+- **Max. 1 Position pro Strategie** — identisch mit Live-Bot-Verhalten
+- **Statisches Startkapital** für Positionsgrößen-Berechnung (kein Compounding)
+- **Regime-Filter**: STRONG_TREND (ADX > 30) → keine neuen Entries; TREND (ADX 25–30) → SL 1.5× breiter
+- **Trend-Bias**: UPTREND (EMA up) = nur Longs; DOWNTREND = nur Shorts
+
+### Portfolio-Optimizer: Einzelstrategie-Prüfung
+Der greedy Portfolio-Optimizer prüft jetzt nach der Portfolio-Zusammenstellung, ob eine einzelne Strategie das Portfolio in Bezug auf **rohen PnL%** schlägt:
+- Verwendet `run_envelope_backtest()` (kein Compounding, echte Drawdown-Messung) für den Vergleich
+- Falls eine Einzelstrategie besser ist und das DD-Constraint erfüllt → wird diese gewählt
+
+### Exchange-Log-Vereinfachung
+Daten-Downloads loggen jetzt nur noch eine einzige Zusammenfassungszeile:
+```
+Daten geladen: BTC/USDT:USDT (4h) | 2024-01-01 → 2025-01-01 | 2200 Kerzen
+```
+
+### Konditionelles Config-Speichern
+Der Optimizer überschreibt bestehende Konfigurationen nur, wenn der neue `pnl_pct` die gespeicherte Performance übertrifft.
+
+---
+
 ## 📂 Projekt-Struktur
 
 ```
 ltbbot/
 ├── src/
 │   └── ltbbot/
-│       ├── strategy/          # Trading-Logik
+│       ├── strategy/              # Trading-Logik
 │       │   ├── run.py
-│       │   └── envelope_detector.py
-│       ├── backtest/          # Backtesting
-│       │   └── backtester.py
-│       └── utils/             # Hilfsfunktionen
+│       │   ├── envelope_detector.py
+│       │   └── configs/           # Optimierte Konfigurationen (JSON)
+│       ├── analysis/              # Analyse & Optimierung
+│       │   ├── backtester.py      # Einzel-Strategie Backtest
+│       │   ├── optimizer.py       # Optuna Parameter-Suche
+│       │   ├── portfolio_optimizer.py  # Greedy Portfolio-Optimierung
+│       │   ├── portfolio_simulator.py  # Multi-Strategie Simulation
+│       │   ├── show_results.py    # Interaktive Ergebnisanzeige
+│       │   └── interactive_status.py  # Live-Status Dashboard
+│       └── utils/                 # Hilfsfunktionen
 │           ├── exchange.py
 │           └── telegram.py
-├── scripts/                   # Hilfsskripte
-├── tests/                     # Unit-Tests
-├── data/                      # Marktdaten
-├── logs/                      # Log-Files
-├── artifacts/                 # Ergebnisse
-├── master_runner.py          # Haupt-Entry-Point
-├── settings.json             # Konfiguration
-├── secret.json               # API-Credentials
-└── requirements.txt          # Dependencies
+├── tests/                         # Unit-Tests
+├── data/                          # Marktdaten & Cache
+├── logs/                          # Log-Files
+├── artifacts/                     # Ergebnisse & DB
+├── master_runner.py               # Haupt-Entry-Point
+├── run_pipeline.sh                # Optimierungs-Pipeline (interaktiv)
+├── show_results.sh                # Backtest & Portfolio-Analyse
+├── settings.json                  # Konfiguration
+├── secret.json                    # API-Credentials (nicht committen!)
+└── requirements.txt               # Dependencies
 ```
 
 ---
@@ -577,8 +620,8 @@ git status
 ### Optimierte Konfigurationen hochladen
 
 ```bash
-git add artifacts/optimal_configs/*.json
-git commit -m "Update: Optimierte Parameter"
+git add src/ltbbot/strategy/configs/config_*_envelope.json
+git commit -m "Update: Aktuelle Envelope-Konfigurationen"
 git push origin main
 ```
 
