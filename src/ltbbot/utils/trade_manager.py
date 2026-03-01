@@ -880,6 +880,13 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     logger.warning(f"Berechnete Long-Menge {amount_coins:.8f} für Layer {i+1} liegt unter Minimum {min_amount_tradable:.8f}. Überspringe.")
                     continue
 
+                # 4b. Mindest-Notional-Wert prüfen (Bitget: min. 5 USDT)
+                MIN_NOTIONAL_USDT = 5.0
+                notional_value = amount_coins * entry_price_for_calc
+                if notional_value < MIN_NOTIONAL_USDT:
+                    logger.warning(f"Notional-Wert {notional_value:.2f} USDT für Long Layer {i+1} unter Bitget-Minimum {MIN_NOTIONAL_USDT} USDT (Kapital zu klein für diesen SL-Abstand). Überspringe.")
+                    continue
+
                 # 5. Benötigte Margin (nur zur Info)
                 margin_required = (amount_coins * entry_price_for_calc) / leverage
                 logger.debug(f"Long Layer {i+1}: Risk={risk_amount_usd:.2f}$, Size={amount_coins:.8f}, MarginReq={margin_required:.2f}$ (Verfügbar ca.: {balance:.2f})")
@@ -1000,6 +1007,13 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # 4. Mindestmenge prüfen
                 if amount_coins < min_amount_tradable:
                     logger.warning(f"Berechnete Short-Menge {amount_coins:.8f} für Layer {i+1} liegt unter Minimum {min_amount_tradable:.8f}. Überspringe.")
+                    continue
+
+                # 4b. Mindest-Notional-Wert prüfen (Bitget: min. 5 USDT)
+                MIN_NOTIONAL_USDT = 5.0
+                notional_value = amount_coins * entry_price_for_calc
+                if notional_value < MIN_NOTIONAL_USDT:
+                    logger.warning(f"Notional-Wert {notional_value:.2f} USDT für Short Layer {i+1} unter Bitget-Minimum {MIN_NOTIONAL_USDT} USDT (Kapital zu klein für diesen SL-Abstand). Überspringe.")
                     continue
 
                 # 5. Benötigte Margin (nur zur Info)
