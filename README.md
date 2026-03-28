@@ -627,6 +627,62 @@ git push origin main
 
 ---
 
+## Coin & Timeframe Empfehlungen
+
+LTBBot ist eine **Mean-Reversion-Strategie** — er wartet, dass der Preis von einer Envelope-Band zur gleitenden Mitte zurückfindet. Das Gegenteil von Trendfolge: gefragt sind Coins, die schwingen statt dauerhaft zu trenden. STRONG_TREND (ADX > 30) blockiert alle Einträge komplett.
+
+### Effektive Zeitspannen je Timeframe
+
+| TF | MA(8) — Mittelachse | ADX(14) — Regime | ATR(10) — SuperTrend | Geeignet |
+|---|---|---|---|---|
+| 15m | 2h | 3.5h | 2.5h | ❌ |
+| 30m | 4h | 7h | 5h | ⚠️ |
+| 1h | 8h | 14h | 10h | ✅ |
+| 2h | 16h | 28h | 20h | ✅ |
+| **4h** | **32h** | **56h** | **40h** | **✅✅** |
+| **6h** | **48h** | **84h** | **60h** | **✅✅** |
+| 1d | 8d | 14d | 10d | ✅ |
+
+Auf 15m/30m ist die ADX-Regime-Erkennung nur wenige Stunden alt — zu schnelle Wechsel. Ab 4h umspannt ADX fast 2.5 Tage und trennt echtes Ranging von echtem Trend zuverlässig.
+
+### Coin-Eignung
+
+| Coin | Mean-Reversion | Envelope-Verhalten | Bewertung |
+|---|---|---|---|
+| **AAVE** | Stark — oscilliert regelmäßig um MA | Trifft alle 3 Bänder bei Vola-Phasen | ✅✅ Beste Wahl |
+| **ETH** | Gut — ausreichend Rückkehr zur Mitte | Klare Envelope-Touchdowns | ✅✅ Sehr gut |
+| **BNB** | Gut — stabile niedrige Volatilität | Enge Bänder funktionieren gut | ✅ Gut |
+| **XRP** | Gut — lange Seitwärtsphasen mit Schwingung | Moderate Bänder, häufige Berührungen | ✅ Gut |
+| **ADA** | Gut — rangelastig, oscilliert | Passt gut zu Envelope-Logik | ✅ Gut |
+| **LTC** | Gut — BTC-korreliert, moderates Verhalten | Gut auf 4h/6h | ✅ Gut |
+| **AVAX** | Mittel — trendet oft, aber mit Rücksetzern | Funktioniert in Konsolidierungsphasen | ⚠️ Mittel |
+| **SOL** | Mittel — trendet zu stark für Reversion | Bänder werden übersprungen | ⚠️ Mittel |
+| **BTC** | Mittel — klare Trends, Reversion auf 1d | 1d-Timeframe empfohlen | ⚠️ Mittel |
+| **DOT** | Mittel — sehr lange Seitwärtsphasen | Wenige klare Signale | ⚠️ Mittel |
+| **LINK** | Schwach in Bull — trendet explosiv | Bänder werden überrannt | ⚠️ Schwach |
+| **DOGE** | Schlecht — sentiment-getrieben | Zufällige Band-Berührungen | ❌ Schlecht |
+| **SHIB/PEPE** | Nicht vorhanden — reine Pumps | Keine strukturierten Bänder | ❌❌ Nicht geeignet |
+
+### Empfohlene Kombinationen (Ranking)
+
+| Rang | Kombination | Begründung |
+|---|---|---|
+| 🥇 1 | **AAVE 4h / 6h** | Stärkste Mean-Reversion, alle 3 Bänder regelmäßig berührt |
+| 🥇 1 | **ETH 4h / 6h** | Klare Rückkehr zur Mitte, Regime gut klassifizierbar |
+| 🥈 2 | **BNB 4h** | Stabil, niedrige Volatilität, häufiges RANGE-Regime |
+| 🥈 2 | **XRP 4h / 6h** | Lange Seitwärtsphasen — ideal für Mean-Reversion |
+| 🥉 3 | **ADA 4h** | Gut in Bear/Seitwärts, schwächer in Bull |
+| 4 | **LTC 4h** | BTC-korreliert, moderate Reversion-Bewegungen |
+| 4 | **BTC 1d** | Auf Tagesbasis gute Reversion-Phasen vorhanden |
+| 4 | **SOL 2h** | Kürzeres TF um Trend-Blocks zu reduzieren |
+| ❌ | **Alles auf 15m** | ADX-Regime zu kurzfristig, zu viele Fehlsignale |
+| ❌ | **DOGE / SHIB** | Kein strukturiertes Mean-Reversion-Verhalten |
+
+> **Hinweis:** In starken Bullmärkten blockiert STRONG_TREND viele Einträge — das ist gewollt. LTBBot performt am besten in Seitwärts- und moderaten Trendmärkten.
+
+
+---
+
 ## 📜 Lizenz
 
 Dieses Projekt ist lizenziert unter der MIT License.
