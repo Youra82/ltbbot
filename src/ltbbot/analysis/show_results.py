@@ -394,9 +394,7 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                         send_document(telegram_config['bot_token'], telegram_config['chat_id'], trades_csv_path, "Trade-Log")
                     logger.info("✔ Bericht wurde erfolgreich an Telegram gesendet.")
                 else: logger.warning("Telegram nicht konfiguriert. Kein Versand.")
-            except FileNotFoundError: logger.error(f"secret.json nicht gefunden für Telegram.")
-                except Exception as e: logger.error(f"ⓘ Konnte Bericht nicht an Telegram senden: {e}")
-            else: logger.warning("Keine gültigen Spalten zum Exportieren.")
+            except Exception as e: logger.error(f"ⓘ Konnte Bericht nicht an Telegram senden: {e}")
 
         except Exception as e: logger.error(f"Fehler beim Exportieren der Equity Curve: {e}", exc_info=True)
     elif results:
