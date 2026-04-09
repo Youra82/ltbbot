@@ -246,10 +246,12 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
 
     if not strategies_data_for_sim: logger.error("Konnte für keine der gewählten Strategien Daten laden."); return
 
-    equity_df = pd.DataFrame()
-    report_csv_path = ""
-    report_caption = ""
-    results = None
+    equity_df            = pd.DataFrame()
+    report_csv_path      = ""
+    report_caption       = ""
+    results              = None
+    _portfolio_trades_df = None
+    start_capital_val    = start_capital
 
     if is_auto:
         try:
@@ -272,9 +274,10 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                 liq_date = final_report.get('liquidation_date')
                 print(f"Liquidiert:       {'JA, am ' + liq_date.strftime('%Y-%m-%d') if liq_date and isinstance(liq_date, pd.Timestamp) else 'NEIN'}")
                 print("="*60)
-                equity_df = final_report.get('equity_curve')
-                report_csv_path = os.path.join(PROJECT_ROOT, 'optimal_portfolio_equity.csv')
-                report_caption = f"Optimales Portfolio ({len(optimal_portfolio_ids)} Strategien)\n{start_date} bis {end_date}\nEndkapital: {final_report.get('end_capital', 0):,.2f} USDT"
+                equity_df            = final_report.get('equity_curve')
+                _portfolio_trades_df = final_report.get('trades_df')
+                report_csv_path      = os.path.join(PROJECT_ROOT, 'optimal_portfolio_equity.csv')
+                report_caption       = f"Optimales Portfolio ({len(optimal_portfolio_ids)} Strategien)\n{start_date} bis {end_date}\nEndkapital: {final_report.get('end_capital', 0):,.2f} USDT"
 
                 save_optimal_to_settings = input("\nSollen diese optimalen Strategien in settings.json als aktiv markiert werden? (j/n) [n]: ").lower() == 'j'
                 if save_optimal_to_settings:
@@ -312,9 +315,10 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                 liq_date = results.get('liquidation_date')
                 print(f"Liquidiert:       {'JA, am ' + liq_date.strftime('%Y-%m-%d') if liq_date and isinstance(liq_date, pd.Timestamp) else 'NEIN'}")
                 print("="*60)
-                equity_df = results.get('equity_curve')
-                report_csv_path = os.path.join(PROJECT_ROOT, 'manual_portfolio_equity.csv')
-                report_caption = f"Manuelle Simulation ({len(strategies_data_for_sim)} Strategien)\n{start_date} bis {end_date}\nEndkapital: {results.get('end_capital', 0):,.2f} USDT"
+                equity_df            = results.get('equity_curve')
+                _portfolio_trades_df = results.get('trades_df')
+                report_csv_path      = os.path.join(PROJECT_ROOT, 'manual_portfolio_equity.csv')
+                report_caption       = f"Manuelle Simulation ({len(strategies_data_for_sim)} Strategien)\n{start_date} bis {end_date}\nEndkapital: {results.get('end_capital', 0):,.2f} USDT"
             else: logger.error("Portfolio-Simulation fehlgeschlagen.")
         except Exception as e: logger.error(f"Fehler während manueller Simulation: {e}", exc_info=True)
 
@@ -329,24 +333,68 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                  logger.error("Equity Curve DataFrame hat keinen gültigen Zeitstempel-Index/Spalte.")
                  return
 
-            export_cols = ['equity', 'drawdown_pct']
-            missing_cols = [col for col in export_cols if col not in equity_df.columns]
-            if missing_cols: logger.warning(f"Spalten fehlen für CSV-Export: {missing_cols}. Exportiere verfügbare.")
-            export_cols = [col for col in export_cols if col in equity_df.columns]
-
+            # --- Equity-Kurve CSV ---
+            export_cols = [c for c in ['equity', 'peak', 'drawdown_pct'] if c in equity_df.columns]
             if export_cols:
-                equity_df[export_cols].to_csv(report_csv_path, index=True, float_format='%.2f')
-                logger.info(f"✔ Details zur Equity-Kurve wurden nach '{os.path.basename(report_csv_path)}' exportiert.")
-                try:
-                    secret_path = os.path.join(PROJECT_ROOT, 'secret.json')
-                    with open(secret_path, 'r') as f: secrets = json.load(f)
-                    telegram_config = secrets.get('telegram', {})
-                    if telegram_config.get('bot_token') and telegram_config.get('chat_id'):
-                        logger.info("Sende Bericht an Telegram...")
-                        send_document(telegram_config['bot_token'], telegram_config['chat_id'], report_csv_path, report_caption)
-                        logger.info("✔ Bericht wurde erfolgreich an Telegram gesendet.")
-                    else: logger.warning("Telegram nicht konfiguriert. Kein Versand.")
-                except FileNotFoundError: logger.error(f"secret.json nicht gefunden für Telegram.")
+                equity_export = equity_df[export_cols].copy()
+                equity_export.index.name = 'timestamp'
+                equity_export.to_csv(report_csv_path, index=True, float_format='%.2f')
+                logger.info(f"✔ Equity-Kurve → '{os.path.basename(report_csv_path)}'")
+
+            # --- Trade-Log CSV ---
+            trades_df = _portfolio_trades_df  # gesetzt vor dem Export-Block
+
+            trades_csv_path = report_csv_path.replace('_equity.csv', '_trades.csv').replace('equity.csv', 'trades.csv')
+            if trades_df is not None and not trades_df.empty:
+                # Laufende Equity-Spalte hinzufügen
+                trades_df = trades_df.sort_values('exit_time').copy()
+                trades_df['equity_after'] = start_capital_val + trades_df['pnl_usd'].cumsum()
+                # Übersichtliche Spaltenreihenfolge
+                col_order = ['entry_time','exit_time','symbol','timeframe','side','entry_price',
+                             'exit_price','sl_price','leverage','pnl_usd','pnl_pct','reason','equity_after']
+                col_order = [c for c in col_order if c in trades_df.columns]
+                trades_df[col_order].to_csv(trades_csv_path, index=False, float_format='%.4f')
+                logger.info(f"✔ Trade-Log    → '{os.path.basename(trades_csv_path)}'")
+
+                # --- Detaillierte Konsolenausgabe ---
+                print(f"\n{'─'*90}")
+                print(f"  {'#':<4} {'Symbol':<20} {'TF':<5} {'Side':<6} {'Entry':>10} {'Exit':>10} {'PnL USD':>9} {'PnL%':>7} {'Result':<6}  Equity")
+                print(f"  {'─'*86}")
+                for i, row in enumerate(trades_df[col_order].itertuples(), 1):
+                    result_str = '✓ WIN' if row.reason == 'WIN' else '✗ SL '
+                    eq_str = f"{row.equity_after:>10.2f}" if hasattr(row, 'equity_after') else ''
+                    print(f"  {i:<4} {row.symbol:<20} {row.timeframe:<5} {row.side:<6} "
+                          f"{row.entry_price:>10.4f} {row.exit_price:>10.4f} "
+                          f"{row.pnl_usd:>+9.2f} {row.pnl_pct:>+6.1f}%  {result_str}  {eq_str}")
+                print(f"{'─'*90}")
+
+                # Per-Strategie Zusammenfassung
+                print(f"\n  {'Strategie':<30} {'Trades':>7} {'Wins':>5} {'WR':>7} {'PnL USD':>10}")
+                print(f"  {'─'*62}")
+                for sid, grp in trades_df.groupby('strategy_id'):
+                    n  = len(grp)
+                    w  = (grp['reason'] == 'WIN').sum()
+                    wr = w/n*100 if n > 0 else 0
+                    p  = grp['pnl_usd'].sum()
+                    label = f"{grp['symbol'].iloc[0]} ({grp['timeframe'].iloc[0]})"
+                    print(f"  {label:<30} {n:>7} {w:>5} {wr:>6.1f}%  {p:>+9.2f}")
+                print(f"{'─'*90}\n")
+            else:
+                logger.info("Keine abgeschlossenen Trades im gewählten Zeitraum.")
+
+            # --- Telegram ---
+            try:
+                secret_path = os.path.join(PROJECT_ROOT, 'secret.json')
+                with open(secret_path, 'r') as f: secrets = json.load(f)
+                telegram_config = secrets.get('telegram', {})
+                if telegram_config.get('bot_token') and telegram_config.get('chat_id'):
+                    logger.info("Sende Bericht an Telegram...")
+                    send_document(telegram_config['bot_token'], telegram_config['chat_id'], report_csv_path, report_caption)
+                    if trades_df is not None and not trades_df.empty:
+                        send_document(telegram_config['bot_token'], telegram_config['chat_id'], trades_csv_path, "Trade-Log")
+                    logger.info("✔ Bericht wurde erfolgreich an Telegram gesendet.")
+                else: logger.warning("Telegram nicht konfiguriert. Kein Versand.")
+            except FileNotFoundError: logger.error(f"secret.json nicht gefunden für Telegram.")
                 except Exception as e: logger.error(f"ⓘ Konnte Bericht nicht an Telegram senden: {e}")
             else: logger.warning("Keine gültigen Spalten zum Exportieren.")
 

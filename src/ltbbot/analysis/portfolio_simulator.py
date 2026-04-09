@@ -193,7 +193,24 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                     pnl -= abs(exit_value * SLIPPAGE_PCT_PER_TRADE)
 
                     total_exit_pnl_this_step += pnl
-                    closed_trades_portfolio.append({'pnl': pnl, 'side': pos_side, 'strategy_id': strategy_id})
+                    entry_value_notional = pos_entry * pos_amount
+                    pnl_pct = (pnl / (entry_value_notional / leverage * leverage)) * 100 if entry_value_notional > 0 else 0.0
+                    reason = 'WIN' if pnl > 0 else 'SL'
+                    closed_trades_portfolio.append({
+                        'exit_time':    ts,
+                        'entry_time':   layer.get('entry_time', ts),
+                        'symbol':       strategies_data[strategy_id]['symbol'],
+                        'timeframe':    strategies_data[strategy_id]['timeframe'],
+                        'side':         pos_side,
+                        'entry_price':  round(pos_entry, 6),
+                        'exit_price':   round(exit_price, 6),
+                        'sl_price':     round(pos_sl, 6),
+                        'leverage':     leverage,
+                        'pnl_usd':      round(pnl, 4),
+                        'pnl_pct':      round(pnl_pct, 2),
+                        'reason':       reason,
+                        'strategy_id':  strategy_id,
+                    })
                 else:
                     remaining_layers.append(layer)
 
@@ -294,7 +311,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                             open_portfolio_positions[strategy_id].append({
                                 'entry_price': entry_price, 'amount_coins': amount_coins,
                                 'side': 'long', 'sl_price': sl_price,
-                                'tp_price': tp_price, 'leverage': leverage
+                                'tp_price': tp_price, 'leverage': leverage,
+                                'entry_time': ts,
                             })
                             entered = True
                             break  # Nur EINEN Einstieg pro Kerze (wie Live Bot)
@@ -317,7 +335,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                             open_portfolio_positions[strategy_id].append({
                                 'entry_price': entry_price, 'amount_coins': amount_coins,
                                 'side': 'short', 'sl_price': sl_price,
-                                'tp_price': tp_price, 'leverage': leverage
+                                'tp_price': tp_price, 'leverage': leverage,
+                                'entry_time': ts,
                             })
                             break  # Nur EINEN Einstieg pro Kerze (wie Live Bot)
 
@@ -331,8 +350,11 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     wins = sum(1 for t in closed_trades_portfolio if t['pnl'] > 0)
     win_rate = (wins / trade_count * 100) if trade_count > 0 else 0
 
-    pnl_per_strategy_df    = pd.DataFrame(closed_trades_portfolio).groupby('strategy_id')['pnl'].sum().reset_index() if closed_trades_portfolio else pd.DataFrame(columns=['strategy_id', 'pnl'])
-    trades_per_strategy_df = pd.DataFrame(closed_trades_portfolio).groupby('strategy_id').size().reset_index(name='trades') if closed_trades_portfolio else pd.DataFrame(columns=['strategy_id', 'trades'])
+    trades_df = pd.DataFrame(closed_trades_portfolio) if closed_trades_portfolio else pd.DataFrame(
+        columns=['exit_time','entry_time','symbol','timeframe','side','entry_price','exit_price','sl_price','leverage','pnl_usd','pnl_pct','reason','strategy_id'])
+
+    pnl_per_strategy_df    = trades_df.groupby('strategy_id')['pnl_usd'].sum().reset_index().rename(columns={'pnl_usd':'pnl'}) if not trades_df.empty else pd.DataFrame(columns=['strategy_id', 'pnl'])
+    trades_per_strategy_df = trades_df.groupby('strategy_id').size().reset_index(name='trades') if not trades_df.empty else pd.DataFrame(columns=['strategy_id', 'trades'])
 
     equity_df = pd.DataFrame(equity_curve)
     calculated_max_dd_pct_final  = 0.0
@@ -361,5 +383,6 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
         "liquidation_date":   liquidation_date,
         "pnl_per_strategy":   pnl_per_strategy_df,
         "trades_per_strategy": trades_per_strategy_df,
-        "equity_curve":       equity_df
+        "equity_curve":       equity_df,
+        "trades_df":          trades_df,
     }
