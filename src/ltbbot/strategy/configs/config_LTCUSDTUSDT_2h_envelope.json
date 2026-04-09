@@ -1,26 +1,26 @@
 {
     "_meta": {
-        "pnl_pct": 3503.55
+        "pnl_pct": 2608.62
     },
     "market": {
-        "symbol": "ADA/USDT:USDT",
+        "symbol": "LTC/USDT:USDT",
         "timeframe": "2h"
     },
     "strategy": {
         "average_type": "EMA",
         "average_period": 5,
         "envelopes": [
-            0.0189335611075417,
-            0.08948991050991187,
-            0.09538663873109991
+            0.023002081441494984,
+            0.06751844403482955,
+            0.13623232132583585
         ],
-        "trigger_price_delta_pct": 0.0421
+        "trigger_price_delta_pct": 0.1815
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.87,
-        "leverage": 11,
-        "stop_loss_pct": 0.59
+        "risk_per_entry_pct": 0.84,
+        "leverage": 12,
+        "stop_loss_pct": 0.51
     },
     "behavior": {
         "use_longs": true,

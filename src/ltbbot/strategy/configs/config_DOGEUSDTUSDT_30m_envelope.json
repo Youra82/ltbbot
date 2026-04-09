@@ -1,26 +1,26 @@
 {
     "_meta": {
-        "pnl_pct": 11.53
+        "pnl_pct": 2029.37
     },
     "market": {
         "symbol": "DOGE/USDT:USDT",
         "timeframe": "30m"
     },
     "strategy": {
-        "average_type": "DCM",
-        "average_period": 30,
+        "average_type": "EMA",
+        "average_period": 5,
         "envelopes": [
-            0.0333280063224362,
-            0.09966616292851165,
-            0.1163870363844689
+            0.008713054623572624,
+            0.05992064915524864,
+            0.14646216485323676
         ],
-        "trigger_price_delta_pct": 0.079
+        "trigger_price_delta_pct": 0.0319
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.33,
+        "risk_per_entry_pct": 0.98,
         "leverage": 14,
-        "stop_loss_pct": 4.75
+        "stop_loss_pct": 1.99
     },
     "behavior": {
         "use_longs": true,

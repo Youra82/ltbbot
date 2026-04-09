@@ -1,26 +1,26 @@
 {
     "_meta": {
-        "pnl_pct": 1208.74
+        "pnl_pct": 831.25
     },
     "market": {
-        "symbol": "ETH/USDT:USDT",
+        "symbol": "BNB/USDT:USDT",
         "timeframe": "2h"
     },
     "strategy": {
         "average_type": "WMA",
         "average_period": 5,
         "envelopes": [
-            0.009564345824144827,
-            0.08190396073824259,
-            0.1094011285126281
+            0.007357343506558017,
+            0.07532565179368841,
+            0.08218512030154351
         ],
-        "trigger_price_delta_pct": 0.1748
+        "trigger_price_delta_pct": 0.0219
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 1.0,
+        "risk_per_entry_pct": 0.96,
         "leverage": 15,
-        "stop_loss_pct": 2.89
+        "stop_loss_pct": 2.74
     },
     "behavior": {
         "use_longs": true,

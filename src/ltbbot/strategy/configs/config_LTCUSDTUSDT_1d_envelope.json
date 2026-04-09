@@ -1,26 +1,26 @@
 {
     "_meta": {
-        "pnl_pct": 1208.74
+        "pnl_pct": 8067.71
     },
     "market": {
-        "symbol": "ETH/USDT:USDT",
-        "timeframe": "2h"
+        "symbol": "LTC/USDT:USDT",
+        "timeframe": "1d"
     },
     "strategy": {
-        "average_type": "WMA",
+        "average_type": "EMA",
         "average_period": 5,
         "envelopes": [
-            0.009564345824144827,
-            0.08190396073824259,
-            0.1094011285126281
+            0.04715437396404095,
+            0.08317201918990667,
+            0.13624381817457937
         ],
-        "trigger_price_delta_pct": 0.1748
+        "trigger_price_delta_pct": 0.0788
     },
     "risk": {
         "margin_mode": "isolated",
         "risk_per_entry_pct": 1.0,
         "leverage": 15,
-        "stop_loss_pct": 2.89
+        "stop_loss_pct": 0.5
     },
     "behavior": {
         "use_longs": true,
