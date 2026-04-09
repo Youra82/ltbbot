@@ -562,6 +562,7 @@ ltbbot/
 ├── master_runner.py               # Haupt-Entry-Point
 ├── run_pipeline.sh                # Optimierungs-Pipeline (interaktiv)
 ├── show_results.sh                # Backtest & Portfolio-Analyse
+├── push_configs.sh                # Configs & Settings auf Repo pushen
 ├── settings.json                  # Konfiguration
 ├── secret.json                    # API-Credentials (nicht committen!)
 └── requirements.txt               # Dependencies
@@ -620,10 +621,10 @@ git status
 ### Optimierte Konfigurationen hochladen
 
 ```bash
-git add src/ltbbot/strategy/configs/config_*_envelope.json
-git commit -m "Update: Aktuelle Envelope-Konfigurationen"
-git push origin main
+./push_configs.sh
 ```
+
+Das Script staged automatisch alle `config_*_envelope.json` + `settings.json`, erstellt einen Commit mit Timestamp und pushed auf `origin/main` — inkl. automatischem Rebase-Fallback bei Remote-Konflikten.
 
 ---
 
@@ -679,7 +680,6 @@ Auf 15m/30m ist die ADX-Regime-Erkennung nur wenige Stunden alt — zu schnelle 
 | ❌ | **DOGE / SHIB** | Kein strukturiertes Mean-Reversion-Verhalten |
 
 > **Hinweis:** In starken Bullmärkten blockiert STRONG_TREND viele Einträge — das ist gewollt. LTBBot performt am besten in Seitwärts- und moderaten Trendmärkten.
-
 
 ---
 
