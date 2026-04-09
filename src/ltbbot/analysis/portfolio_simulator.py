@@ -347,7 +347,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
 
     total_pnl_pct = (final_equity_curve_val / start_capital - 1) * 100 if start_capital > 0 else 0
     trade_count = len(closed_trades_portfolio)
-    wins = sum(1 for t in closed_trades_portfolio if t['pnl'] > 0)
+    wins = sum(1 for t in closed_trades_portfolio if t['pnl_usd'] > 0)
     win_rate = (wins / trade_count * 100) if trade_count > 0 else 0
 
     trades_df = pd.DataFrame(closed_trades_portfolio) if closed_trades_portfolio else pd.DataFrame(
