@@ -1,6 +1,6 @@
 {
     "_meta": {
-        "pnl_pct": 8.15
+        "pnl_pct": 325.69
     },
     "market": {
         "symbol": "XRP/USDT:USDT",
@@ -8,19 +8,19 @@
     },
     "strategy": {
         "average_type": "WMA",
-        "average_period": 5,
+        "average_period": 6,
         "envelopes": [
-            0.007164107804191139,
-            0.06319904202682389,
-            0.07104782822271015
+            0.012058109580141281,
+            0.06925042975517721,
+            0.0754817774369648
         ],
-        "trigger_price_delta_pct": 0.1866
+        "trigger_price_delta_pct": 0.0619
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.66,
-        "leverage": 13,
-        "stop_loss_pct": 4.81
+        "risk_per_entry_pct": 1.0,
+        "leverage": 14,
+        "stop_loss_pct": 0.58
     },
     "behavior": {
         "use_longs": true,

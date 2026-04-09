@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": 1248.46
+    },
+    "market": {
+        "symbol": "BNB/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 5,
+        "envelopes": [
+            0.013576962533285296,
+            0.03579070096268233,
+            0.04720649693020975
+        ],
+        "trigger_price_delta_pct": 0.1059
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.95,
+        "leverage": 7,
+        "stop_loss_pct": 0.5
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

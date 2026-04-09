@@ -1,26 +1,26 @@
 {
     "_meta": {
-        "pnl_pct": 181.13
+        "pnl_pct": 7419.93
     },
     "market": {
-        "symbol": "DOGE/USDT:USDT",
-        "timeframe": "15m"
+        "symbol": "LTC/USDT:USDT",
+        "timeframe": "6h"
     },
     "strategy": {
         "average_type": "WMA",
         "average_period": 5,
         "envelopes": [
-            0.009409976411193057,
-            0.08129991887750573,
-            0.08932287630432034
+            0.018792529373105972,
+            0.04593446741420456,
+            0.0781662411312862
         ],
-        "trigger_price_delta_pct": 0.1238
+        "trigger_price_delta_pct": 0.1375
     },
     "risk": {
         "margin_mode": "isolated",
         "risk_per_entry_pct": 0.87,
-        "leverage": 6,
-        "stop_loss_pct": 0.51
+        "leverage": 13,
+        "stop_loss_pct": 0.5
     },
     "behavior": {
         "use_longs": true,

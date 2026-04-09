@@ -1,6 +1,6 @@
 {
     "_meta": {
-        "pnl_pct": 99.42
+        "pnl_pct": 591.98
     },
     "market": {
         "symbol": "BTC/USDT:USDT",
@@ -8,19 +8,19 @@
     },
     "strategy": {
         "average_type": "DCM",
-        "average_period": 11,
+        "average_period": 10,
         "envelopes": [
-            0.038582670210082055,
-            0.06352777459289659,
-            0.09165471921125695
+            0.04512692861344106,
+            0.08095350675286049,
+            0.10067419632480011
         ],
-        "trigger_price_delta_pct": 0.1828
+        "trigger_price_delta_pct": 0.0837
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.96,
-        "leverage": 13,
-        "stop_loss_pct": 4.77
+        "risk_per_entry_pct": 0.91,
+        "leverage": 8,
+        "stop_loss_pct": 0.5
     },
     "behavior": {
         "use_longs": true,
