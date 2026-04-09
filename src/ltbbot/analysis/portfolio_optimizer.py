@@ -223,8 +223,8 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
              final_result_serializable['equity_curve_list'] = ec_df.to_dict('records')
              del final_result_serializable['equity_curve']
 
-        # Serialisiere pnl_per_strategy und trades_per_strategy DataFrames
-        for key in ['pnl_per_strategy', 'trades_per_strategy']:
+        # Serialisiere pnl_per_strategy, trades_per_strategy und trades_df DataFrames
+        for key in ['pnl_per_strategy', 'trades_per_strategy', 'trades_df']:
             if key in final_result_serializable and isinstance(final_result_serializable[key], pd.DataFrame):
                 final_result_serializable[key] = final_result_serializable[key].to_dict('records')
 
