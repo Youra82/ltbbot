@@ -3,18 +3,28 @@
         "use_auto_optimizer_results": false,
         "active_strategies": [
             {
-                "symbol": "SOL/USDT:USDT",
-                "timeframe": "30m",
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "15m",
                 "active": true
             },
             {
-                "symbol": "DOGE/USDT:USDT",
-                "timeframe": "30m",
+                "symbol": "LTC/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "BNB/USDT:USDT",
+                "timeframe": "1h",
                 "active": true
             },
             {
                 "symbol": "BTC/USDT:USDT",
-                "timeframe": "1d",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "XRP/USDT:USDT",
+                "timeframe": "15m",
                 "active": true
             }
         ]
