@@ -241,7 +241,7 @@ def _generate_portfolio_chart(trades_df, equity_df, start_capital, start_date, e
                                              line=dict(width=2, color='#7f1d1d'))))
 
     fig.update_layout(
-        title=dict(text=title, font=dict(size=11), x=0.5, xanchor='center'),
+        title=dict(text=title, font=dict(size=12), x=0.5, xanchor='center'),
         height=600, hovermode='x unified', template='plotly_dark', dragmode='zoom',
         xaxis=dict(rangeslider=dict(visible=True), fixedrange=False),
         legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
@@ -470,6 +470,7 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
     results              = None
     _portfolio_trades_df = None
     result_xlsx          = None
+    result_html          = None
     start_capital_val    = start_capital
 
     if is_auto:
@@ -606,12 +607,12 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                 if result_xlsx:
                     logger.info(f"✔ Excel         → '{xlsx_name}'")
 
-                # --- HTML Chart ---
-                html_name  = os.path.basename(report_csv_path).replace('_equity.csv','_equity.html').replace('equity.csv','equity.html')
-                html_path  = os.path.join(charts_dir, html_name)
+                # --- HTML Chart (Root-Verzeichnis, wie jaegerbot) ---
+                html_name  = 'ltbbot_portfolio_equity.html'
+                html_path  = os.path.join(PROJECT_ROOT, html_name)
                 result_html = _generate_portfolio_chart(trades_df, equity_df, start_capital_val, start_date, end_date, html_path)
                 if result_html:
-                    logger.info(f"✔ HTML-Chart    → 'artifacts/charts/{html_name}'")
+                    logger.info(f"✔ HTML-Chart    → '{html_name}'")
             else:
                 logger.info("Keine abgeschlossenen Trades im gewählten Zeitraum.")
 
@@ -626,6 +627,8 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                         send_document(telegram_config['bot_token'], telegram_config['chat_id'], result_xlsx, report_caption)
                     else:
                         send_document(telegram_config['bot_token'], telegram_config['chat_id'], report_csv_path, report_caption)
+                    if result_html and os.path.exists(result_html):
+                        send_document(telegram_config['bot_token'], telegram_config['chat_id'], result_html, "LTBBot Portfolio-Equity Chart")
                     logger.info("✔ Bericht wurde erfolgreich an Telegram gesendet.")
                 else: logger.warning("Telegram nicht konfiguriert. Kein Versand.")
             except Exception as e: logger.error(f"ⓘ Konnte Bericht nicht an Telegram senden: {e}")
