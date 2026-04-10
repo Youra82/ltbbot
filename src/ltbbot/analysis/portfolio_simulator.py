@@ -206,6 +206,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         'exit_price':   round(exit_price, 6),
                         'sl_price':     round(pos_sl, 6),
                         'leverage':     leverage,
+                        'amount_coins': round(pos_amount, 8),
                         'pnl_usd':      round(pnl, 4),
                         'pnl_pct':      round(pnl_pct, 2),
                         'reason':       reason,
@@ -351,7 +352,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     win_rate = (wins / trade_count * 100) if trade_count > 0 else 0
 
     trades_df = pd.DataFrame(closed_trades_portfolio) if closed_trades_portfolio else pd.DataFrame(
-        columns=['exit_time','entry_time','symbol','timeframe','side','entry_price','exit_price','sl_price','leverage','pnl_usd','pnl_pct','reason','strategy_id'])
+        columns=['exit_time','entry_time','symbol','timeframe','side','entry_price','exit_price','sl_price','leverage','amount_coins','pnl_usd','pnl_pct','reason','strategy_id'])
 
     pnl_per_strategy_df    = trades_df.groupby('strategy_id')['pnl_usd'].sum().reset_index().rename(columns={'pnl_usd':'pnl'}) if not trades_df.empty else pd.DataFrame(columns=['strategy_id', 'pnl'])
     trades_per_strategy_df = trades_df.groupby('strategy_id').size().reset_index(name='trades') if not trades_df.empty else pd.DataFrame(columns=['strategy_id', 'trades'])

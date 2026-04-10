@@ -65,13 +65,14 @@ def _generate_trades_excel(trades_df, start_capital, start_date, end_date, out_p
     alt_fill    = PatternFill('solid', fgColor='F2F2F2')
 
     headers = ['Nr', 'Datum', 'Strategie', 'Richtung', 'Hebel',
-               'Einsatz (USDT)', 'SL-Bereich', 'Entry', 'Exit',
-               'Ergebnis', 'PnL (USDT)', 'Kapital']
+               'Einsatz (USDT)', 'SL-Bereich', 'TSL Akt.', 'TSL Callback',
+               'Entry', 'Exit', 'Ergebnis', 'PnL (USDT)', 'Kapital']
     col_widths = {
         'Nr': 5, 'Datum': 18, 'Strategie': 22, 'Richtung': 10,
-        'Hebel': 7, 'Einsatz (USDT)': 15, 'SL-Bereich': 14,
+        'Hebel': 8, 'Einsatz (USDT)': 16, 'SL-Bereich': 16,
+        'TSL Akt.': 10, 'TSL Callback': 13,
         'Entry': 14, 'Exit': 14, 'Ergebnis': 14,
-        'PnL (USDT)': 13, 'Kapital': 14,
+        'PnL (USDT)': 14, 'Kapital': 16,
     }
 
     wb = openpyxl.Workbook()
@@ -89,19 +90,24 @@ def _generate_trades_excel(trades_df, start_capital, start_date, end_date, out_p
         sl_str = f"{sl_dist:.2f}%"
         datum = str(t.entry_time)[:16].replace('T', ' ')
         strat = f"{t.symbol.split('/')[0]}/{t.timeframe}"
+        lev = float(t.leverage) if hasattr(t, 'leverage') and t.leverage else 1.0
+        coins = float(t.amount_coins) if hasattr(t, 'amount_coins') and t.amount_coins else 0.0
+        margin = round(coins * float(t.entry_price) / lev, 2) if coins and lev else 0.0
         rows.append({
-            'Nr':            i + 1,
-            'Datum':         datum,
-            'Strategie':     strat,
-            'Richtung':      t.side.upper(),
-            'Hebel':         int(t.leverage) if hasattr(t, 'leverage') else '—',
-            'Einsatz (USDT)': round(abs(float(t.entry_price) * getattr(t, 'amount_coins', 0)) if hasattr(t, 'amount_coins') else 0, 2),
-            'SL-Bereich':    sl_str,
-            'Entry':         float(t.entry_price),
-            'Exit':          float(t.exit_price),
-            'Ergebnis':      ergebnis,
-            'PnL (USDT)':    round(float(t.pnl_usd), 4),
-            'Kapital':       round(equity, 4),
+            'Nr':              i + 1,
+            'Datum':           datum,
+            'Strategie':       strat,
+            'Richtung':        t.side.upper(),
+            'Hebel':           int(lev),
+            'Einsatz (USDT)':  margin,
+            'SL-Bereich':      sl_str,
+            'TSL Akt.':        '—',
+            'TSL Callback':    '—',
+            'Entry':           float(t.entry_price),
+            'Exit':            float(t.exit_price),
+            'Ergebnis':        ergebnis,
+            'PnL (USDT)':      round(float(t.pnl_usd), 4),
+            'Kapital':         round(equity, 4),
         })
 
     # Header
