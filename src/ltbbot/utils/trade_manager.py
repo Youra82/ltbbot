@@ -636,29 +636,12 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
         if sl_price <= 0:
             logger.error(f"Ungültiger SL-Preis berechnet ({sl_price:.4f}). Überspringe SL/TP-Platzierung.")
         else:
-            # Berechne minimale TP-Distanz basierend auf gewünschtem Risiko-Verhältnis (1:2 => TP >= 2*SL)
-            sl_distance = abs(avg_entry_price - sl_price)
-
-            # Neuer Take Profit (Trigger Market am aktuellen Durchschnitt mit Mindestabstand)
+            # Neuer Take Profit: aktueller MA (dynamisch, wird jeden Zyklus neu gesetzt)
             tp_price_base = band_prices.get('average')
             if tp_price_base is None or pd.isna(tp_price_base) or tp_price_base <= 0:
                 logger.error("Ungültiger Average-Preis für TP. Überspringe TP-Platzierung.")
             else:
-                # Stelle Mindestabstand von 0.5% zum Entry sicher
-                min_tp_distance_pct = 0.005
-                if pos_side == 'long':
-                    tp_price = max(tp_price_base, avg_entry_price * (1 + min_tp_distance_pct))
-                    # Sicherstellen, dass TP mindestens 2x SL-Distanz hat
-                    desired_tp_price = avg_entry_price + max(2 * sl_distance, 0)
-                    if tp_price < desired_tp_price:
-                        logger.info(f"TP-Anpassung: Erhöhe TP von {tp_price:.6f} auf {desired_tp_price:.6f} um 1:2 R:R zu gewährleisten.")
-                        tp_price = desired_tp_price
-                else:  # short
-                    tp_price = min(tp_price_base, avg_entry_price * (1 - min_tp_distance_pct))
-                    desired_tp_price = avg_entry_price - max(2 * sl_distance, 0)
-                    if tp_price > desired_tp_price:
-                        logger.info(f"TP-Anpassung: Verringere TP von {tp_price:.6f} auf {desired_tp_price:.6f} um 1:2 R:R zu gewährleisten.")
-                        tp_price = desired_tp_price
+                tp_price = tp_price_base
 
                 tp_side = 'sell' if pos_side == 'long' else 'buy'
 
@@ -901,12 +884,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 if tp_price is None or pd.isna(tp_price) or tp_price <= 0:
                     logger.error("Ungültiger Average-Preis für TP. Überspringe TP.")
                 else:
-                    # Stelle sicher, dass TP mindestens 1:2 Reward:Risk gegenüber SL ist
-                    min_tp_distance_pct = 0.005
-                    # sl_distance_price wurde vorher berechnet (entry_price_for_calc - sl_price)
-                    desired_tp_by_rr = entry_price_for_calc + 2 * sl_distance_price
-                    min_tp_by_pct = entry_limit_price * (1 + min_tp_distance_pct)
-                    tp_price = max(tp_price, min_tp_by_pct, desired_tp_by_rr)
+                    # TP = aktueller MA (kein 1:2 R:R erzwingen)
 
                     # Native trailing TP falls aktiviert
                     use_native_tp = risk_params.get('use_native_trailing_tp', False)
@@ -1030,15 +1008,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 if tp_price is None or pd.isna(tp_price) or tp_price <= 0:
                     logger.error("Ungültiger Average-Preis für TP. Überspringe TP.")
                 else:
-                    # Stelle sicher, dass TP mindestens 1:2 Reward:Risk gegenüber SL ist (für Short ist TP unter Entry)
-                    min_tp_distance_pct = 0.005
-                    desired_tp_by_rr = entry_price_for_calc - 2 * sl_distance_price
-                    min_tp_by_pct = entry_limit_price * (1 - min_tp_distance_pct)
-                    # Für Short wählen wir das kleinere (profitabler) TP
-                    tp_price = min(tp_price, min_tp_by_pct)
-                    if tp_price > desired_tp_by_rr:
-                        logger.info(f"TP-Anpassung für Short: Verringere TP von {tp_price:.6f} auf {desired_tp_by_rr:.6f} um 1:2 R:R zu gewährleisten.")
-                        tp_price = desired_tp_by_rr
+                    # TP = aktueller MA (kein 1:2 R:R erzwingen)
 
                     # Native trailing TP falls aktiviert
                     use_native_tp = risk_params.get('use_native_trailing_tp', False)

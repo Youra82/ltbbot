@@ -206,9 +206,9 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                 exit_price = pos_sl; exited = True
 
             # TP Prüfung (nur wenn SL nicht getroffen)
-            # BUG1-FIX: Statischer TP aus Position (beim Entry gesetzt), nicht dynamischer MA
+            # Dynamischer TP: aktueller MA jede Kerze (entspricht Live-Bot der TP jede Runde neu setzt)
             if not exited:
-                tp_price_current = pos['tp_price']
+                tp_price_current = current_candle['average']
                 if not pd.isna(tp_price_current) and tp_price_current > 0:
                     if pos_side == 'long' and current_candle['high'] >= tp_price_current:
                         if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
@@ -314,12 +314,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                         sl_distance_price = abs(entry_price - sl_price)
                         if sl_distance_price <= 0: continue
                         amount_coins = risk_amount_usd / sl_distance_price
-                        # BUG2-FIX: 1:2 R:R erzwingen (wie Live Bot)
+                        # TP = MA beim Entry (wird jede Kerze dynamisch neu geprüft)
                         tp_price_target = current_candle['average']
-                        if not pd.isna(tp_price_target) and tp_price_target > 0:
-                            desired_tp_rr  = entry_price + 2 * sl_distance_price
-                            min_tp_by_pct  = entry_price * 1.005
-                            tp_price_target = max(tp_price_target, min_tp_by_pct, desired_tp_rr)
                         positions.append({
                             'entry_price': entry_price,
                             'amount_coins': amount_coins,
@@ -345,12 +341,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                         sl_distance_price = abs(entry_price - sl_price)
                         if sl_distance_price <= 0: continue
                         amount_coins = risk_amount_usd / sl_distance_price
-                        # BUG2-FIX: 1:2 R:R erzwingen (wie Live Bot)
+                        # TP = MA beim Entry (wird jede Kerze dynamisch neu geprüft)
                         tp_price_target = current_candle['average']
-                        if not pd.isna(tp_price_target) and tp_price_target > 0:
-                            desired_tp_rr  = entry_price - 2 * sl_distance_price
-                            max_tp_by_pct  = entry_price * 0.995
-                            tp_price_target = min(tp_price_target, max_tp_by_pct, desired_tp_rr)
                         positions.append({
                             'entry_price': entry_price,
                             'amount_coins': amount_coins,
