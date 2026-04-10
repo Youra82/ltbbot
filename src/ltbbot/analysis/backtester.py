@@ -16,8 +16,9 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 from ltbbot.utils.exchange import Exchange # Für load_data
 from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
 
-# --- KONSTANTEN FÜR REALISTISCHERE SIMULATION (Anpassen!) ---
-SLIPPAGE_PCT_PER_TRADE = 0.0005 # Beispiel: 0.05% Slippage pro Ausführung (Market Order TP/SL)
+# --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
+SLIPPAGE_PCT_EXIT  = 0.0005  # 0.05% Slippage auf Exit (Market Order TP/SL)
+SLIPPAGE_PCT_ENTRY = 0.0012  # 0.12% Slippage auf Entry (Trigger-Limit, beobachtet live: +0.10–0.20%)
 # --- ENDE KONSTANTEN ---
 
 def load_data(symbol, timeframe, start_date_str, end_date_str):
@@ -205,16 +206,14 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                 exit_price = pos_sl; exited = True
 
             # TP Prüfung (nur wenn SL nicht getroffen)
+            # BUG1-FIX: Statischer TP aus Position (beim Entry gesetzt), nicht dynamischer MA
             if not exited:
-                tp_price_current = current_candle['average']
-                # Stelle sicher, dass TP Preis gültig ist
+                tp_price_current = pos['tp_price']
                 if not pd.isna(tp_price_current) and tp_price_current > 0:
                     if pos_side == 'long' and current_candle['high'] >= tp_price_current:
-                        # Prüfe, ob TP innerhalb der Kerze erreicht wurde ODER Gap darüber
                         if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
                             exit_price = tp_price_current; exited = True
                     elif pos_side == 'short' and current_candle['low'] <= tp_price_current:
-                        # Prüfe, ob TP innerhalb der Kerze erreicht wurde ODER Gap darunter
                         if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
                             exit_price = tp_price_current; exited = True
 
@@ -231,9 +230,10 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                 fees = (entry_notional_value * fee_pct) + (exit_notional_value * fee_pct)
                 pnl -= fees
 
-                # *** Slippage hinzufügen (simuliert für Market Order TP/SL) ***
-                slippage_cost = abs(exit_notional_value * SLIPPAGE_PCT_PER_TRADE)
-                pnl -= slippage_cost
+                # BUG3-FIX: Slippage auf Entry (Trigger-Limit) UND Exit (Market Order)
+                entry_slippage_cost = abs(entry_notional_value * SLIPPAGE_PCT_ENTRY)
+                exit_slippage_cost  = abs(exit_notional_value  * SLIPPAGE_PCT_EXIT)
+                pnl -= entry_slippage_cost + exit_slippage_cost
 
                 exit_pnl_current_candle += pnl
                 closed_trades.append({'pnl': pnl, 'side': pos_side})
@@ -314,7 +314,12 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                         sl_distance_price = abs(entry_price - sl_price)
                         if sl_distance_price <= 0: continue
                         amount_coins = risk_amount_usd / sl_distance_price
+                        # BUG2-FIX: 1:2 R:R erzwingen (wie Live Bot)
                         tp_price_target = current_candle['average']
+                        if not pd.isna(tp_price_target) and tp_price_target > 0:
+                            desired_tp_rr  = entry_price + 2 * sl_distance_price
+                            min_tp_by_pct  = entry_price * 1.005
+                            tp_price_target = max(tp_price_target, min_tp_by_pct, desired_tp_rr)
                         positions.append({
                             'entry_price': entry_price,
                             'amount_coins': amount_coins,
@@ -340,7 +345,12 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                         sl_distance_price = abs(entry_price - sl_price)
                         if sl_distance_price <= 0: continue
                         amount_coins = risk_amount_usd / sl_distance_price
+                        # BUG2-FIX: 1:2 R:R erzwingen (wie Live Bot)
                         tp_price_target = current_candle['average']
+                        if not pd.isna(tp_price_target) and tp_price_target > 0:
+                            desired_tp_rr  = entry_price - 2 * sl_distance_price
+                            max_tp_by_pct  = entry_price * 0.995
+                            tp_price_target = min(tp_price_target, max_tp_by_pct, desired_tp_rr)
                         positions.append({
                             'entry_price': entry_price,
                             'amount_coins': amount_coins,

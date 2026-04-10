@@ -833,7 +833,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
 
     # Option 1: Risiko basiert auf ANFANGSKAPITAL (konsistent mit korrigiertem Backtester)
     # Annahme: 'initial_capital_live' ist in der config_...json definiert
-    initial_capital_live = params.get('initial_capital_live', balance if balance > 1 else 1000) # Fallback auf aktuellen Saldo oder 1000
+    initial_capital_live = params.get('initial_capital_live', balance)  # Fallback: aktueller Kontostand
     risk_base_capital = initial_capital_live
     logger.info(f"Risikoberechnung basiert auf initialem Kapital: {risk_base_capital:.2f} USDT")
 
