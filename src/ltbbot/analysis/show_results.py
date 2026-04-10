@@ -469,6 +469,7 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
     report_caption       = ""
     results              = None
     _portfolio_trades_df = None
+    result_xlsx          = None
     start_capital_val    = start_capital
 
     if is_auto:
@@ -621,9 +622,10 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                 telegram_config = secrets.get('telegram', {})
                 if telegram_config.get('bot_token') and telegram_config.get('chat_id'):
                     logger.info("Sende Bericht an Telegram...")
-                    send_document(telegram_config['bot_token'], telegram_config['chat_id'], report_csv_path, report_caption)
-                    if trades_df is not None and not trades_df.empty:
-                        send_document(telegram_config['bot_token'], telegram_config['chat_id'], trades_csv_path, "Trade-Log")
+                    if result_xlsx and os.path.exists(result_xlsx):
+                        send_document(telegram_config['bot_token'], telegram_config['chat_id'], result_xlsx, report_caption)
+                    else:
+                        send_document(telegram_config['bot_token'], telegram_config['chat_id'], report_csv_path, report_caption)
                     logger.info("✔ Bericht wurde erfolgreich an Telegram gesendet.")
                 else: logger.warning("Telegram nicht konfiguriert. Kein Versand.")
             except Exception as e: logger.error(f"ⓘ Konnte Bericht nicht an Telegram senden: {e}")
