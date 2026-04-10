@@ -811,19 +811,18 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     min_amount_tradable = exchange.fetch_min_amount_tradable(symbol)
     trigger_delta_pct_cfg = strategy_params.get('trigger_price_delta_pct', 0.05) / 100.0
 
-    # *** RISIKOBASIS: Startkapital oder aktueller Saldo? ***
-    # Wähle EINE der folgenden Optionen aus:
-
-    # Option 1: Risiko basiert auf ANFANGSKAPITAL (konsistent mit korrigiertem Backtester)
-    # Annahme: 'initial_capital_live' ist in der config_...json definiert
-    initial_capital_live = params.get('initial_capital_live', balance)  # Fallback: aktueller Kontostand
-    risk_base_capital = initial_capital_live
-    logger.info(f"Risikoberechnung basiert auf initialem Kapital: {risk_base_capital:.2f} USDT")
-
-    # Option 2: Risiko basiert auf AKTUELLEM KONTOSTAND (führt zu Compounding)
-    # risk_base_capital = balance
-    # logger.info(f"Risikoberechnung basiert auf aktuellem Kontostand: {risk_base_capital:.2f} USDT")
-    # --------------------------------------------------------
+    # *** RISIKOBASIS: start_capital aus settings.json (konsistent mit Backtester) ***
+    # Fallback-Reihenfolge: 1) initial_capital_live in Config, 2) start_capital aus settings.json, 3) aktueller Kontostand
+    risk_base_capital = params.get('initial_capital_live')
+    if not risk_base_capital:
+        try:
+            settings_path = os.path.join(PROJECT_ROOT, 'settings.json')
+            with open(settings_path, 'r') as _f:
+                _settings = json.load(_f)
+            risk_base_capital = _settings.get('optimization_settings', {}).get('start_capital', balance)
+        except Exception:
+            risk_base_capital = balance
+    logger.info(f"Risikoberechnung basiert auf: {risk_base_capital:.2f} USDT")
 
     new_sl_ids = []
     new_tp_ids = []
