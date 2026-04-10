@@ -597,13 +597,13 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                     label = f"{grp['symbol'].iloc[0]} ({grp['timeframe'].iloc[0]})"
                     print(f"  {label:<30} {n:>7} {w:>5} {wr:>6.1f}%  {p:>+9.2f}")
                 print(f"{'─'*90}\n")
-                # --- Excel ---
+                # --- Excel (Root-Verzeichnis, wie jaegerbot) ---
                 charts_dir = os.path.join(PROJECT_ROOT, 'artifacts', 'charts')
                 xlsx_name  = os.path.basename(report_csv_path).replace('_equity.csv','_trades.xlsx').replace('equity.csv','trades.xlsx')
-                xlsx_path  = os.path.join(charts_dir, xlsx_name)
+                xlsx_path  = os.path.join(PROJECT_ROOT, xlsx_name)
                 result_xlsx = _generate_trades_excel(trades_df, start_capital_val, start_date, end_date, xlsx_path)
                 if result_xlsx:
-                    logger.info(f"✔ Excel         → 'artifacts/charts/{xlsx_name}'")
+                    logger.info(f"✔ Excel         → '{xlsx_name}'")
 
                 # --- HTML Chart ---
                 html_name  = os.path.basename(report_csv_path).replace('_equity.csv','_equity.html').replace('equity.csv','equity.html')
