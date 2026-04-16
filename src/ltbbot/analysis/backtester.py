@@ -299,8 +299,14 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
             if risk_amount_usd <= 0:
                 continue
 
-            # Long Entry: ersten getriggerten Layer nehmen, dann stoppen (max. 1 Position)
-            entered = False
+            # Wie Live Bot: Long- UND Short-Trigger unabhängig prüfen.
+            # Wenn beide in derselben Kerze getroffen werden, gewinnt der dessen
+            # Trigger-Preis näher am Kerzeneröffnungspreis liegt (= zuerst ausgelöst).
+            MIN_NOTIONAL_USDT = 5.0
+            candle_open = current_candle['open']
+            long_candidate = None   # (entry_price, sl_price, amount_coins, trigger_dist)
+            short_candidate = None
+
             if current_use_longs:
                 for k in range(1, num_envelopes + 1):
                     low_band_col = f'band_low_{k}'
@@ -309,31 +315,17 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                     entry_limit_price = current_candle[low_band_col]
                     entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct)
                     if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
-                        entry_price = entry_limit_price  # Fill am Limit (Bandpreis)
-                        sl_price = entry_price * (1 - effective_sl_pct)
+                        sl_price = entry_limit_price * (1 - effective_sl_pct)
                         if sl_price <= 0: continue
-                        sl_distance_price = abs(entry_price - sl_price)
-                        if sl_distance_price <= 0: continue
-                        amount_coins = risk_amount_usd / sl_distance_price
-                        # Min-Notional-Prüfung (Bitget: min. 5 USDT, wie Live Bot)
-                        MIN_NOTIONAL_USDT = 5.0
-                        if amount_coins * entry_price < MIN_NOTIONAL_USDT:
-                            continue
-                        # TP = MA beim Entry (wird jede Kerze dynamisch neu geprüft)
-                        tp_price_target = current_candle['average']
-                        positions.append({
-                            'entry_price': entry_price,
-                            'amount_coins': amount_coins,
-                            'side': 'long',
-                            'sl_price': sl_price,
-                            'tp_price': tp_price_target,
-                            'leverage': leverage
-                        })
-                        entered = True
-                        break  # Nur EINEN Einstieg pro Kerze (wie Live Bot)
+                        sl_dist = abs(entry_limit_price - sl_price)
+                        if sl_dist <= 0: continue
+                        amount_coins = risk_amount_usd / sl_dist
+                        if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
+                        trigger_dist = abs(candle_open - entry_trigger_price)
+                        long_candidate = (entry_limit_price, sl_price, amount_coins, trigger_dist)
+                        break
 
-            # Short Entry: nur wenn kein Long-Einstieg erfolgte (max. 1 Position)
-            if not entered and current_use_shorts:
+            if current_use_shorts:
                 for k in range(1, num_envelopes + 1):
                     high_band_col = f'band_high_{k}'
                     if high_band_col not in current_candle or pd.isna(current_candle[high_band_col]) or current_candle[high_band_col] <= 0:
@@ -341,27 +333,38 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                     entry_limit_price = current_candle[high_band_col]
                     entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct)
                     if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
-                        entry_price = entry_limit_price  # Fill am Limit (Bandpreis)
-                        sl_price = entry_price * (1 + effective_sl_pct)
+                        sl_price = entry_limit_price * (1 + effective_sl_pct)
                         if sl_price <= 0: continue
-                        sl_distance_price = abs(entry_price - sl_price)
-                        if sl_distance_price <= 0: continue
-                        amount_coins = risk_amount_usd / sl_distance_price
-                        # Min-Notional-Prüfung (Bitget: min. 5 USDT, wie Live Bot)
-                        MIN_NOTIONAL_USDT = 5.0
-                        if amount_coins * entry_price < MIN_NOTIONAL_USDT:
-                            continue
-                        # TP = MA beim Entry (wird jede Kerze dynamisch neu geprüft)
-                        tp_price_target = current_candle['average']
-                        positions.append({
-                            'entry_price': entry_price,
-                            'amount_coins': amount_coins,
-                            'side': 'short',
-                            'sl_price': sl_price,
-                            'tp_price': tp_price_target,
-                            'leverage': leverage
-                        })
-                        break  # Nur EINEN Einstieg pro Kerze (wie Live Bot)
+                        sl_dist = abs(entry_limit_price - sl_price)
+                        if sl_dist <= 0: continue
+                        amount_coins = risk_amount_usd / sl_dist
+                        if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
+                        trigger_dist = abs(candle_open - entry_trigger_price)
+                        short_candidate = (entry_limit_price, sl_price, amount_coins, trigger_dist)
+                        break
+
+            # Wenn beide gleichzeitig getriggert: näherer Trigger zum Open gewinnt
+            if long_candidate and short_candidate:
+                if long_candidate[3] <= short_candidate[3]:
+                    short_candidate = None  # Long war näher am Open → zuerst ausgelöst
+                else:
+                    long_candidate = None   # Short war näher am Open → zuerst ausgelöst
+
+            # Gewinner in Positions-Liste eintragen
+            if long_candidate:
+                entry_price, sl_price, amount_coins, _ = long_candidate
+                positions.append({
+                    'entry_price': entry_price, 'amount_coins': amount_coins,
+                    'side': 'long', 'sl_price': sl_price,
+                    'tp_price': current_candle['average'], 'leverage': leverage
+                })
+            elif short_candidate:
+                entry_price, sl_price, amount_coins, _ = short_candidate
+                positions.append({
+                    'entry_price': entry_price, 'amount_coins': amount_coins,
+                    'side': 'short', 'sl_price': sl_price,
+                    'tp_price': current_candle['average'], 'leverage': leverage
+                })
 
 
         # --- Abbruch bei Totalverlust (basierend auf Equity Curve Start) ---
