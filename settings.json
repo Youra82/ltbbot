@@ -1,62 +1,115 @@
 {
-    "live_trading_settings": {
-        "use_auto_optimizer_results": false,
-        "active_strategies": [
-            {
-                "symbol": "DOGE/USDT:USDT",
-                "timeframe": "15m",
-                "active": true
-            },
-            {
-                "symbol": "LTC/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "BNB/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "BTC/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "XRP/USDT:USDT",
-                "timeframe": "15m",
-                "active": true
-            }
-        ]
+  "live_trading_settings": {
+    "use_auto_optimizer_results": true,
+    "top_n_strategies_to_trade": 15,
+    "active_strategies": [
+      {
+        "symbol": "INJ/USDT:USDT",
+        "timeframe": "4h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "LINK/USDT:USDT",
+        "timeframe": "6h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "DOT/USDT:USDT",
+        "timeframe": "4h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "XRP/USDT:USDT",
+        "timeframe": "6h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "AVAX/USDT:USDT",
+        "timeframe": "6h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "BTC/USDT:USDT",
+        "timeframe": "6h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "UNI/USDT:USDT",
+        "timeframe": "4h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "BNB/USDT:USDT",
+        "timeframe": "2h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "ADA/USDT:USDT",
+        "timeframe": "1h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "ETH/USDT:USDT",
+        "timeframe": "2h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "SUI/USDT:USDT",
+        "timeframe": "1h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "LTC/USDT:USDT",
+        "timeframe": "2h",
+        "use_macd_filter": false,
+        "active": true
+      },
+      {
+        "symbol": "NEAR/USDT:USDT",
+        "timeframe": "2h",
+        "use_macd_filter": false,
+        "active": true
+      }
+    ]
+  },
+  "optimization_settings": {
+    "enabled": true,
+    "_info": "symbols_to_optimize/timeframes_to_optimize: 'auto' liest active_strategies aus, oder explizite Liste wie ['BTC', 'ETH']",
+    "symbols_to_optimize": "auto",
+    "timeframes_to_optimize": "auto",
+    "lookback_days": "auto",
+    "start_capital": 15,
+    "num_trials": 500,
+    "cpu_cores": -1,
+    "mode": "strict",
+    "top_n": 5,
+    "auto_clear_cache_days": 30,
+    "send_telegram_on_completion": true,
+    "constraints": {
+      "max_drawdown_pct": 30,
+      "min_win_rate_pct": 45,
+      "min_pnl_pct": 0
     },
-    "optimization_settings": {
-        "enabled": true,
-        "_info": "symbols_to_optimize/timeframes_to_optimize: 'auto' liest active_strategies aus, oder explizite Liste wie ['BTC', 'ETH']",
-        "symbols_to_optimize": "auto",
-        "timeframes_to_optimize": "auto",
-        "lookback_days": "auto",
-        "start_capital": 50,
-        "num_trials": 500,
-        "cpu_cores": -1,
-        "mode": "strict",
-        "config_suffix": "_envelope",
-        "auto_clear_cache_days": 30,
-        "send_telegram_on_completion": true,
-        "constraints": {
-            "max_drawdown_pct": 30,
-            "min_win_rate_pct": 0,
-            "min_pnl_pct": 0,
-            "min_trades": 20
-        },
-        "schedule": {
-            "_info": "day_of_week: 0=Montag, 6=Sonntag | hour: 0-23 (24h Format)",
-            "day_of_week": 5,
-            "hour": 15,
-            "minute": 0,
-            "interval": {
-                "value": 7,
-                "unit": "days"
-            }
-        }
+    "schedule": {
+      "_info": "day_of_week: 0=Montag, 6=Sonntag | hour: 0-23 (24h Format)",
+      "day_of_week": 6,
+      "hour": 23,
+      "minute": 0,
+      "interval": {
+        "value": 7,
+        "unit": "days"
+      }
     }
+  }
 }
