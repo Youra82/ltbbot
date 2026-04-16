@@ -625,6 +625,11 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
         # Neuer Stop Loss (basierend auf ursprünglichem Entry und SL-Prozentsatz)
         sl_pct = risk_params['stop_loss_pct'] / 100.0
         trailing_callback_rate = risk_params.get('trailing_callback_rate_pct', 0.0) / 100.0  # Default 0% = kein Trailing
+        # Regime-basierte SL-Erweiterung (identisch zu place_entry_orders)
+        regime = band_prices.get('regime', 'UNCERTAIN')
+        if regime in ("TREND", "STRONG_TREND"):
+            sl_pct *= 1.5
+            logger.info(f"📈 Trend-Markt: SL auf {sl_pct*100:.2f}% erweitert (Regime: {regime})")
         if pos_side == 'long':
             sl_price = avg_entry_price * (1 - sl_pct)
             sl_side = 'sell'
@@ -692,17 +697,7 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
                     logger.info(f"Neuen TP für {pos_side} @ {tp_price:.4f} gesetzt (Entry war @ {avg_entry_price:.4f}).")
                 time.sleep(0.1) # Kleine Pause
 
-        # Neuer Stop Loss (basierend auf ursprünglichem Entry und SL-Prozentsatz)
-        sl_pct = risk_params['stop_loss_pct'] / 100.0
-        trailing_callback_rate = risk_params.get('trailing_callback_rate_pct', 0.0) / 100.0  # Default 0% = kein Trailing
-        
-        if pos_side == 'long':
-            sl_price = avg_entry_price * (1 - sl_pct)
-            sl_side = 'sell'
-        else: # short
-            sl_price = avg_entry_price * (1 + sl_pct)
-            sl_side = 'buy'
-
+        # SL-Preis ist bereits oben berechnet (inkl. Regime-Multiplikator)
         # Stelle sicher, dass SL-Preis gültig ist
         if sl_price <= 0:
              logger.error(f"Ungültiger SL-Preis berechnet ({sl_price:.4f}). Überspringe SL-Platzierung.")
