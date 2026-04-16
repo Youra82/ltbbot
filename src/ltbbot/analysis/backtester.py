@@ -119,6 +119,7 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
         stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0 # Als Dezimalzahl
         use_longs = behavior_params.get('use_longs', True)
         use_shorts = behavior_params.get('use_shorts', True)
+        trigger_delta_pct = strategy_params.get('trigger_price_delta_pct', 0.05) / 100.0
     except KeyError as e:
          logger.error(f"Fehlender Schlüssel in Parameter-Dict: {e}. Backtest abgebrochen.")
          return {"total_pnl_pct": -1000, "trades_count": 0, "win_rate": 0, "max_drawdown_pct": 100, "end_capital": 0, "start_capital": start_capital}
@@ -197,7 +198,6 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
             pos_entry = pos['entry_price']
             pos_sl = pos['sl_price']
             pos_amount = pos['amount_coins']
-            pos_lev = pos.get('leverage', 1) # Hebel holen
 
             # SL Prüfung
             if pos_side == 'long' and current_candle['low'] <= pos_sl:
@@ -306,9 +306,10 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                     low_band_col = f'band_low_{k}'
                     if low_band_col not in current_candle or pd.isna(current_candle[low_band_col]) or current_candle[low_band_col] <= 0:
                         continue
-                    entry_trigger_price = current_candle[low_band_col]
+                    entry_limit_price = current_candle[low_band_col]
+                    entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct)
                     if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
-                        entry_price = entry_trigger_price
+                        entry_price = entry_limit_price  # Fill am Limit (Bandpreis)
                         sl_price = entry_price * (1 - effective_sl_pct)
                         if sl_price <= 0: continue
                         sl_distance_price = abs(entry_price - sl_price)
@@ -337,9 +338,10 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                     high_band_col = f'band_high_{k}'
                     if high_band_col not in current_candle or pd.isna(current_candle[high_band_col]) or current_candle[high_band_col] <= 0:
                         continue
-                    entry_trigger_price = current_candle[high_band_col]
+                    entry_limit_price = current_candle[high_band_col]
+                    entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct)
                     if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
-                        entry_price = entry_trigger_price
+                        entry_price = entry_limit_price  # Fill am Limit (Bandpreis)
                         sl_price = entry_price * (1 + effective_sl_pct)
                         if sl_price <= 0: continue
                         sl_distance_price = abs(entry_price - sl_price)
