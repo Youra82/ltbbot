@@ -789,20 +789,6 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     risk_per_entry_pct = risk_params.get('risk_per_entry_pct', 0.5) # Risiko pro Layer aus Config
     stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0 # SL % aus Config
     
-    # ATR-basierte Stop-Loss Anpassung (falls aktiviert in Config)
-    use_atr_sl = risk_params.get('use_atr_stop_loss', False)  # Neuer Config-Parameter
-    if use_atr_sl:
-        logger.info("🎯 ATR-basierte Stop-Loss Anpassung aktiviert")
-        stop_loss_pct_param = calculate_atr_adjusted_stop_loss(exchange, symbol, stop_loss_pct_param, logger)
-    
-    # Dynamische Risiko-Anpassung basierend auf Performance
-    reduce_risk, risk_reason = should_reduce_risk(tracker_file_path)
-    if reduce_risk:
-        logger.warning(f"🛡️ RISIKO-REDUKTION aktiv: {risk_reason}")
-        leverage = max(1, leverage // 2)  # Halbiere Hebel, mindestens 1x
-        risk_per_entry_pct = risk_per_entry_pct * 0.5  # Halbiere Positionsgröße
-        logger.info(f"   Neuer Hebel: {leverage}x | Neues Risiko: {risk_per_entry_pct:.2f}%")
-    
     # Stop-Loss breiter im Trend-Markt (weniger Whipsaws)
     if regime == "TREND" or regime == "STRONG_TREND":
         stop_loss_pct_param *= 1.5  # 50% breitere SLs
@@ -946,10 +932,11 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 )
                 logger.info(f"✅ Long Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 time.sleep(0.1)
+                break  # Nur EINEN Einstieg pro Zyklus (wie Backtester)
 
             except ccxt.InsufficientFunds as e:
                 logger.error(f"Nicht genügend Guthaben für Long-Order-Gruppe {i+1}: {e}. Stoppe weitere Orders für DIESE SEITE.")
-                break # Bei InsufficientFunds weitere Layer für diese Seite abbrechen
+                break
             except ccxt.ExchangeError as e:
                  logger.error(f"Börsenfehler beim Platzieren der Long-Order-Gruppe {i+1}: {e}")
                  # Hier könnte man spezifische Fehler behandeln, z.B. Preis zu weit weg etc.
@@ -1070,6 +1057,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 )
                 logger.info(f"✅ Short Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 time.sleep(0.1)
+                break  # Nur EINEN Einstieg pro Zyklus (wie Backtester)
 
             except ccxt.InsufficientFunds as e:
                 logger.error(f"Nicht genügend Guthaben für Short-Order-Gruppe {i+1}: {e}. Stoppe weitere Orders für DIESE SEITE.")
@@ -1164,99 +1152,39 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
 
 
         # --- 2. Prüfen, ob TP/SL ausgelöst wurden SEIT dem letzten Lauf ---
-        tp_triggered_this_cycle = check_take_profit_trigger(exchange, symbol, tracker_file_path, logger)
-        sl_triggered_this_cycle = check_stop_loss_trigger(exchange, symbol, tracker_file_path, logger)
-        # Wenn SL ausgelöst wurde, wird der Tracker-Status aktualisiert
+        check_take_profit_trigger(exchange, symbol, tracker_file_path, logger)
+        check_stop_loss_trigger(exchange, symbol, tracker_file_path, logger)
 
         # --- 3. Alle alten Orders der Strategie stornieren (wichtig!) ---
-        # Storniert Limit- und Trigger-Orders, die von *diesem* Bot für *dieses* Symbol platziert wurden
         cancel_strategy_orders(exchange, symbol, logger)
 
-        # --- 4. Tracker-Status prüfen ("Cooldown" nach SL) ---
-        tracker_info = read_tracker_file(tracker_file_path)
-        current_status = tracker_info['status']
-        last_side_sl = tracker_info.get('last_side') # Seite der Position, die ausgestoppt wurde
-        logger.info(f"Tracker-Status: {current_status}, Letzte SL-Seite: {last_side_sl}")
-
-        cooldown_active = False
-        if current_status == "stop_loss_triggered":
-            cooldown_active = True
-            # Prüfen, ob Cooldown beendet werden kann
-            # Preis muss Average KREUZEN, nicht nur berühren
-            average_crossed = False
-            if last_side_sl == 'long' and last_price > current_average: # Preis ist ÜBER dem Average nach Long-SL
-                average_crossed = True
-            elif last_side_sl == 'short' and last_price < current_average: # Preis ist UNTER dem Average nach Short-SL
-                average_crossed = True
-            # Es könnte sein, dass last_side_sl None ist, obwohl Status triggered ist (Fehlerfall)
-            elif last_side_sl is None:
-                 logger.warning("Cooldown aktiv, aber 'last_side' ist None. Setze Status sicherheitshalber zurück.")
-                 average_crossed = True # Reset erlauben
-
-            if average_crossed:
-                logger.info(f"Preis hat Average gekreuzt nach SL ({last_side_sl}). Setze Status zurück auf 'ok_to_trade'.")
-                tracker_info['status'] = 'ok_to_trade'
-                tracker_info['last_side'] = None # Seite zurücksetzen
-                tracker_info['stop_loss_ids'] = [] # Sicherstellen, dass IDs leer sind
-                update_tracker_file(tracker_file_path, tracker_info)
-                cooldown_active = False # Cooldown für diesen Zyklus aufgehoben
-            else:
-                logger.info(f"Bot ist im Cooldown-Modus ('stop_loss_triggered' für {last_side_sl}). Keine neuen Entries bis Preis Average kreuzt.")
-
-        # --- 5. Offene Position prüfen und verwalten ---
+        # --- 4. Offene Position prüfen und verwalten ---
         position_list = exchange.fetch_open_positions(symbol)
-        position = position_list[0] if position_list else None # Nimm die erste (sollte nur eine geben)
+        position = position_list[0] if position_list else None
 
         if position:
-            # Position ist offen -> TP/SL aktualisieren (auch im Cooldown!)
             manage_existing_position(exchange, position, band_prices, params, tracker_file_path, logger)
             logger.info(f"Position für {symbol} ist offen ({position['side']} {position['contracts']}). Nur TP/SL verwaltet.")
-            
-            # Prüfe ob dies eine NEUE Position ist und sende detaillierte Telegram-Benachrichtigung
             check_and_notify_new_position(exchange, position, params, tracker_file_path, telegram_config, logger)
-            
-            # Keine neuen Entry-Orders platzieren, wenn schon eine Position offen ist
 
-        elif cooldown_active:
-              logger.info("Keine Position offen, aber Cooldown aktiv. Keine neuen Entries.")
-              # Sicherstellen, dass keine SL IDs im Tracker sind
-              if tracker_info.get("stop_loss_ids"):
-                   tracker_info["stop_loss_ids"] = []
-                   # Position wurde geschlossen, lösche gemeldete Position aus Tracker
-                   if 'last_notified_entry_price' in tracker_info:
-                       del tracker_info['last_notified_entry_price']
-                   if 'last_notified_side' in tracker_info:
-                       del tracker_info['last_notified_side']
-                   update_tracker_file(tracker_file_path, tracker_info)
-
-        elif sl_triggered_this_cycle:
-              # Direkt nach SL-Trigger in *diesem* Zyklus keine neuen Entries,
-              # auch wenn Cooldown formal aufgehoben wäre (verhindert sofortigen Wiedereinstieg)
-              logger.warning("SL wurde in diesem Zyklus ausgelöst. Überspringe Platzierung neuer Entry-Orders für diesen Lauf.")
-              # Tracker Status wurde schon in check_stop_loss_trigger gesetzt
-
-        else: # Keine Position offen, kein Cooldown, kein SL in diesem Zyklus
-              logger.info(f"Keine offene Position für {symbol} und Cooldown nicht aktiv.")
+        else:
+              logger.info(f"Keine offene Position für {symbol}.")
               current_balance = exchange.fetch_balance_usdt()
-              if current_balance <= 1: # Mindestguthaben
+              if current_balance <= 1:
                   logger.error(f"Guthaben ({current_balance:.2f} USDT) zu gering zum Platzieren von Entry-Orders.")
-                  # Sende evtl. Telegram Nachricht
                   message = f"📉 *Guthaben zu gering* bei {account_name} ({symbol}): {current_balance:.2f} USDT."
                   send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), message)
-                  return # Zyklus hier beenden
+                  return
 
-              # Setze Margin Mode und Leverage VOR dem Order platzieren
               try:
                   risk_params = params['risk']
                   exchange.set_margin_mode(symbol, margin_mode=risk_params['margin_mode'])
-                  # Kurze Pause nach Margin Mode setzen kann bei Bitget helfen
                   time.sleep(0.5)
                   exchange.set_leverage(symbol, margin_mode=risk_params['margin_mode'], leverage=risk_params['leverage'])
-                  time.sleep(0.5) # Weitere kurze Pause
+                  time.sleep(0.5)
               except Exception as e:
                   logger.warning(f"Konnte Margin Mode/Leverage nicht setzen (evtl. schon korrekt?): {e}")
 
-              # Neue Entry Orders platzieren
               place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger)
 
 
