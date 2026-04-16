@@ -220,13 +220,13 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
             # Wenn Ausstieg, PnL berechnen und Position entfernen
             if exited and exit_price is not None and exit_price > 0: # Stelle sicher, dass Exit-Preis gültig ist
                 if pos_side == 'long':
-                    pnl = (exit_price - pos_entry) * pos_amount * pos_lev
+                    pnl = (exit_price - pos_entry) * pos_amount
                 else: # short
-                    pnl = (pos_entry - exit_price) * pos_amount * pos_lev
+                    pnl = (pos_entry - exit_price) * pos_amount
 
-                # Gebühren abziehen
-                entry_notional_value = pos_entry * pos_amount * pos_lev
-                exit_notional_value = exit_price * pos_amount * pos_lev
+                # Gebühren abziehen (Notional ohne Leverage-Faktor)
+                entry_notional_value = pos_entry * pos_amount
+                exit_notional_value = exit_price * pos_amount
                 fees = (entry_notional_value * fee_pct) + (exit_notional_value * fee_pct)
                 pnl -= fees
 
@@ -314,6 +314,10 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                         sl_distance_price = abs(entry_price - sl_price)
                         if sl_distance_price <= 0: continue
                         amount_coins = risk_amount_usd / sl_distance_price
+                        # Min-Notional-Prüfung (Bitget: min. 5 USDT, wie Live Bot)
+                        MIN_NOTIONAL_USDT = 5.0
+                        if amount_coins * entry_price < MIN_NOTIONAL_USDT:
+                            continue
                         # TP = MA beim Entry (wird jede Kerze dynamisch neu geprüft)
                         tp_price_target = current_candle['average']
                         positions.append({
@@ -341,6 +345,10 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
                         sl_distance_price = abs(entry_price - sl_price)
                         if sl_distance_price <= 0: continue
                         amount_coins = risk_amount_usd / sl_distance_price
+                        # Min-Notional-Prüfung (Bitget: min. 5 USDT, wie Live Bot)
+                        MIN_NOTIONAL_USDT = 5.0
+                        if amount_coins * entry_price < MIN_NOTIONAL_USDT:
+                            continue
                         # TP = MA beim Entry (wird jede Kerze dynamisch neu geprüft)
                         tp_price_target = current_candle['average']
                         positions.append({
@@ -375,13 +383,12 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
 
         if last_close_price > 0:
             for pos in positions:
-                pos_lev_final = pos.get('leverage', 1)
                 pos_amount_final = pos['amount_coins']
                 pos_entry_final = pos['entry_price']
                 if pos['side'] == 'long':
-                    final_unrealized_pnl += (last_close_price - pos_entry_final) * pos_amount_final * pos_lev_final
+                    final_unrealized_pnl += (last_close_price - pos_entry_final) * pos_amount_final
                 else: # short
-                    final_unrealized_pnl += (pos_entry_final - last_close_price) * pos_amount_final * pos_lev_final
+                    final_unrealized_pnl += (pos_entry_final - last_close_price) * pos_amount_final
 
     final_total_equity = max(0, final_equity + final_unrealized_pnl) # Endgültiges Gesamtkapital
 
