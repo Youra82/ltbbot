@@ -63,51 +63,33 @@ echo "  Walk-Forward Out-of-Sample Test (optional)"
 echo -e "${BLUE}=======================================================${NC}"
 echo ""
 echo "  Konzept:"
-echo "    Optimizer trainiert NUR auf 70% der Daten (je Timeframe)."
-echo "    Die restlichen 30% bleiben komplett verborgen."
-echo "    Je Timeframe wird der Split automatisch berechnet:"
+echo "    Du gibst ein End-Datum ein (z.B. heute)."
+echo "    Der 70/30-Split wird automatisch je Timeframe berechnet:"
+echo "    30% des Lookbacks = verborgen, 70% = Training."
 echo ""
-echo "      1d  → 1825 Tage gesamt: 1277 Training + 548 OOS"
-echo "      4h  → 1095 Tage gesamt:  766 Training + 329 OOS"
-echo "      1h  →  548 Tage gesamt:  383 Training + 165 OOS"
-echo "      15m →   90 Tage gesamt:   63 Training +  27 OOS"
+echo "      1d  → 1825 Tage: 1277 Training + 548 OOS (ab ~2024-12)"
+echo "      4h  → 1095 Tage:  766 Training + 329 OOS (ab ~2025-07)"
+echo "      1h  →  548 Tage:  383 Training + 165 OOS (ab ~2026-01)"
+echo "      15m →   90 Tage:   63 Training +  27 OOS (ab ~2026-05)"
 echo ""
-echo "  Optionen:  'auto' | JJJJ-MM-TT (fixes Datum) | leer=kein OOS"
+echo "  Optionen:  JJJJ-MM-TT (End-Datum, z.B. heute) | leer=kein OOS"
 echo ""
-read -p "OOS-Modus eingeben [auto / Datum / leer]: " OOS_INPUT
+read -p "End-Datum für 70/30-Split eingeben [leer=kein OOS]: " OOS_INPUT
 
-# OOS_MODE: "auto", "fixed", ""
 OOS_MODE=""
-OOS_FIXED=""
+OOS_REF_DATE=""
 
-if [ "$OOS_INPUT" == "auto" ]; then
+if [ -n "$OOS_INPUT" ]; then
     OOS_MODE="auto"
-    echo -e "${GREEN}✔ OOS-Modus: auto — 70/30 wird pro Timeframe in der Schleife berechnet.${NC}"
+    OOS_REF_DATE="$OOS_INPUT"
+    echo ""
+    echo -e "${GREEN}✔ 70/30-Split aktiv — End-Datum: $OOS_REF_DATE${NC}"
+    echo "  (OOS-Startpunkt wird je Timeframe automatisch berechnet)"
     "$PYTHON" -c "
 import json
 s = json.load(open('settings.json'))
-s.setdefault('optimization_settings', {})['oos_start_date'] = 'auto'
-s['optimization_settings']['_oos_note'] = '70/30-Split automatisch je Timeframe.'
-json.dump(s, open('settings.json', 'w'), indent=4)
-" 2>/dev/null || true
-elif [ -n "$OOS_INPUT" ]; then
-    OOS_MODE="fixed"
-    OOS_FIXED="$OOS_INPUT"
-    TRAIN_END_FIXED=$(date -d "$OOS_FIXED - 1 day" +%F)
-    OOS_DAYS_FIXED=$(( ($(date +%s) - $(date -d "$OOS_FIXED" +%s)) / 86400 ))
-    echo ""
-    echo -e "${GREEN}✔ OOS-Modus: fixes Datum $OOS_FIXED${NC}"
-    echo ""
-    echo "  ────────────────────────────────────────────────────────────────────"
-    printf "  ◄──── TRAINING ────►  ◄── OOS (%d Tage, verborgen) ──►\n" "$OOS_DAYS_FIXED"
-    printf "  %-28s  %-12s  %s\n" "$TRAIN_END_FIXED" "$OOS_FIXED" "$TODAY"
-    echo "  ────────────────────────────────────────────────────────────────────"
-    echo ""
-    "$PYTHON" -c "
-import json
-s = json.load(open('settings.json'))
-s.setdefault('optimization_settings', {})['oos_start_date'] = '${OOS_FIXED}'
-s['optimization_settings']['_oos_note'] = 'Fixes OOS-Datum fuer alle Timeframes.'
+s.setdefault('optimization_settings', {})['oos_reference_date'] = '${OOS_REF_DATE}'
+s['optimization_settings']['_oos_note'] = 'End-Datum fuer 70/30-Split. OOS-Start automatisch je Timeframe.'
 json.dump(s, open('settings.json', 'w'), indent=4)
 " 2>/dev/null || true
 else
@@ -115,7 +97,7 @@ else
     "$PYTHON" -c "
 import json
 s = json.load(open('settings.json'))
-s.setdefault('optimization_settings', {})['oos_start_date'] = None
+s.setdefault('optimization_settings', {})['oos_reference_date'] = None
 json.dump(s, open('settings.json', 'w'), indent=4)
 " 2>/dev/null || true
 fi
@@ -173,32 +155,23 @@ for symbol in $SYMBOLS; do
 
         # OOS-Split pro Timeframe berechnen
         if [ "$OOS_MODE" == "auto" ]; then
+            # 30% des Lookbacks rückwärts vom Referenz-Datum = OOS-Startpunkt
             oos_days_tf=$(( lookback_days * 30 / 100 ))
-            train_days_tf=$(( lookback_days - oos_days_tf ))
-            OOS_START_TF=$(date -d "$oos_days_tf days ago" +%F)
+            OOS_START_TF=$(date -d "$OOS_REF_DATE - $oos_days_tf days" +%F)
             CURRENT_END_DATE=$(date -d "$OOS_START_TF - 1 day" +%F)
-            CURRENT_START_DATE=$(date -d "$lookback_days days ago" +%F)
-        elif [ "$OOS_MODE" == "fixed" ]; then
-            OOS_START_TF="$OOS_FIXED"
-            CURRENT_END_DATE=$(date -d "$OOS_FIXED - 1 day" +%F)
             if [ "$START_DATE_INPUT" == "a" ]; then
-                CURRENT_START_DATE=$(date -d "$OOS_FIXED - $lookback_days days" +%F)
+                CURRENT_START_DATE=$(date -d "$OOS_REF_DATE - $lookback_days days" +%F)
             else
                 CURRENT_START_DATE="$START_DATE_INPUT"
             fi
         else
             OOS_START_TF=""
-            CURRENT_END_DATE="$TODAY"
             if [ "$START_DATE_INPUT" == "a" ]; then
                 CURRENT_START_DATE=$(date -d "$lookback_days days ago" +%F)
             else
                 CURRENT_START_DATE="$START_DATE_INPUT"
             fi
-        fi
-
-        # START_DATE_INPUT überschreibt wenn nicht 'a' und kein 'fixed' OOS
-        if [ "$START_DATE_INPUT" != "a" ] && [ "$OOS_MODE" != "fixed" ]; then
-            CURRENT_START_DATE="$START_DATE_INPUT"
+            CURRENT_END_DATE="$TODAY"
         fi
 
         echo ""

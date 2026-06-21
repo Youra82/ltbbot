@@ -277,16 +277,12 @@ def _run_bash_pipeline() -> int:
 def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
     """Direkter Python-Aufruf pro Paar: nur optimizer.py (kein Trainer/Threshold)."""
     python_exe  = sys.executable
-    # OOS: wenn oos_start_date gesetzt → Pipeline sieht niemals danach
-    oos_start = opt_settings.get('oos_start_date')
-    # "auto" wird pro Paar in der Schleife aufgelöst; hier kein globales end_date
-    _oos_auto = (str(oos_start).lower() == 'auto') if oos_start else False
-    if oos_start and not _oos_auto:
-        oos_dt   = date.fromisoformat(str(oos_start))
-        end_date = (oos_dt - timedelta(days=1)).strftime('%Y-%m-%d')
-        _log(f"OOS aktiv (fixed): end_date={end_date}")
-    else:
-        end_date = None  # wird pro Paar gesetzt
+    # OOS: oos_reference_date = End-Datum; 70/30-Split automatisch je Timeframe
+    oos_ref = opt_settings.get('oos_reference_date')
+    _oos_active = bool(oos_ref)
+    if _oos_active:
+        _log(f"OOS 70/30 aktiv: oos_reference_date={oos_ref}")
+    end_date = None  # wird pro Paar gesetzt
     constraints = opt_settings.get('constraints', {})
     config_suffix = opt_settings.get('config_suffix', '_envelope')
 
@@ -296,19 +292,17 @@ def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
     for sym, tf in pairs:
         lookback_tf = LOOKBACK_MAP.get(tf, lookback)
 
-        # Auto-OOS: 70/30 pro Timeframe
-        if _oos_auto:
-            oos_days_tf = lookback_tf * 30 // 100
-            oos_start_tf = date.today() - timedelta(days=oos_days_tf)
+        # OOS 70/30 pro Timeframe: 30% des Lookbacks rückwärts vom Referenz-Datum
+        if _oos_active:
+            ref_dt        = date.fromisoformat(str(oos_ref))
+            oos_days_tf   = lookback_tf * 30 // 100
+            oos_start_tf  = ref_dt - timedelta(days=oos_days_tf)
             pair_end_date = (oos_start_tf - timedelta(days=1)).strftime('%Y-%m-%d')
-            start_date    = (date.today() - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
-            _log(f"OOS auto: tf={tf} lookback={lookback_tf}d oos={oos_days_tf}d end={pair_end_date}")
+            start_date    = (ref_dt - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
+            _log(f"OOS 70/30: tf={tf} ref={oos_ref} oos_start={oos_start_tf} end={pair_end_date}")
         else:
-            pair_end_date = end_date or date.today().strftime('%Y-%m-%d')
-            if oos_start and not _oos_auto:
-                start_date = (date.fromisoformat(str(oos_start)) - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
-            else:
-                start_date = (date.today() - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
+            pair_end_date = date.today().strftime('%Y-%m-%d')
+            start_date    = (date.today() - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
 
         _log(f"PAIR_START sym={sym} tf={tf} start={start_date} end={pair_end_date}")
 
