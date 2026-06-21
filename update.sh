@@ -50,7 +50,6 @@ if [ "$VENV_OK" = false ]; then
     rm -rf .venv
     python3 -m venv .venv
     echo "   Installiere Dependencies..."
-    .venv/bin/pip install --quiet --upgrade pip
     .venv/bin/pip install --quiet -r requirements.txt
     echo "   ✅ venv neu erstellt und Dependencies installiert."
 else
