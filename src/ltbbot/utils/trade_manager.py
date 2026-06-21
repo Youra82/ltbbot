@@ -16,9 +16,142 @@ TRACKER_DIR = os.path.join(PROJECT_ROOT, 'artifacts', 'tracker')
 # Sicherstellen, dass das src-Verzeichnis im PYTHONPATH ist (kann in manchen Setups helfen)
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
-from ltbbot.utils.telegram import send_message
+from ltbbot.utils.telegram import send_message, send_photo
 from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
 from ltbbot.utils.exchange import Exchange # Import hinzugefügt, falls Type Hinting verwendet wird (optional)
+
+
+# --- Chart-Generierung ---
+
+def _generate_ltbbot_chart_png(df: pd.DataFrame, band_prices: dict, signal_side: str,
+                                entry_price: float, sl_price: float, tp_price: float,
+                                symbol: str, timeframe: str, n_candles: int = 60) -> str:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import uuid
+
+    df_plot = df.tail(n_candles).reset_index(drop=True)
+    n = len(df_plot)
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+    fig.patch.set_facecolor('#0d1117')
+    ax.set_facecolor('#0d1117')
+
+    # Candlesticks
+    for i in range(n):
+        row = df_plot.iloc[i]
+        o, h, l, c = float(row['open']), float(row['high']), float(row['low']), float(row['close'])
+        bull = c >= o
+        body_color = '#26a69a' if bull else '#ef5350'
+        wick_color = '#4cceac' if bull else '#ff6b6b'
+        ax.plot([i, i], [l, h], color=wick_color, linewidth=0.8)
+        ax.add_patch(plt.Rectangle((i - 0.35, min(o, c)), 0.7, abs(c - o),
+                                    color=body_color, zorder=2))
+
+    # Moving Average (envelope center = TP target)
+    if 'average' in df_plot.columns:
+        avg_vals = pd.to_numeric(df_plot['average'], errors='coerce')
+        ax.plot(range(n), avg_vals, color='#00bcd4', linewidth=1.3, label='MA', zorder=3)
+
+    # Envelope bands as dashed lines
+    band_colors = ['#7b68ee', '#ba55d3', '#c71585', '#ff69b4']
+    band_idx = 0
+    while True:
+        b = band_idx + 1
+        lo_col = f'band_low_{b}'
+        hi_col = f'band_high_{b}'
+        if lo_col not in df_plot.columns:
+            break
+        color = band_colors[band_idx % len(band_colors)]
+        lo_vals = pd.to_numeric(df_plot[lo_col], errors='coerce')
+        hi_vals = pd.to_numeric(df_plot[hi_col], errors='coerce')
+        ax.plot(range(n), lo_vals, color=color, linewidth=0.8, linestyle='--', alpha=0.65)
+        ax.plot(range(n), hi_vals, color=color, linewidth=0.8, linestyle='--', alpha=0.65)
+        band_idx += 1
+
+    # Entry / SL / TP horizontal lines
+    ax.axhline(entry_price, color='#ffd700', linewidth=1.0, linestyle='--', zorder=4)
+    ax.axhline(sl_price,    color='#ef5350', linewidth=1.2, linestyle='-',  zorder=4)
+    ax.axhline(tp_price,    color='#26a69a', linewidth=1.2, linestyle='-',  zorder=4)
+
+    # Price tags (right side)
+    x_tag = n + 0.3
+    fmt = '{:.6g}'
+    for price, label, color in [
+        (tp_price,    f'TP {fmt.format(tp_price)}',    '#26a69a'),
+        (entry_price, f'Entry {fmt.format(entry_price)}', '#ffd700'),
+        (sl_price,    f'SL {fmt.format(sl_price)}',    '#ef5350'),
+    ]:
+        ax.text(x_tag, price, label,
+                color=color, fontsize=7.5, va='center', ha='left',
+                bbox=dict(facecolor='#0d1117', edgecolor=color, boxstyle='round,pad=0.2', alpha=0.85),
+                zorder=6)
+
+    # Infobox
+    regime = band_prices.get('regime', '')
+    trend  = band_prices.get('trend_direction', '')
+    adx    = band_prices.get('adx')
+    sl_pct = abs(entry_price - sl_price) / entry_price * 100 if entry_price > 0 else 0
+    tp_pct = abs(tp_price - entry_price) / entry_price * 100 if entry_price > 0 else 0
+    rr     = tp_pct / sl_pct if sl_pct > 0 else 0.0
+    adx_str = f'  ADX: {adx:.1f}' if adx is not None else ''
+    side_label = 'LONG' if signal_side == 'buy' else 'SHORT'
+    side_color = '#26a69a' if signal_side == 'buy' else '#ef5350'
+
+    info_text = '\n'.join([
+        f'{side_label}   R:R 1:{rr:.1f}',
+        f'Regime: {regime} | Trend: {trend}{adx_str}',
+        f'Signal: Envelope Mean-Reversion',
+        f'SL: {sl_pct:.2f}%  TP: {tp_pct:.2f}% (MA)',
+    ])
+    ax.text(0.01, 0.98, info_text, transform=ax.transAxes,
+            fontsize=7.5, verticalalignment='top', color='white',
+            bbox=dict(facecolor='#1e2530', edgecolor=side_color, boxstyle='round,pad=0.5', alpha=0.9),
+            zorder=7)
+
+    sym_clean = symbol.split('/')[0] if '/' in symbol else symbol
+    ax.set_title(f'{sym_clean} / {timeframe} — {side_label} Setup (Envelope)',
+                 color='white', fontsize=11, pad=8)
+    ax.tick_params(colors='#aaaaaa')
+    ax.set_xlim(-1, n + 9)
+    for spine in ax.spines.values():
+        spine.set_edgecolor('#333333')
+    ax.grid(axis='y', color='#2a2a2a', linewidth=0.5)
+    ax.set_xticks([])
+    plt.tight_layout()
+
+    tmp_dir = os.path.join(PROJECT_ROOT, 'artifacts', 'tmp')
+    os.makedirs(tmp_dir, exist_ok=True)
+    path = os.path.join(tmp_dir, f'ltbbot_chart_{uuid.uuid4().hex[:8]}.png')
+    plt.savefig(path, dpi=130, bbox_inches='tight', facecolor=fig.get_facecolor())
+    plt.close(fig)
+    return path
+
+
+def _send_ltbbot_chart(df: pd.DataFrame, band_prices: dict, signal_side: str,
+                        entry_price: float, sl_price: float, tp_price: float,
+                        symbol: str, timeframe: str, telegram_config: dict,
+                        logger: logging.Logger):
+    try:
+        path = _generate_ltbbot_chart_png(df, band_prices, signal_side, entry_price,
+                                           sl_price, tp_price, symbol, timeframe)
+        if not path or not os.path.exists(path):
+            return
+        sl_pct = abs(entry_price - sl_price) / entry_price * 100 if entry_price > 0 else 0
+        tp_pct = abs(tp_price - entry_price) / entry_price * 100 if entry_price > 0 else 0
+        rr = tp_pct / sl_pct if sl_pct > 0 else 0.0
+        side_label = 'LONG' if signal_side == 'buy' else 'SHORT'
+        caption = (
+            f"LTBBOT | {symbol} ({timeframe})\n"
+            f"{side_label} @ {entry_price:.6g}  |  SL: {sl_price:.6g}  |  TP: {tp_price:.6g}\n"
+            f"R:R 1:{rr:.1f}  |  Envelope Mean-Reversion"
+        )
+        send_photo(telegram_config.get('bot_token'), telegram_config.get('chat_id'), path, caption)
+        os.remove(path)
+    except Exception as e:
+        logger.warning(f"Fehler beim Senden des Envelope-Charts: {e}")
+
 
 # --- Performance Tracking ---
 
@@ -745,9 +878,10 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
 
 # --- Entry Order Platzierung ---
 
-def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, balance: float, tracker_file_path: str, telegram_config: dict, logger: logging.Logger):
+def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, balance: float, tracker_file_path: str, telegram_config: dict, logger: logging.Logger, df: pd.DataFrame = None):
     """Platziert die gestaffelten Entry-, TP- und SL-Orders basierend auf Risiko."""
     symbol = params['market']['symbol']
+    timeframe = params['market']['timeframe']
     risk_params = params['risk']
     strategy_params = params['strategy']
     behavior_params = params['behavior'].copy()  # Copy um zu modifizieren
@@ -927,6 +1061,28 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 )
                 logger.info(f"✅ Long Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 time.sleep(0.1)
+
+                # Telegram: Text + Chart
+                if tp_price and sl_price and tp_price > 0 and sl_price > 0:
+                    sl_pct_msg = stop_loss_pct_param * 100
+                    tp_pct_msg = abs(tp_price - entry_limit_price) / entry_limit_price * 100 if entry_limit_price > 0 else 0
+                    rr_msg = tp_pct_msg / sl_pct_msg if sl_pct_msg > 0 else 0
+                    regime_msg = band_prices.get('regime', '')
+                    trend_msg  = band_prices.get('trend_direction', '')
+                    msg = (
+                        f"LONG ENTRY-ORDER PLATZIERT\n\n"
+                        f"Symbol: {symbol} ({timeframe})\n"
+                        f"Entry: {entry_limit_price:.6g} USDT (Band {i+1})\n"
+                        f"SL: {sl_price:.6g} USDT (-{sl_pct_msg:.2f}%)\n"
+                        f"TP: {tp_price:.6g} USDT (+{tp_pct_msg:.2f}%) [MA]\n"
+                        f"R:R 1:{rr_msg:.1f} | Hebel: {leverage}x\n"
+                        f"Regime: {regime_msg} | Trend: {trend_msg}"
+                    )
+                    send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), msg)
+                    if df is not None:
+                        _send_ltbbot_chart(df, band_prices, 'buy', entry_limit_price,
+                                           sl_price, tp_price, symbol, timeframe,
+                                           telegram_config, logger)
                 break  # Nur EINEN Einstieg pro Zyklus (wie Backtester)
 
             except ccxt.InsufficientFunds as e:
@@ -1052,6 +1208,28 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 )
                 logger.info(f"✅ Short Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 time.sleep(0.1)
+
+                # Telegram: Text + Chart
+                if tp_price and sl_price and tp_price > 0 and sl_price > 0:
+                    sl_pct_msg = stop_loss_pct_param * 100
+                    tp_pct_msg = abs(tp_price - entry_limit_price) / entry_limit_price * 100 if entry_limit_price > 0 else 0
+                    rr_msg = tp_pct_msg / sl_pct_msg if sl_pct_msg > 0 else 0
+                    regime_msg = band_prices.get('regime', '')
+                    trend_msg  = band_prices.get('trend_direction', '')
+                    msg = (
+                        f"SHORT ENTRY-ORDER PLATZIERT\n\n"
+                        f"Symbol: {symbol} ({timeframe})\n"
+                        f"Entry: {entry_limit_price:.6g} USDT (Band {i+1})\n"
+                        f"SL: {sl_price:.6g} USDT (+{sl_pct_msg:.2f}%)\n"
+                        f"TP: {tp_price:.6g} USDT (-{tp_pct_msg:.2f}%) [MA]\n"
+                        f"R:R 1:{rr_msg:.1f} | Hebel: {leverage}x\n"
+                        f"Regime: {regime_msg} | Trend: {trend_msg}"
+                    )
+                    send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), msg)
+                    if df is not None:
+                        _send_ltbbot_chart(df, band_prices, 'sell', entry_limit_price,
+                                           sl_price, tp_price, symbol, timeframe,
+                                           telegram_config, logger)
                 break  # Nur EINEN Einstieg pro Zyklus (wie Backtester)
 
             except ccxt.InsufficientFunds as e:
@@ -1180,7 +1358,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
               except Exception as e:
                   logger.warning(f"Konnte Margin Mode/Leverage nicht setzen (evtl. schon korrekt?): {e}")
 
-              place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger)
+              place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger, df=data_with_indicators)
 
 
     except ccxt.AuthenticationError as e:

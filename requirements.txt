@@ -18,3 +18,4 @@ plotly
 openpyxl
 # tensorflow-cpu==2.16.1 # Entfernt
 scikit-learn # Behalten für StandardScaler im Optimizer/Backtester, falls noch genutzt
+matplotlib>=3.7.0
