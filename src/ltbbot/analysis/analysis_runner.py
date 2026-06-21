@@ -166,14 +166,14 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
         freq='W-MON', tz='UTC'
     )
 
+    from tqdm import tqdm
     results = {}
     for lb in lookbacks:
-        print(f"  Lookback {lb}W ({len(all_mondays)} OOS-Wochen)...")
         eq = capital
         equity_series = [eq]
         empty_weeks = 0
 
-        for oos_start in all_mondays:
+        for oos_start in tqdm(all_mondays, desc=f"  Lookback {lb:>2}W", unit="Woche", leave=True):
             oos_end = oos_start + timedelta(days=7)
             is_end  = oos_start
             is_start = is_end - timedelta(weeks=lb)
@@ -285,11 +285,12 @@ def analyse_param_walkforward(capital, send_telegram, token, chat):
         for sl in [round(base_sl * m, 2) for m in [0.5, 0.75, 1.0, 1.5, 2.0]]
     }
 
+    from tqdm import tqdm
     results = {}
     for label, cfg in param_sets.items():
         eq = capital
         equity_series = [eq]
-        for oos_start in oos_weeks:
+        for oos_start in tqdm(oos_weeks, desc=f"  {label}", unit="Woche", leave=True):
             oos_end = oos_start + timedelta(days=7)
             df_oos  = df.loc[(df.index >= oos_start) & (df.index < oos_end)]
             if len(df_oos) < 5:
