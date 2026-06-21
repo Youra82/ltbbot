@@ -279,12 +279,14 @@ def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
     python_exe  = sys.executable
     # OOS: wenn oos_start_date gesetzt → Pipeline sieht niemals danach
     oos_start = opt_settings.get('oos_start_date')
-    if oos_start:
+    # "auto" wird pro Paar in der Schleife aufgelöst; hier kein globales end_date
+    _oos_auto = (str(oos_start).lower() == 'auto') if oos_start else False
+    if oos_start and not _oos_auto:
         oos_dt   = date.fromisoformat(str(oos_start))
         end_date = (oos_dt - timedelta(days=1)).strftime('%Y-%m-%d')
-        _log(f"OOS aktiv: end_date={end_date} (oos_start_date={oos_start})")
+        _log(f"OOS aktiv (fixed): end_date={end_date}")
     else:
-        end_date = date.today().strftime('%Y-%m-%d')
+        end_date = None  # wird pro Paar gesetzt
     constraints = opt_settings.get('constraints', {})
     config_suffix = opt_settings.get('config_suffix', '_envelope')
 
@@ -293,16 +295,29 @@ def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
     any_failed = False
     for sym, tf in pairs:
         lookback_tf = LOOKBACK_MAP.get(tf, lookback)
-        start_date  = (date.today() - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
 
-        _log(f"PAIR_START sym={sym} tf={tf} start={start_date} end={end_date}")
+        # Auto-OOS: 70/30 pro Timeframe
+        if _oos_auto:
+            oos_days_tf = lookback_tf * 30 // 100
+            oos_start_tf = date.today() - timedelta(days=oos_days_tf)
+            pair_end_date = (oos_start_tf - timedelta(days=1)).strftime('%Y-%m-%d')
+            start_date    = (date.today() - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
+            _log(f"OOS auto: tf={tf} lookback={lookback_tf}d oos={oos_days_tf}d end={pair_end_date}")
+        else:
+            pair_end_date = end_date or date.today().strftime('%Y-%m-%d')
+            if oos_start and not _oos_auto:
+                start_date = (date.fromisoformat(str(oos_start)) - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
+            else:
+                start_date = (date.today() - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
+
+        _log(f"PAIR_START sym={sym} tf={tf} start={start_date} end={pair_end_date}")
 
         optimizer_cmd = [
             python_exe, OPTIMIZER_SCRIPT,
             '--symbols',       sym,
             '--timeframes',    tf,
             '--start_date',    start_date,
-            '--end_date',      end_date,
+            '--end_date',      pair_end_date,
             '--jobs',          str(opt_settings.get('cpu_cores', -1)),
             '--max_drawdown',  str(constraints.get('max_drawdown_pct', 30)),
             '--start_capital', str(opt_settings.get('start_capital', 1000)),
