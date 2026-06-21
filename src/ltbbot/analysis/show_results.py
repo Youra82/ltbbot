@@ -665,52 +665,56 @@ if __name__ == "__main__":
         if start_capital_input <= 0: raise ValueError("Startkapital muss positiv sein.")
         pd.to_datetime(start_date_input); pd.to_datetime(end_date_input) # Einfache Datumsvalidierung
 
-        # --- OOS-Info: Zeige ob Analysezeitraum in Training oder OOS liegt ---
+        # --- OOS-Info: Zeige Training/OOS-Aufteilung je Timeframe ---
         try:
             _settings_path = os.path.join(PROJECT_ROOT, 'settings.json')
             with open(_settings_path) as _sf:
                 _settings = json.load(_sf)
             _oos_ref = _settings.get('optimization_settings', {}).get('oos_reference_date')
             if _oos_ref:
+                # Nur Timeframes der geladenen Configs anzeigen
+                _configs_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
+                _cfg_tfs = set()
+                for _fn in os.listdir(_configs_dir):
+                    if _fn.startswith('config_') and _fn.endswith('_envelope.json'):
+                        try:
+                            with open(os.path.join(_configs_dir, _fn)) as _cf:
+                                _cfg_tfs.add(json.load(_cf)['market']['timeframe'])
+                        except Exception:
+                            pass
                 _LOOKBACK_MAP = {'15m': 90, '30m': 180, '1h': 365, '2h': 548, '4h': 730, '1d': 1825}
-                _ref_dt        = date.fromisoformat(str(_oos_ref))
+                _tfs_to_check = {_tf: _lb for _tf, _lb in _LOOKBACK_MAP.items()
+                                 if not _cfg_tfs or _tf in _cfg_tfs}
+                _ref_dt         = date.fromisoformat(str(_oos_ref))
                 _analysis_start = date.fromisoformat(start_date_input)
                 _analysis_end   = date.fromisoformat(end_date_input)
-                _oos_lines   = []  # Zeitraum liegt (teilweise) im OOS
-                _train_lines = []  # Zeitraum liegt (teilweise) im Training
-                for _tf, _lb in _LOOKBACK_MAP.items():
-                    _oos_days   = _lb * 30 // 100
-                    _oos_start  = _ref_dt - timedelta(days=_oos_days)
-                    _train_end  = _oos_start - timedelta(days=1)
-                    if _analysis_start <= _train_end:
-                        # mindestens ein Teil liegt im Trainingszeitraum
-                        _train_lines.append(f"  {_tf:>4s}: Training bis {_train_end}")
-                    if _analysis_end >= _oos_start:
-                        _overlap_start = max(_analysis_start, _oos_start)
-                        _overlap_days  = (_analysis_end - _overlap_start).days + 1
-                        _oos_lines.append(
-                            f"  {_tf:>4s}: OOS ab {_oos_start} — {_overlap_days} Tage echte OOS-Daten"
-                        )
+                _total_days     = (_analysis_end - _analysis_start).days + 1
                 print()
-                if _oos_lines and not _train_lines:
-                    print("  ✅  OOS-TEST: Dein Zeitraum liegt vollständig im verborgenen Testbereich.")
-                    print(f"  Referenz-Datum: {_oos_ref}")
-                    for _l in _oos_lines:
-                        print(_l)
-                    print("  → Der Optimizer hat diese Daten NIE gesehen — echte Out-of-Sample Ergebnisse.")
-                elif _oos_lines and _train_lines:
-                    print("  ℹ️   GEMISCHTER ZEITRAUM: Teils Training, teils OOS.")
-                    print(f"  Referenz-Datum: {_oos_ref}")
-                    for _l in _oos_lines:
-                        print(_l)
-                    print("  → Für reinen OOS-Test: Startdatum nach dem OOS-Beginn wählen.")
-                    print("  → Für reinen Training-Test: Enddatum vor dem OOS-Beginn wählen.")
-                elif _train_lines:
-                    print("  ⚠️   TRAINING-DATEN: Dein Zeitraum liegt im Trainingszeitraum.")
-                    print(f"  Referenz-Datum: {_oos_ref}")
-                    for _l in _train_lines:
-                        print(_l)
-                    print("  → Ergebnisse können Overfitting zeigen — der Optimizer kannte diese Daten.")
+                print(f"  OOS-Referenz: {_oos_ref}  |  Analysezeitraum: {start_date_input} → {end_date_input} ({_total_days} Tage)")
+                print(f"  {'TF':>4s}  {'OOS ab':>12s}  {'Training':>10s}  {'OOS':>8s}  Status")
+                print(f"  {'─'*4}  {'─'*12}  {'─'*10}  {'─'*8}  {'─'*30}")
+                for _tf, _lb in _tfs_to_check.items():
+                    _oos_days_tf = _lb * 30 // 100
+                    _oos_start   = _ref_dt - timedelta(days=_oos_days_tf)
+                    _train_end   = _oos_start - timedelta(days=1)
+                    # Tage im Training
+                    if _analysis_start <= _train_end:
+                        _t_days = (min(_analysis_end, _train_end) - _analysis_start).days + 1
+                    else:
+                        _t_days = 0
+                    # Tage im OOS
+                    if _analysis_end >= _oos_start:
+                        _o_days = (_analysis_end - max(_analysis_start, _oos_start)).days + 1
+                    else:
+                        _o_days = 0
+                    if _t_days == 0:
+                        _status = "✅ vollständig OOS"
+                    elif _o_days == 0:
+                        _status = "⚠️  vollständig Training"
+                    else:
+                        _pct_train = _t_days * 100 // _total_days
+                        _status = f"ℹ️  {_t_days}d Training / {_o_days}d OOS ({_pct_train}% im Training)"
+                    print(f"  {_tf:>4s}  {str(_oos_start):>12s}  {_t_days:>9d}d  {_o_days:>7d}d  {_status}")
                 print()
         except Exception:
             pass  # OOS-Prüfung ist optional; kein Crash wenn settings.json fehlt
