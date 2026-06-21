@@ -207,17 +207,22 @@ def main():
             study = optuna.create_study(study_name=study_name, direction="maximize")
 
             n_jobs = args.jobs
-            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)... (Mit Standard show_progress_bar)")
+            logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)...")
 
-            # *** ZURÜCK ZUM STANDARD-AUFRUF (wie bei JaegerBot/TitanBot) ***
+            from tqdm import tqdm as _tqdm
+            _bar = _tqdm(total=N_TRIALS, desc=f'  {symbol} ({timeframe})',
+                         unit='trial', leave=True, dynamic_ncols=True)
+            def _progress_cb(study, trial):
+                _bar.update(1)
+
             study.optimize(
                 objective,
                 n_trials=N_TRIALS,
                 n_jobs=n_jobs,
-                show_progress_bar=True # Standard-Balken aktivieren
-                # Keine callbacks-Liste
+                show_progress_bar=False,
+                callbacks=[_progress_cb],
             )
-            # ***************************************************************
+            _bar.close()
 
         except Exception as e:
             logger.error(f"Schwerwiegender Fehler während der Optuna-Studie für {symbol} ({timeframe}): {e}", exc_info=True)
