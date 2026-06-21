@@ -53,9 +53,7 @@ if [ "$VENV_OK" = false ]; then
     .venv/bin/pip install --quiet -r requirements.txt
     echo "   ✅ venv neu erstellt und Dependencies installiert."
 else
-    echo "   venv gesund — aktualisiere Packages falls nötig..."
-    .venv/bin/pip install --quiet -r requirements.txt
-    echo "   ✅ venv und Packages aktuell."
+    echo "   ✅ venv ist gesund."
 fi
 
 echo "✅ Update erfolgreich abgeschlossen. Dein Bot ist jetzt auf dem neuesten Stand."
