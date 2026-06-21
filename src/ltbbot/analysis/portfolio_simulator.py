@@ -293,53 +293,71 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 if risk_amount_usd <= 0:
                     continue
 
-                # Long Entry: ersten getriggerten Layer nehmen, dann stoppen
-                entered = False
+                # Identisch zu backtester.py: trigger_delta + beide Richtungen prüfen,
+                # näherer Trigger zum Kerzeneröffnungspreis gewinnt + Min-Notional
+                trigger_delta_pct = strategy_params.get('trigger_price_delta_pct', 0.05) / 100.0
+                MIN_NOTIONAL_USDT = 5.0
+                candle_open   = current_candle['open']
+                long_candidate  = None
+                short_candidate = None
+
                 if current_use_longs:
                     for k in range(1, num_envelopes + 1):
                         low_band_col = f'band_low_{k}'
                         if low_band_col not in current_candle or pd.isna(current_candle[low_band_col]) or current_candle[low_band_col] <= 0:
                             continue
-                        entry_trigger_price = current_candle[low_band_col]
+                        entry_limit_price   = current_candle[low_band_col]
+                        entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct)
                         if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
-                            entry_price = entry_trigger_price
-                            sl_price = entry_price * (1 - effective_sl_pct)
+                            sl_price = entry_limit_price * (1 - effective_sl_pct)
                             if sl_price <= 0: continue
-                            sl_distance_price = abs(entry_price - sl_price)
-                            if sl_distance_price <= 0: continue
-                            amount_coins = risk_amount_usd / sl_distance_price
-                            tp_price = current_candle['average']
-                            open_portfolio_positions[strategy_id].append({
-                                'entry_price': entry_price, 'amount_coins': amount_coins,
-                                'side': 'long', 'sl_price': sl_price,
-                                'tp_price': tp_price, 'leverage': leverage,
-                                'entry_time': ts,
-                            })
-                            entered = True
-                            break  # Nur EINEN Einstieg pro Kerze (wie Live Bot)
+                            sl_dist = abs(entry_limit_price - sl_price)
+                            if sl_dist <= 0: continue
+                            amount_coins = risk_amount_usd / sl_dist
+                            if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
+                            long_candidate = (entry_limit_price, sl_price, amount_coins,
+                                              abs(candle_open - entry_trigger_price))
+                            break
 
-                # Short Entry: nur wenn kein Long-Einstieg erfolgte
-                if not entered and current_use_shorts:
+                if current_use_shorts:
                     for k in range(1, num_envelopes + 1):
                         high_band_col = f'band_high_{k}'
                         if high_band_col not in current_candle or pd.isna(current_candle[high_band_col]) or current_candle[high_band_col] <= 0:
                             continue
-                        entry_trigger_price = current_candle[high_band_col]
+                        entry_limit_price   = current_candle[high_band_col]
+                        entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct)
                         if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
-                            entry_price = entry_trigger_price
-                            sl_price = entry_price * (1 + effective_sl_pct)
+                            sl_price = entry_limit_price * (1 + effective_sl_pct)
                             if sl_price <= 0: continue
-                            sl_distance_price = abs(entry_price - sl_price)
-                            if sl_distance_price <= 0: continue
-                            amount_coins = risk_amount_usd / sl_distance_price
-                            tp_price = current_candle['average']
-                            open_portfolio_positions[strategy_id].append({
-                                'entry_price': entry_price, 'amount_coins': amount_coins,
-                                'side': 'short', 'sl_price': sl_price,
-                                'tp_price': tp_price, 'leverage': leverage,
-                                'entry_time': ts,
-                            })
-                            break  # Nur EINEN Einstieg pro Kerze (wie Live Bot)
+                            sl_dist = abs(entry_limit_price - sl_price)
+                            if sl_dist <= 0: continue
+                            amount_coins = risk_amount_usd / sl_dist
+                            if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
+                            short_candidate = (entry_limit_price, sl_price, amount_coins,
+                                               abs(candle_open - entry_trigger_price))
+                            break
+
+                # Wenn beide gleichzeitig: näherer Trigger zum Open gewinnt
+                if long_candidate and short_candidate:
+                    if long_candidate[3] <= short_candidate[3]:
+                        short_candidate = None
+                    else:
+                        long_candidate = None
+
+                if long_candidate:
+                    ep, sl, amt, _ = long_candidate
+                    open_portfolio_positions[strategy_id].append({
+                        'entry_price': ep, 'amount_coins': amt, 'side': 'long',
+                        'sl_price': sl, 'tp_price': current_candle['average'],
+                        'leverage': leverage, 'entry_time': ts,
+                    })
+                elif short_candidate:
+                    ep, sl, amt, _ = short_candidate
+                    open_portfolio_positions[strategy_id].append({
+                        'entry_price': ep, 'amount_coins': amt, 'side': 'short',
+                        'sl_price': sl, 'tp_price': current_candle['average'],
+                        'leverage': leverage, 'entry_time': ts,
+                    })
 
     # --- Endauswertung ---
     logger.info("3/4: Bereite Analyse-Ergebnisse vor...")
