@@ -16,73 +16,7 @@
     },
     "optimization_settings": {
         "enabled": true,
-        "_info": "candidate_strategies = Pool aller Paare fuer Optuna. active_strategies = was gerade tradet.",
-        "candidate_strategies": [
-            {
-                "symbol": "BTC/USDT:USDT",
-                "timeframe": "1h"
-            },
-            {
-                "symbol": "BTC/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "ETH/USDT:USDT",
-                "timeframe": "1h"
-            },
-            {
-                "symbol": "ETH/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "BNB/USDT:USDT",
-                "timeframe": "1h"
-            },
-            {
-                "symbol": "BNB/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "XRP/USDT:USDT",
-                "timeframe": "15m"
-            },
-            {
-                "symbol": "XRP/USDT:USDT",
-                "timeframe": "1h"
-            },
-            {
-                "symbol": "DOGE/USDT:USDT",
-                "timeframe": "15m"
-            },
-            {
-                "symbol": "DOGE/USDT:USDT",
-                "timeframe": "1h"
-            },
-            {
-                "symbol": "LTC/USDT:USDT",
-                "timeframe": "1h"
-            },
-            {
-                "symbol": "LTC/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "SOL/USDT:USDT",
-                "timeframe": "1h"
-            },
-            {
-                "symbol": "SOL/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "ADA/USDT:USDT",
-                "timeframe": "1h"
-            },
-            {
-                "symbol": "ADA/USDT:USDT",
-                "timeframe": "4h"
-            }
-        ],
+        "_info": "Optimizer nutzt alle vorhandenen Configs aus src/ltbbot/strategy/configs/ — kein Pool noetig.",
         "oos_reference_date": "2026-06-21",
         "_oos_note": "End-Datum fuer 70/30-Split. OOS-Start automatisch je Timeframe.",
         "backtest_lookback_weeks": 8,

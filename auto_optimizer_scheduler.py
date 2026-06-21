@@ -125,16 +125,21 @@ def _is_due(schedule: dict) -> tuple[bool, str]:
 # ---------------------------------------------------------------------------
 
 def _resolve_pairs_auto(live_settings: dict, opt_settings: dict) -> list:
-    """[(full_symbol, timeframe)] aus candidate_strategies (opt_settings) oder active_strategies."""
-    candidates = opt_settings.get('candidate_strategies', [])
-    source = candidates if candidates else live_settings.get('active_strategies', [])
+    """[(full_symbol, timeframe)] — scannt Configs-Verzeichnis wie dnabot (kein Pool in settings.json)."""
+    import glob
+    configs_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
     pairs, seen = [], set()
-    for s in source:
-        sym = s.get('symbol', '')
-        tf  = s.get('timeframe', '')
-        if sym and tf and (sym, tf) not in seen:
-            pairs.append((sym, tf))
-            seen.add((sym, tf))
+    for cfg_path in sorted(glob.glob(os.path.join(configs_dir, 'config_*_envelope.json'))):
+        try:
+            with open(cfg_path) as f:
+                cfg = json.load(f)
+            sym = cfg.get('market', {}).get('symbol', '')
+            tf  = cfg.get('market', {}).get('timeframe', '')
+            if sym and tf and (sym, tf) not in seen:
+                pairs.append((sym, tf))
+                seen.add((sym, tf))
+        except Exception:
+            continue
     return pairs or [('BTC/USDT:USDT', '4h')]
 
 
