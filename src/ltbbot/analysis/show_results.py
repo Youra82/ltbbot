@@ -387,7 +387,7 @@ def run_single_analysis(start_date, end_date, start_capital):
 # --- Mode 2 & 3: Portfolio-Simulation / Optimierung ---
 # (Dieser Teil bleibt unverändert, da der Portfolio-Simulator bereits Liquidationsdaten liefert
 # und der Optimierer liquidierte Einzelstrategien ignoriert)
-def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
+def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital, auto_mode=False):
     mode_name = "Automatische Portfolio-Optimierung" if is_auto else "Manuelle Portfolio-Simulation"
     logger.info(f"--- ltbbot {mode_name} ---")
 
@@ -426,28 +426,32 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
     max_portfolio_dd = 0.30 # Standard
 
     if is_auto:
-        try:
-             max_dd_input = input(f"Maximal erlaubter Drawdown für das PORTFOLIO in % eingeben [Standard: {max_portfolio_dd*100:.0f}]: ")
-             if max_dd_input:
-                  max_portfolio_dd = float(max_dd_input) / 100.0
-                  if not (0 < max_portfolio_dd <= 1): raise ValueError("Drawdown muss > 0 und <= 100 sein.")
-             print(f"Verwende maximalen Portfolio Drawdown von {max_portfolio_dd*100:.1f}% für die Optimierung.")
-        except ValueError as e:
-             print(f"Ungültige Eingabe für Drawdown: {e}. Verwende Standardwert {max_portfolio_dd*100:.0f}%.")
+        if not auto_mode:
+            try:
+                max_dd_input = input(f"Maximal erlaubter Drawdown für das PORTFOLIO in % eingeben [Standard: {max_portfolio_dd*100:.0f}]: ")
+                if max_dd_input:
+                    max_portfolio_dd = float(max_dd_input) / 100.0
+                    if not (0 < max_portfolio_dd <= 1): raise ValueError("Drawdown muss > 0 und <= 100 sein.")
+                print(f"Verwende maximalen Portfolio Drawdown von {max_portfolio_dd*100:.1f}% für die Optimierung.")
+            except ValueError as e:
+                print(f"Ungültige Eingabe für Drawdown: {e}. Verwende Standardwert {max_portfolio_dd*100:.0f}%.")
         selected_files = available_filenames
     else: # Manueller Modus
-        print("\nVerfügbare optimierte Strategien:")
-        for i, name in enumerate(available_filenames):
-            config = available_strategy_configs[name]
-            print(f"  {i+1}) {config['market']['symbol']} ({config['market']['timeframe']}) - [{name}]")
-        selection = input("\nWelche Strategien sollen simuliert werden? (Zahlen mit Komma, z.B. 1,3,4 oder 'alle'): ").strip()
-        try:
-            if selection.lower() == 'alle': selected_files = available_filenames
-            else:
-                indices = [int(i.strip()) - 1 for i in selection.split(',')]
-                if any(i < 0 or i >= len(available_filenames) for i in indices): raise IndexError("Auswahl außerhalb des gültigen Bereichs.")
-                selected_files = [available_filenames[i] for i in indices]
-        except (ValueError, IndexError) as e: print(f"Ungültige Auswahl: {e}. Breche ab."); return
+        if auto_mode:
+            selected_files = available_filenames
+        else:
+            print("\nVerfügbare optimierte Strategien:")
+            for i, name in enumerate(available_filenames):
+                config = available_strategy_configs[name]
+                print(f"  {i+1}) {config['market']['symbol']} ({config['market']['timeframe']}) - [{name}]")
+            selection = input("\nWelche Strategien sollen simuliert werden? (Zahlen mit Komma, z.B. 1,3,4 oder 'alle'): ").strip()
+            try:
+                if selection.lower() == 'alle': selected_files = available_filenames
+                else:
+                    indices = [int(i.strip()) - 1 for i in selection.split(',')]
+                    if any(i < 0 or i >= len(available_filenames) for i in indices): raise IndexError("Auswahl außerhalb des gültigen Bereichs.")
+                    selected_files = [available_filenames[i] for i in indices]
+            except (ValueError, IndexError) as e: print(f"Ungültige Auswahl: {e}. Breche ab."); return
 
     if not selected_files: logger.warning("Keine Strategien ausgewählt."); return
 
@@ -501,7 +505,7 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                 report_csv_path      = os.path.join(PROJECT_ROOT, 'optimal_portfolio_equity.csv')
                 report_caption       = f"Optimales Portfolio ({len(optimal_portfolio_ids)} Strategien)\n{start_date} bis {end_date}\nEndkapital: {final_report.get('end_capital', 0):,.2f} USDT"
 
-                save_optimal_to_settings = input("\nSollen diese optimalen Strategien in settings.json als aktiv markiert werden? (j/n) [n]: ").lower() == 'j'
+                save_optimal_to_settings = (not auto_mode) and input("\nSollen diese optimalen Strategien in settings.json als aktiv markiert werden? (j/n) [n]: ").lower() == 'j'
                 if save_optimal_to_settings:
                     try:
                         settings_path = os.path.join(PROJECT_ROOT, 'settings.json')
@@ -579,29 +583,30 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                 logger.info(f"✔ Trade-Log    → '{os.path.basename(trades_csv_path)}'")
 
                 # --- Detaillierte Konsolenausgabe ---
-                print(f"\n{'─'*90}")
-                print(f"  {'#':<4} {'Symbol':<20} {'TF':<5} {'Side':<6} {'Entry':>10} {'Exit':>10} {'PnL USD':>9} {'PnL%':>7} {'Result':<6}  Equity")
-                print(f"  {'─'*86}")
-                for i, row in enumerate(trades_df[col_order].itertuples(), 1):
-                    result_str = '✓ WIN' if row.reason == 'WIN' else '✗ SL '
-                    eq_str = f"{row.equity_after:>10.2f}" if hasattr(row, 'equity_after') else ''
-                    print(f"  {i:<4} {row.symbol:<20} {row.timeframe:<5} {row.side:<6} "
-                          f"{row.entry_price:>10.4f} {row.exit_price:>10.4f} "
-                          f"{row.pnl_usd:>+9.2f} {row.pnl_pct:>+6.1f}%  {result_str}  {eq_str}")
-                print(f"{'─'*90}")
-
-                # Per-Strategie Zusammenfassung
-                print(f"\n  {'Strategie':<30} {'Trades':>7} {'Wins':>5} {'WR':>7} {'PnL USD':>10} {'PnL %':>8}")
-                print(f"  {'─'*72}")
-                for sid, grp in trades_df.groupby('strategy_id'):
-                    n     = len(grp)
-                    w     = (grp['reason'] == 'WIN').sum()
-                    wr    = w/n*100 if n > 0 else 0
-                    p_usd = grp['pnl_usd'].sum()
-                    p_pct = p_usd / start_capital_val * 100 if start_capital_val > 0 else 0
-                    label = f"{grp['symbol'].iloc[0]} ({grp['timeframe'].iloc[0]})"
-                    print(f"  {label:<30} {n:>7} {w:>5} {wr:>6.1f}%  {p_usd:>+9.2f}  {p_pct:>+7.2f}%")
-                print(f"{'─'*90}\n")
+                try:
+                    print(f"\n{'─'*90}")
+                    print(f"  {'#':<4} {'Symbol':<20} {'TF':<5} {'Side':<6} {'Entry':>10} {'Exit':>10} {'PnL USD':>9} {'PnL%':>7} {'Result':<6}  Equity")
+                    print(f"  {'─'*86}")
+                    for i, row in enumerate(trades_df[col_order].itertuples(), 1):
+                        result_str = 'WIN' if row.reason == 'WIN' else 'SL  '
+                        eq_str = f"{row.equity_after:>10.2f}" if hasattr(row, 'equity_after') else ''
+                        print(f"  {i:<4} {row.symbol:<20} {row.timeframe:<5} {row.side:<6} "
+                              f"{row.entry_price:>10.4f} {row.exit_price:>10.4f} "
+                              f"{row.pnl_usd:>+9.2f} {row.pnl_pct:>+6.1f}%  {result_str}  {eq_str}")
+                    print(f"{'─'*90}")
+                    print(f"\n  {'Strategie':<30} {'Trades':>7} {'Wins':>5} {'WR':>7} {'PnL USD':>10} {'PnL %':>8}")
+                    print(f"  {'─'*72}")
+                    for sid, grp in trades_df.groupby('strategy_id'):
+                        n     = len(grp)
+                        w     = (grp['reason'] == 'WIN').sum()
+                        wr    = w/n*100 if n > 0 else 0
+                        p_usd = grp['pnl_usd'].sum()
+                        p_pct = p_usd / start_capital_val * 100 if start_capital_val > 0 else 0
+                        label = f"{grp['symbol'].iloc[0]} ({grp['timeframe'].iloc[0]})"
+                        print(f"  {label:<30} {n:>7} {w:>5} {wr:>6.1f}%  {p_usd:>+9.2f}  {p_pct:>+7.2f}%")
+                    print(f"{'─'*90}\n")
+                except UnicodeEncodeError:
+                    pass  # Windows-Terminal-Encoding; Dateien werden trotzdem generiert
                 # --- Excel (Root-Verzeichnis, wie jaegerbot) ---
                 charts_dir = os.path.join(PROJECT_ROOT, 'artifacts', 'charts')
                 xlsx_name  = os.path.basename(report_csv_path).replace('_equity.csv','_trades.xlsx').replace('equity.csv','trades.xlsx')
@@ -646,6 +651,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ltbbot Backtest Ergebnis-Analyse")
     parser.add_argument('--mode', default='1', type=str, choices=['1', '2', '3', '4'],
                         help="Analysemodus: 1=Einzel, 2=Manuell Portfolio, 3=Auto Portfolio, 4=Interaktive Charts")
+    parser.add_argument('--auto', action='store_true',
+                        help="Nicht-interaktiver Modus: Daten aus settings.json, keine Eingaben nötig")
     args = parser.parse_args()
 
     # Mode 4 (Interaktive Charts) hat eigenes Input-System
@@ -657,12 +664,28 @@ if __name__ == "__main__":
             logger.critical(f"Fehler beim Ausführen der interaktiven Charts: {e}", exc_info=True)
         sys.exit(0)  # Beende sauber nach Mode 4
 
-    # Für Modi 1, 2, 3: Frage Backtest-Konfiguration ab
-    print("\n--- Bitte Konfiguration für den Backtest festlegen ---")
-    try:
+    # Für Modi 1, 2, 3: Konfiguration abfragen oder aus settings.json lesen (--auto)
+    if args.auto:
+        try:
+            _s_path = os.path.join(PROJECT_ROOT, 'settings.json')
+            with open(_s_path, encoding='utf-8') as _sf:
+                _s = json.load(_sf)
+            _opt = _s.get('optimization_settings', {})
+            _lookback_weeks = int(_opt.get('backtest_lookback_weeks', 8))
+            start_capital_input = int(_opt.get('start_capital', 50))
+            end_date_input   = date.today().strftime("%Y-%m-%d")
+            start_date_input = (date.today() - timedelta(days=_lookback_weeks * 7)).strftime("%Y-%m-%d")
+            print(f"\n[AUTO] Zeitraum: {start_date_input} bis {end_date_input}  Kapital: {start_capital_input} USDT")
+        except Exception as e:
+            logger.error(f"Fehler beim Lesen von settings.json für --auto: {e}")
+            sys.exit(1)
+    else:
+        print("\n--- Bitte Konfiguration für den Backtest festlegen ---")
         start_date_input = input(f"Startdatum (JJJJ-MM-TT) [Standard: 2023-01-01]: ") or "2023-01-01"
         end_date_input = input(f"Enddatum (JJJJ-MM-TT) [Standard: Heute]: ") or date.today().strftime("%Y-%m-%d")
         start_capital_input = int(input(f"Startkapital in USDT eingeben [Standard: 1000]: ") or 1000)
+
+    try:
         print("--------------------------------------------------")
 
         if start_capital_input <= 0: raise ValueError("Startkapital muss positiv sein.")
@@ -723,9 +746,9 @@ if __name__ == "__main__":
             pass  # OOS-Prüfung ist optional; kein Crash wenn settings.json fehlt
 
         if args.mode == '2':
-            run_portfolio_mode(is_auto=False, start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input)
+            run_portfolio_mode(is_auto=False, start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input, auto_mode=args.auto)
         elif args.mode == '3':
-            run_portfolio_mode(is_auto=True, start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input)
+            run_portfolio_mode(is_auto=True, start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input, auto_mode=args.auto)
         else: # mode == '1'
             run_single_analysis(start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input)
 
