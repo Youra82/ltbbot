@@ -665,6 +665,41 @@ if __name__ == "__main__":
         if start_capital_input <= 0: raise ValueError("Startkapital muss positiv sein.")
         pd.to_datetime(start_date_input); pd.to_datetime(end_date_input) # Einfache Datumsvalidierung
 
+        # --- OOS-Warnung: Prüfe ob Analysezeitraum in den verborgenen OOS-Bereich ragt ---
+        try:
+            _settings_path = os.path.join(PROJECT_ROOT, 'settings.json')
+            with open(_settings_path) as _sf:
+                _settings = json.load(_sf)
+            _oos_ref = _settings.get('optimization_settings', {}).get('oos_reference_date')
+            if _oos_ref:
+                _LOOKBACK_MAP = {'15m': 90, '30m': 180, '1h': 365, '2h': 548, '4h': 730, '1d': 1825}
+                _ref_dt = date.fromisoformat(str(_oos_ref))
+                _analysis_start = date.fromisoformat(start_date_input)
+                _analysis_end   = date.fromisoformat(end_date_input)
+                _warn_lines = []
+                for _tf, _lb in _LOOKBACK_MAP.items():
+                    _oos_days = _lb * 30 // 100
+                    _oos_start = _ref_dt - timedelta(days=_oos_days)
+                    if _analysis_end >= _oos_start:
+                        _overlap_start = max(_analysis_start, _oos_start)
+                        _overlap_days  = (_analysis_end - _overlap_start).days + 1
+                        _warn_lines.append(
+                            f"  {_tf:>4s}: OOS ab {_oos_start} — "
+                            f"dein Zeitraum ragt {_overlap_days} Tage in den verborgenen Bereich"
+                        )
+                if _warn_lines:
+                    print()
+                    print("  ⚠️  OOS-WARNUNG: Dein Analysezeitraum überschneidet den verborgenen Testbereich!")
+                    print(f"  Referenz-Datum: {_oos_ref} | Trainingsgrenze je Timeframe:")
+                    for _l in _warn_lines:
+                        print(_l)
+                    print("  → Diese Ergebnisse sind NICHT unabhängig — der Optimizer hat diese Daten NICHT gesehen,")
+                    print("    aber du bewertest ihn damit. Ergebnis zeigt echte Out-of-Sample Performance.")
+                    print("    Falls du NUR auf Trainingsdaten testen willst, wähle ein Enddatum vor den OOS-Grenzen.")
+                    print()
+        except Exception:
+            pass  # OOS-Prüfung ist optional; kein Crash wenn settings.json fehlt
+
         if args.mode == '2':
             run_portfolio_mode(is_auto=False, start_date=start_date_input, end_date=end_date_input, start_capital=start_capital_input)
         elif args.mode == '3':
