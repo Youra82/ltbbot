@@ -137,18 +137,6 @@ def main():
         # === SCHLEIFE ENTFERNT ===
         # Das Skript beendet sich hier, der Cronjob startet es neu.
 
-        # --- Auto-Optimizer (Optuna Parameter-Suche) im Hintergrund starten ---
-        auto_opt_script = os.path.join(SCRIPT_DIR, 'auto_optimizer_scheduler.py')
-        if os.path.exists(auto_opt_script):
-            logging.info("[Auto-Optimizer] Prüfe ob Parameter-Optimierung fällig...")
-            logs_dir = os.path.join(SCRIPT_DIR, 'logs')
-            os.makedirs(logs_dir, exist_ok=True)
-            subprocess.Popen(
-                [python_executable, auto_opt_script],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-
         # --- Auto-Portfolio-Optimizer im Hintergrund starten ---
         portfolio_sched = os.path.join(SCRIPT_DIR, 'auto_portfolio_scheduler.py')
         if os.path.exists(portfolio_sched):
