@@ -124,12 +124,12 @@ def _is_due(schedule: dict) -> tuple[bool, str]:
 # Paare / Symbole / Timeframes aufloesen
 # ---------------------------------------------------------------------------
 
-def _resolve_pairs_auto(live_settings: dict) -> list:
-    """[(full_symbol, timeframe)] aus aktiven Strategien."""
+def _resolve_pairs_auto(live_settings: dict, opt_settings: dict) -> list:
+    """[(full_symbol, timeframe)] aus candidate_strategies (opt_settings) oder active_strategies."""
+    candidates = opt_settings.get('candidate_strategies', [])
+    source = candidates if candidates else live_settings.get('active_strategies', [])
     pairs, seen = [], set()
-    for s in live_settings.get('active_strategies', []):
-        if not s.get('active', True):
-            continue
+    for s in source:
         sym = s.get('symbol', '')
         tf  = s.get('timeframe', '')
         if sym and tf and (sym, tf) not in seen:
@@ -138,11 +138,11 @@ def _resolve_pairs_auto(live_settings: dict) -> list:
     return pairs or [('BTC/USDT:USDT', '4h')]
 
 
-def _resolve_symbols(value, live_settings: dict) -> list:
+def _resolve_symbols(value, live_settings: dict, opt_settings: dict) -> list:
     if value != 'auto':
         return value if isinstance(value, list) else [value]
     seen, syms = set(), []
-    for sym, _ in _resolve_pairs_auto(live_settings):
+    for sym, _ in _resolve_pairs_auto(live_settings, opt_settings):
         base = sym.split('/')[0]
         if base not in seen:
             syms.append(base)
@@ -150,11 +150,11 @@ def _resolve_symbols(value, live_settings: dict) -> list:
     return syms or ['BTC']
 
 
-def _resolve_timeframes(value, live_settings: dict) -> list:
+def _resolve_timeframes(value, live_settings: dict, opt_settings: dict) -> list:
     if value != 'auto':
         return value if isinstance(value, list) else [value]
     seen, tfs = set(), []
-    for _, tf in _resolve_pairs_auto(live_settings):
+    for _, tf in _resolve_pairs_auto(live_settings, opt_settings):
         if tf not in seen:
             tfs.append(tf)
             seen.add(tf)
@@ -329,12 +329,12 @@ def run_optimization(schedule: dict, opt_settings: dict,
                or opt_settings.get('timeframes_to_optimize') == 'auto')
 
     if is_auto:
-        pairs_full   = _resolve_pairs_auto(live_settings)
+        pairs_full   = _resolve_pairs_auto(live_settings, opt_settings)
         pair_display = [f"{sym.split('/')[0]}/{tf}" for sym, tf in pairs_full]
         timeframes   = list(dict.fromkeys(tf for _, tf in pairs_full))
     else:
-        symbols    = _resolve_symbols(opt_settings.get('symbols_to_optimize'), live_settings)
-        timeframes = _resolve_timeframes(opt_settings.get('timeframes_to_optimize'), live_settings)
+        symbols    = _resolve_symbols(opt_settings.get('symbols_to_optimize'), live_settings, opt_settings)
+        timeframes = _resolve_timeframes(opt_settings.get('timeframes_to_optimize'), live_settings, opt_settings)
         pairs_full = [(f"{sym}/USDT:USDT", tf) for sym in symbols for tf in timeframes]
         pair_display = [f"{sym}/{tf}" for sym in symbols for tf in timeframes]
 
