@@ -60,25 +60,25 @@ def main():
 
         strategy_list = []
         if use_autopilot:
-            logging.info("Modus: Autopilot. Lese Strategien aus den Optimierungs-Ergebnissen...")
-            if os.path.exists(last_optimizer_run_file):
-                with open(last_optimizer_run_file, 'r') as f:
-                    run_data = json.load(f)
-                saved = run_data.get('saved', [])
-                strategy_list = [
-                    {
-                        'symbol': entry['symbol'],
-                        'timeframe': entry['timeframe'],
-                        'active': True,
-                    }
-                    for entry in saved
-                ]
+            # Portfolio-Optimizer schreibt direkt in active_strategies — das ist die
+            # autoritative Quelle. last_optimizer_run.json dient nur als Legacy-Fallback.
+            logging.info("Modus: Autopilot. Lese Strategien aus active_strategies (Portfolio-Optimizer)...")
+            strategy_list = [
+                s for s in live_settings.get('active_strategies', [])
+                if s.get('active')
+            ]
+            if not strategy_list:
+                logging.warning("  → Keine aktiven Strategien in settings.json. Pruefe last_optimizer_run.json...")
+                if os.path.exists(last_optimizer_run_file):
+                    with open(last_optimizer_run_file, 'r') as f:
+                        run_data = json.load(f)
+                    saved = run_data.get('saved', [])
+                    strategy_list = [
+                        {'symbol': e['symbol'], 'timeframe': e['timeframe'], 'active': True}
+                        for e in saved
+                    ]
                 if not strategy_list:
-                    logging.warning("  → Keine gespeicherten Optimierungsergebnisse. Falle auf manuellen Modus zurück.")
-                    strategy_list = live_settings.get('active_strategies', [])
-            else:
-                logging.warning("  → Keine Optimierungsdatei gefunden. Falle auf manuellen Modus zurück.")
-                strategy_list = live_settings.get('active_strategies', [])
+                    logging.warning("  → Kein Fallback gefunden. Ueberspringe.")
         else:
             logging.info("Modus: Manuell. Lese Strategien aus den manuellen Einstellungen...")
             strategy_list = live_settings.get('active_strategies', [])
@@ -137,14 +137,24 @@ def main():
         # === SCHLEIFE ENTFERNT ===
         # Das Skript beendet sich hier, der Cronjob startet es neu.
 
-        # --- Auto-Optimizer im Hintergrund starten ---
+        # --- Auto-Optimizer (Optuna Parameter-Suche) im Hintergrund starten ---
         auto_opt_script = os.path.join(SCRIPT_DIR, 'auto_optimizer_scheduler.py')
         if os.path.exists(auto_opt_script):
-            logging.info("[Auto-Optimizer] Prüfe ob Optimierung fällig...")
+            logging.info("[Auto-Optimizer] Prüfe ob Parameter-Optimierung fällig...")
             logs_dir = os.path.join(SCRIPT_DIR, 'logs')
             os.makedirs(logs_dir, exist_ok=True)
             subprocess.Popen(
                 [python_executable, auto_opt_script],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+        # --- Auto-Portfolio-Optimizer im Hintergrund starten ---
+        portfolio_sched = os.path.join(SCRIPT_DIR, 'auto_portfolio_scheduler.py')
+        if os.path.exists(portfolio_sched):
+            logging.info("[Portfolio-Optimizer] Prüfe ob Portfolio-Optimierung fällig...")
+            subprocess.Popen(
+                [python_executable, portfolio_sched],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
