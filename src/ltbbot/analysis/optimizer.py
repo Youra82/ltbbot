@@ -7,9 +7,10 @@ import numpy as np
 import argparse
 import logging
 import warnings
+import contextlib
+import io
 from joblib import Parallel, delayed # Für Parallelisierung
 from datetime import datetime as _dt
-# KEINE Tqdm Imports
 
 # Logging konfigurieren
 # Optuna Logs auf WARNING reduzieren, um Balken nicht zu stören
@@ -81,7 +82,8 @@ def objective(trial):
         # logger.error("...") # Wird durch backtester_logger unterdrückt, wenn auf ERROR gesetzt
         raise ValueError("HISTORICAL_DATA oder START_CAPITAL nicht korrekt initialisiert.")
 
-    result = run_envelope_backtest(HISTORICAL_DATA.copy(), params, START_CAPITAL)
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        result = run_envelope_backtest(HISTORICAL_DATA.copy(), params, START_CAPITAL)
 
     # --- Ergebnisse ---
     pnl = result.get('total_pnl_pct', -1000.0)
