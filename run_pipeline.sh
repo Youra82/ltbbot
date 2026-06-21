@@ -22,8 +22,13 @@ echo -e "${GREEN}✔ Virtuelle Umgebung wurde erfolgreich aktiviert.${NC}"
 echo -e "\n${YELLOW}Möchtest du alle alten, generierten Konfigurationen vor dem Start löschen?${NC}"
 read -p "Dies wird für einen kompletten Neustart empfohlen. (j/n) [Standard: n]: " CLEANUP_CHOICE; CLEANUP_CHOICE=${CLEANUP_CHOICE:-n}
 if [[ "$CLEANUP_CHOICE" == "j" || "$CLEANUP_CHOICE" == "J" ]]; then
-    # Lösche nur Envelope Configs (oder alle?)
-    echo -e "${YELLOW}Lösche alte Konfigurationen (config_*_envelope.json)...${NC}"; rm -f src/ltbbot/strategy/configs/config_*_envelope.json; echo -e "${GREEN}✔ Aufräumen abgeschlossen.${NC}"
+    echo -e "${YELLOW}Lösche Envelope Configs...${NC}"
+    rm -f src/ltbbot/strategy/configs/config_*_envelope.json
+    echo -e "${YELLOW}Lösche letztes Optimizer-Ergebnis (last_optimizer_run.json)...${NC}"
+    rm -f artifacts/results/last_optimizer_run.json
+    echo -e "${YELLOW}Lösche OHLCV-Cache (data/cache/)...${NC}"
+    rm -rf data/cache/
+    echo -e "${GREEN}✔ Kompletter Neustart — alles gelöscht.${NC}"
 else
     echo -e "${GREEN}✔ Alte Konfigurationen werden beibehalten.${NC}"
 fi
