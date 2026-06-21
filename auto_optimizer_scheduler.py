@@ -406,6 +406,16 @@ def run_optimization(schedule: dict, opt_settings: dict,
         _log(f"FINISH result=success elapsed_s={elapsed}")
         if send_tg:
             _send_end_telegram(elapsed)
+        # Automatisch show_results.py --mode 2 --auto aufrufen → HTML + XLSX + Telegram
+        try:
+            show_results_script = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'analysis', 'show_results.py')
+            sr_cmd = [sys.executable, show_results_script, '--mode', '2', '--auto']
+            _log(f"SHOW_RESULTS_START cmd={' '.join(sr_cmd)}")
+            with open(TRIGGER_LOG, 'a', encoding='utf-8') as _lf:
+                sr_rc = subprocess.run(sr_cmd, stdout=_lf, stderr=_lf).returncode
+            _log(f"SHOW_RESULTS_EXIT rc={sr_rc}")
+        except Exception as e:
+            _log(f"SHOW_RESULTS_ERROR {e}")
     else:
         _log(f"FINISH result=failed elapsed_s={elapsed}")
 
