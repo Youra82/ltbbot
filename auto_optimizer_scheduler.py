@@ -277,7 +277,14 @@ def _run_bash_pipeline() -> int:
 def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
     """Direkter Python-Aufruf pro Paar: nur optimizer.py (kein Trainer/Threshold)."""
     python_exe  = sys.executable
-    end_date    = date.today().strftime('%Y-%m-%d')
+    # OOS: wenn oos_start_date gesetzt → Pipeline sieht niemals danach
+    oos_start = opt_settings.get('oos_start_date')
+    if oos_start:
+        oos_dt   = date.fromisoformat(str(oos_start))
+        end_date = (oos_dt - timedelta(days=1)).strftime('%Y-%m-%d')
+        _log(f"OOS aktiv: end_date={end_date} (oos_start_date={oos_start})")
+    else:
+        end_date = date.today().strftime('%Y-%m-%d')
     constraints = opt_settings.get('constraints', {})
     config_suffix = opt_settings.get('config_suffix', '_envelope')
 

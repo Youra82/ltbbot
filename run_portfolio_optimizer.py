@@ -362,7 +362,16 @@ def main() -> int:
     opt       = settings.get('optimization_settings', {})
     capital   = args.capital or float(opt.get('start_capital', 50))
     max_dd    = args.max_dd
-    end_date  = args.end_date or date.today().strftime('%Y-%m-%d')
+
+    # OOS: wenn oos_start_date gesetzt → Portfolio-Optimizer sieht niemals OOS-Daten
+    oos_start = opt.get('oos_start_date')
+    if oos_start:
+        from datetime import date as _date
+        oos_dt   = _date.fromisoformat(str(oos_start))
+        end_date = (oos_dt - timedelta(days=1)).strftime('%Y-%m-%d')
+        print(f"  OOS aktiv: end_date={end_date} (oos_start_date={oos_start})")
+    else:
+        end_date = args.end_date or date.today().strftime('%Y-%m-%d')
 
     # Lookback bestimmen: backtest_lookback_weeks hat Vorrang (aus Walk-Forward Analyse)
     if args.start_date:
