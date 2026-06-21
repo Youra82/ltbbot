@@ -591,15 +591,16 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital):
                 print(f"{'─'*90}")
 
                 # Per-Strategie Zusammenfassung
-                print(f"\n  {'Strategie':<30} {'Trades':>7} {'Wins':>5} {'WR':>7} {'PnL USD':>10}")
-                print(f"  {'─'*62}")
+                print(f"\n  {'Strategie':<30} {'Trades':>7} {'Wins':>5} {'WR':>7} {'PnL USD':>10} {'PnL %':>8}")
+                print(f"  {'─'*72}")
                 for sid, grp in trades_df.groupby('strategy_id'):
-                    n  = len(grp)
-                    w  = (grp['reason'] == 'WIN').sum()
-                    wr = w/n*100 if n > 0 else 0
-                    p  = grp['pnl_usd'].sum()
+                    n     = len(grp)
+                    w     = (grp['reason'] == 'WIN').sum()
+                    wr    = w/n*100 if n > 0 else 0
+                    p_usd = grp['pnl_usd'].sum()
+                    p_pct = p_usd / start_capital_val * 100 if start_capital_val > 0 else 0
                     label = f"{grp['symbol'].iloc[0]} ({grp['timeframe'].iloc[0]})"
-                    print(f"  {label:<30} {n:>7} {w:>5} {wr:>6.1f}%  {p:>+9.2f}")
+                    print(f"  {label:<30} {n:>7} {w:>5} {wr:>6.1f}%  {p_usd:>+9.2f}  {p_pct:>+7.2f}%")
                 print(f"{'─'*90}\n")
                 # --- Excel (Root-Verzeichnis, wie jaegerbot) ---
                 charts_dir = os.path.join(PROJECT_ROOT, 'artifacts', 'charts')
