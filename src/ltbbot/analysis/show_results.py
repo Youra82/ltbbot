@@ -665,7 +665,7 @@ if __name__ == "__main__":
         if start_capital_input <= 0: raise ValueError("Startkapital muss positiv sein.")
         pd.to_datetime(start_date_input); pd.to_datetime(end_date_input) # Einfache Datumsvalidierung
 
-        # --- OOS-Warnung: Prüfe ob Analysezeitraum in den verborgenen OOS-Bereich ragt ---
+        # --- OOS-Info: Zeige ob Analysezeitraum in Training oder OOS liegt ---
         try:
             _settings_path = os.path.join(PROJECT_ROOT, 'settings.json')
             with open(_settings_path) as _sf:
@@ -673,30 +673,45 @@ if __name__ == "__main__":
             _oos_ref = _settings.get('optimization_settings', {}).get('oos_reference_date')
             if _oos_ref:
                 _LOOKBACK_MAP = {'15m': 90, '30m': 180, '1h': 365, '2h': 548, '4h': 730, '1d': 1825}
-                _ref_dt = date.fromisoformat(str(_oos_ref))
+                _ref_dt        = date.fromisoformat(str(_oos_ref))
                 _analysis_start = date.fromisoformat(start_date_input)
                 _analysis_end   = date.fromisoformat(end_date_input)
-                _warn_lines = []
+                _oos_lines   = []  # Zeitraum liegt (teilweise) im OOS
+                _train_lines = []  # Zeitraum liegt (teilweise) im Training
                 for _tf, _lb in _LOOKBACK_MAP.items():
-                    _oos_days = _lb * 30 // 100
-                    _oos_start = _ref_dt - timedelta(days=_oos_days)
+                    _oos_days   = _lb * 30 // 100
+                    _oos_start  = _ref_dt - timedelta(days=_oos_days)
+                    _train_end  = _oos_start - timedelta(days=1)
+                    if _analysis_start <= _train_end:
+                        # mindestens ein Teil liegt im Trainingszeitraum
+                        _train_lines.append(f"  {_tf:>4s}: Training bis {_train_end}")
                     if _analysis_end >= _oos_start:
                         _overlap_start = max(_analysis_start, _oos_start)
                         _overlap_days  = (_analysis_end - _overlap_start).days + 1
-                        _warn_lines.append(
-                            f"  {_tf:>4s}: OOS ab {_oos_start} — "
-                            f"dein Zeitraum ragt {_overlap_days} Tage in den verborgenen Bereich"
+                        _oos_lines.append(
+                            f"  {_tf:>4s}: OOS ab {_oos_start} — {_overlap_days} Tage echte OOS-Daten"
                         )
-                if _warn_lines:
-                    print()
-                    print("  ⚠️  OOS-WARNUNG: Dein Analysezeitraum überschneidet den verborgenen Testbereich!")
-                    print(f"  Referenz-Datum: {_oos_ref} | Trainingsgrenze je Timeframe:")
-                    for _l in _warn_lines:
+                print()
+                if _oos_lines and not _train_lines:
+                    print("  ✅  OOS-TEST: Dein Zeitraum liegt vollständig im verborgenen Testbereich.")
+                    print(f"  Referenz-Datum: {_oos_ref}")
+                    for _l in _oos_lines:
                         print(_l)
-                    print("  → Diese Ergebnisse sind NICHT unabhängig — der Optimizer hat diese Daten NICHT gesehen,")
-                    print("    aber du bewertest ihn damit. Ergebnis zeigt echte Out-of-Sample Performance.")
-                    print("    Falls du NUR auf Trainingsdaten testen willst, wähle ein Enddatum vor den OOS-Grenzen.")
-                    print()
+                    print("  → Der Optimizer hat diese Daten NIE gesehen — echte Out-of-Sample Ergebnisse.")
+                elif _oos_lines and _train_lines:
+                    print("  ℹ️   GEMISCHTER ZEITRAUM: Teils Training, teils OOS.")
+                    print(f"  Referenz-Datum: {_oos_ref}")
+                    for _l in _oos_lines:
+                        print(_l)
+                    print("  → Für reinen OOS-Test: Startdatum nach dem OOS-Beginn wählen.")
+                    print("  → Für reinen Training-Test: Enddatum vor dem OOS-Beginn wählen.")
+                elif _train_lines:
+                    print("  ⚠️   TRAINING-DATEN: Dein Zeitraum liegt im Trainingszeitraum.")
+                    print(f"  Referenz-Datum: {_oos_ref}")
+                    for _l in _train_lines:
+                        print(_l)
+                    print("  → Ergebnisse können Overfitting zeigen — der Optimizer kannte diese Daten.")
+                print()
         except Exception:
             pass  # OOS-Prüfung ist optional; kein Crash wenn settings.json fehlt
 
