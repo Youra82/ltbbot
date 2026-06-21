@@ -219,37 +219,91 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
                 pass
             equity_series.append(eq)
 
-        arr = np.array(equity_series)
-        peak = np.maximum.accumulate(arr)
-        dd   = ((peak - arr) / peak * 100)
+        arr    = np.array(equity_series)
+        dates  = [pd.Timestamp(start_date) + timedelta(weeks=max_lb + 1) + timedelta(weeks=i)
+                  for i in range(len(arr))]
+        peak   = np.maximum.accumulate(arr)
+        dd     = (peak - arr) / peak * 100
         max_dd = float(dd.max()) if len(dd) > 0 else 0
         total_pnl = (eq - capital) / capital * 100
         calmar = _calmar(total_pnl, max_dd)
-        results[lb] = {'equity': arr, 'calmar': calmar, 'dd': max_dd,
-                        'pnl': total_pnl, 'empty': empty_weeks}
+        results[lb] = {'equity': arr, 'dates': dates, 'calmar': calmar,
+                       'dd': max_dd, 'pnl': total_pnl, 'empty': empty_weeks}
 
-    # Chart
-    fig = _dark_fig(14, 6)
-    ax  = fig.add_subplot(111)
-    _style_ax(ax)
-    ax.set_title('Walk-Forward Lookback-Vergleich', fontsize=13, pad=12)
+    best_lb     = max(results, key=lambda x: results[x]['calmar'])
+    best_calmar = results[best_lb]['calmar']
+    n_oos       = len(all_mondays)
+
+    # ── Chart: 2 Subplots (Equity oben, Calmar-Balken unten) ─────────────────
+    fig = _dark_fig(14, 10)
+    gs  = gridspec.GridSpec(2, 1, figure=fig, height_ratios=[2, 1], hspace=0.4)
+    ax1 = fig.add_subplot(gs[0])
+    ax2 = fig.add_subplot(gs[1])
+    _style_ax(ax1)
+    _style_ax(ax2)
+
+    # Equity-Kurven (Log-Skala)
     for i, (lb, r) in enumerate(results.items()):
-        ax.plot(r['equity'], label=f"{lb}W | Cal={r['calmar']:.0f} | DD={r['dd']:.1f}%",
-                color=PALETTE[i % len(PALETTE)], linewidth=1.5)
-    ax.axhline(capital, color='#8b949e', linewidth=0.8, linestyle='--')
-    ax.set_xlabel('Wochen (OOS)')
-    ax.set_ylabel('Equity (USDT)')
-    ax.legend(fontsize=8, facecolor='#161b22', labelcolor='#c9d1d9', loc='upper left')
-    fig.tight_layout()
+        sign  = '+' if r['pnl'] >= 0 else ''
+        label = (f"{lb}W Lookback: {sign}{r['pnl']:.1f}% | "
+                 f"DD {r['dd']:.1f}% | Calmar {r['calmar']:.1f}")
+        lw    = 2.2 if lb == best_lb else 1.2
+        alpha = 1.0 if lb == best_lb else 0.75
+        ax1.plot(r['dates'], r['equity'], label=label,
+                 color=PALETTE[i % len(PALETTE)], linewidth=lw, alpha=alpha)
+
+    ax1.axhline(capital, color='#8b949e', linewidth=0.8, linestyle='--',
+                label=f'Start {capital:.0f} USDT')
+    ax1.set_yscale('log')
+    ax1.set_title(
+        f'ltbbot Walk-Forward — Lookback-Vergleich (Out-of-Sample)\n'
+        f'Startkapital: {capital:.0f} USDT | Test-Wochen: {n_oos}',
+        fontsize=11, pad=10)
+    ax1.set_ylabel('Equity (USDT, log)')
+    ax1.legend(fontsize=8, facecolor='#161b22', labelcolor='#c9d1d9', loc='upper left')
+
+    # Datum-Ticks: jedes Quartal
+    import matplotlib.dates as mdates
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+    ax1.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+    plt.setp(ax1.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=7)
+
+    # Calmar-Balken
+    lbs     = list(results.keys())
+    calmars = [results[lb]['calmar'] for lb in lbs]
+    colors  = [C4 if lb == best_lb else PALETTE[i % len(PALETTE)]
+               for i, lb in enumerate(lbs)]
+    bars    = ax2.bar([f"{lb}W" for lb in lbs], calmars, color=colors, width=0.6)
+
+    for bar, val, lb in zip(bars, calmars, lbs):
+        ax2.text(bar.get_x() + bar.get_width() / 2,
+                 bar.get_height() + max(abs(v) for v in calmars) * 0.02,
+                 f'{val:.1f}', ha='center', va='bottom',
+                 color='#f0f6fc', fontsize=9, fontweight='bold')
+        if lb == best_lb:
+            ax2.text(bar.get_x() + bar.get_width() / 2,
+                     min(0, bar.get_height()) - max(abs(v) for v in calmars) * 0.06,
+                     '★ BEST', ha='center', va='top',
+                     color=C4, fontsize=9, fontweight='bold')
+
+    ax2.axhline(0, color='#8b949e', linewidth=0.8)
+    ax2.set_title('Calmar Score pro Lookback (Out-of-Sample, höher = besser)', fontsize=10)
+    ax2.set_xlabel('Lookback-Zeitraum')
+    ax2.set_ylabel('Calmar Score (OOS)')
+
     path = f'{TMP}/ltbbot_wf_lookback.png'
     _send_fig(token, chat, fig, 'ltbbot Walk-Forward Lookback', path, send_telegram)
 
     # Text-Tabelle
-    lines = ['ltbbot Walk-Forward Lookback-Vergleich\n']
-    best_calmar = max(r['calmar'] for r in results.values())
+    lines = [f'ltbbot Walk-Forward Lookback-Vergleich\nStartkapital: {capital:.0f} USDT | Test-Wochen: {n_oos}\n']
     for lb, r in results.items():
-        star = ' ← bestes Calmar' if abs(r['calmar'] - best_calmar) < 1 else ''
-        lines.append(f"Lookback {lb:>2}W  DD={r['dd']:5.1f}% | Calmar={r['calmar']:7.0f} | Leerwochen={r['empty']:2d}{star}")
+        star = ' ← bestes Calmar' if lb == best_lb else ''
+        sign = '+' if r['pnl'] >= 0 else ''
+        lines.append(
+            f"Lookback {lb:>2}W  PnL={sign}{r['pnl']:6.1f}% | "
+            f"DD={r['dd']:5.1f}% | Calmar={r['calmar']:7.1f} | "
+            f"Leerwochen={r['empty']:2d}{star}"
+        )
     _send(token, chat, '\n'.join(lines), send_telegram)
 
 
