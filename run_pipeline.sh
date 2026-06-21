@@ -5,169 +5,235 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${BLUE}======================================================="
-echo "      ltbbot Vollautomatische Optimierungs-Pipeline (Envelope)"
-echo -e "=======================================================${NC}"
-
 # --- Pfade definieren ---
 VENV_PATH=".venv/bin/activate"
 PYTHON=".venv/bin/python"
-OPTIMIZER="src/ltbbot/analysis/optimizer.py" # Nur noch der Optimizer wird gebraucht
+OPTIMIZER="src/ltbbot/analysis/optimizer.py"
 
 # --- Umgebung aktivieren ---
 source "$VENV_PATH"
 echo -e "${GREEN}✔ Virtuelle Umgebung wurde erfolgreich aktiviert.${NC}"
 
+echo ""
+echo -e "${BLUE}=======================================================${NC}"
+echo "      ltbbot Envelope Optimierungs-Pipeline"
+echo -e "${BLUE}=======================================================${NC}"
+
 # --- AUFRÄUM-ASSISTENT ---
-echo -e "\n${YELLOW}Möchtest du alle alten, generierten Konfigurationen vor dem Start löschen?${NC}"
-read -p "Dies wird für einen kompletten Neustart empfohlen. (j/n) [Standard: n]: " CLEANUP_CHOICE; CLEANUP_CHOICE=${CLEANUP_CHOICE:-n}
+echo ""
+echo -e "${YELLOW}Möchtest du alle alten, generierten Configs vor dem Start löschen?${NC}"
+read -p "Dies wird für einen kompletten Neustart empfohlen. (j/n) [Standard: n]: " CLEANUP_CHOICE
+CLEANUP_CHOICE=${CLEANUP_CHOICE:-n}
 if [[ "$CLEANUP_CHOICE" == "j" || "$CLEANUP_CHOICE" == "J" ]]; then
-    echo -e "${YELLOW}Lösche Envelope Configs...${NC}"
     rm -f src/ltbbot/strategy/configs/config_*_envelope.json
-    echo -e "${YELLOW}Lösche letztes Optimizer-Ergebnis (last_optimizer_run.json)...${NC}"
     rm -f artifacts/results/last_optimizer_run.json
-    echo -e "${YELLOW}Lösche OHLCV-Cache (data/cache/)...${NC}"
     rm -rf data/cache/
-    echo -e "${GREEN}✔ Kompletter Neustart — alles gelöscht.${NC}"
+    echo -e "${GREEN}✔ Kompletter Neustart — Configs, Optimizer-Ergebnis und Cache gelöscht.${NC}"
 else
-    echo -e "${GREEN}✔ Alte Konfigurationen werden beibehalten.${NC}"
+    echo -e "${GREEN}✔ Alte Configs werden beibehalten.${NC}"
 fi
 
-# --- Interaktive Abfrage ---
-read -p "Handelspaar(e) eingeben (ohne /USDT, z.B. BTC ETH): " SYMBOLS
-read -p "Zeitfenster eingeben (z.B. 1h 4h): " TIMEFRAMES
-echo -e "\n${BLUE}--- Empfehlung: Optimaler Rückblick-Zeitraum ---${NC}"
-printf "+-------------+--------------------------------+\n"; printf "| Zeitfenster | Empfohlener Rückblick (Tage)   |\n"; printf "+-------------+--------------------------------+\n"; printf "| 5m, 15m     | 30 - 90 Tage                   |\n"; printf "| 30m, 1h     | 180 - 365 Tage                 |\n"; printf "| 2h, 4h      | 365 - 730 Tage                 |\n"; printf "| 6h, 1d      | 730 - 1825 Tage                |\n"; printf "+-------------+--------------------------------+\n"
-# Automatik für Startdatum basierend auf Zeitfenster (vereinfacht)
-read -p "Startdatum (JJJJ-MM-TT) oder 'a' für Automatik [Standard: a]: " START_DATE_INPUT; START_DATE_INPUT=${START_DATE_INPUT:-a}
-read -p "Startkapital in USDT [Standard: 1000]: " START_CAPITAL; START_CAPITAL=${START_CAPITAL:-1000}
+# --- Paare und Zeitfenster ---
+echo ""
+read -p "Handelspaar(e) eingeben (ohne /USDT, z.B. BTC ETH DOGE) [leer=auto aus settings.json]: " SYMBOLS
+read -p "Zeitfenster eingeben (z.B. 1h 4h) [leer=auto aus settings.json]: " TIMEFRAMES
 
-# --- OOS-SPLIT (70/30) ---
+# Auto aus settings.json falls leer
+if [ -z "$SYMBOLS" ]; then
+    SYMBOLS=$("$PYTHON" -c "
+import json
+s = json.load(open('settings.json'))
+pairs = s.get('optimization_settings', {}).get('candidate_strategies', [])
+syms = list(dict.fromkeys(p['symbol'].split('/')[0] for p in pairs))
+print(' '.join(syms))
+" 2>/dev/null)
+    echo -e "  ${BLUE}Auto-Paare aus settings.json: $SYMBOLS${NC}"
+fi
+if [ -z "$TIMEFRAMES" ]; then
+    TIMEFRAMES=$("$PYTHON" -c "
+import json
+s = json.load(open('settings.json'))
+pairs = s.get('optimization_settings', {}).get('candidate_strategies', [])
+tfs = list(dict.fromkeys(p['timeframe'] for p in pairs))
+print(' '.join(tfs))
+" 2>/dev/null)
+    echo -e "  ${BLUE}Auto-Zeitfenster aus settings.json: $TIMEFRAMES${NC}"
+fi
+
+# --- OOS-SPLIT ---
 echo ""
 echo -e "${BLUE}=======================================================${NC}"
-echo "  Walk-Forward Out-of-Sample Split (optional)"
+echo "  Walk-Forward Out-of-Sample Test (optional)"
 echo -e "${BLUE}=======================================================${NC}"
 echo ""
-echo "  Die Pipeline kann einen 70/30-Split verwenden:"
-echo "  70% = Training (Optimizer sieht NUR diese Daten)"
-echo "  30% = Komplett verborgen — niemals von run_pipeline.sh genutzt"
+echo "  Konzept:"
+echo "    1. Du wählst ein OOS-Datum (z.B. 2026-01-01)"
+echo "    2. Optimizer trainiert NUR auf Daten VOR diesem Datum"
+echo "    3. Die Daten AB diesem Datum sind komplett verborgen"
+echo "       — niemals von run_pipeline.sh genutzt"
+echo "    4. run_analysis.sh kann die OOS-Daten auswerten"
 echo ""
-echo "  Optionen:"
-echo "    'auto' = automatisch 70/30 berechnen"
-echo "    JJJJ-MM-TT = eigenes OOS-Startdatum"
-echo "    leer = kein OOS (kompletter Zeitraum)"
-echo ""
-read -p "OOS-Startdatum ['auto', JJJJ-MM-TT, leer=kein OOS]: " OOS_INPUT
+read -p "OOS-Startdatum eingeben [leer=kein OOS-Test, Standard-Modus]: " OOS_INPUT
 
 OOS_START=""
+TODAY=$(date +%F)
+
 if [ -n "$OOS_INPUT" ]; then
-    if [ "$OOS_INPUT" == "auto" ]; then
-        # 70/30: Lookback für 1h als Basis (365 Tage), dann 70% davon
-        REF_LOOKBACK=365
-        OOS_DAYS=$(( REF_LOOKBACK * 30 / 100 ))  # 30% = ~110 Tage
-        OOS_START=$(date -d "$OOS_DAYS days ago" +%F)
-    else
-        OOS_START="$OOS_INPUT"
-    fi
+    OOS_START="$OOS_INPUT"
     TRAIN_END=$(date -d "$OOS_START - 1 day" +%F)
-    OOS_TOTAL=$(( ($(date +%s) - $(date -d "$OOS_START" +%s)) / 86400 ))
+    OOS_DAYS=$(( ($(date +%s) - $(date -d "$OOS_START" +%s)) / 86400 ))
+
+    # Automatisches Startdatum basierend auf Zeitfenster, rückwärts ab OOS-Datum
+    _AUTO_LOOKBACK=730
+    for tf in $TIMEFRAMES; do
+        case "$tf" in
+            5m|15m) _AUTO_LOOKBACK=90 ;;
+            30m|1h) _AUTO_LOOKBACK=548 ;;
+            2h)     _AUTO_LOOKBACK=730 ;;
+            4h|6h)  _AUTO_LOOKBACK=1095 ;;
+            1d)     _AUTO_LOOKBACK=1825 ;;
+        esac
+        break
+    done
+    _AUTO_START=$(date -d "$OOS_START - $_AUTO_LOOKBACK days" +%F)
+
     echo ""
     echo -e "${GREEN}✔ OOS-Modus aktiv:${NC}"
     echo ""
-    echo "  Trainingsperiode:  bis ${TRAIN_END}  (Pipeline trainiert hier)"
-    echo "  OOS-Periode:       ab ${OOS_START}  (${OOS_TOTAL} Tage — komplett verborgen)"
+    printf "  Trainingsperiode:  %-12s ──────────────────────► %s\n" "$_AUTO_START" "$TRAIN_END"
+    printf "  Backtestperiode:   %-12s ──────────────────────► %-12s  (dunkler Bereich)\n" "$OOS_START" "$TODAY"
     echo ""
-    printf "  %-52s\n" "────────────────────────────────────────────────────"
-    printf "  %-30s %-20s\n" "◄──── TRAINING (70%) ────►" "◄── OOS (30%) ──►"
-    printf "  %-52s\n" "────────────────────────────────────────────────────"
+    echo "  ────────────────────────────────────────────────────────────────────"
+    printf "  ◄──── TRAINING (%d Tage) ────►  ◄── OOS (%d Tage) ──►\n" "$_AUTO_LOOKBACK" "$OOS_DAYS"
+    printf "  %-24s %-16s  %-12s  %s\n" "$_AUTO_START" "$TRAIN_END" "$OOS_START" "$TODAY"
+    echo "  ────────────────────────────────────────────────────────────────────"
     echo ""
+    echo "  (Startdatum kann unten angepasst werden — 'a' = Automatik = $_AUTO_START)"
+    echo ""
+
     # OOS-Datum in settings.json speichern
-    .venv/bin/python3 -c "
-import json, os
+    "$PYTHON" -c "
+import json
 s = json.load(open('settings.json'))
 s.setdefault('optimization_settings', {})['oos_start_date'] = '${OOS_START}'
-s['optimization_settings']['_oos_note'] = '30% OOS: Pipeline trainiert NUR auf Daten vor diesem Datum.'
+s['optimization_settings']['_oos_note'] = 'Pipeline trainiert NUR auf Daten vor diesem Datum.'
 json.dump(s, open('settings.json', 'w'), indent=4)
-print('  settings.json: oos_start_date = ${OOS_START} gesetzt.')
 "
 else
     echo -e "${GREEN}✔ Kein OOS — kompletter Zeitraum wird genutzt.${NC}"
-    # oos_start_date auf null setzen
-    .venv/bin/python3 -c "
+    "$PYTHON" -c "
 import json
 s = json.load(open('settings.json'))
 s.setdefault('optimization_settings', {})['oos_start_date'] = None
 json.dump(s, open('settings.json', 'w'), indent=4)
 " 2>/dev/null || true
 fi
-read -p "CPU-Kerne für Optimierung [Standard: -1 für alle]: " N_CORES; N_CORES=${N_CORES:--1}
-read -p "Anzahl Optimierungs-Trials [Standard: 200]: " N_TRIALS; N_TRIALS=${N_TRIALS:-200}
 
-echo -e "\n${YELLOW}Wähle einen Optimierungs-Modus:${NC}"; echo "  1) Strenger Modus (Profit mit Constraints)"; echo "  2) 'Finde das Beste' (Max Score, nur DD Constraint)"
+# --- Empfehlung Rückblick ---
+echo -e "${BLUE}--- Empfehlung: Optimaler Rückblick-Zeitraum ---${NC}"
+printf "+------------------+------------------------------+\n"
+printf "| Zeitfenster      | Empfohlener Rückblick (Tage) |\n"
+printf "+------------------+------------------------------+\n"
+printf "| 5m, 15m          | 90 Tage   (~3 Monate)        |\n"
+printf "| 30m, 1h          | 548 Tage  (~1,5 Jahre)       |\n"
+printf "| 2h               | 730 Tage  (~2 Jahre)         |\n"
+printf "| 4h, 6h           | 1095 Tage (~3 Jahre)         |\n"
+printf "| 1d               | 1825 Tage (~5 Jahre)         |\n"
+printf "+------------------+------------------------------+\n"
+if [ -n "$OOS_START" ]; then
+    echo "  Rückblick wird rückwärts ab OOS-Datum ($OOS_START) berechnet"
+fi
+echo ""
+read -p "Startdatum (JJJJ-MM-TT) oder 'a' für Automatik [Standard: a]: " START_DATE_INPUT
+START_DATE_INPUT=${START_DATE_INPUT:-a}
+
+# Bestätigung des Zeitraums anzeigen
+if [ -n "$OOS_START" ]; then
+    if [ "$START_DATE_INPUT" == "a" ]; then
+        _SHOW_START="$_AUTO_START"
+    else
+        _SHOW_START="$START_DATE_INPUT"
+    fi
+    echo ""
+    echo "  Trainingsperiode:  $_SHOW_START  →  $TRAIN_END"
+    echo "  OOS-Periode:       ab $OOS_START  →  $TODAY  (komplett verborgen)"
+    echo ""
+fi
+
+read -p "Startkapital in USDT [Standard: 1000]: " START_CAPITAL; START_CAPITAL=${START_CAPITAL:-1000}
+read -p "CPU-Kerne [Standard: -1 für alle]: " N_CORES; N_CORES=${N_CORES:--1}
+read -p "Anzahl Trials [Standard: 200]: " N_TRIALS; N_TRIALS=${N_TRIALS:-200}
+
+echo ""
+echo -e "${YELLOW}Wähle einen Optimierungs-Modus:${NC}"
+echo "  1) Strenger Modus    (Profitabel + WR >= Min. Win-Rate + MaxDD <= Limit)"
+echo "  2) Best-Profit-Modus (Nur MaxDD-Limit, maximiert PnL)"
 read -p "Auswahl (1-2) [Standard: 1]: " OPTIM_MODE_CHOICE; OPTIM_MODE_CHOICE=${OPTIM_MODE_CHOICE:-1}
 if [ "$OPTIM_MODE_CHOICE" == "1" ]; then
     OPTIM_MODE_ARG="strict"
     read -p "Max Drawdown % [Standard: 30]: " MAX_DD; MAX_DD=${MAX_DD:-30}
-    # WinRate ist für Envelope weniger kritisch, Standard 0
-    read -p "Min Win-Rate % [Standard: 0 (Ignorieren)]: " MIN_WR; MIN_WR=${MIN_WR:-0}
+    read -p "Min Win-Rate % [Standard: 0]: " MIN_WR; MIN_WR=${MIN_WR:-0}
     read -p "Min PnL % [Standard: 0]: " MIN_PNL; MIN_PNL=${MIN_PNL:-0}
 else
     OPTIM_MODE_ARG="best_profit"
-    # Evtl. höheres DD erlauben im Best Profit Modus
-    read -p "Max Drawdown % [Standard: 50]: " MAX_DD; MAX_DD=${MAX_DD:-50}
-    MIN_WR=0 # Keine Win-Rate-Beschränkung
-    MIN_PNL=-99999 # Negativer PnL erlaubt
+    read -p "Max Drawdown % [Standard: 30]: " MAX_DD; MAX_DD=${MAX_DD:-30}
+    MIN_WR=0
+    MIN_PNL=-99999
 fi
 
-# Schleife für Symbole und Zeitrahmen
+# --- Schleife ---
 for symbol in $SYMBOLS; do
     for timeframe in $TIMEFRAMES; do
-        echo -e "\n${BLUE}=======================================================${NC}"
-        echo -e "${BLUE}  Bearbeite Pipeline für: $symbol ($timeframe)${NC}"
-
-        # Automatisches Startdatum berechnen
+        # Startdatum berechnen
         if [ "$START_DATE_INPUT" == "a" ]; then
-             lookback_days=365 # Standard
-             # Lookback basierend auf Zeitfenster anpassen
-             case "$timeframe" in
-                 5m|15m) lookback_days=60 ;;
-                 30m|1h) lookback_days=180 ;;
-                 2h|4h) lookback_days=365 ;;
-                 6h|1d) lookback_days=730 ;;
-             esac
-             CURRENT_START_DATE=$(date -d "$lookback_days days ago" +%F)
-             echo -e "${BLUE}  Automatischer Lookback: $lookback_days Tage${NC}"
+            lookback_days=730
+            case "$timeframe" in
+                5m|15m) lookback_days=90 ;;
+                30m|1h) lookback_days=548 ;;
+                2h)     lookback_days=730 ;;
+                4h|6h)  lookback_days=1095 ;;
+                1d)     lookback_days=1825 ;;
+            esac
+            if [ -n "$OOS_START" ]; then
+                CURRENT_START_DATE=$(date -d "$OOS_START - $lookback_days days" +%F)
+            else
+                CURRENT_START_DATE=$(date -d "$lookback_days days ago" +%F)
+            fi
         else
             CURRENT_START_DATE="$START_DATE_INPUT"
         fi
-        # OOS: Enddatum auf Trainingsgrenze kappen
+
+        # OOS: Enddatum kappen
         if [ -n "$OOS_START" ]; then
             CURRENT_END_DATE=$(date -d "$OOS_START - 1 day" +%F)
-            echo -e "${YELLOW}  OOS aktiv: Optimizer sieht nur bis ${CURRENT_END_DATE}${NC}"
         else
-            CURRENT_END_DATE=$(date +%F)
+            CURRENT_END_DATE="$TODAY"
         fi
-        echo -e "${BLUE}  Datenzeitraum: $CURRENT_START_DATE bis $CURRENT_END_DATE${NC}"
+
+        echo ""
+        echo -e "${BLUE}=======================================================${NC}"
+        echo -e "${BLUE}  Bearbeite Pipeline für: $symbol ($timeframe)${NC}"
+        echo -e "${BLUE}  Trainingszeitraum: $CURRENT_START_DATE bis $CURRENT_END_DATE${NC}"
+        if [ -n "$OOS_START" ]; then
+            echo -e "${YELLOW}  OOS-Periode:       ab $OOS_START  →  $TODAY  (verborgen)${NC}"
+        fi
         echo -e "${BLUE}=======================================================${NC}"
 
-        # --- Nur noch Stufe: Optimierung ---
         echo -e "\n${GREEN}>>> Starte Optimierung für $symbol ($timeframe)...${NC}"
-        # Führe den Optimizer aus
         "$PYTHON" "$OPTIMIZER" \
-            --symbols "$symbol" \
-            --timeframes "$timeframe" \
-            --start_date "$CURRENT_START_DATE" \
-            --end_date "$CURRENT_END_DATE" \
-            --jobs "$N_CORES" \
+            --symbols      "$symbol" \
+            --timeframes   "$timeframe" \
+            --start_date   "$CURRENT_START_DATE" \
+            --end_date     "$CURRENT_END_DATE" \
+            --jobs         "$N_CORES" \
             --max_drawdown "$MAX_DD" \
             --start_capital "$START_CAPITAL" \
             --min_win_rate "$MIN_WR" \
-            --trials "$N_TRIALS" \
-            --min_pnl "$MIN_PNL" \
-            --mode "$OPTIM_MODE_ARG" \
-            --config_suffix "_envelope" # Wichtig: Suffix für Config-Dateien
+            --trials       "$N_TRIALS" \
+            --min_pnl      "$MIN_PNL" \
+            --mode         "$OPTIM_MODE_ARG" \
+            --config_suffix "_envelope"
 
-        # Fehlerprüfung
         if [ $? -ne 0 ]; then
             echo -e "${RED}Fehler im Optimierer für $symbol ($timeframe). Überspringe...${NC}"
         else
@@ -176,110 +242,46 @@ for symbol in $SYMBOLS; do
     done
 done
 
-echo -e "\n${BLUE}=======================================================${NC}"
+echo ""
+echo -e "${BLUE}=======================================================${NC}"
 echo -e "${BLUE}✔ Alle Optimierungen abgeschlossen!${NC}"
 echo -e "${BLUE}=======================================================${NC}"
 
-# --- INTERAKTIVE ABFRAGE: SETTINGS AKTUALISIEREN ---
-echo -e "\n${YELLOW}Möchtest du die optimierten Strategien automatisch in settings.json übernehmen?${NC}"
-echo -e "${YELLOW}(Dies ersetzt die aktuellen active_strategies mit den neu optimierten)${NC}"
+# --- Settings aktualisieren ---
+echo ""
+echo -e "${YELLOW}Möchtest du die optimierten Strategien automatisch in settings.json übernehmen?${NC}"
 read -p "Settings aktualisieren? (j/n) [Standard: n]: " UPDATE_SETTINGS_CHOICE
 UPDATE_SETTINGS_CHOICE=${UPDATE_SETTINGS_CHOICE:-n}
 
 if [[ "$UPDATE_SETTINGS_CHOICE" == "j" || "$UPDATE_SETTINGS_CHOICE" == "J" ]]; then
-    echo -e "\n${GREEN}>>> Aktualisiere settings.json mit optimierten Strategien...${NC}"
-    
-    # Erstelle temporäres Python-Skript zum Aktualisieren
-    python3 << 'PYTHON_SCRIPT'
-import json
-import os
-import glob
-
-# Pfade
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-SETTINGS_FILE = os.path.join(PROJECT_ROOT, 'settings.json')
-CONFIGS_DIR = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
-
-# Lade aktuelle settings.json
-try:
-    with open(SETTINGS_FILE, 'r') as f:
-        settings = json.load(f)
-except Exception as e:
-    print(f"❌ Fehler beim Laden von settings.json: {e}")
-    exit(1)
-
-# Finde alle optimierten Config-Dateien (envelope)
-config_files = glob.glob(os.path.join(CONFIGS_DIR, 'config_*_envelope.json'))
-
-if not config_files:
-    print("⚠️  Keine optimierten Config-Dateien gefunden.")
+    echo -e "\n${GREEN}>>> Aktualisiere settings.json...${NC}"
+    "$PYTHON" - <<'PYEOF'
+import json, os, glob
+ROOT = os.path.abspath('.')
+settings = json.load(open(os.path.join(ROOT, 'settings.json')))
+configs  = glob.glob(os.path.join(ROOT, 'src', 'ltbbot', 'strategy', 'configs', 'config_*_envelope.json'))
+if not configs:
+    print("⚠  Keine Config-Dateien gefunden.")
     exit(0)
-
-print(f"✓ Gefundene optimierte Configs: {len(config_files)}")
-
-# Erstelle neue active_strategies Liste
-new_strategies = []
-
-for config_file in sorted(config_files):
-    try:
-        # Lade Config um Symbol und Timeframe zu extrahieren
-        with open(config_file, 'r') as f:
-            config = json.load(f)
-        
-        symbol = config.get('market', {}).get('symbol')
-        timeframe = config.get('market', {}).get('timeframe')
-        
-        if symbol and timeframe:
-            # Prüfe ob bereits in Liste (Duplikate vermeiden)
-            exists = any(s.get('symbol') == symbol and s.get('timeframe') == timeframe 
-                        for s in new_strategies)
-            
-            if not exists:
-                new_strategies.append({
-                    "symbol": symbol,
-                    "timeframe": timeframe,
-                    "active": True,  # Automatisch aktiviert
-                    "_comment": "Optimiert am " + os.path.basename(config_file)
-                })
-                print(f"  ✓ Hinzugefügt: {symbol} ({timeframe})")
-    except Exception as e:
-        print(f"  ⚠️  Fehler beim Lesen von {os.path.basename(config_file)}: {e}")
-        continue
-
-# Aktualisiere settings.json
-if new_strategies:
-    settings['live_trading_settings']['active_strategies'] = new_strategies
-    settings['live_trading_settings']['use_auto_optimizer_results'] = True
-    settings['live_trading_settings']['_last_update'] = str(__import__('datetime').datetime.now())
-    
-    # Speichere
-    with open(SETTINGS_FILE, 'w') as f:
-        json.dump(settings, f, indent=4)
-    
-    print(f"\n✅ settings.json erfolgreich aktualisiert!")
-    print(f"   Total Strategien: {len(new_strategies)}")
-    print(f"   Status: ALLE AKTIVIERT (active: true)")
-    print(f"\n✅ Strategien sind bereit für Live-Trading!")
-else:
-    print("⚠️  Keine Strategien zum Aktualisieren gefunden.")
-
-PYTHON_SCRIPT
-
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✔ settings.json wurde erfolgreich aktualisiert!${NC}"
-        echo -e "\n${YELLOW}📝 Nächste Schritte:${NC}"
-        echo -e "   1. Öffne und prüfe settings.json bei Bedarf"
-        echo -e "   2. Starte den Bot neu: .venv/bin/python master_runner.py"
-    else
-        echo -e "${RED}❌ Fehler beim Aktualisieren der settings.json${NC}"
-    fi
+new_strats = []
+for f in sorted(configs):
+    cfg = json.load(open(f))
+    sym = cfg.get('market', {}).get('symbol')
+    tf  = cfg.get('market', {}).get('timeframe')
+    if sym and tf and not any(s['symbol']==sym and s['timeframe']==tf for s in new_strats):
+        new_strats.append({'symbol': sym, 'timeframe': tf, 'active': True})
+        print(f"  ✔ {sym} ({tf})")
+settings['live_trading_settings']['active_strategies'] = new_strats
+settings['live_trading_settings']['use_auto_optimizer_results'] = True
+json.dump(settings, open(os.path.join(ROOT, 'settings.json'), 'w'), indent=4)
+print(f"\n✅ settings.json aktualisiert — {len(new_strats)} Strategie(n) aktiv.")
+PYEOF
 else
     echo -e "${GREEN}✔ settings.json wurde NICHT verändert.${NC}"
-    echo -e "${YELLOW}Tipp: Du kannst die optimierten Configs manuell aktivieren in:${NC}"
-    echo -e "      src/ltbbot/strategy/configs/config_*_envelope.json"
 fi
 
 deactivate
-echo -e "\n${BLUE}=======================================================${NC}"
+echo ""
+echo -e "${BLUE}=======================================================${NC}"
 echo -e "${BLUE}✔ Pipeline abgeschlossen!${NC}"
 echo -e "${BLUE}=======================================================${NC}"
