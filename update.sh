@@ -29,4 +29,29 @@ find . -type d -name "__pycache__" -delete
 echo "6. Setze Ausführungsrechte für alle .sh-Skripte..."
 chmod +x *.sh
 
+# 7. venv-Gesundheitscheck — Rebuild falls pip kaputt ist
+echo "7. Prüfe venv-Gesundheit..."
+VENV_OK=true
+if [ ! -f ".venv/bin/python3" ]; then
+    echo "   venv fehlt — wird neu erstellt..."
+    VENV_OK=false
+elif ! .venv/bin/python3 -c "import pip" 2>/dev/null; then
+    echo "   pip nicht importierbar — venv wird neu erstellt..."
+    VENV_OK=false
+elif ! .venv/bin/pip --version 2>/dev/null | grep -q pip; then
+    echo "   pip defekt — venv wird neu erstellt..."
+    VENV_OK=false
+fi
+
+if [ "$VENV_OK" = false ]; then
+    rm -rf .venv
+    python3 -m venv .venv
+    echo "   Installiere Dependencies..."
+    .venv/bin/pip install --quiet --upgrade pip
+    .venv/bin/pip install --quiet -r requirements.txt
+    echo "   ✅ venv neu erstellt und Dependencies installiert."
+else
+    echo "   ✅ venv ist gesund."
+fi
+
 echo "✅ Update erfolgreich abgeschlossen. Dein Bot ist jetzt auf dem neuesten Stand."
