@@ -306,6 +306,21 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
         )
     _send(token, chat, '\n'.join(lines), send_telegram)
 
+    # Bestes Ergebnis in settings.json schreiben
+    try:
+        with open(os.path.join(PROJECT_ROOT, 'settings.json')) as f:
+            s = json.load(f)
+        s.setdefault('optimization_settings', {})['backtest_lookback_weeks'] = best_lb
+        s['optimization_settings']['_backtest_lookback_note'] = (
+            'Wie viele Wochen zurueck der Portfolio-Optimizer schaut. '
+            'Optimal per run_analysis.sh Analyse 1 ermittelt.'
+        )
+        with open(os.path.join(PROJECT_ROOT, 'settings.json'), 'w') as f:
+            json.dump(s, f, indent=4)
+        print(f"  settings.json: backtest_lookback_weeks = {best_lb} gesetzt.")
+    except Exception as e:
+        print(f"  WARNUNG: settings.json konnte nicht aktualisiert werden: {e}")
+
 
 # ─── Analyse 2: Envelope Parameter Walk-Forward ───────────────────────────────
 
