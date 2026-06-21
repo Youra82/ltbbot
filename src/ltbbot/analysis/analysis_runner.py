@@ -28,7 +28,8 @@ from ltbbot.analysis.backtester import load_data, run_envelope_backtest
 from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
 from ltbbot.utils.telegram import send_message, send_photo
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.ERROR)
+logging.getLogger('ltbbot').setLevel(logging.ERROR)
 
 TMP = '/tmp'
 DARK_BG = '#0d1117'
