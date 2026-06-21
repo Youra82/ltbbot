@@ -345,6 +345,88 @@ Alle Modi nutzen denselben einheitlichen Backtesting-Engine:
 
 ---
 
+## 🔬 Strategie-Analysen (`run_analysis.sh`)
+
+Das **`run_analysis.sh`** Script bietet 9 tiefe Analysen zur Bewertung und Optimierung der Envelope-Strategie — ähnlich wie das Analyse-Script beim dnabot, aber passend für Mean-Reversion.
+
+### Starten
+
+```bash
+chmod +x run_analysis.sh
+./run_analysis.sh
+```
+
+Ein interaktives Menü erscheint:
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║         ltbbot — Envelope Strategie Analysen                ║
+╚══════════════════════════════════════════════════════════════╝
+
+  Walk-Forward / Robustheit
+  1  Walk-Forward Lookback-Analyse
+  2  Envelope Parameter Walk-Forward (SL / Period)
+
+  Risiko / Kosten
+  3  Slippage & Fee Impact
+  4  Monte Carlo Simulation
+
+  Portfolio / Pair-Auswahl
+  5  Anti-Korrelations-Portfolio
+  6  Kelly Position Sizing
+
+  Strategie-Einblicke
+  7  Regime Performance Analyse
+  8  Tageszeit-Analyse
+  9  Drawdown Duration Analyse
+
+  0  Alle Analysen nacheinander (Batch)
+```
+
+Alle Analysen verwenden die `active_strategies` aus `settings.json` und senden Ergebnisse (Charts + Text) per Telegram.
+
+### Analyse-Übersicht
+
+| # | Analyse | Frage |
+|---|---------|-------|
+| 1 | **Walk-Forward Lookback** | Wie viele Wochen zurück soll der Auto-Optimizer schauen? Rolling WF für 1/2/4/8/12/26 Wochen — Calmar-Vergleich auf demselben OOS-Zeitraum. Bestes Calmar → direkt in `optimization_settings.backtest_lookback_weeks` übernehmbar. |
+| 2 | **Envelope Parameter Walk-Forward** | Ist der aktuelle Stop-Loss-Wert optimal? WF-Vergleich für SL ×0.5, ×0.75, ×1.0, ×1.5, ×2.0 — ohne Lookahead. |
+| 3 | **Slippage & Fee Impact** | Ist der Bot nach realen Gebühren noch profitabel? Gebühren-Sweep 0–0.20%/Seite + Slippage-Sweep bei SL-Execution. Break-Even-Gebühr wird berechnet (Bitget Taker = 0.06%). |
+| 4 | **Monte Carlo** | Was ist das realistisch schlechteste Ergebnis? 10.000 zufällige Permutationen der echten Trade-Sequenz. 5./50./95. Perzentil der Equity + Ruin-Wahrscheinlichkeit (<50% Kapital). |
+| 5 | **Anti-Korrelations-Portfolio** | Welche Pairs verlieren und gewinnen selten gleichzeitig? Pearson-Korrelationsmatrix der wöchentlichen PnL je Pair. Stark positiv korrelierte Pairs (>0.7) bringen keinen Diversifikationsvorteil. |
+| 6 | **Kelly Position Sizing** | Wie viel sollte man pro Pair riskieren — mathematisch optimal? Kelly-Kriterium pro aktivem Pair. Half-Kelly (empfohlen) vs. aktueller SL-Prozentsatz. |
+| 7 | **Regime Performance** | In welchen Marktphasen funktioniert Envelope am besten? Win-Rate und PnL nach Regime (RANGE / TREND / UNCERTAIN / STRONG\_TREND) für alle aktiven Pairs. |
+| 8 | **Tageszeit-Analyse** | Performen Entries zu bestimmten Stunden besser? Win-Rate und PnL pro Einstiegs-Stunde (UTC) + Session-Auswertung (Asia / Europe / US). |
+| 9 | **Drawdown Duration** | Wie lange dauern Verlustphasen? Scatter (Tiefe vs. Erholungsdauer), Histogramm der Erholungsdauern, Equity-Kurve mit markierten DD-Zonen. |
+
+### Direkt aufrufen (ohne Menü)
+
+```bash
+# Beispiel: Monte Carlo mit 50 USDT Kapital, 365 Tage Lookback
+.venv/bin/python3 src/ltbbot/analysis/analysis_runner.py \
+    --mode 4 --capital 50 --lookback 365 --simulations 10000
+
+# Walk-Forward Lookback ohne Telegram
+.venv/bin/python3 src/ltbbot/analysis/analysis_runner.py \
+    --mode 1 --capital 50 --no-telegram
+
+# Alle Modi: 1–9
+```
+
+### Voraussetzungen
+
+Die Analysen benötigen mindestens eine aktive Strategie mit existierenden Backtest-Daten:
+
+```bash
+# Zuerst Optimizer laufen lassen (erzeugt Configs)
+./run_pipeline.sh
+
+# Dann Analysen starten
+./run_analysis.sh
+```
+
+---
+
 ## 📊 Monitoring & Status
 
 ### Status-Dashboard
@@ -543,24 +625,31 @@ ltbbot/
 │   └── ltbbot/
 │       ├── strategy/              # Trading-Logik
 │       │   ├── run.py
-│       │   ├── envelope_detector.py
+│       │   ├── envelope_logic.py
 │       │   └── configs/           # Optimierte Konfigurationen (JSON)
 │       ├── analysis/              # Analyse & Optimierung
-│       │   ├── backtester.py      # Einzel-Strategie Backtest
-│       │   ├── optimizer.py       # Optuna Parameter-Suche
-│       │   ├── portfolio_optimizer.py  # Greedy Portfolio-Optimierung
-│       │   ├── portfolio_simulator.py  # Multi-Strategie Simulation
-│       │   ├── show_results.py    # Interaktive Ergebnisanzeige
+│       │   ├── backtester.py          # Einzel-Strategie Backtest
+│       │   ├── optimizer.py           # Optuna Parameter-Suche
+│       │   ├── portfolio_optimizer.py # Greedy Portfolio-Optimierung
+│       │   ├── portfolio_simulator.py # Multi-Strategie Simulation
+│       │   ├── analysis_runner.py     # 9 Strategie-Analysen (run_analysis.sh)
+│       │   ├── show_results.py        # Interaktive Ergebnisanzeige
 │       │   └── interactive_status.py  # Live-Status Dashboard
 │       └── utils/                 # Hilfsfunktionen
 │           ├── exchange.py
-│           └── telegram.py
+│           ├── telegram.py
+│           └── trade_manager.py
 ├── tests/                         # Unit-Tests
 ├── data/                          # Marktdaten & Cache
 ├── logs/                          # Log-Files
 ├── artifacts/                     # Ergebnisse & DB
 ├── master_runner.py               # Haupt-Entry-Point
-├── run_pipeline.sh                # Optimierungs-Pipeline (interaktiv)
+├── run_pipeline.sh                # Optuna Parameter-Suche (interaktiv)
+├── run_analysis.sh                # 9 Strategie-Analysen (interaktiv)
+├── run_portfolio_optimizer.py     # Portfolio-Selektion (Greedy)
+├── auto_portfolio_scheduler.py    # Automatischer Portfolio-Optimizer
+├── auto_optimizer_scheduler.py    # Automatischer Optuna-Scheduler (manuell)
+├── show_chart.py                  # Envelope-Chart per Telegram senden
 ├── show_results.sh                # Backtest & Portfolio-Analyse
 ├── push_configs.sh                # Configs & Settings auf Repo pushen
 ├── settings.json                  # Konfiguration
