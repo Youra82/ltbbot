@@ -16,7 +16,8 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
-SLIPPAGE_PCT_PER_TRADE = 0.0005  # 0.05% Slippage pro Ausführung (Market Order TP/SL)
+SLIPPAGE_PCT_EXIT  = 0.0005  # 0.05% Slippage auf Exit (Market Order TP/SL)
+SLIPPAGE_PCT_ENTRY = 0.0012  # 0.12% Slippage auf Entry (Trigger-Limit, wie backtester.py)
 # --- ENDE KONSTANTEN ---
 
 
@@ -114,13 +115,12 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
             current_candle_pnl = strategy_dfs[strategy_id_pnl].loc[ts]
             current_price_for_pnl = current_candle_pnl['open']
             for layer_pnl_calc in open_layers_pnl:
-                pos_lev_pnl    = layer_pnl_calc.get('leverage', 1)
                 pos_amount_pnl = layer_pnl_calc['amount_coins']
                 pos_entry_pnl  = layer_pnl_calc['entry_price']
                 if layer_pnl_calc['side'] == 'long':
-                    unrealized_pnl_start += (current_price_for_pnl - pos_entry_pnl) * pos_amount_pnl * pos_lev_pnl
+                    unrealized_pnl_start += (current_price_for_pnl - pos_entry_pnl) * pos_amount_pnl
                 else:
-                    unrealized_pnl_start += (pos_entry_pnl - current_price_for_pnl) * pos_amount_pnl * pos_lev_pnl
+                    unrealized_pnl_start += (pos_entry_pnl - current_price_for_pnl) * pos_amount_pnl
 
         total_equity_at_candle_start = equity + unrealized_pnl_start
         equity_curve.append({'timestamp': ts, 'equity': total_equity_at_candle_start})
@@ -182,19 +182,19 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
 
                 if exited and exit_price is not None:
                     if pos_side == 'long':
-                        pnl = (exit_price - pos_entry) * pos_amount * leverage
+                        pnl = (exit_price - pos_entry) * pos_amount
                     else:
-                        pnl = (pos_entry - exit_price) * pos_amount * leverage
+                        pnl = (pos_entry - exit_price) * pos_amount
 
-                    entry_value = pos_entry * pos_amount * leverage
-                    exit_value  = exit_price * pos_amount * leverage
-                    fees = (entry_value * fee_pct) + (exit_value * fee_pct)
+                    entry_notional = pos_entry * pos_amount
+                    exit_notional  = exit_price * pos_amount
+                    fees = (entry_notional * fee_pct) + (exit_notional * fee_pct)
                     pnl -= fees
-                    pnl -= abs(exit_value * SLIPPAGE_PCT_PER_TRADE)
+                    pnl -= abs(exit_notional  * SLIPPAGE_PCT_EXIT)
+                    pnl -= abs(entry_notional * SLIPPAGE_PCT_ENTRY)
 
                     total_exit_pnl_this_step += pnl
-                    entry_value_notional = pos_entry * pos_amount
-                    pnl_pct = (pnl / (entry_value_notional / leverage * leverage)) * 100 if entry_value_notional > 0 else 0.0
+                    pnl_pct = (pnl / entry_notional) * 100 if entry_notional > 0 else 0.0
                     reason = 'WIN' if pnl > 0 else 'SL'
                     closed_trades_portfolio.append({
                         'exit_time':    ts,
