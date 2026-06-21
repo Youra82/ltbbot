@@ -160,7 +160,9 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
     # Wichtig: portfolio_simulator erfasst unrealisierten PnL bei jeder Kerze → DD höher als im
     # Backtester (der nur bei Trade-Exits aufzeichnet). Deshalb nutzen wir run_envelope_backtest()
     # für die akkurate DD-Prüfung – konsistent mit den Ergebnissen aus Option 1 (Einzel-Analyse).
-    if len(best_portfolio_ids) > 1:
+    # Dieser Check läuft immer (auch bei 1 Strategie), da der portfolio_simulator die Strategien
+    # anders bewertet als der Backtester → ETH könnte vom Backtester besser bewertet werden.
+    if len(best_portfolio_ids) >= 1:
         portfolio_pnl = best_portfolio_result.get('total_pnl_pct', -9999)
         logger.info("Prüfe ob eine Einzelstrategie das Portfolio übertrifft (Backtester-Verifikation)...")
 
