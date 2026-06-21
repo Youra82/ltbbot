@@ -364,16 +364,21 @@ def main() -> int:
     max_dd    = args.max_dd
     end_date  = args.end_date or date.today().strftime('%Y-%m-%d')
 
-    # Lookback automatisch aus Timeframes ableiten
+    # Lookback bestimmen: backtest_lookback_weeks hat Vorrang (aus Walk-Forward Analyse)
     if args.start_date:
         start_date = args.start_date
     else:
-        active_tfs = [
-            s.get('timeframe', '1h')
-            for s in settings.get('live_trading_settings', {}).get('active_strategies', [])
-            if s.get('active', True)
-        ]
-        lookback = max((LOOKBACK_MAP.get(tf, 365) for tf in active_tfs), default=365)
+        lookback_weeks = opt.get('backtest_lookback_weeks')
+        if lookback_weeks:
+            lookback   = int(lookback_weeks) * 7
+            print(f"  Lookback: {lookback_weeks} Wochen (aus backtest_lookback_weeks)")
+        else:
+            active_tfs = [
+                s.get('timeframe', '1h')
+                for s in settings.get('live_trading_settings', {}).get('active_strategies', [])
+                if s.get('active', True)
+            ]
+            lookback = max((LOOKBACK_MAP.get(tf, 365) for tf in active_tfs), default=365)
         start_date = (date.today() - timedelta(days=lookback)).strftime('%Y-%m-%d')
 
     if args.replot:
