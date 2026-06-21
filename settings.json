@@ -1,30 +1,15 @@
 {
     "live_trading_settings": {
-        "use_auto_optimizer_results": false,
+        "use_auto_optimizer_results": true,
         "active_strategies": [
             {
-                "symbol": "DOGE/USDT:USDT",
-                "timeframe": "15m",
-                "active": true
-            },
-            {
-                "symbol": "LTC/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "BNB/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "BTC/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "ETH/USDT:USDT",
+                "timeframe": "1d",
                 "active": true
             },
             {
                 "symbol": "XRP/USDT:USDT",
-                "timeframe": "15m",
+                "timeframe": "1d",
                 "active": true
             }
         ]
@@ -33,25 +18,73 @@
         "enabled": true,
         "_info": "candidate_strategies = Pool aller Paare fuer Optuna. active_strategies = was gerade tradet.",
         "candidate_strategies": [
-            {"symbol": "BTC/USDT:USDT",  "timeframe": "1h"},
-            {"symbol": "BTC/USDT:USDT",  "timeframe": "4h"},
-            {"symbol": "ETH/USDT:USDT",  "timeframe": "1h"},
-            {"symbol": "ETH/USDT:USDT",  "timeframe": "4h"},
-            {"symbol": "BNB/USDT:USDT",  "timeframe": "1h"},
-            {"symbol": "BNB/USDT:USDT",  "timeframe": "4h"},
-            {"symbol": "XRP/USDT:USDT",  "timeframe": "15m"},
-            {"symbol": "XRP/USDT:USDT",  "timeframe": "1h"},
-            {"symbol": "DOGE/USDT:USDT", "timeframe": "15m"},
-            {"symbol": "DOGE/USDT:USDT", "timeframe": "1h"},
-            {"symbol": "LTC/USDT:USDT",  "timeframe": "1h"},
-            {"symbol": "LTC/USDT:USDT",  "timeframe": "4h"},
-            {"symbol": "SOL/USDT:USDT",  "timeframe": "1h"},
-            {"symbol": "SOL/USDT:USDT",  "timeframe": "4h"},
-            {"symbol": "ADA/USDT:USDT",  "timeframe": "1h"},
-            {"symbol": "ADA/USDT:USDT",  "timeframe": "4h"}
+            {
+                "symbol": "BTC/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "BTC/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ETH/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ETH/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "BNB/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "BNB/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "XRP/USDT:USDT",
+                "timeframe": "15m"
+            },
+            {
+                "symbol": "XRP/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "15m"
+            },
+            {
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "LTC/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "LTC/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "SOL/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "SOL/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "4h"
+            }
         ],
-        "oos_reference_date": null,
-        "_oos_note": "End-Datum fuer 70/30-Split. 30% des Lookbacks je Timeframe = verborgen. Wird von run_pipeline.sh gesetzt.",
+        "oos_reference_date": "2026-06-21",
+        "_oos_note": "End-Datum fuer 70/30-Split. OOS-Start automatisch je Timeframe.",
         "backtest_lookback_weeks": 8,
         "_backtest_lookback_note": "Wie viele Wochen zurueck der Portfolio-Optimizer schaut. Optimal per run_analysis.sh Analyse 1 ermitteln.",
         "symbols_to_optimize": "auto",
