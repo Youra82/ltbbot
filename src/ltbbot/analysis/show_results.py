@@ -313,15 +313,17 @@ def run_single_analysis(start_date, end_date, start_capital):
                  status = "⚠️ Liquidiert" if max_dd >= 100 or end_capital_val <= 0 else "OK"
                  # **************************
 
+                 pnl_usd = end_capital_val - result.get('start_capital', start_capital)
                  summary_entry = {
                      "Strategie": strategy_name,
                      "Startkapital": result.get('start_capital', start_capital),
                      "Endkapital": end_capital_val,
+                     "PnL USD": pnl_usd,
                      "PnL %": result.get('total_pnl_pct', 0),
                      "Max DD %": max_dd,
                      "Trades": result.get('trades_count', 0),
                      "Win Rate %": result.get('win_rate', 0),
-                     "Status": status # *** NEU: Status hinzufügen ***
+                     "Status": status
                  }
                  all_results_summary.append(summary_entry)
                  # Logge auch den Status
@@ -350,13 +352,13 @@ def run_single_analysis(start_date, end_date, start_capital):
     # Spalten formatieren für bessere Lesbarkeit in der Konsole
     results_df_display = results_df.copy()
     results_df_display["Startkapital"] = results_df_display["Startkapital"].map('{:,.0f}'.format)
-    results_df_display["Endkapital"] = results_df_display["Endkapital"].map('{:,.2f}'.format)
-    results_df_display["PnL %"] = results_df_display["PnL %"].map('{:.2f}%'.format)
-    results_df_display["Max DD %"] = results_df_display["Max DD %"].map('{:.2f}%'.format)
-    results_df_display["Win Rate %"] = results_df_display["Win Rate %"].map('{:.2f}%'.format)
+    results_df_display["Endkapital"]   = results_df_display["Endkapital"].map('{:,.2f}'.format)
+    results_df_display["PnL USD"]      = results_df_display["PnL USD"].map(lambda x: f'{x:+.2f}')
+    results_df_display["PnL %"]        = results_df_display["PnL %"].map('{:.2f}%'.format)
+    results_df_display["Max DD %"]     = results_df_display["Max DD %"].map('{:.2f}%'.format)
+    results_df_display["Win Rate %"]   = results_df_display["Win Rate %"].map('{:.2f}%'.format)
 
-    # *** NEU: Status-Spalte in Anzeigeliste aufnehmen ***
-    display_columns = ["Strategie", "Startkapital", "Endkapital", "PnL %", "Max DD %", "Trades", "Win Rate %", "Status"]
+    display_columns = ["Strategie", "Startkapital", "Endkapital", "PnL USD", "PnL %", "Max DD %", "Trades", "Win Rate %", "Status"]
     # Sicherstellen, dass nur existierende Spalten angezeigt werden (falls eine fehlt)
     existing_display_columns = [col for col in display_columns if col in results_df_display.columns]
 
@@ -375,7 +377,7 @@ def run_single_analysis(start_date, end_date, start_capital):
     results_csv_path = os.path.join(PROJECT_ROOT, f'single_analysis_summary_{date.today()}.csv')
     try:
         # Stelle sicher, dass die Status-Spalte auch in der CSV ist
-        csv_columns = ["Strategie", "Startkapital", "Endkapital", "PnL %", "Max DD %", "Trades", "Win Rate %", "Status"]
+        csv_columns = ["Strategie", "Startkapital", "Endkapital", "PnL USD", "PnL %", "Max DD %", "Trades", "Win Rate %", "Status"]
         existing_csv_columns = [col for col in csv_columns if col in results_df.columns]
         results_df[existing_csv_columns].to_csv(results_csv_path, index=False, float_format='%.2f')
         logger.info(f"✔ Zusammenfassung gespeichert unter: {results_csv_path}")
