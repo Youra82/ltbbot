@@ -96,7 +96,7 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
     return pd.DataFrame()
 
 # --- NEUER BACKTESTER FÜR ENVELOPE (MIT KORREKTUREN) ---
-def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
+def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, sim_start_date=None):
     """
     Führt einen Backtest für die Envelope-Strategie durch.
     KORRIGIERT: Verwendet Startkapital für Positionsgrößen, simuliert Slippage und Max Position Size.
@@ -167,6 +167,9 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
     _upper_pre = _hl2_pre + (3.0 * _atr_pre)
     _lower_pre = _hl2_pre - (3.0 * _atr_pre)
 
+    # sim_start_date: Warmup-Kerzen werden für Indikatoren genutzt, Trades erst ab hier
+    sim_start_ts = pd.to_datetime(sim_start_date, utc=True) if sim_start_date else None
+
     # Progress Bar Setup
     total_candles = len(df)
     if show_progress:
@@ -181,9 +184,13 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True):
             filled = int(bar_length * (i + 1) / total_candles)
             bar = '█' * filled + '░' * (bar_length - filled)
             print(f"\r  Progress: [{bar}] {progress_pct:.1f}% ({i+1}/{total_candles})", end='', flush=True)
-        
+
         current_candle = df.iloc[i]
         timestamp = current_candle.name # Zeitstempel der Kerze
+
+        # Warmup-Kerzen: Indikatoren berechnen, aber keine Trades
+        if sim_start_ts and timestamp < sim_start_ts:
+            continue
 
 
         # --- Ausstiege prüfen (TP und SL) ---

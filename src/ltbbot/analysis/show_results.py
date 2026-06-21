@@ -304,7 +304,7 @@ def run_single_analysis(start_date, end_date, start_capital):
                 logger.warning(f"--> Konnte keine Daten für {strategy_name} laden. Überspringe.")
                 continue
 
-            result = run_envelope_backtest(data.copy(), config, start_capital)
+            result = run_envelope_backtest(data.copy(), config, start_capital, sim_start_date=start_date)
 
             if result:
                  # *** NEU: Status prüfen ***
