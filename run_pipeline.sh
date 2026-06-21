@@ -35,8 +35,66 @@ echo -e "\n${BLUE}--- Empfehlung: Optimaler Rückblick-Zeitraum ---${NC}"
 printf "+-------------+--------------------------------+\n"; printf "| Zeitfenster | Empfohlener Rückblick (Tage)   |\n"; printf "+-------------+--------------------------------+\n"; printf "| 5m, 15m     | 30 - 90 Tage                   |\n"; printf "| 30m, 1h     | 180 - 365 Tage                 |\n"; printf "| 2h, 4h      | 365 - 730 Tage                 |\n"; printf "| 6h, 1d      | 730 - 1825 Tage                |\n"; printf "+-------------+--------------------------------+\n"
 # Automatik für Startdatum basierend auf Zeitfenster (vereinfacht)
 read -p "Startdatum (JJJJ-MM-TT) oder 'a' für Automatik [Standard: a]: " START_DATE_INPUT; START_DATE_INPUT=${START_DATE_INPUT:-a}
-read -p "Enddatum (JJJJ-MM-TT) [Standard: Heute]: " END_DATE; END_DATE=${END_DATE:-$(date +%F)}
 read -p "Startkapital in USDT [Standard: 1000]: " START_CAPITAL; START_CAPITAL=${START_CAPITAL:-1000}
+
+# --- OOS-SPLIT (70/30) ---
+echo ""
+echo -e "${BLUE}=======================================================${NC}"
+echo "  Walk-Forward Out-of-Sample Split (optional)"
+echo -e "${BLUE}=======================================================${NC}"
+echo ""
+echo "  Die Pipeline kann einen 70/30-Split verwenden:"
+echo "  70% = Training (Optimizer sieht NUR diese Daten)"
+echo "  30% = Komplett verborgen — niemals von run_pipeline.sh genutzt"
+echo ""
+echo "  Optionen:"
+echo "    'auto' = automatisch 70/30 berechnen"
+echo "    JJJJ-MM-TT = eigenes OOS-Startdatum"
+echo "    leer = kein OOS (kompletter Zeitraum)"
+echo ""
+read -p "OOS-Startdatum ['auto', JJJJ-MM-TT, leer=kein OOS]: " OOS_INPUT
+
+OOS_START=""
+if [ -n "$OOS_INPUT" ]; then
+    if [ "$OOS_INPUT" == "auto" ]; then
+        # 70/30: Lookback für 1h als Basis (365 Tage), dann 70% davon
+        REF_LOOKBACK=365
+        OOS_DAYS=$(( REF_LOOKBACK * 30 / 100 ))  # 30% = ~110 Tage
+        OOS_START=$(date -d "$OOS_DAYS days ago" +%F)
+    else
+        OOS_START="$OOS_INPUT"
+    fi
+    TRAIN_END=$(date -d "$OOS_START - 1 day" +%F)
+    OOS_TOTAL=$(( ($(date +%s) - $(date -d "$OOS_START" +%s)) / 86400 ))
+    echo ""
+    echo -e "${GREEN}✔ OOS-Modus aktiv:${NC}"
+    echo ""
+    echo "  Trainingsperiode:  bis ${TRAIN_END}  (Pipeline trainiert hier)"
+    echo "  OOS-Periode:       ab ${OOS_START}  (${OOS_TOTAL} Tage — komplett verborgen)"
+    echo ""
+    printf "  %-52s\n" "────────────────────────────────────────────────────"
+    printf "  %-30s %-20s\n" "◄──── TRAINING (70%) ────►" "◄── OOS (30%) ──►"
+    printf "  %-52s\n" "────────────────────────────────────────────────────"
+    echo ""
+    # OOS-Datum in settings.json speichern
+    .venv/bin/python3 -c "
+import json, os
+s = json.load(open('settings.json'))
+s.setdefault('optimization_settings', {})['oos_start_date'] = '${OOS_START}'
+s['optimization_settings']['_oos_note'] = '30% OOS: Pipeline trainiert NUR auf Daten vor diesem Datum.'
+json.dump(s, open('settings.json', 'w'), indent=4)
+print('  settings.json: oos_start_date = ${OOS_START} gesetzt.')
+"
+else
+    echo -e "${GREEN}✔ Kein OOS — kompletter Zeitraum wird genutzt.${NC}"
+    # oos_start_date auf null setzen
+    .venv/bin/python3 -c "
+import json
+s = json.load(open('settings.json'))
+s.setdefault('optimization_settings', {})['oos_start_date'] = None
+json.dump(s, open('settings.json', 'w'), indent=4)
+" 2>/dev/null || true
+fi
 read -p "CPU-Kerne für Optimierung [Standard: -1 für alle]: " N_CORES; N_CORES=${N_CORES:--1}
 read -p "Anzahl Optimierungs-Trials [Standard: 200]: " N_TRIALS; N_TRIALS=${N_TRIALS:-200}
 
@@ -73,11 +131,16 @@ for symbol in $SYMBOLS; do
                  6h|1d) lookback_days=730 ;;
              esac
              CURRENT_START_DATE=$(date -d "$lookback_days days ago" +%F)
-             CURRENT_END_DATE="$END_DATE" # Enddatum bleibt wie eingegeben
              echo -e "${BLUE}  Automatischer Lookback: $lookback_days Tage${NC}"
         else
             CURRENT_START_DATE="$START_DATE_INPUT"
-            CURRENT_END_DATE="$END_DATE"
+        fi
+        # OOS: Enddatum auf Trainingsgrenze kappen
+        if [ -n "$OOS_START" ]; then
+            CURRENT_END_DATE=$(date -d "$OOS_START - 1 day" +%F)
+            echo -e "${YELLOW}  OOS aktiv: Optimizer sieht nur bis ${CURRENT_END_DATE}${NC}"
+        else
+            CURRENT_END_DATE=$(date +%F)
         fi
         echo -e "${BLUE}  Datenzeitraum: $CURRENT_START_DATE bis $CURRENT_END_DATE${NC}"
         echo -e "${BLUE}=======================================================${NC}"

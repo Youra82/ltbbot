@@ -50,6 +50,8 @@
             {"symbol": "ADA/USDT:USDT",  "timeframe": "1h"},
             {"symbol": "ADA/USDT:USDT",  "timeframe": "4h"}
         ],
+        "oos_start_date": null,
+        "_oos_note": "30% OOS: Pipeline trainiert NUR auf Daten vor diesem Datum. Wird von run_pipeline.sh gesetzt.",
         "backtest_lookback_weeks": 8,
         "_backtest_lookback_note": "Wie viele Wochen zurueck der Portfolio-Optimizer schaut. Optimal per run_analysis.sh Analyse 1 ermitteln.",
         "symbols_to_optimize": "auto",
