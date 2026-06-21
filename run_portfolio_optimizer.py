@@ -363,13 +363,20 @@ def main() -> int:
     capital   = args.capital or float(opt.get('start_capital', 50))
     max_dd    = args.max_dd
 
-    # OOS: wenn oos_start_date gesetzt → Portfolio-Optimizer sieht niemals OOS-Daten
-    oos_start = opt.get('oos_start_date')
-    if oos_start:
-        from datetime import date as _date
-        oos_dt   = _date.fromisoformat(str(oos_start))
-        end_date = (oos_dt - timedelta(days=1)).strftime('%Y-%m-%d')
-        print(f"  OOS aktiv: end_date={end_date} (oos_start_date={oos_start})")
+    # OOS: oos_reference_date → 70/30-Split; Portfolio-Optimizer sieht nur Training
+    oos_ref = opt.get('oos_reference_date')
+    if oos_ref:
+        ref_dt       = date.fromisoformat(str(oos_ref))
+        # Für Portfolio-Optimizer: kürzester OOS = kleinster Lookback (15m=90d → 27d OOS)
+        # Wir nehmen 30% des aktiven Timeframe-Lookbacks — konservativ: min. Lookback
+        active_tfs   = [s.get('timeframe', '1h')
+                        for s in settings.get('live_trading_settings', {}).get('active_strategies', [])
+                        if s.get('active', True)]
+        min_lookback = min((LOOKBACK_MAP.get(tf, 365) for tf in active_tfs), default=365)
+        oos_days     = min_lookback * 30 // 100
+        oos_start_dt = ref_dt - timedelta(days=oos_days)
+        end_date     = (oos_start_dt - timedelta(days=1)).strftime('%Y-%m-%d')
+        print(f"  OOS 70/30: ref={oos_ref} oos_start={oos_start_dt} end={end_date}")
     else:
         end_date = args.end_date or date.today().strftime('%Y-%m-%d')
 
