@@ -41,6 +41,9 @@ elif ! .venv/bin/python3 -c "import pip" 2>/dev/null; then
 elif ! .venv/bin/pip --version 2>/dev/null | grep -q pip; then
     echo "   pip defekt — venv wird neu erstellt..."
     VENV_OK=false
+elif ! .venv/bin/python3 -c "from pip._vendor.resolvelib.structs import RequirementInformation" 2>/dev/null; then
+    echo "   pip-Resolver defekt — venv wird neu erstellt..."
+    VENV_OK=false
 fi
 
 if [ "$VENV_OK" = false ]; then
