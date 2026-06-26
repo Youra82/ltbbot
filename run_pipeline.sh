@@ -203,7 +203,7 @@ for symbol in $SYMBOLS; do
         echo -e "${BLUE}=======================================================${NC}"
 
         # Config-Existenz prüfen (skip/overwrite/all) — Wildcard wie titanbot
-        SYM_CLEAN=$(echo "${symbol}" | tr '[:lower:]' '[:upper:]' | tr -d '/:- ')
+        SYM_CLEAN=$(echo "${symbol}" | tr '[:lower:]' '[:upper:]' | tr -d '/: -')
         FOUND_CFG=$(ls src/ltbbot/strategy/configs/config_*${SYM_CLEAN}*_${timeframe}*_envelope.json 2>/dev/null | head -1)
         if [ -n "$FOUND_CFG" ] && [ "$OVERWRITE_ALL" != "j" ]; then
             echo ""
