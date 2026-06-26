@@ -426,7 +426,17 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital, auto_
     max_portfolio_dd = 0.30 # Standard
 
     if is_auto:
-        if not auto_mode:
+        if auto_mode:
+            try:
+                _s_path = os.path.join(PROJECT_ROOT, 'settings.json')
+                with open(_s_path) as _sf:
+                    _s = json.load(_sf)
+                _dd = _s.get('optimization_settings', {}).get('constraints', {}).get('max_drawdown_pct', 30)
+                max_portfolio_dd = float(_dd) / 100.0
+            except Exception:
+                pass
+            print(f"  [AUTO] Max Portfolio Drawdown: {max_portfolio_dd*100:.0f}% (aus settings.json)")
+        else:
             try:
                 max_dd_input = input(f"Maximal erlaubter Drawdown für das PORTFOLIO in % eingeben [Standard: {max_portfolio_dd*100:.0f}]: ")
                 if max_dd_input:
@@ -505,7 +515,11 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital, auto_
                 report_csv_path      = os.path.join(PROJECT_ROOT, 'optimal_portfolio_equity.csv')
                 report_caption       = f"Optimales Portfolio ({len(optimal_portfolio_ids)} Strategien)\n{start_date} bis {end_date}\nEndkapital: {final_report.get('end_capital', 0):,.2f} USDT"
 
-                save_optimal_to_settings = (not auto_mode) and input("\nSollen diese optimalen Strategien in settings.json als aktiv markiert werden? (j/n) [n]: ").lower() == 'j'
+                if auto_mode:
+                    save_optimal_to_settings = True
+                    print("  [AUTO] Optimale Strategien werden automatisch in settings.json gespeichert.")
+                else:
+                    save_optimal_to_settings = input("\nSollen diese optimalen Strategien in settings.json als aktiv markiert werden? (j/n) [n]: ").lower() == 'j'
                 if save_optimal_to_settings:
                     try:
                         settings_path = os.path.join(PROJECT_ROOT, 'settings.json')
