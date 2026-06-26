@@ -708,7 +708,7 @@ if __name__ == "__main__":
                                 _cfg_tfs.add(json.load(_cf)['market']['timeframe'])
                         except Exception:
                             pass
-                _LOOKBACK_MAP = {'15m': 90, '30m': 180, '1h': 365, '2h': 548, '4h': 730, '1d': 1825}
+                _LOOKBACK_MAP = {'5m': 90, '15m': 90, '30m': 548, '1h': 548, '2h': 730, '4h': 1095, '6h': 1095, '1d': 1825}
                 _tfs_to_check = {_tf: _lb for _tf, _lb in _LOOKBACK_MAP.items()
                                  if not _cfg_tfs or _tf in _cfg_tfs}
                 _ref_dt         = date.fromisoformat(str(_oos_ref))
