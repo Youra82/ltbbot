@@ -3,9 +3,17 @@ set -e
 
 echo "--- Sicheres Update wird ausgeführt (Robuste Version) ---"
 
-# 1. Sichere die einzige Datei, die lokal wichtig ist
-echo "1. Erstelle ein Backup von 'secret.json'..."
+# 1. Sichere lokale Dateien die nicht von Git verwaltet werden sollen
+echo "1. Erstelle ein Backup von 'secret.json' und lokalen settings.json-Overrides..."
 cp secret.json secret.json.bak
+
+# Sichere Analyse-Ergebnisse aus settings.json (werden durch git reset überschrieben)
+SAVED_LB=""
+SAVED_OOS=""
+if [ -f settings.json ]; then
+    SAVED_LB=$(python3 -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('backtest_lookback_weeks',''))" 2>/dev/null || true)
+    SAVED_OOS=$(python3 -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('oos_reference_date','') or '')" 2>/dev/null || true)
+fi
 
 # 2. Hole die neuesten Daten von GitHub
 echo "2. Hole den neuesten Stand von GitHub..."
@@ -19,6 +27,24 @@ git reset --hard origin/main
 echo "4. Stelle den Inhalt von 'secret.json' aus dem Backup wieder her..."
 cp secret.json.bak secret.json
 rm secret.json.bak
+
+# Stelle Analyse-Ergebnisse in settings.json wieder her (falls vorhanden)
+if [ -n "$SAVED_LB" ] && [ "$SAVED_LB" != "" ]; then
+    python3 -c "
+import json
+s = json.load(open('settings.json'))
+s.setdefault('optimization_settings', {})['backtest_lookback_weeks'] = int('$SAVED_LB')
+json.dump(s, open('settings.json', 'w'), indent=4)
+" 2>/dev/null && echo "   ✅ backtest_lookback_weeks=$SAVED_LB wiederhergestellt." || true
+fi
+if [ -n "$SAVED_OOS" ] && [ "$SAVED_OOS" != "None" ]; then
+    python3 -c "
+import json
+s = json.load(open('settings.json'))
+s.setdefault('optimization_settings', {})['oos_reference_date'] = '$SAVED_OOS'
+json.dump(s, open('settings.json', 'w'), indent=4)
+" 2>/dev/null && echo "   ✅ oos_reference_date=$SAVED_OOS wiederhergestellt." || true
+fi
 
 # 5. Lösche den Python-Cache, um alte Code-Versionen zu entfernen
 echo "5. Lösche alten Python-Cache für einen sauberen Neustart..."
