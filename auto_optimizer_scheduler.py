@@ -2,9 +2,9 @@
 """
 auto_optimizer_scheduler.py
 
-Prueft bei jedem Aufruf ob eine Optimierung faellig ist und fuehrt
-die Hyperparameter-Optimierung (Envelope-Strategie) aus.
-Sendet Telegram-Benachrichtigungen bei Start und Ende.
+Prueft bei jedem Aufruf ob eine Portfolio-Optimierung faellig ist und fuehrt
+show_results.py --mode 3 --auto auf ALLEN vorhandenen Configs aus.
+Configs werden manuell per run_pipeline.sh erstellt.
 
 Aufruf:
   python3 auto_optimizer_scheduler.py           # normale Pruefung
@@ -14,32 +14,24 @@ Aufruf:
 import os
 import sys
 import json
+import glob
 import time
 import subprocess
 import argparse
-from datetime import datetime, date, timedelta
+from datetime import datetime
 
-PROJECT_ROOT     = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT       = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
 
-CACHE_DIR        = os.path.join(PROJECT_ROOT, 'data', 'cache')
-LOG_DIR          = os.path.join(PROJECT_ROOT, 'logs')
-SETTINGS_FILE    = os.path.join(PROJECT_ROOT, 'settings.json')
-OPTIMIZER_SCRIPT = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'analysis', 'optimizer.py')
-SECRET_FILE      = os.path.join(PROJECT_ROOT, 'secret.json')
-LAST_RUN_FILE    = os.path.join(CACHE_DIR, '.last_optimization_run')
-IN_PROGRESS_FILE = os.path.join(CACHE_DIR, '.optimization_in_progress')
-TRIGGER_LOG      = os.path.join(LOG_DIR, 'auto_optimizer_trigger.log')
-OPTIMIZER_RESULTS_FILE = os.path.join(
-    PROJECT_ROOT, 'artifacts', 'results', 'last_optimizer_run.json')
-
-# Lookback je Timeframe (Tage)
-LOOKBACK_MAP = {
-    '5m': 60,  '15m': 60,
-    '30m': 365, '1h': 365,
-    '2h': 730,  '4h': 730,
-    '6h': 1095, '1d': 1095, '1w': 1095,
-}
+CACHE_DIR          = os.path.join(PROJECT_ROOT, 'data', 'cache')
+LOG_DIR            = os.path.join(PROJECT_ROOT, 'logs')
+SETTINGS_FILE      = os.path.join(PROJECT_ROOT, 'settings.json')
+SECRET_FILE        = os.path.join(PROJECT_ROOT, 'secret.json')
+SHOW_RESULTS_SCRIPT = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'analysis', 'show_results.py')
+PORTFOLIO_RESULTS  = os.path.join(PROJECT_ROOT, 'artifacts', 'results', 'portfolio_optimization_results.json')
+LAST_RUN_FILE      = os.path.join(CACHE_DIR, '.last_optimization_run')
+IN_PROGRESS_FILE   = os.path.join(CACHE_DIR, '.optimization_in_progress')
+TRIGGER_LOG        = os.path.join(LOG_DIR, 'auto_optimizer_trigger.log')
 
 
 # ---------------------------------------------------------------------------
@@ -48,7 +40,7 @@ LOOKBACK_MAP = {
 
 def _log(msg: str):
     os.makedirs(LOG_DIR, exist_ok=True)
-    line = f"{datetime.now().isoformat()} AUTO-OPTIMIZER {msg}"
+    line = f"{datetime.now().isoformat()} AUTO-PORTFOLIO {msg}"
     with open(TRIGGER_LOG, 'a', encoding='utf-8') as f:
         f.write(line + '\n')
     try:
@@ -120,56 +112,21 @@ def _is_due(schedule: dict) -> tuple[bool, str]:
     return False, None
 
 
-# ---------------------------------------------------------------------------
-# Paare / Symbole / Timeframes aufloesen
-# ---------------------------------------------------------------------------
-
-def _resolve_pairs_auto(live_settings: dict, opt_settings: dict) -> list:
-    """[(full_symbol, timeframe)] — scannt Configs-Verzeichnis wie dnabot (kein Pool in settings.json)."""
-    import glob
+def _scan_configs() -> list[dict]:
+    """Liest alle vorhandenen Envelope-Configs und gibt Metadaten zurück."""
     configs_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
-    pairs, seen = [], set()
-    for cfg_path in sorted(glob.glob(os.path.join(configs_dir, 'config_*_envelope.json'))):
+    result = []
+    for path in sorted(glob.glob(os.path.join(configs_dir, 'config_*_envelope.json'))):
         try:
-            with open(cfg_path) as f:
+            with open(path) as f:
                 cfg = json.load(f)
             sym = cfg.get('market', {}).get('symbol', '')
             tf  = cfg.get('market', {}).get('timeframe', '')
-            if sym and tf and (sym, tf) not in seen:
-                pairs.append((sym, tf))
-                seen.add((sym, tf))
+            if sym and tf:
+                result.append({'symbol': sym, 'timeframe': tf, 'path': path})
         except Exception:
             continue
-    return pairs or [('BTC/USDT:USDT', '4h')]
-
-
-def _resolve_symbols(value, live_settings: dict, opt_settings: dict) -> list:
-    if value != 'auto':
-        return value if isinstance(value, list) else [value]
-    seen, syms = set(), []
-    for sym, _ in _resolve_pairs_auto(live_settings, opt_settings):
-        base = sym.split('/')[0]
-        if base not in seen:
-            syms.append(base)
-            seen.add(base)
-    return syms or ['BTC']
-
-
-def _resolve_timeframes(value, live_settings: dict, opt_settings: dict) -> list:
-    if value != 'auto':
-        return value if isinstance(value, list) else [value]
-    seen, tfs = set(), []
-    for _, tf in _resolve_pairs_auto(live_settings, opt_settings):
-        if tf not in seen:
-            tfs.append(tf)
-            seen.add(tf)
-    return tfs or ['4h']
-
-
-def _resolve_lookback(value, timeframes: list) -> int:
-    if value != 'auto':
-        return int(value)
-    return max((LOOKBACK_MAP.get(tf, 365) for tf in timeframes), default=365)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -186,211 +143,103 @@ def _get_telegram_credentials():
         return None, None
 
 
-def _send_telegram_plain(message: str):
+def _send_telegram(message: str):
     bot_token, chat_id = _get_telegram_credentials()
     if not bot_token or not chat_id:
         _log("TELEGRAM SKIP kein token/chat_id in secret.json")
         return
     try:
         import requests
-        api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        requests.post(api_url, data={'chat_id': chat_id, 'text': message}, timeout=10)
+        requests.post(
+            f"https://api.telegram.org/bot{bot_token}/sendMessage",
+            data={'chat_id': chat_id, 'text': message},
+            timeout=10
+        )
         _log("TELEGRAM sent")
     except Exception as e:
         _log(f"TELEGRAM ERROR {e}")
 
 
-def _init_results_file(start_time: datetime):
-    """Initialisiert last_optimizer_run.json vor dem Pipeline-Start.
-    optimizer.py haengt pro Paar Ergebnisse an statt die Datei zu ueberschreiben."""
-    os.makedirs(os.path.dirname(OPTIMIZER_RESULTS_FILE), exist_ok=True)
-    init_data = {
-        'run_start': start_time.isoformat(timespec='seconds'),
-        'run_end': None,
-        'saved': [],
-        'failed': [],
-    }
-    with open(OPTIMIZER_RESULTS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(init_data, f, indent=2)
-
-
-def _send_start_telegram(pair_display: list, num_trials: int, start_time: datetime):
+def _send_start_telegram(configs: list, lookback_weeks: int, start_time: datetime):
+    pair_list = ', '.join(f"{c['symbol'].split('/')[0]}/{c['timeframe']}" for c in configs)
     msg = (
-        f"\U0001f680 ltbbot Auto-Optimizer GESTARTET\n"
-        f"Paare: {', '.join(pair_display)}\n"
-        f"Trials: {num_trials}\n"
+        f"\U0001f4ca ltbbot Auto-Portfolio-Optimierung GESTARTET\n"
+        f"Configs: {len(configs)}\n"
+        f"Paare: {pair_list}\n"
+        f"Lookback: {lookback_weeks} Wochen\n"
         f"Start: {start_time.strftime('%Y-%m-%d %H:%M:%S')}"
     )
-    _send_telegram_plain(msg)
+    _send_telegram(msg)
 
 
-def _send_end_telegram(elapsed_seconds: float):
-    dur = _format_elapsed(elapsed_seconds)
+def _send_end_telegram(elapsed: float):
+    dur = _format_elapsed(elapsed)
 
-    if not os.path.exists(OPTIMIZER_RESULTS_FILE):
-        _log(f"TELEGRAM_WARN results file not found: {OPTIMIZER_RESULTS_FILE}")
-        _send_telegram_plain(f"\u2705 Auto-Optimizer abgeschlossen\nDauer: {dur}")
+    if not os.path.exists(PORTFOLIO_RESULTS):
+        _send_telegram(f"✅ Auto-Portfolio-Optimierung abgeschlossen\nDauer: {dur}")
         return
 
     try:
-        with open(OPTIMIZER_RESULTS_FILE, encoding='utf-8') as f:
+        with open(PORTFOLIO_RESULTS, encoding='utf-8') as f:
             results = json.load(f)
+        portfolio = results.get('optimal_portfolio', [])
+        summary   = results.get('final_summary', {})
+        pnl_pct   = summary.get('total_pnl_pct', 0)
+        max_dd    = summary.get('max_drawdown_pct', 0)
+        end_cap   = summary.get('end_capital', 0)
+        sign      = '+' if pnl_pct >= 0 else ''
+
+        portfolio_lines = '\n'.join(f"• {p}" for p in portfolio)
+        msg = (
+            f"✅ Auto-Portfolio-Optimierung abgeschlossen (Dauer: {dur})\n\n"
+            f"Optimales Portfolio ({len(portfolio)} Strategie(n)):\n"
+            f"{portfolio_lines}\n\n"
+            f"PnL: {sign}{pnl_pct:.1f}%  |  MaxDD: {max_dd:.1f}%  |  End: {end_cap:.2f} USDT\n"
+            f"✔ active_strategies in settings.json aktualisiert."
+        )
+        _send_telegram(msg)
     except Exception as e:
-        _log(f"TELEGRAM_WARN cannot read results file: {e}")
-        _send_telegram_plain(f"\u2705 Auto-Optimizer abgeschlossen (Dauer: {dur})")
-        return
-
-    saved  = results.get('saved', [])
-    failed = results.get('failed', [])
-    total  = len(saved) + len(failed)
-    _log(f"TELEGRAM_RESULTS saved={len(saved)} failed={len(failed)} total={total}")
-
-    lines = [f"\u2705 Auto-Optimizer abgeschlossen (Dauer: {dur})"]
-
-    if saved:
-        lines.append(f"\n\u2714 Gespeichert ({len(saved)}/{total}):")
-        for s in saved:
-            sym_short = s['symbol'].split('/')[0]
-            sign = '+' if s['pnl_pct'] >= 0 else ''
-            lines.append(f"\u2022 {sym_short}/{s['timeframe']}: {sign}{s['pnl_pct']}% \u2192 {s['config_file']}")
-
-    if failed:
-        lines.append(f"\n\u274c Fehlgeschlagen ({len(failed)}/{total}):")
-        for fi in failed:
-            sym_short = fi['symbol'].split('/')[0]
-            lines.append(f"\u2022 {sym_short}/{fi['timeframe']}: {fi['reason']}")
-
-    _send_telegram_plain('\n'.join(lines))
-
-
-# ---------------------------------------------------------------------------
-# Pipeline-Ausfuehrung
-# ---------------------------------------------------------------------------
-
-def _run_bash_pipeline() -> int:
-    bash_root = PROJECT_ROOT.replace('\\', '/')
-    if len(bash_root) > 1 and bash_root[1] == ':':
-        bash_root = '/' + bash_root[0].lower() + bash_root[2:]
-    cmd = ['bash', '-lc', f"cd '{bash_root}' && ./run_pipeline_automated.sh"]
-    _log(f"PIPELINE_EXEC method=bash cmd={cmd}")
-    result = subprocess.run(cmd)
-    rc = result.returncode
-    _log(f"PIPELINE_EXIT rc={rc}")
-    return rc
-
-
-def _run_python_pipeline(pairs: list, lookback: int, opt_settings: dict) -> int:
-    """Direkter Python-Aufruf pro Paar: nur optimizer.py (kein Trainer/Threshold)."""
-    python_exe  = sys.executable
-    # OOS: oos_reference_date = End-Datum; 70/30-Split automatisch je Timeframe
-    oos_ref = opt_settings.get('oos_reference_date')
-    _oos_active = bool(oos_ref)
-    if _oos_active:
-        _log(f"OOS 70/30 aktiv: oos_reference_date={oos_ref}")
-    end_date = None  # wird pro Paar gesetzt
-    constraints = opt_settings.get('constraints', {})
-    config_suffix = opt_settings.get('config_suffix', '_envelope')
-
-    _log(f"PIPELINE_EXEC method=python_pairs interpreter={python_exe} pairs={pairs}")
-
-    any_failed = False
-    for sym, tf in pairs:
-        lookback_tf = LOOKBACK_MAP.get(tf, lookback)
-
-        # OOS 70/30 pro Timeframe: 30% des Lookbacks rückwärts vom Referenz-Datum
-        if _oos_active:
-            ref_dt        = date.fromisoformat(str(oos_ref))
-            oos_days_tf   = lookback_tf * 30 // 100
-            oos_start_tf  = ref_dt - timedelta(days=oos_days_tf)
-            pair_end_date = (oos_start_tf - timedelta(days=1)).strftime('%Y-%m-%d')
-            start_date    = (ref_dt - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
-            _log(f"OOS 70/30: tf={tf} ref={oos_ref} oos_start={oos_start_tf} end={pair_end_date}")
-        else:
-            pair_end_date = date.today().strftime('%Y-%m-%d')
-            start_date    = (date.today() - timedelta(days=lookback_tf)).strftime('%Y-%m-%d')
-
-        _log(f"PAIR_START sym={sym} tf={tf} start={start_date} end={pair_end_date}")
-
-        optimizer_cmd = [
-            python_exe, OPTIMIZER_SCRIPT,
-            '--symbols',       sym,
-            '--timeframes',    tf,
-            '--start_date',    start_date,
-            '--end_date',      pair_end_date,
-            '--jobs',          str(opt_settings.get('cpu_cores', -1)),
-            '--max_drawdown',  str(constraints.get('max_drawdown_pct', 30)),
-            '--start_capital', str(opt_settings.get('start_capital', 1000)),
-            '--min_win_rate',  str(constraints.get('min_win_rate_pct', 0)),
-            '--trials',        str(opt_settings.get('num_trials', 100)),
-            '--min_pnl',       str(constraints.get('min_pnl_pct', 0)),
-            '--mode',          opt_settings.get('mode', 'strict'),
-            '--config_suffix', config_suffix,
-            '--min_trades',    str(constraints.get('min_trades', 20)),
-        ]
-        with open(TRIGGER_LOG, 'a', encoding='utf-8') as _lf:
-            rc = subprocess.run(optimizer_cmd, stdout=_lf, stderr=_lf).returncode
-        _log(f"PAIR_EXIT sym={sym} tf={tf} rc={rc}")
-        if rc != 0:
-            any_failed = True
-
-    final_rc = 1 if any_failed else 0
-    _log(f"PIPELINE_EXIT rc={final_rc}")
-    return final_rc
+        _log(f"TELEGRAM_WARN cannot read portfolio results: {e}")
+        _send_telegram(f"✅ Auto-Portfolio-Optimierung abgeschlossen\nDauer: {dur}")
 
 
 # ---------------------------------------------------------------------------
 # Haupt-Ablauf
 # ---------------------------------------------------------------------------
 
-def run_optimization(schedule: dict, opt_settings: dict,
-                     live_settings: dict, reason: str):
+def run_portfolio_optimization(opt_settings: dict, reason: str):
     os.makedirs(CACHE_DIR, exist_ok=True)
 
-    is_auto = (opt_settings.get('symbols_to_optimize') == 'auto'
-               or opt_settings.get('timeframes_to_optimize') == 'auto')
+    configs = _scan_configs()
+    if not configs:
+        _log("SKIP no configs found — run run_pipeline.sh first")
+        _send_telegram(
+            "⚠️ ltbbot Auto-Portfolio-Optimierung: Keine Configs gefunden.\n"
+            "Bitte zuerst run_pipeline.sh ausführen."
+        )
+        return
 
-    if is_auto:
-        pairs_full   = _resolve_pairs_auto(live_settings, opt_settings)
-        pair_display = [f"{sym.split('/')[0]}/{tf}" for sym, tf in pairs_full]
-        timeframes   = list(dict.fromkeys(tf for _, tf in pairs_full))
-    else:
-        symbols    = _resolve_symbols(opt_settings.get('symbols_to_optimize'), live_settings, opt_settings)
-        timeframes = _resolve_timeframes(opt_settings.get('timeframes_to_optimize'), live_settings, opt_settings)
-        pairs_full = [(f"{sym}/USDT:USDT", tf) for sym in symbols for tf in timeframes]
-        pair_display = [f"{sym}/{tf}" for sym in symbols for tf in timeframes]
+    lookback_weeks = int(opt_settings.get('backtest_lookback_weeks', 8))
+    start_time     = datetime.now()
 
-    # Basisname des Symbols für optimizer.py (z.B. "SOL" statt "SOL/USDT:USDT")
-    pairs_base = [(sym.split('/')[0], tf) for sym, tf in pairs_full]
-
-    lookback   = _resolve_lookback(opt_settings.get('lookback_days', 'auto'), timeframes)
-    start_time = datetime.now()
-    num_trials = int(opt_settings.get('num_trials', 100))
-
-    _log(f"START reason={reason} pairs={pair_display} lookback_days={lookback} trials={num_trials}")
+    _log(f"START reason={reason} configs={len(configs)} lookback_weeks={lookback_weeks}")
 
     with open(IN_PROGRESS_FILE, 'w') as f:
         f.write(start_time.isoformat())
 
     send_tg = opt_settings.get('send_telegram_on_completion', False)
     if send_tg:
-        _send_start_telegram(pair_display, num_trials, start_time)
+        _send_start_telegram(configs, lookback_weeks, start_time)
 
     start_perf = time.time()
     success    = False
 
-    # Ergebnisdatei leeren, damit optimizer.py pro Paar anhängen kann
-    _init_results_file(start_time)
-
     try:
-        if is_auto:
-            # Auto-Modus: direkt Python pro Paar (kein Bash nötig)
-            rc = _run_python_pipeline(pairs_base, lookback, opt_settings)
-        else:
-            # Expliziter Modus: Bash-Pipeline mit Python-Fallback
-            rc = _run_bash_pipeline()
-            if rc != 0:
-                _log("PIPELINE_WARNING Bash exit != 0 — attempting Python fallback")
-                rc = _run_python_pipeline(pairs_base, lookback, opt_settings)
+        cmd = [sys.executable, '-u', SHOW_RESULTS_SCRIPT, '--mode', '3', '--auto']
+        _log(f"PORTFOLIO_OPTIMIZER_START cmd={' '.join(cmd)}")
+        with open(TRIGGER_LOG, 'a', encoding='utf-8') as _lf:
+            rc = subprocess.run(cmd, stdout=_lf, stderr=_lf).returncode
+        _log(f"PORTFOLIO_OPTIMIZER_EXIT rc={rc}")
         success = (rc == 0)
     except Exception as e:
         _log(f"ERROR {e}")
@@ -406,18 +255,13 @@ def run_optimization(schedule: dict, opt_settings: dict,
         _log(f"FINISH result=success elapsed_s={elapsed}")
         if send_tg:
             _send_end_telegram(elapsed)
-        # Automatisch show_results.py --mode 2 --auto aufrufen → HTML + XLSX + Telegram
-        try:
-            show_results_script = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'analysis', 'show_results.py')
-            sr_cmd = [sys.executable, show_results_script, '--mode', '3', '--auto']
-            _log(f"SHOW_RESULTS_START cmd={' '.join(sr_cmd)}")
-            with open(TRIGGER_LOG, 'a', encoding='utf-8') as _lf:
-                sr_rc = subprocess.run(sr_cmd, stdout=_lf, stderr=_lf).returncode
-            _log(f"SHOW_RESULTS_EXIT rc={sr_rc}")
-        except Exception as e:
-            _log(f"SHOW_RESULTS_ERROR {e}")
     else:
         _log(f"FINISH result=failed elapsed_s={elapsed}")
+        if send_tg:
+            _send_telegram(
+                f"❌ ltbbot Auto-Portfolio-Optimierung fehlgeschlagen\n"
+                f"Dauer: {_format_elapsed(elapsed)}"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -425,9 +269,9 @@ def run_optimization(schedule: dict, opt_settings: dict,
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description='ltbbot Auto-Optimizer Scheduler')
+    parser = argparse.ArgumentParser(description='ltbbot Auto-Portfolio-Optimierung Scheduler')
     parser.add_argument('--force', action='store_true',
-                        help='Optimierung sofort erzwingen (ignoriert Zeitplan)')
+                        help='Portfolio-Optimierung sofort erzwingen (ignoriert Zeitplan)')
     args = parser.parse_args()
 
     try:
@@ -437,17 +281,15 @@ def main():
         print(f"Fehler beim Lesen der settings.json: {e}")
         return
 
-    opt_settings  = settings.get('optimization_settings', {})
-    live_settings = settings.get('live_trading_settings', {})
+    opt_settings = settings.get('optimization_settings', {})
 
     if not opt_settings.get('enabled', False) and not args.force:
         _log("SKIP optimization disabled (enabled=false in settings.json)")
         return
 
     schedule = opt_settings.get('schedule', {
-        '_info':       'day_of_week: 0=Montag, 6=Sonntag | hour: 0-23 (24h Format)',
-        'day_of_week': 0, 'hour': 3, 'minute': 0,
-        'interval':    {'value': 7, 'unit': 'days'},
+        'day_of_week': 4, 'hour': 15, 'minute': 0,
+        'interval': {'value': 7, 'unit': 'days'},
     })
 
     if args.force:
@@ -458,7 +300,7 @@ def main():
             _log("SKIP not due yet (interval not reached)")
             return
 
-    run_optimization(schedule, opt_settings, live_settings, reason)
+    run_portfolio_optimization(opt_settings, reason)
 
 
 if __name__ == '__main__':
