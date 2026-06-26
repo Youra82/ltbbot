@@ -700,34 +700,24 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
     pos_side = position['side']
     logger.info(f"Verwalte bestehende {pos_side}-Position für {symbol} (Größe: {position.get('contracts', 'N/A')}).")
 
-    # Alte TP/SL Orders wurden bereits zu Beginn von full_trade_cycle storniert
+    # Alle alten TP/SL-Orders (reduceOnly) explizit stornieren bevor neue gesetzt werden
+    try:
+        _old_triggers = exchange.fetch_open_trigger_orders(symbol)
+        _cancelled_count = 0
+        for _ord in _old_triggers:
+            if _ord.get('reduceOnly'):
+                try:
+                    exchange.cancel_trigger_order(_ord['id'], symbol)
+                    _cancelled_count += 1
+                    logger.debug(f"Alter TP/SL storniert: {_ord['id']}")
+                except Exception as _ce:
+                    logger.debug(f"TP/SL {_ord['id']} bereits entfernt oder Fehler: {_ce}")
+        if _cancelled_count > 0:
+            logger.info(f"🗑 {_cancelled_count} alte TP/SL-Order(s) storniert.")
+    except Exception as _e:
+        logger.warning(f"Fehler beim Stornieren alter TP/SL Orders: {_e}")
 
-    # Sicherheits-Check: Existieren TP und SL für diese Position?
-    open_triggers = exchange.fetch_open_trigger_orders(symbol)
-    tp_exists = False
-    sl_exists = False
-    for order in open_triggers:
-        if order.get('reduceOnly') and order.get('side') != position['side']:
-            # TP/SL sind immer reduceOnly und entgegengesetzte Seite
-            if order.get('type', '').lower() == 'market' and order.get('triggerPrice'):
-                # Heuristik: TP ist näher am Average, SL weiter weg
-                trigger_price = float(order.get('triggerPrice', 0))
-                avg_entry_price = float(position.get('entryPrice', position.get('info', {}).get('avgOpenPrice', 0)))
-                if position['side'] == 'long':
-                    if trigger_price > avg_entry_price:
-                        tp_exists = True
-                    elif trigger_price < avg_entry_price:
-                        sl_exists = True
-                else:
-                    if trigger_price < avg_entry_price:
-                        tp_exists = True
-                    elif trigger_price > avg_entry_price:
-                        sl_exists = True
-
-    if not tp_exists or not sl_exists:
-        logger.warning(f"Sicherheits-Check: TP vorhanden? {tp_exists}, SL vorhanden? {sl_exists}. Fehlt etwas, wird nachgetragen!")
-
-    # Neuen TP (am Moving Average) und SL setzen, falls sie fehlen
+    # Neuen TP (am Moving Average) und SL setzen
     amount_contracts = position['contracts']
     try:
         amount_contracts_float = float(amount_contracts)
@@ -926,6 +916,9 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     min_amount_tradable = exchange.fetch_min_amount_tradable(symbol)
     trigger_delta_pct_cfg = strategy_params.get('trigger_price_delta_pct', 0.05) / 100.0
 
+    # Aktueller Schlusskurs für SL-Sofort-Prüfung (vermeidet sofortigen SL-Trigger)
+    current_close = float(df['close'].iloc[-1]) if df is not None and not df.empty else None
+
     # *** RISIKOBASIS: start_capital aus settings.json (konsistent mit Backtester) ***
     # Fallback-Reihenfolge: 1) initial_capital_live in Config, 2) start_capital aus settings.json, 3) aktueller Kontostand
     risk_base_capital = params.get('initial_capital_live')
@@ -964,6 +957,10 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 if sl_price <=0 :
                      logger.warning(f"Negativer oder Null SL-Preis ({sl_price:.4f}) berechnet für Entry {entry_price_for_calc:.4f}. Überspringe Layer {i+1}.")
                      continue
+                # Preis bereits unter SL → Entry würde sofort gestoppt (immediate SL-Trigger)
+                if current_close is not None and current_close < sl_price:
+                    logger.warning(f"⚠️ Aktueller Preis {current_close:.4f} < SL {sl_price:.4f} für Long Layer {i+1} → überspringe (sofortiger SL vermieden).")
+                    continue
                 sl_distance_price = abs(entry_price_for_calc - sl_price)
                 if sl_distance_price <= 0:
                     logger.warning(f"SL distance <= 0 für entry {entry_price_for_calc:.4f}. Skipping Layer {i+1}.")
@@ -1113,6 +1110,10 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 entry_price_for_calc = entry_limit_price
                 sl_price = entry_price_for_calc * (1 + stop_loss_pct_param)
                 if sl_price <=0 : continue # Ungültiger Preis
+                # Preis bereits über SL → Entry würde sofort gestoppt (immediate SL-Trigger)
+                if current_close is not None and current_close > sl_price:
+                    logger.warning(f"⚠️ Aktueller Preis {current_close:.4f} > SL {sl_price:.4f} für Short Layer {i+1} → überspringe (sofortiger SL vermieden).")
+                    continue
                 sl_distance_price = abs(entry_price_for_calc - sl_price)
                 if sl_distance_price <= 0: continue
 

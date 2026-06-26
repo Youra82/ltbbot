@@ -118,9 +118,19 @@ echo ""
 read -p "Startdatum (JJJJ-MM-TT) oder 'a' für Automatik [Standard: a]: " START_DATE_INPUT
 START_DATE_INPUT=${START_DATE_INPUT:-a}
 
-read -p "Startkapital in USDT [Standard: 1000]: " START_CAPITAL; START_CAPITAL=${START_CAPITAL:-1000}
+DEFAULT_CAPITAL=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('start_capital',50))" 2>/dev/null || echo "50")
+DEFAULT_TRIALS=$("$PYTHON"  -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('num_trials',200))" 2>/dev/null || echo "200")
+read -p "Startkapital in USDT [Standard: $DEFAULT_CAPITAL]: " START_CAPITAL; START_CAPITAL=${START_CAPITAL:-$DEFAULT_CAPITAL}
 read -p "CPU-Kerne [Standard: -1 für alle]: " N_CORES; N_CORES=${N_CORES:--1}
-read -p "Anzahl Trials [Standard: 200]: " N_TRIALS; N_TRIALS=${N_TRIALS:-200}
+read -p "Anzahl Trials [Standard: $DEFAULT_TRIALS]: " N_TRIALS; N_TRIALS=${N_TRIALS:-$DEFAULT_TRIALS}
+
+echo ""
+echo "Mindest-Trades pro Jahr pro Strategie:"
+echo "  Jede Strategie muss diesen Wert pro Jahr erreichen — sonst wird der Trial verworfen."
+echo "  Der Wert wird proportional zur Trainingslänge skaliert (Trades/Jahr × Tage / 365)."
+echo "  Tipp: 1d-Timeframe = max ~365 Kerzen/Jahr, Envelopes triggern selten."
+echo "  Empfehlung: 20 (locker) | 30 (ausgewogen) | 50 (streng)"
+read -p "Mindest-Trades/Jahr pro Strategie [Standard: 20]: " MIN_TRADES_PER_YEAR; MIN_TRADES_PER_YEAR=${MIN_TRADES_PER_YEAR:-20}
 
 echo ""
 echo -e "${YELLOW}Wähle einen Optimierungs-Modus:${NC}"
@@ -140,6 +150,7 @@ else
 fi
 
 # --- Schleife pro Symbol + Timeframe ---
+OVERWRITE_ALL="n"
 for symbol in $SYMBOLS; do
     for timeframe in $TIMEFRAMES; do
 
@@ -191,6 +202,24 @@ for symbol in $SYMBOLS; do
         fi
         echo -e "${BLUE}=======================================================${NC}"
 
+        # Config-Existenz prüfen (skip/overwrite/all) — Wildcard wie titanbot
+        SYM_CLEAN=$(echo "${symbol}" | tr '[:lower:]' '[:upper:]' | tr -d '/:- ')
+        FOUND_CFG=$(ls src/ltbbot/strategy/configs/config_*${SYM_CLEAN}*_${timeframe}*_envelope.json 2>/dev/null | head -1)
+        if [ -n "$FOUND_CFG" ] && [ "$OVERWRITE_ALL" != "j" ]; then
+            echo ""
+            echo -e "${YELLOW}⚠  Config existiert bereits: $symbol ($timeframe)${NC}"
+            read -p "   (ü)berschreiben / (s)kip / (a)lle überschreiben? [s]: " OVERWRITE_CHOICE
+            OVERWRITE_CHOICE=${OVERWRITE_CHOICE:-s}
+            if [[ "$OVERWRITE_CHOICE" == "s" || "$OVERWRITE_CHOICE" == "S" ]]; then
+                echo "  → Übersprungen."; continue
+            elif [[ "$OVERWRITE_CHOICE" == "a" || "$OVERWRITE_CHOICE" == "A" ]]; then
+                OVERWRITE_ALL="j"
+                echo "  → Alle überschreiben."
+            else
+                echo "  → Wird überschrieben."
+            fi
+        fi
+
         echo -e "\n${GREEN}>>> Starte Optimierung für $symbol ($timeframe)...${NC}"
         "$PYTHON" "$OPTIMIZER" \
             --symbols       "$symbol" \
@@ -204,6 +233,7 @@ for symbol in $SYMBOLS; do
             --trials        "$N_TRIALS" \
             --min_pnl       "$MIN_PNL" \
             --mode          "$OPTIM_MODE_ARG" \
+            --min_trades_per_year "$MIN_TRADES_PER_YEAR" \
             --config_suffix "_envelope"
 
         if [ $? -ne 0 ]; then

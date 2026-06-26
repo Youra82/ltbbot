@@ -41,7 +41,8 @@ MIN_WIN_RATE_CONSTRAINT = 0.0
 MIN_PNL_CONSTRAINT = 0.0
 START_CAPITAL = 1000
 OPTIM_MODE = "strict"
-MIN_TRADES_FOR_VALID = 20
+MIN_TRADES_FOR_VALID = 20       # wird pro Symbol proportional zur Trainingslänge berechnet
+MIN_TRADES_PER_YEAR_GLOBAL = 20  # User-Eingabe in Trades/Jahr
 
 def create_safe_filename(symbol, timeframe):
     """Erstellt einen sicheren Dateinamen aus Symbol und Zeitrahmen."""
@@ -49,7 +50,7 @@ def create_safe_filename(symbol, timeframe):
 
 def objective(trial):
     """Optuna Objective-Funktion zur Optimierung der Envelope-Parameter."""
-    global HISTORICAL_DATA, START_CAPITAL, CURRENT_TIMEFRAME, OPTIM_MODE, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, MIN_TRADES_FOR_VALID
+    global HISTORICAL_DATA, START_CAPITAL, CURRENT_TIMEFRAME, OPTIM_MODE, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL
 
     # --- Parameter vorschlagen ---
     avg_type = trial.suggest_categorical('average_type', ['SMA', 'EMA', 'WMA', 'DCM'])
@@ -111,7 +112,7 @@ def objective(trial):
 
 # --- Main Funktion ---
 def main():
-    global HISTORICAL_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID
+    global HISTORICAL_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL
 
     parser = argparse.ArgumentParser(description="Parameter-Optimierung für ltbbot (Envelope-Strategie)")
     parser.add_argument('--symbols', required=True, type=str)
@@ -127,7 +128,8 @@ def main():
     parser.add_argument('--min_pnl', required=True, type=float)
     parser.add_argument('--mode', required=True, type=str, choices=['strict', 'best_profit'])
     parser.add_argument('--config_suffix', type=str, default="_envelope")
-    parser.add_argument('--min_trades', type=int, default=20)
+    parser.add_argument('--min_trades_per_year', type=int, default=20,
+                        help='Mindest-Trades pro Jahr (proportional auf Trainingslänge skaliert)')
     args = parser.parse_args()
 
     # Globale Variablen setzen
@@ -138,7 +140,7 @@ def main():
     START_CAPITAL = args.start_capital
     OPTIM_MODE = args.mode
     N_TRIALS = args.trials
-    MIN_TRADES_FOR_VALID = args.min_trades
+    MIN_TRADES_PER_YEAR_GLOBAL = args.min_trades_per_year
 
     symbols, timeframes = args.symbols.split(), args.timeframes.split()
     TASKS = [{'symbol': f"{s.upper()}/USDT:USDT", 'timeframe': tf} for s in symbols for tf in timeframes]
@@ -177,6 +179,11 @@ def main():
             logger.error(f"Fehler beim Laden der Daten für {symbol} ({timeframe}): {e}", exc_info=True)
             run_results['failed'].append({'symbol': symbol, 'timeframe': timeframe, 'reason': 'no_data'})
             continue
+
+        # --- Proportionale min_trades Berechnung (wie titanbot) ---
+        _train_days = max(1, (HISTORICAL_DATA.index[-1] - HISTORICAL_DATA.index[0]).days)
+        MIN_TRADES_FOR_VALID = max(2, int(MIN_TRADES_PER_YEAR_GLOBAL * _train_days / 365))
+        logger.info(f"Mindest-Trades: >={MIN_TRADES_FOR_VALID} ({_train_days}d @ {MIN_TRADES_PER_YEAR_GLOBAL}/Jahr)")
 
         # --- Datenqualität bewerten ---
         try:
