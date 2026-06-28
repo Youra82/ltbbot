@@ -26,8 +26,12 @@ CLEANUP_CHOICE=${CLEANUP_CHOICE:-n}
 if [[ "$CLEANUP_CHOICE" == "j" || "$CLEANUP_CHOICE" == "J" ]]; then
     rm -f src/ltbbot/strategy/configs/config_*_envelope.json
     rm -f artifacts/results/last_optimizer_run.json
+    rm -f artifacts/results/portfolio_optimization_results.json
+    rm -f artifacts/db/optuna_studies_ltbbot.db
     rm -rf data/cache/
-    echo -e "${GREEN}✔ Kompletter Neustart — Configs, Optimizer-Ergebnis und Cache gelöscht.${NC}"
+    # Laufende Hintergrundprozesse des Schedulers beenden
+    pkill -f auto_optimizer_scheduler.py 2>/dev/null || true
+    echo -e "${GREEN}✔ Kompletter Neustart — Configs, DB, Ergebnisse, Cache gelöscht und Hintergrundprozesse beendet.${NC}"
 else
     echo -e "${GREEN}✔ Alte Configs werden beibehalten.${NC}"
 fi
