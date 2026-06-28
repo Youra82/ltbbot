@@ -64,6 +64,11 @@ def objective(trial):
     risk_per_entry_pct = trial.suggest_float('risk_per_entry_pct', 0.1, 1.0)
     stop_loss_pct = trial.suggest_float('stop_loss_pct', 0.5, 5.0)
 
+    # Envelope/SL-Ratio pruefen: innerste Envelope muss mind. 3x groesser als SL sein,
+    # sonst ist Break-Even strukturell > 45% (unerreichbar bei Mean-Reversion).
+    if env1 < stop_loss_pct / 100.0 * 3:
+        raise optuna.exceptions.TrialPruned()
+
     # --- Parameter-Dict ---
     params = {
         'strategy': {
