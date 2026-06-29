@@ -3,7 +3,7 @@
         "use_auto_optimizer_results": true,
         "active_strategies": [
             {
-                "symbol": "AAVE/USDT:USDT",
+                "symbol": "ETH/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             }

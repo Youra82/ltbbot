@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": 43.37
+    },
+    "market": {
+        "symbol": "ETH/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 5,
+        "envelopes": [
+            0.022012431403254266,
+            0.03477791448857635,
+            0.04243852864913138
+        ],
+        "trigger_price_delta_pct": 0.0921
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.95,
+        "leverage": 13,
+        "sl_to_env1_ratio": 0.101
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}
