@@ -24,8 +24,9 @@ LOG_DIR          = os.path.join(PROJECT_ROOT, 'logs')
 SETTINGS_FILE    = os.path.join(PROJECT_ROOT, 'settings.json')
 PORTFOLIO_SCRIPT = os.path.join(PROJECT_ROOT, 'run_portfolio_optimizer.py')
 SECRET_FILE      = os.path.join(PROJECT_ROOT, 'secret.json')
-LAST_RUN_FILE    = os.path.join(CACHE_DIR, '.last_portfolio_opt_run')
-IN_PROGRESS_FILE = os.path.join(CACHE_DIR, '.portfolio_opt_in_progress')
+_ARTIFACTS_DIR   = os.path.join(PROJECT_ROOT, 'artifacts', 'results')
+LAST_RUN_FILE    = os.path.join(_ARTIFACTS_DIR, '.last_portfolio_opt_run')
+IN_PROGRESS_FILE = os.path.join(_ARTIFACTS_DIR, '.portfolio_opt_in_progress')
 TRIGGER_LOG      = os.path.join(LOG_DIR, 'auto_portfolio_trigger.log')
 
 
@@ -63,7 +64,7 @@ def _get_last_run():
 
 
 def _set_last_run():
-    os.makedirs(CACHE_DIR, exist_ok=True)
+    os.makedirs(_ARTIFACTS_DIR, exist_ok=True)
     now_str = datetime.now().isoformat()
     with open(LAST_RUN_FILE, 'w') as f:
         f.write(now_str)
@@ -149,6 +150,7 @@ def run_optimization(opt_settings: dict, reason: str):
 
     _log(f"START reason={reason}")
 
+    os.makedirs(_ARTIFACTS_DIR, exist_ok=True)
     with open(IN_PROGRESS_FILE, 'w') as f:
         f.write(start_time.isoformat())
 
