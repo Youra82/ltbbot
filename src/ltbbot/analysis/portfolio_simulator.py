@@ -237,7 +237,13 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 behavior_params = params['behavior']
                 leverage            = risk_params['leverage']
                 num_envelopes       = len(strategy_params['envelopes'])
-                stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0
+                _envelopes_cfg = strategy_params.get('envelopes', [0.03, 0.05, 0.08])
+                if 'sl_to_env1_ratio' in risk_params:
+                    _sl_mode = 'ratio'; _sl_ratio = risk_params['sl_to_env1_ratio']
+                    stop_loss_pct_param = None
+                else:
+                    _sl_mode = 'fixed'; _sl_ratio = None
+                    stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0
                 risk_per_entry_pct  = risk_params.get('risk_per_entry_pct', 0.5)
                 use_longs  = behavior_params.get('use_longs', True)
                 use_shorts = behavior_params.get('use_shorts', True)
@@ -286,7 +292,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
 
                 # SL-Multiplikator im TREND (wie Live Bot)
                 sl_multiplier  = 1.5 if regime in ("TREND", "STRONG_TREND") else 1.0
-                effective_sl_pct = stop_loss_pct_param * sl_multiplier
+                effective_sl_pct = stop_loss_pct_param * sl_multiplier if _sl_mode == 'fixed' else None
 
                 # Risiko basiert auf STARTKAPITAL (statisch – wie Live Bot)
                 risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0)
@@ -309,7 +315,11 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         entry_limit_price   = current_candle[low_band_col]
                         entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct)
                         if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
-                            sl_price = entry_limit_price * (1 - effective_sl_pct)
+                            if _sl_mode == 'ratio':
+                                env_pct = _envelopes_cfg[k - 1] if k - 1 < len(_envelopes_cfg) else _envelopes_cfg[0]
+                                sl_price = entry_limit_price * (1 - env_pct * _sl_ratio * sl_multiplier)
+                            else:
+                                sl_price = entry_limit_price * (1 - effective_sl_pct)
                             if sl_price <= 0: continue
                             sl_dist = abs(entry_limit_price - sl_price)
                             if sl_dist <= 0: continue
@@ -327,7 +337,11 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         entry_limit_price   = current_candle[high_band_col]
                         entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct)
                         if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
-                            sl_price = entry_limit_price * (1 + effective_sl_pct)
+                            if _sl_mode == 'ratio':
+                                env_pct = _envelopes_cfg[k - 1] if k - 1 < len(_envelopes_cfg) else _envelopes_cfg[0]
+                                sl_price = entry_limit_price * (1 + env_pct * _sl_ratio * sl_multiplier)
+                            else:
+                                sl_price = entry_limit_price * (1 + effective_sl_pct)
                             if sl_price <= 0: continue
                             sl_dist = abs(entry_limit_price - sl_price)
                             if sl_dist <= 0: continue
