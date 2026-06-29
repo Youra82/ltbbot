@@ -154,6 +154,9 @@ def run_optimization(opt_settings: dict, reason: str):
     with open(IN_PROGRESS_FILE, 'w') as f:
         f.write(start_time.isoformat())
 
+    # Timestamp sofort schreiben — verhindert Re-Trigger auch bei Fehlschlag
+    _set_last_run()
+
     if send_tg:
         _send_telegram_plain(
             f"ltbbot Portfolio-Optimizer GESTARTET\n"
@@ -182,7 +185,6 @@ def run_optimization(opt_settings: dict, reason: str):
     elapsed = round(time.time() - start_perf, 1)
 
     if success:
-        _set_last_run()
         _log(f"FINISH result=success elapsed_s={elapsed}")
         if send_tg:
             _send_end_telegram(elapsed)
