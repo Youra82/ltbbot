@@ -1,6 +1,6 @@
 {
     "live_trading_settings": {
-        "use_auto_optimizer_results": false,
+        "use_auto_optimizer_results": true,
         "active_strategies": [
             {
                 "symbol": "AAVE/USDT:USDT",
@@ -12,7 +12,7 @@
     "optimization_settings": {
         "enabled": true,
         "_info": "Optimizer nutzt alle vorhandenen Configs aus src/ltbbot/strategy/configs/ \u2014 kein Pool noetig.",
-        "oos_reference_date": "2026-06-28",
+        "oos_reference_date": "2026-06-29",
         "_oos_note": "End-Datum fuer 70/30-Split. OOS-Start automatisch je Timeframe.",
         "backtest_lookback_weeks": 1,
         "_backtest_lookback_note": "Wie viele Wochen zurueck der Portfolio-Optimizer schaut. Optimal per run_analysis.sh Analyse 1 ermittelt.",
