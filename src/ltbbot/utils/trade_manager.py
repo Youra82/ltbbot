@@ -745,10 +745,14 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
             logger.error(f"Konnte Entry Preis '{avg_entry_price_str}' nicht in Float umwandeln.")
             return
 
-        # Neuer Stop Loss — ATR-basiert (neu) oder fixer % (alte Configs)
+        # Neuer Stop Loss — sl_ratio (neu) → ATR (Zwischen) → fixed % (alt)
         regime = band_prices.get('regime', 'UNCERTAIN')
         trailing_callback_rate = risk_params.get('trailing_callback_rate_pct', 0.0) / 100.0
-        if 'stop_loss_atr_multiplier' in risk_params:
+        if 'sl_to_env1_ratio' in risk_params:
+            _envelopes_m = params.get('strategy', {}).get('envelopes', [0.03])
+            env1_m = _envelopes_m[0] if _envelopes_m else 0.03
+            sl_pct = env1_m * risk_params['sl_to_env1_ratio']
+        elif 'stop_loss_atr_multiplier' in risk_params:
             _atr_mult_m = risk_params['stop_loss_atr_multiplier']
             _min_sl_m   = risk_params.get('min_stop_loss_pct', 0.5) / 100.0
             _atr_m      = band_prices.get('atr')
@@ -915,9 +919,14 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     leverage = risk_params['leverage']
     risk_per_entry_pct = risk_params.get('risk_per_entry_pct', 0.5) # Risiko pro Layer aus Config
 
-    # ATR-basierter SL (neu) mit Fallback auf fixen stop_loss_pct (alte Configs)
-    use_atr_sl = 'stop_loss_atr_multiplier' in risk_params
-    if use_atr_sl:
+    # SL-Modus (Priorität: sl_ratio → ATR-mult → fixer %)
+    _envelopes_cfg = strategy_params.get('envelopes', [0.03, 0.05, 0.08])
+    if 'sl_to_env1_ratio' in risk_params:
+        _sl_mode    = 'ratio'
+        _sl_ratio   = risk_params['sl_to_env1_ratio']
+        stop_loss_pct_param = None; _current_atr = 0.0; _atr_sl_mult = 0.0; _min_sl_pct = 0.0
+    elif 'stop_loss_atr_multiplier' in risk_params:
+        _sl_mode       = 'atr'
         _atr_sl_mult   = risk_params['stop_loss_atr_multiplier']
         _atr_sl_period = risk_params.get('stop_loss_atr_period', 14)
         _min_sl_pct    = risk_params.get('min_stop_loss_pct', 0.5) / 100.0
@@ -926,11 +935,11 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
             _current_atr = float(_atr_series.iloc[-1]) if pd.notna(_atr_series.iloc[-1]) else 0.0
         else:
             _current_atr = 0.0
-        stop_loss_pct_param = None
+        stop_loss_pct_param = None; _sl_ratio = None
     else:
+        _sl_mode = 'fixed'
         stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0
-        _current_atr = 0.0; _atr_sl_mult = 0.0; _min_sl_pct = 0.0
-        # Stop-Loss breiter im Trend-Markt (nur bei fixem SL)
+        _current_atr = 0.0; _atr_sl_mult = 0.0; _min_sl_pct = 0.0; _sl_ratio = None
         if regime == "TREND" or regime == "STRONG_TREND":
             stop_loss_pct_param *= 1.5
             logger.info(f"📈 Trend-Markt: Stop-Loss erweitert auf {stop_loss_pct_param*100:.2f}%")
@@ -984,14 +993,19 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
 
                 # 2. SL-Preis und Distanz berechnen
                 entry_price_for_calc = entry_limit_price
-                if use_atr_sl:
+                if _sl_mode == 'ratio':
+                    env_pct = _envelopes_cfg[i] if i < len(_envelopes_cfg) else _envelopes_cfg[0]
+                    sl_pct_dyn = env_pct * _sl_ratio
+                    if regime in ("TREND", "STRONG_TREND"):
+                        sl_pct_dyn *= 1.5
+                    sl_price = entry_price_for_calc * (1 - sl_pct_dyn)
+                elif _sl_mode == 'atr':
                     if _current_atr > 0 and entry_price_for_calc > 0:
                         sl_pct_dyn = max(_current_atr * _atr_sl_mult / entry_price_for_calc, _min_sl_pct)
                     else:
                         sl_pct_dyn = _min_sl_pct
                     if regime in ("TREND", "STRONG_TREND"):
                         sl_pct_dyn *= 1.5
-                        logger.info(f"📈 Trend-Markt: ATR-SL erweitert auf {sl_pct_dyn*100:.2f}%")
                     sl_price = entry_price_for_calc * (1 - sl_pct_dyn)
                 else:
                     sl_price = entry_price_for_calc * (1 - stop_loss_pct_param)
@@ -1158,7 +1172,13 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
 
                 # 2. SL-Preis und Distanz berechnen
                 entry_price_for_calc = entry_limit_price
-                if use_atr_sl:
+                if _sl_mode == 'ratio':
+                    env_pct = _envelopes_cfg[i] if i < len(_envelopes_cfg) else _envelopes_cfg[0]
+                    sl_pct_dyn = env_pct * _sl_ratio
+                    if regime in ("TREND", "STRONG_TREND"):
+                        sl_pct_dyn *= 1.5
+                    sl_price = entry_price_for_calc * (1 + sl_pct_dyn)
+                elif _sl_mode == 'atr':
                     if _current_atr > 0 and entry_price_for_calc > 0:
                         sl_pct_dyn = max(_current_atr * _atr_sl_mult / entry_price_for_calc, _min_sl_pct)
                     else:

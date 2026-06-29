@@ -119,16 +119,23 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
         use_longs = behavior_params.get('use_longs', True)
         use_shorts = behavior_params.get('use_shorts', True)
         trigger_delta_pct = strategy_params.get('trigger_price_delta_pct', 0.05) / 100.0
-        # ATR-basierter SL (neu) mit Fallback auf fixen stop_loss_pct (alte Configs)
-        use_atr_sl = 'stop_loss_atr_multiplier' in risk_params
-        if use_atr_sl:
+        # SL-Modus (Priorität: sl_ratio → ATR-mult → fixer %)
+        if 'sl_to_env1_ratio' in risk_params:
+            _sl_mode = 'ratio'
+            _sl_ratio = risk_params['sl_to_env1_ratio']
+            _envelopes = strategy_params['envelopes']
+            stop_loss_pct_param = None; _atr_sl_mult = None; _atr_sl_period = 14; _min_sl_pct = 0.0
+        elif 'stop_loss_atr_multiplier' in risk_params:
+            _sl_mode = 'atr'
             _atr_sl_mult   = risk_params['stop_loss_atr_multiplier']
             _atr_sl_period = risk_params.get('stop_loss_atr_period', 14)
             _min_sl_pct    = risk_params.get('min_stop_loss_pct', 0.5) / 100.0
-            stop_loss_pct_param = None
+            stop_loss_pct_param = None; _sl_ratio = None; _envelopes = []
         else:
+            _sl_mode = 'fixed'
             stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0
-            _atr_sl_mult = None; _atr_sl_period = 14; _min_sl_pct = 0.0
+            _sl_ratio = None; _envelopes = []; _atr_sl_mult = None; _atr_sl_period = 14; _min_sl_pct = 0.0
+        use_atr_sl = (_sl_mode == 'atr')
     except KeyError as e:
          logger.error(f"Fehlender Schlüssel in Parameter-Dict: {e}. Backtest abgebrochen.")
          return {"total_pnl_pct": -1000, "trades_count": 0, "win_rate": 0, "max_drawdown_pct": 100, "end_capital": 0, "start_capital": start_capital}
@@ -342,8 +349,12 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                         continue
                     entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct)
                     if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
-                        # ATR-basierter oder fixer SL
-                        if use_atr_sl:
+                        # SL berechnen (Priorität: ratio → ATR → fixed)
+                        if _sl_mode == 'ratio':
+                            env_pct = _envelopes[k - 1] if k - 1 < len(_envelopes) else _envelopes[0]
+                            sl_pct_dyn = env_pct * _sl_ratio * sl_multiplier
+                            sl_price = entry_limit_price * (1 - sl_pct_dyn)
+                        elif use_atr_sl:
                             atr_val = _atr_sl_pre.iloc[i]
                             sl_pct_dyn = (max(float(atr_val) * _atr_sl_mult / entry_limit_price, _min_sl_pct)
                                           if pd.notna(atr_val) and entry_limit_price > 0 else _min_sl_pct)
@@ -373,8 +384,12 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                         continue
                     entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct)
                     if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
-                        # ATR-basierter oder fixer SL
-                        if use_atr_sl:
+                        # SL berechnen (Priorität: ratio → ATR → fixed)
+                        if _sl_mode == 'ratio':
+                            env_pct = _envelopes[k - 1] if k - 1 < len(_envelopes) else _envelopes[0]
+                            sl_pct_dyn = env_pct * _sl_ratio * sl_multiplier
+                            sl_price = entry_limit_price * (1 + sl_pct_dyn)
+                        elif use_atr_sl:
                             atr_val = _atr_sl_pre.iloc[i]
                             sl_pct_dyn = (max(float(atr_val) * _atr_sl_mult / entry_limit_price, _min_sl_pct)
                                           if pd.notna(atr_val) and entry_limit_price > 0 else _min_sl_pct)
