@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "pnl_pct": 159.78
+    },
+    "market": {
+        "symbol": "LTC/USDT:USDT",
+        "timeframe": "1h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 7,
+        "envelopes": [
+            0.018708707948106994,
+            0.09295662873959845,
+            0.09855690934892879
+        ],
+        "trigger_price_delta_pct": 0.0252
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 1.0,
+        "leverage": 15,
+        "stop_loss_pct": 0.51
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}
