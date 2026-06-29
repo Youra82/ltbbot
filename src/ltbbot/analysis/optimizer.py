@@ -63,12 +63,8 @@ def objective(trial):
     trigger_delta_pct = trial.suggest_float('trigger_price_delta_pct', 0.01, 0.2)
     leverage = trial.suggest_int('leverage', 1, 15)
     risk_per_entry_pct = trial.suggest_float('risk_per_entry_pct', 0.1, 1.0)
-    stop_loss_pct = trial.suggest_float('stop_loss_pct', MIN_STOP_LOSS_PCT, 5.0)
-
-    # Envelope/SL-Ratio pruefen: innerste Envelope muss mind. 3x groesser als SL sein,
-    # sonst ist Break-Even strukturell > 45% (unerreichbar bei Mean-Reversion).
-    if env1 < stop_loss_pct / 100.0 * 3:
-        raise optuna.exceptions.TrialPruned()
+    stop_loss_atr_mult = trial.suggest_float('stop_loss_atr_multiplier', 0.3, 2.5)
+    stop_loss_atr_period = trial.suggest_int('stop_loss_atr_period', 7, 21)
 
     # --- Parameter-Dict ---
     params = {
@@ -78,7 +74,10 @@ def objective(trial):
         },
         'risk': {
             'margin_mode': 'isolated', 'risk_per_entry_pct': round(risk_per_entry_pct, 2),
-            'leverage': leverage, 'stop_loss_pct': round(stop_loss_pct, 2)
+            'leverage': leverage,
+            'stop_loss_atr_multiplier': round(stop_loss_atr_mult, 2),
+            'stop_loss_atr_period': stop_loss_atr_period,
+            'min_stop_loss_pct': MIN_STOP_LOSS_PCT,
         },
         'behavior': {'use_longs': True, 'use_shorts': True}
     }
@@ -272,7 +271,10 @@ def main():
             },
             'risk': {
                 'margin_mode': 'isolated', 'risk_per_entry_pct': round(best_params_optuna['risk_per_entry_pct'], 2),
-                'leverage': best_params_optuna['leverage'], 'stop_loss_pct': round(best_params_optuna['stop_loss_pct'], 2)
+                'leverage': best_params_optuna['leverage'],
+                'stop_loss_atr_multiplier': round(best_params_optuna['stop_loss_atr_multiplier'], 2),
+                'stop_loss_atr_period': best_params_optuna['stop_loss_atr_period'],
+                'min_stop_loss_pct': MIN_STOP_LOSS_PCT,
             },
             'behavior': {'use_longs': True, 'use_shorts': True}
         }

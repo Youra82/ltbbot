@@ -1,5 +1,6 @@
 # src/ltbbot/strategy/envelope_logic.py
 import pandas as pd
+import numpy as np
 import ta
 import logging
 
@@ -131,6 +132,12 @@ def calculate_indicators_and_signals(df, params):
     else:
         raise ValueError(f"Ungültiger average_type: {avg_type}")
 
+    # --- Berechne ATR für SL-Berechnung ---
+    atr_period = params.get('risk', {}).get('stop_loss_atr_period', 14)
+    df_copy['atr'] = ta.volatility.average_true_range(
+        df_copy['high'], df_copy['low'], df_copy['close'], window=atr_period
+    )
+
     # --- Berechne die Envelopes ---
     band_prices = {'average': None, 'long': [], 'short': []}
     for i, e_pct in enumerate(envelopes):
@@ -149,6 +156,7 @@ def calculate_indicators_and_signals(df, params):
 
     if not df_copy.empty:
         band_prices['average'] = df_copy['average'].iloc[-1]
+        band_prices['atr'] = float(df_copy['atr'].iloc[-1]) if pd.notna(df_copy['atr'].iloc[-1]) else None
 
     # Optional: Hier könnte man noch explizite Signal-Spalten hinzufügen,
     # aber für die Live-Logik reichen die berechneten Bandpreise.
