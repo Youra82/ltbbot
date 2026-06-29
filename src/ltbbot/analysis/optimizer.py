@@ -43,7 +43,7 @@ START_CAPITAL = 1000
 OPTIM_MODE = "strict"
 MIN_TRADES_FOR_VALID = 20       # wird pro Symbol proportional zur Trainingslänge berechnet
 MIN_TRADES_PER_YEAR_GLOBAL = 20  # User-Eingabe in Trades/Jahr
-MIN_STOP_LOSS_PCT = 0.5          # Untergrenze für SL-Suche (konfigurierbar)
+SL_MAX_RATIO = 0.333             # Garantiert R:R ≥ 2:1 (sl_ratio = SL/env1, max 1/3)
 
 def create_safe_filename(symbol, timeframe):
     """Erstellt einen sicheren Dateinamen aus Symbol und Zeitrahmen."""
@@ -51,7 +51,7 @@ def create_safe_filename(symbol, timeframe):
 
 def objective(trial):
     """Optuna Objective-Funktion zur Optimierung der Envelope-Parameter."""
-    global HISTORICAL_DATA, START_CAPITAL, CURRENT_TIMEFRAME, OPTIM_MODE, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, MIN_STOP_LOSS_PCT
+    global HISTORICAL_DATA, START_CAPITAL, CURRENT_TIMEFRAME, OPTIM_MODE, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO
 
     # --- Parameter vorschlagen ---
     avg_type = trial.suggest_categorical('average_type', ['SMA', 'EMA', 'WMA', 'DCM'])
@@ -63,8 +63,8 @@ def objective(trial):
     trigger_delta_pct = trial.suggest_float('trigger_price_delta_pct', 0.01, 0.2)
     leverage = trial.suggest_int('leverage', 1, 15)
     risk_per_entry_pct = trial.suggest_float('risk_per_entry_pct', 0.1, 1.0)
-    stop_loss_atr_mult = trial.suggest_float('stop_loss_atr_multiplier', 0.3, 2.5)
-    stop_loss_atr_period = trial.suggest_int('stop_loss_atr_period', 7, 21)
+    # SL als Anteil von env1 — garantiert R:R ≥ 2:1 (sl_ratio ≤ 0.333 → SL ≤ TP/2)
+    sl_to_env1_ratio = trial.suggest_float('sl_to_env1_ratio', 0.10, SL_MAX_RATIO)
 
     # --- Parameter-Dict ---
     params = {
@@ -75,9 +75,7 @@ def objective(trial):
         'risk': {
             'margin_mode': 'isolated', 'risk_per_entry_pct': round(risk_per_entry_pct, 2),
             'leverage': leverage,
-            'stop_loss_atr_multiplier': round(stop_loss_atr_mult, 2),
-            'stop_loss_atr_period': stop_loss_atr_period,
-            'min_stop_loss_pct': MIN_STOP_LOSS_PCT,
+            'sl_to_env1_ratio': round(sl_to_env1_ratio, 4),
         },
         'behavior': {'use_longs': True, 'use_shorts': True}
     }
@@ -117,7 +115,7 @@ def objective(trial):
 
 # --- Main Funktion ---
 def main():
-    global HISTORICAL_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, MIN_STOP_LOSS_PCT
+    global HISTORICAL_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO
 
     parser = argparse.ArgumentParser(description="Parameter-Optimierung für ltbbot (Envelope-Strategie)")
     parser.add_argument('--symbols', required=True, type=str)
@@ -135,8 +133,6 @@ def main():
     parser.add_argument('--config_suffix', type=str, default="_envelope")
     parser.add_argument('--min_trades_per_year', type=int, default=20,
                         help='Mindest-Trades pro Jahr (proportional auf Trainingslänge skaliert)')
-    parser.add_argument('--min_stop_loss_pct', type=float, default=0.5,
-                        help='Minimaler Stop-Loss %% (Untergrenze für Optuna-Suche)')
     args = parser.parse_args()
 
     # Globale Variablen setzen
@@ -148,7 +144,6 @@ def main():
     OPTIM_MODE = args.mode
     N_TRIALS = args.trials
     MIN_TRADES_PER_YEAR_GLOBAL = args.min_trades_per_year
-    MIN_STOP_LOSS_PCT = max(0.1, args.min_stop_loss_pct)
 
     symbols, timeframes = args.symbols.split(), args.timeframes.split()
     TASKS = [{'symbol': f"{s.upper()}/USDT:USDT", 'timeframe': tf} for s in symbols for tf in timeframes]
@@ -272,9 +267,7 @@ def main():
             'risk': {
                 'margin_mode': 'isolated', 'risk_per_entry_pct': round(best_params_optuna['risk_per_entry_pct'], 2),
                 'leverage': best_params_optuna['leverage'],
-                'stop_loss_atr_multiplier': round(best_params_optuna['stop_loss_atr_multiplier'], 2),
-                'stop_loss_atr_period': best_params_optuna['stop_loss_atr_period'],
-                'min_stop_loss_pct': MIN_STOP_LOSS_PCT,
+                'sl_to_env1_ratio': round(best_params_optuna['sl_to_env1_ratio'], 4),
             },
             'behavior': {'use_longs': True, 'use_shorts': True}
         }
