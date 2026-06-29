@@ -306,6 +306,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 candle_open   = current_candle['open']
                 long_candidate  = None
                 short_candidate = None
+                prev_candle = strat_df.iloc[df_idx - 1] if df_idx > 0 else None
 
                 if current_use_longs:
                     for k in range(1, num_envelopes + 1):
@@ -313,6 +314,12 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         if low_band_col not in current_candle or pd.isna(current_candle[low_band_col]) or current_candle[low_band_col] <= 0:
                             continue
                         entry_limit_price   = current_candle[low_band_col]
+                        # Close-Confirmation: vorherige Kerze muss unterhalb des Bands geschlossen haben
+                        if prev_candle is None:
+                            continue
+                        prev_band_val = prev_candle.get(low_band_col, float('nan'))
+                        if pd.isna(prev_candle['close']) or pd.isna(prev_band_val) or prev_candle['close'] > prev_band_val:
+                            continue
                         entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct)
                         if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
                             if _sl_mode == 'ratio':
@@ -335,6 +342,12 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         if high_band_col not in current_candle or pd.isna(current_candle[high_band_col]) or current_candle[high_band_col] <= 0:
                             continue
                         entry_limit_price   = current_candle[high_band_col]
+                        # Close-Confirmation: vorherige Kerze muss oberhalb des Bands geschlossen haben
+                        if prev_candle is None:
+                            continue
+                        prev_band_val = prev_candle.get(high_band_col, float('nan'))
+                        if pd.isna(prev_candle['close']) or pd.isna(prev_band_val) or prev_candle['close'] < prev_band_val:
+                            continue
                         entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct)
                         if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
                             if _sl_mode == 'ratio':
