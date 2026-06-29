@@ -116,10 +116,19 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
         leverage = risk_params['leverage']
         risk_per_entry_pct = risk_params.get('risk_per_entry_pct', 0.5) # Risiko pro Layer
         num_envelopes = len(strategy_params['envelopes'])
-        stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0 # Als Dezimalzahl
         use_longs = behavior_params.get('use_longs', True)
         use_shorts = behavior_params.get('use_shorts', True)
         trigger_delta_pct = strategy_params.get('trigger_price_delta_pct', 0.05) / 100.0
+        # ATR-basierter SL (neu) mit Fallback auf fixen stop_loss_pct (alte Configs)
+        use_atr_sl = 'stop_loss_atr_multiplier' in risk_params
+        if use_atr_sl:
+            _atr_sl_mult   = risk_params['stop_loss_atr_multiplier']
+            _atr_sl_period = risk_params.get('stop_loss_atr_period', 14)
+            _min_sl_pct    = risk_params.get('min_stop_loss_pct', 0.5) / 100.0
+            stop_loss_pct_param = None
+        else:
+            stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0
+            _atr_sl_mult = None; _atr_sl_period = 14; _min_sl_pct = 0.0
     except KeyError as e:
          logger.error(f"Fehlender Schlüssel in Parameter-Dict: {e}. Backtest abgebrochen.")
          return {"total_pnl_pct": -1000, "trades_count": 0, "win_rate": 0, "max_drawdown_pct": 100, "end_capital": 0, "start_capital": start_capital}
@@ -158,6 +167,9 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
         first_timestamp = df.index[0]
         equity_curve_data.append({'timestamp': first_timestamp, 'equity': start_capital})
     
+    # ATR-Serie für SL-Berechnung (nur wenn ATR-SL aktiv)
+    _atr_sl_pre = _ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=_atr_sl_period) if use_atr_sl else None
+
     # Regime-Indikatoren einmalig vorab berechnen (O(n) statt O(n²))
     _adx_pre   = _ta.trend.adx(df['high'], df['low'], df['close'], window=14)
     _sma20_pre = _ta.trend.sma_indicator(df['close'], window=20)
@@ -314,15 +326,30 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
             long_candidate = None   # (entry_price, sl_price, amount_coins, trigger_dist)
             short_candidate = None
 
+            prev_candle = df.iloc[i - 1] if i > 0 else None
+
             if current_use_longs:
                 for k in range(1, num_envelopes + 1):
                     low_band_col = f'band_low_{k}'
                     if low_band_col not in current_candle or pd.isna(current_candle[low_band_col]) or current_candle[low_band_col] <= 0:
                         continue
                     entry_limit_price = current_candle[low_band_col]
+                    # Close-Confirmation: vorherige Kerze muss unterhalb des Bands geschlossen haben
+                    if prev_candle is None:
+                        continue
+                    prev_band_val = prev_candle.get(low_band_col, float('nan'))
+                    if pd.isna(prev_candle['close']) or pd.isna(prev_band_val) or prev_candle['close'] > prev_band_val:
+                        continue
                     entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct)
                     if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
-                        sl_price = entry_limit_price * (1 - effective_sl_pct)
+                        # ATR-basierter oder fixer SL
+                        if use_atr_sl:
+                            atr_val = _atr_sl_pre.iloc[i]
+                            sl_pct_dyn = (max(float(atr_val) * _atr_sl_mult / entry_limit_price, _min_sl_pct)
+                                          if pd.notna(atr_val) and entry_limit_price > 0 else _min_sl_pct)
+                            sl_price = entry_limit_price * (1 - sl_pct_dyn * sl_multiplier)
+                        else:
+                            sl_price = entry_limit_price * (1 - effective_sl_pct)
                         if sl_price <= 0: continue
                         sl_dist = abs(entry_limit_price - sl_price)
                         if sl_dist <= 0: continue
@@ -338,9 +365,22 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                     if high_band_col not in current_candle or pd.isna(current_candle[high_band_col]) or current_candle[high_band_col] <= 0:
                         continue
                     entry_limit_price = current_candle[high_band_col]
+                    # Close-Confirmation: vorherige Kerze muss oberhalb des Bands geschlossen haben
+                    if prev_candle is None:
+                        continue
+                    prev_band_val = prev_candle.get(high_band_col, float('nan'))
+                    if pd.isna(prev_candle['close']) or pd.isna(prev_band_val) or prev_candle['close'] < prev_band_val:
+                        continue
                     entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct)
                     if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
-                        sl_price = entry_limit_price * (1 + effective_sl_pct)
+                        # ATR-basierter oder fixer SL
+                        if use_atr_sl:
+                            atr_val = _atr_sl_pre.iloc[i]
+                            sl_pct_dyn = (max(float(atr_val) * _atr_sl_mult / entry_limit_price, _min_sl_pct)
+                                          if pd.notna(atr_val) and entry_limit_price > 0 else _min_sl_pct)
+                            sl_price = entry_limit_price * (1 + sl_pct_dyn * sl_multiplier)
+                        else:
+                            sl_price = entry_limit_price * (1 + effective_sl_pct)
                         if sl_price <= 0: continue
                         sl_dist = abs(entry_limit_price - sl_price)
                         if sl_dist <= 0: continue

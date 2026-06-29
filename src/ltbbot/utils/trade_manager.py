@@ -745,11 +745,19 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
             logger.error(f"Konnte Entry Preis '{avg_entry_price_str}' nicht in Float umwandeln.")
             return
 
-        # Neuer Stop Loss (basierend auf ursprünglichem Entry und SL-Prozentsatz)
-        sl_pct = risk_params['stop_loss_pct'] / 100.0
-        trailing_callback_rate = risk_params.get('trailing_callback_rate_pct', 0.0) / 100.0  # Default 0% = kein Trailing
-        # Regime-basierte SL-Erweiterung (identisch zu place_entry_orders)
+        # Neuer Stop Loss — ATR-basiert (neu) oder fixer % (alte Configs)
         regime = band_prices.get('regime', 'UNCERTAIN')
+        trailing_callback_rate = risk_params.get('trailing_callback_rate_pct', 0.0) / 100.0
+        if 'stop_loss_atr_multiplier' in risk_params:
+            _atr_mult_m = risk_params['stop_loss_atr_multiplier']
+            _min_sl_m   = risk_params.get('min_stop_loss_pct', 0.5) / 100.0
+            _atr_m      = band_prices.get('atr')
+            if _atr_m and _atr_m > 0 and avg_entry_price > 0:
+                sl_pct = max(_atr_m * _atr_mult_m / avg_entry_price, _min_sl_m)
+            else:
+                sl_pct = _min_sl_m
+        else:
+            sl_pct = risk_params['stop_loss_pct'] / 100.0
         if regime in ("TREND", "STRONG_TREND"):
             sl_pct *= 1.5
             logger.info(f"📈 Trend-Markt: SL auf {sl_pct*100:.2f}% erweitert (Regime: {regime})")
@@ -906,12 +914,26 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     # Parameter holen
     leverage = risk_params['leverage']
     risk_per_entry_pct = risk_params.get('risk_per_entry_pct', 0.5) # Risiko pro Layer aus Config
-    stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0 # SL % aus Config
-    
-    # Stop-Loss breiter im Trend-Markt (weniger Whipsaws)
-    if regime == "TREND" or regime == "STRONG_TREND":
-        stop_loss_pct_param *= 1.5  # 50% breitere SLs
-        logger.info(f"📈 Trend-Markt: Stop-Loss erweitert auf {stop_loss_pct_param*100:.2f}%")
+
+    # ATR-basierter SL (neu) mit Fallback auf fixen stop_loss_pct (alte Configs)
+    use_atr_sl = 'stop_loss_atr_multiplier' in risk_params
+    if use_atr_sl:
+        _atr_sl_mult   = risk_params['stop_loss_atr_multiplier']
+        _atr_sl_period = risk_params.get('stop_loss_atr_period', 14)
+        _min_sl_pct    = risk_params.get('min_stop_loss_pct', 0.5) / 100.0
+        if df is not None and len(df) >= _atr_sl_period:
+            _atr_series  = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=_atr_sl_period)
+            _current_atr = float(_atr_series.iloc[-1]) if pd.notna(_atr_series.iloc[-1]) else 0.0
+        else:
+            _current_atr = 0.0
+        stop_loss_pct_param = None
+    else:
+        stop_loss_pct_param = risk_params['stop_loss_pct'] / 100.0
+        _current_atr = 0.0; _atr_sl_mult = 0.0; _min_sl_pct = 0.0
+        # Stop-Loss breiter im Trend-Markt (nur bei fixem SL)
+        if regime == "TREND" or regime == "STRONG_TREND":
+            stop_loss_pct_param *= 1.5
+            logger.info(f"📈 Trend-Markt: Stop-Loss erweitert auf {stop_loss_pct_param*100:.2f}%")
     num_envelopes = len(strategy_params['envelopes'])
     min_amount_tradable = exchange.fetch_min_amount_tradable(symbol)
     trigger_delta_pct_cfg = strategy_params.get('trigger_price_delta_pct', 0.05) / 100.0
@@ -945,6 +967,15 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 continue
 
             try:
+                # Close-Confirmation: letzte abgeschlossene Kerze muss unterhalb des Bands geschlossen haben
+                if df is not None and not df.empty:
+                    last_close = float(df['close'].iloc[-1])
+                    low_band_col = f'band_low_{i+1}'
+                    last_band_low = float(df[low_band_col].iloc[-1]) if low_band_col in df.columns else entry_limit_price
+                    if last_close > last_band_low:
+                        logger.info(f"Long Layer {i+1}: Kein Close-Confirmation (Close {last_close:.6g} > Band {last_band_low:.6g}). Überspringe.")
+                        continue
+
                 # 1. Risiko in USD berechnen (basierend auf gewählter Basis)
                 risk_amount_usd = risk_base_capital * (risk_per_entry_pct / 100.0)
                 if risk_amount_usd <= 0:
@@ -953,8 +984,18 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
 
                 # 2. SL-Preis und Distanz berechnen
                 entry_price_for_calc = entry_limit_price
-                sl_price = entry_price_for_calc * (1 - stop_loss_pct_param)
-                if sl_price <=0 :
+                if use_atr_sl:
+                    if _current_atr > 0 and entry_price_for_calc > 0:
+                        sl_pct_dyn = max(_current_atr * _atr_sl_mult / entry_price_for_calc, _min_sl_pct)
+                    else:
+                        sl_pct_dyn = _min_sl_pct
+                    if regime in ("TREND", "STRONG_TREND"):
+                        sl_pct_dyn *= 1.5
+                        logger.info(f"📈 Trend-Markt: ATR-SL erweitert auf {sl_pct_dyn*100:.2f}%")
+                    sl_price = entry_price_for_calc * (1 - sl_pct_dyn)
+                else:
+                    sl_price = entry_price_for_calc * (1 - stop_loss_pct_param)
+                if sl_price <= 0:
                      logger.warning(f"Negativer oder Null SL-Preis ({sl_price:.4f}) berechnet für Entry {entry_price_for_calc:.4f}. Überspringe Layer {i+1}.")
                      continue
                 # Preis bereits unter SL → Entry würde sofort gestoppt (immediate SL-Trigger)
@@ -1102,14 +1143,32 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 continue
 
             try:
+                # Close-Confirmation: letzte abgeschlossene Kerze muss oberhalb des Bands geschlossen haben
+                if df is not None and not df.empty:
+                    last_close = float(df['close'].iloc[-1])
+                    high_band_col = f'band_high_{i+1}'
+                    last_band_high = float(df[high_band_col].iloc[-1]) if high_band_col in df.columns else entry_limit_price
+                    if last_close < last_band_high:
+                        logger.info(f"Short Layer {i+1}: Kein Close-Confirmation (Close {last_close:.6g} < Band {last_band_high:.6g}). Überspringe.")
+                        continue
+
                 # 1. Risiko in USD berechnen (basierend auf gewählter Basis)
                 risk_amount_usd = risk_base_capital * (risk_per_entry_pct / 100.0)
                 if risk_amount_usd <= 0: continue
 
                 # 2. SL-Preis und Distanz berechnen
                 entry_price_for_calc = entry_limit_price
-                sl_price = entry_price_for_calc * (1 + stop_loss_pct_param)
-                if sl_price <=0 : continue # Ungültiger Preis
+                if use_atr_sl:
+                    if _current_atr > 0 and entry_price_for_calc > 0:
+                        sl_pct_dyn = max(_current_atr * _atr_sl_mult / entry_price_for_calc, _min_sl_pct)
+                    else:
+                        sl_pct_dyn = _min_sl_pct
+                    if regime in ("TREND", "STRONG_TREND"):
+                        sl_pct_dyn *= 1.5
+                    sl_price = entry_price_for_calc * (1 + sl_pct_dyn)
+                else:
+                    sl_price = entry_price_for_calc * (1 + stop_loss_pct_param)
+                if sl_price <= 0: continue
                 # Preis bereits über SL → Entry würde sofort gestoppt (immediate SL-Trigger)
                 if current_close is not None and current_close > sl_price:
                     logger.warning(f"⚠️ Aktueller Preis {current_close:.4f} > SL {sl_price:.4f} für Short Layer {i+1} → überspringe (sofortiger SL vermieden).")
