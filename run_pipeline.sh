@@ -136,6 +136,14 @@ echo "  Tipp: 1d-Timeframe = max ~365 Kerzen/Jahr, Envelopes triggern selten."
 echo "  Empfehlung: 20 (locker) | 30 (ausgewogen) | 50 (streng)"
 read -p "Mindest-Trades/Jahr pro Strategie [Standard: 20]: " MIN_TRADES_PER_YEAR; MIN_TRADES_PER_YEAR=${MIN_TRADES_PER_YEAR:-20}
 
+DEFAULT_MIN_SL=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('constraints',{}).get('min_stop_loss_pct',1.0))" 2>/dev/null || echo "1.0")
+echo ""
+echo "Minimaler Stop-Loss % (Untergrenze für Optuna-Suche):"
+echo "  Der Optimizer sucht SL nur ab diesem Wert aufwärts."
+echo "  Verhindert strukturell zu enge SL-Werte (z.B. 0.5% bei ATR von 3%)."
+echo "  Empfehlung: 1.0% (ausgewogen) | 1.5% (strenger) | 0.5% (kein Limit)"
+read -p "Mindest-SL % [Standard: $DEFAULT_MIN_SL]: " MIN_SL_PCT; MIN_SL_PCT=${MIN_SL_PCT:-$DEFAULT_MIN_SL}
+
 echo ""
 echo -e "${YELLOW}Wähle einen Optimierungs-Modus:${NC}"
 echo "  1) Strenger Modus    (Profitabel + WR >= Min. Win-Rate + MaxDD <= Limit)"
@@ -238,6 +246,7 @@ for symbol in $SYMBOLS; do
             --min_pnl       "$MIN_PNL" \
             --mode          "$OPTIM_MODE_ARG" \
             --min_trades_per_year "$MIN_TRADES_PER_YEAR" \
+            --min_stop_loss_pct   "$MIN_SL_PCT" \
             --config_suffix "_envelope"
 
         if [ $? -ne 0 ]; then

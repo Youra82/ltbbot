@@ -43,6 +43,7 @@ START_CAPITAL = 1000
 OPTIM_MODE = "strict"
 MIN_TRADES_FOR_VALID = 20       # wird pro Symbol proportional zur Trainingslänge berechnet
 MIN_TRADES_PER_YEAR_GLOBAL = 20  # User-Eingabe in Trades/Jahr
+MIN_STOP_LOSS_PCT = 0.5          # Untergrenze für SL-Suche (konfigurierbar)
 
 def create_safe_filename(symbol, timeframe):
     """Erstellt einen sicheren Dateinamen aus Symbol und Zeitrahmen."""
@@ -50,7 +51,7 @@ def create_safe_filename(symbol, timeframe):
 
 def objective(trial):
     """Optuna Objective-Funktion zur Optimierung der Envelope-Parameter."""
-    global HISTORICAL_DATA, START_CAPITAL, CURRENT_TIMEFRAME, OPTIM_MODE, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL
+    global HISTORICAL_DATA, START_CAPITAL, CURRENT_TIMEFRAME, OPTIM_MODE, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, MIN_STOP_LOSS_PCT
 
     # --- Parameter vorschlagen ---
     avg_type = trial.suggest_categorical('average_type', ['SMA', 'EMA', 'WMA', 'DCM'])
@@ -62,7 +63,7 @@ def objective(trial):
     trigger_delta_pct = trial.suggest_float('trigger_price_delta_pct', 0.01, 0.2)
     leverage = trial.suggest_int('leverage', 1, 15)
     risk_per_entry_pct = trial.suggest_float('risk_per_entry_pct', 0.1, 1.0)
-    stop_loss_pct = trial.suggest_float('stop_loss_pct', 0.5, 5.0)
+    stop_loss_pct = trial.suggest_float('stop_loss_pct', MIN_STOP_LOSS_PCT, 5.0)
 
     # Envelope/SL-Ratio pruefen: innerste Envelope muss mind. 3x groesser als SL sein,
     # sonst ist Break-Even strukturell > 45% (unerreichbar bei Mean-Reversion).
@@ -117,7 +118,7 @@ def objective(trial):
 
 # --- Main Funktion ---
 def main():
-    global HISTORICAL_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL
+    global HISTORICAL_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, MIN_STOP_LOSS_PCT
 
     parser = argparse.ArgumentParser(description="Parameter-Optimierung für ltbbot (Envelope-Strategie)")
     parser.add_argument('--symbols', required=True, type=str)
@@ -135,6 +136,8 @@ def main():
     parser.add_argument('--config_suffix', type=str, default="_envelope")
     parser.add_argument('--min_trades_per_year', type=int, default=20,
                         help='Mindest-Trades pro Jahr (proportional auf Trainingslänge skaliert)')
+    parser.add_argument('--min_stop_loss_pct', type=float, default=0.5,
+                        help='Minimaler Stop-Loss %% (Untergrenze für Optuna-Suche)')
     args = parser.parse_args()
 
     # Globale Variablen setzen
@@ -146,6 +149,7 @@ def main():
     OPTIM_MODE = args.mode
     N_TRIALS = args.trials
     MIN_TRADES_PER_YEAR_GLOBAL = args.min_trades_per_year
+    MIN_STOP_LOSS_PCT = max(0.1, args.min_stop_loss_pct)
 
     symbols, timeframes = args.symbols.split(), args.timeframes.split()
     TASKS = [{'symbol': f"{s.upper()}/USDT:USDT", 'timeframe': tf} for s in symbols for tf in timeframes]
