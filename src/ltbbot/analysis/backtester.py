@@ -318,7 +318,7 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
 
             # SL-Multiplikator: Im TREND 1.5x breiter (wie Live Bot)
             sl_multiplier = 1.5 if regime in ("TREND", "STRONG_TREND") else 1.0
-            effective_sl_pct = stop_loss_pct_param * sl_multiplier
+            effective_sl_pct = stop_loss_pct_param * sl_multiplier if _sl_mode == 'fixed' else None
 
             # Risiko basiert auf STARTKAPITAL (statisch, kein Compounding - wie Live Bot)
             risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0)
