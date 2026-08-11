@@ -90,23 +90,44 @@ class Exchange:
         current_ts = start_ts
         logger.info(f"Starte historischen Download für {symbol} ({timeframe}) von {start_date_str} bis {end_date_str}")
 
-        while current_ts < end_ts:
+        # Schutz gegen Endlosschleife (uebernommen von titanbot/exchange.py):
+        # bei dauerhaftem Fehler auf demselben current_ts (z.B. Exchange lehnt
+        # den Chunk wiederholt ab) nach max_retries abbrechen statt ewig zu
+        # retrien. Zaehler wird bei jedem erfolgreichen Chunk zurueckgesetzt.
+        max_retries = 5
+        retries = 0
+
+        while current_ts < end_ts and retries < max_retries:
             try:
                 ohlcv = self.exchange.fetch_ohlcv(symbol, timeframe, current_ts, fetch_limit)
                 if not ohlcv: break
                 ohlcv = [candle for candle in ohlcv if candle[0] <= end_ts]
                 if not ohlcv: break
                 all_ohlcv.extend(ohlcv)
-                current_ts = ohlcv[-1][0] + timeframe_duration_in_ms
+                last_ts = ohlcv[-1][0]
+                if last_ts >= current_ts:
+                    current_ts = last_ts + timeframe_duration_in_ms
+                else:
+                    logger.warning("WARNUNG: Kein Zeitfortschritt beim Datenabruf, breche ab.")
+                    break
+                retries = 0
                 last_date = pd.to_datetime(ohlcv[-1][0], unit='ms', utc=True).strftime('%Y-%m-%d')
                 logger.debug(f"Daten bis {last_date} heruntergeladen...")
                 time.sleep(self.exchange.rateLimit / 1000)
             except ccxt.RateLimitExceeded as e:
-                logger.warning(f"Rate limit exceeded during historical fetch: {e}. Waiting...")
+                retries += 1
+                logger.warning(f"Rate limit exceeded during historical fetch: {e}. Versuch {retries}/{max_retries}. Waiting...")
                 time.sleep(10)
             except Exception as e:
-                logger.error(f"Error fetching historical OHLCV chunk: {e}")
+                retries += 1
+                logger.error(f"Error fetching historical OHLCV chunk ({retries}/{max_retries}): {e}")
                 time.sleep(5)
+
+        if retries >= max_retries:
+            logger.error(
+                f"Abbruch: {max_retries}x hintereinander fehlgeschlagen bei current_ts={current_ts} "
+                f"({pd.to_datetime(current_ts, unit='ms', utc=True)}). Gebe bisher geladene Daten zurück (falls vorhanden)."
+            )
 
         if not all_ohlcv:
             logger.warning(f"Keine historischen OHLCV-Daten für {symbol} im Zeitraum gefunden.")

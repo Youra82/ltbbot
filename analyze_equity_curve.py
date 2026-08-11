@@ -13,7 +13,7 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange
-from ltbbot.analysis.backtester import run_envelope_backtest, load_data, calculate_indicators_and_signals
+from ltbbot.analysis.backtester import run_envelope_backtest, load_data, calculate_indicators_and_signals, FINE_TF_MAP
 
 def main():
     # Lade eine Test-Konfiguration
@@ -53,11 +53,21 @@ def main():
     except Exception as e:
         print(f"❌ Fehler beim Laden: {e}")
         return
-    
+
+    fine_data = None
+    fine_tf = FINE_TF_MAP.get(timeframe)
+    if fine_tf:
+        try:
+            fine_data = load_data(symbol, fine_tf, '2025-01-01', '2025-01-03')
+            if fine_data is None or fine_data.empty:
+                fine_data = None
+        except Exception:
+            fine_data = None
+
     # Führe Backtest durch
     print(f"⚙️  Starte Backtest...")
     try:
-        backtest_result = run_envelope_backtest(data, config['strategy'], start_capital=start_capital)
+        backtest_result = run_envelope_backtest(data, config['strategy'], start_capital=start_capital, fine_data=fine_data)
         print(f"✅ Backtest abgeschlossen\n")
     except Exception as e:
         print(f"❌ Fehler beim Backtest: {e}")

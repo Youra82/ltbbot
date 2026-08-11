@@ -26,11 +26,12 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 RESULTS_FILE = os.path.join(PROJECT_ROOT, 'artifacts', 'results', 'last_optimizer_run.json')
 
 # Verwende den Backtester für Envelope
-from ltbbot.analysis.backtester import load_data, run_envelope_backtest
+from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP
 from ltbbot.analysis.evaluator import evaluate_dataset
 
 # Globale Variablen für die Objective-Funktion
 HISTORICAL_DATA = None
+FINE_DATA = None  # feinere Kerzen fuer SL/TP-Intrabar-Aufloesung (oraclebot-Muster)
 CURRENT_SYMBOL = None
 CURRENT_TIMEFRAME = None
 CONFIG_SUFFIX = ""
@@ -87,7 +88,7 @@ def objective(trial):
         raise ValueError("HISTORICAL_DATA oder START_CAPITAL nicht korrekt initialisiert.")
 
     with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-        result = run_envelope_backtest(HISTORICAL_DATA.copy(), params, START_CAPITAL)
+        result = run_envelope_backtest(HISTORICAL_DATA.copy(), params, START_CAPITAL, fine_data=FINE_DATA)
 
     # --- Ergebnisse ---
     pnl = result.get('total_pnl_pct', -1000.0)
@@ -115,7 +116,7 @@ def objective(trial):
 
 # --- Main Funktion ---
 def main():
-    global HISTORICAL_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO
+    global HISTORICAL_DATA, FINE_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO
 
     parser = argparse.ArgumentParser(description="Parameter-Optimierung für ltbbot (Envelope-Strategie)")
     parser.add_argument('--symbols', required=True, type=str)
@@ -182,6 +183,20 @@ def main():
             logger.error(f"Fehler beim Laden der Daten für {symbol} ({timeframe}): {e}", exc_info=True)
             run_results['failed'].append({'symbol': symbol, 'timeframe': timeframe, 'reason': 'no_data'})
             continue
+
+        # Feinere Kerzen fuer SL/TP-Intrabar-Reihenfolgen-Aufloesung (oraclebot-Muster).
+        FINE_DATA = None
+        fine_tf = FINE_TF_MAP.get(timeframe)
+        if fine_tf:
+            try:
+                FINE_DATA = load_data(symbol, fine_tf, args.start_date, args.end_date)
+                if FINE_DATA is None or FINE_DATA.empty:
+                    FINE_DATA = None
+                else:
+                    logger.info(f"Fein-Daten geladen: {fine_tf} ({len(FINE_DATA)} Kerzen).")
+            except Exception as _e:
+                logger.warning(f"Fein-Daten-Abruf ({fine_tf}) fehlgeschlagen: {_e}")
+                FINE_DATA = None
 
         # --- Proportionale min_trades Berechnung (wie titanbot) ---
         _train_days = max(1, (HISTORICAL_DATA.index[-1] - HISTORICAL_DATA.index[0]).days)
@@ -271,7 +286,7 @@ def main():
             },
             'behavior': {'use_longs': True, 'use_shorts': True}
         }
-        final_result = run_envelope_backtest(HISTORICAL_DATA.copy(), final_params_dict, START_CAPITAL)
+        final_result = run_envelope_backtest(HISTORICAL_DATA.copy(), final_params_dict, START_CAPITAL, fine_data=FINE_DATA)
 
         final_pnl = final_result.get('total_pnl_pct', -1000)
         final_dd = final_result.get('max_drawdown_pct', 100)

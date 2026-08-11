@@ -24,14 +24,15 @@ import pandas as pd
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
 
-from ltbbot.analysis.backtester import load_data, run_envelope_backtest
+from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP
 from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
 from ltbbot.utils.telegram import send_message, send_photo
 
 logging.basicConfig(level=logging.ERROR)
 logging.getLogger('ltbbot').setLevel(logging.ERROR)
 
-TMP = '/tmp'
+import tempfile
+TMP = tempfile.gettempdir()
 DARK_BG = '#0d1117'
 C1, C2, C3 = '#2563eb', '#22c55e', '#ef4444'
 C4, C5, C6 = '#f59e0b', '#a855f7', '#06b6d4'
@@ -90,6 +91,21 @@ def _load_config(symbol, timeframe):
     }
 
 
+def _load_fine_data(symbol, timeframe, start_date, end_date):
+    """Feinere Kerzen fuer SL/TP-Intrabar-Reihenfolgen-Aufloesung (oraclebot-Muster).
+    Best-effort: gibt None zurueck wenn keine passende Fein-Timeframe existiert
+    oder der Abruf fehlschlaegt -- Aufrufer fallen dann auf die alte SL-first-
+    Konvention zurueck."""
+    fine_tf = FINE_TF_MAP.get(timeframe)
+    if not fine_tf:
+        return None
+    try:
+        fine_df = load_data(symbol, fine_tf, start_date, end_date)
+        return fine_df if fine_df is not None and not fine_df.empty else None
+    except Exception:
+        return None
+
+
 def _build_strategies_data(strategies, start_date, end_date):
     data = {}
     for s in strategies:
@@ -100,7 +116,8 @@ def _build_strategies_data(strategies, start_date, end_date):
             continue
         cfg = _load_config(sym, tf)
         key = f"{sym.split('/')[0]}_{tf}"
-        data[key] = {'symbol': sym, 'timeframe': tf, 'data': df, 'params': cfg}
+        fine_df = _load_fine_data(sym, tf, start_date, end_date)
+        data[key] = {'symbol': sym, 'timeframe': tf, 'data': df, 'params': cfg, 'fine_data': fine_df}
     return data
 
 
@@ -153,7 +170,8 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
         df = load_data(sym, tf, str(start_date), str(end_date))
         if df is not None and len(df) > 50:
             cfg = _load_config(sym, tf)
-            pairs_data[f"{sym.split('/')[0]}_{tf}"] = {'symbol': sym, 'timeframe': tf, 'df': df, 'cfg': cfg}
+            fine_df = _load_fine_data(sym, tf, str(start_date), str(end_date))
+            pairs_data[f"{sym.split('/')[0]}_{tf}"] = {'symbol': sym, 'timeframe': tf, 'df': df, 'cfg': cfg, 'fine_df': fine_df}
 
     if not pairs_data:
         _send(token, chat, "Keine Daten geladen.", send_telegram)
@@ -185,9 +203,11 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
                 ]
                 if len(df_is) < max(min_trades, 10):
                     continue
+                fine_df = pd_info.get('fine_df')
+                fine_is = fine_df.loc[(fine_df.index >= is_start) & (fine_df.index < is_end)] if fine_df is not None else None
                 try:
                     with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                        r = run_envelope_backtest(df_is, pd_info['cfg'], start_capital=capital, show_progress=False)
+                        r = run_envelope_backtest(df_is, pd_info['cfg'], start_capital=capital, show_progress=False, fine_data=fine_is)
                     if r and r.get('trades_count', 0) >= min_trades and r.get('max_drawdown_pct', 100) > 0:
                         c = _calmar(r['total_pnl_pct'], r['max_drawdown_pct'])
                         if c > 0:
@@ -210,9 +230,11 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
                 equity_series.append(eq)
                 continue
 
+            best_fine = best.get('fine_df')
+            fine_oos = best_fine.loc[(best_fine.index >= oos_start) & (best_fine.index < oos_end)] if best_fine is not None else None
             try:
                 with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                    r_oos = run_envelope_backtest(df_oos, best['cfg'], start_capital=eq, show_progress=False)
+                    r_oos = run_envelope_backtest(df_oos, best['cfg'], start_capital=eq, show_progress=False, fine_data=fine_oos)
                 if r_oos:
                     eq = r_oos['end_capital']
             except Exception:
@@ -343,6 +365,7 @@ def analyse_param_walkforward(capital, send_telegram, token, chat):
     if df is None or len(df) < 50:
         _send(token, chat, f"Zu wenig Daten für {sym}/{tf}", send_telegram)
         return
+    fine_df = _load_fine_data(sym, tf, str(start_date), str(end_date))
 
     oos_weeks = pd.date_range(
         start=pd.Timestamp(start_date) + timedelta(weeks=9),
@@ -365,9 +388,10 @@ def analyse_param_walkforward(capital, send_telegram, token, chat):
             if len(df_oos) < 5:
                 equity_series.append(eq)
                 continue
+            fine_oos = fine_df.loc[(fine_df.index >= oos_start) & (fine_df.index < oos_end)] if fine_df is not None else None
             try:
                 with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                    r = run_envelope_backtest(df_oos, cfg, start_capital=eq, show_progress=False)
+                    r = run_envelope_backtest(df_oos, cfg, start_capital=eq, show_progress=False, fine_data=fine_oos)
                 if r:
                     eq = r['end_capital']
             except Exception:
@@ -958,6 +982,202 @@ def analyse_drawdown_duration(capital, lookback_days, send_telegram, token, chat
     _send(token, chat, msg, send_telegram)
 
 
+# ─── Analyse 10: Reoptimierungs-Snapshot-Glaettung ───────────────────────────
+
+def analyse_reopt_smoothing(capital, min_trades, send_telegram, token, chat):
+    """
+    backtest_lookback_weeks bleibt auf dem per Analyse 1 ermittelten Wert (Team
+    wechselt weiterhin nur woechentlich). Testet, ob die woechentliche Auswahl
+    der "besten" Einzelstrategie auf dem Mittel mehrerer versetzter Trailing-
+    Snapshots (statt nur einem einzelnen Stichtag) treffsicherer wird — validiert
+    per identischer Methode in zerobot (Calmar 20.7 vs. 14.1 Baseline, OOS-Test).
+    """
+    _send(token, chat, "ltbbot Reoptimierungs-Snapshot-Glaettung gestartet...", send_telegram)
+    settings   = _load_settings()
+    strategies = _active_strategies(settings)
+    if not strategies:
+        _send(token, chat, "Keine aktiven Strategien.", send_telegram)
+        return
+
+    lb = int(settings.get('optimization_settings', {}).get('backtest_lookback_weeks', 1))
+    variants = {
+        'Baseline (1 Snapshot)': None,
+        'Glaettung 1d x3':  (1, 3),
+        'Glaettung 1d x7':  (1, 7),
+        'Glaettung 2d x3':  (2, 3),
+        'Glaettung 2d x7':  (2, 7),
+    }
+    max_extra_days = max((s - 1) * step for step, s in
+                         [v for v in variants.values() if v] or [(1, 1)])
+
+    end_date  = date.today()
+    full_days = lb * 7 + max_extra_days + 52 * 7
+    start_date = end_date - timedelta(days=full_days)
+
+    print(f"  Lookback fix bei {lb}W (aus settings.json) | Lade Daten {start_date} -> {end_date}...")
+    pairs_data = {}
+    for s in strategies:
+        sym, tf = s['symbol'], s['timeframe']
+        df = load_data(sym, tf, str(start_date), str(end_date))
+        if df is not None and len(df) > 50:
+            cfg = _load_config(sym, tf)
+            fine_df = _load_fine_data(sym, tf, str(start_date), str(end_date))
+            pairs_data[f"{sym.split('/')[0]}_{tf}"] = {'symbol': sym, 'timeframe': tf, 'df': df, 'cfg': cfg, 'fine_df': fine_df}
+    if not pairs_data:
+        _send(token, chat, "Keine Daten geladen.", send_telegram)
+        return
+
+    all_mondays = pd.date_range(
+        start=pd.Timestamp(start_date) + timedelta(weeks=(max_extra_days // 7) + lb + 1),
+        end=pd.Timestamp(end_date),
+        freq='W-MON', tz='UTC'
+    )
+
+    from tqdm import tqdm
+
+    def _score(pd_info, is_start, is_end):
+        df_is = pd_info['df'].loc[(pd_info['df'].index >= is_start) & (pd_info['df'].index < is_end)]
+        if len(df_is) < max(min_trades, 10):
+            return None
+        fine_df = pd_info.get('fine_df')
+        fine_is = fine_df.loc[(fine_df.index >= is_start) & (fine_df.index < is_end)] if fine_df is not None else None
+        try:
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                r = run_envelope_backtest(df_is, pd_info['cfg'], start_capital=capital, show_progress=False, fine_data=fine_is)
+            if r and r.get('trades_count', 0) >= min_trades and r.get('max_drawdown_pct', 100) > 0:
+                c = _calmar(r['total_pnl_pct'], r['max_drawdown_pct'])
+                return c if c > 0 else None
+        except Exception:
+            pass
+        return None
+
+    results = {}
+    for label, smoothing in variants.items():
+        eq = capital
+        equity_series = [eq]
+        empty_weeks = 0
+
+        for oos_start in tqdm(all_mondays, desc=f"  {label:<24}", unit="Woche", leave=True):
+            oos_end  = oos_start + timedelta(days=7)
+            is_end   = oos_start
+            is_start = is_end - timedelta(weeks=lb)
+
+            scored = []
+            for key, pd_info in pairs_data.items():
+                if smoothing is None:
+                    c = _score(pd_info, is_start, is_end)
+                    if c is not None:
+                        scored.append((c, key, pd_info))
+                else:
+                    step_days, n_samples = smoothing
+                    sub_scores = []
+                    for k in range(n_samples):
+                        shift = timedelta(days=k * step_days)
+                        c = _score(pd_info, is_start - shift, is_end - shift)
+                        if c is not None:
+                            sub_scores.append(c)
+                    if sub_scores:
+                        scored.append((float(np.mean(sub_scores)), key, pd_info))
+
+            if not scored:
+                empty_weeks += 1
+                equity_series.append(eq)
+                continue
+
+            scored.sort(reverse=True)
+            best = scored[0][2]
+            df_oos = best['df'].loc[(best['df'].index >= oos_start) & (best['df'].index < oos_end)]
+            if len(df_oos) < 5:
+                equity_series.append(eq)
+                continue
+            best_fine = best.get('fine_df')
+            fine_oos = best_fine.loc[(best_fine.index >= oos_start) & (best_fine.index < oos_end)] if best_fine is not None else None
+            try:
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    r_oos = run_envelope_backtest(df_oos, best['cfg'], start_capital=eq, show_progress=False, fine_data=fine_oos)
+                if r_oos:
+                    eq = r_oos['end_capital']
+            except Exception:
+                pass
+            equity_series.append(eq)
+
+        arr    = np.array(equity_series)
+        dates  = [pd.Timestamp(start_date) + timedelta(weeks=(max_extra_days // 7) + lb + 1) + timedelta(weeks=i)
+                  for i in range(len(arr))]
+        peak   = np.maximum.accumulate(arr)
+        dd     = (peak - arr) / peak * 100
+        max_dd = float(dd.max()) if len(dd) > 0 else 0
+        total_pnl = (eq - capital) / capital * 100
+        calmar = _calmar(total_pnl, max_dd)
+        results[label] = {'equity': arr, 'dates': dates, 'calmar': calmar,
+                          'dd': max_dd, 'pnl': total_pnl, 'empty': empty_weeks}
+
+    best_label = max(results, key=lambda x: results[x]['calmar'])
+    n_oos      = len(all_mondays)
+
+    fig = _dark_fig(14, 10)
+    gs  = gridspec.GridSpec(2, 1, figure=fig, height_ratios=[2, 1], hspace=0.4)
+    ax1 = fig.add_subplot(gs[0])
+    ax2 = fig.add_subplot(gs[1])
+    _style_ax(ax1); _style_ax(ax2)
+
+    for i, (label, r) in enumerate(results.items()):
+        sign  = '+' if r['pnl'] >= 0 else ''
+        lbl   = f"{label}: {sign}{r['pnl']:.1f}% | DD {r['dd']:.1f}% | Calmar {r['calmar']:.1f}"
+        lw    = 2.2 if label == best_label else 1.2
+        alpha = 1.0 if label == best_label else 0.75
+        ax1.plot(r['dates'], r['equity'], label=lbl,
+                 color=PALETTE[i % len(PALETTE)], linewidth=lw, alpha=alpha)
+    ax1.axhline(capital, color='#8b949e', linewidth=0.8, linestyle='--',
+                label=f'Start {capital:.0f} USDT')
+    ax1.set_yscale('log')
+    ax1.set_title(
+        f'ltbbot Reoptimierungs-Snapshot-Glaettung (Out-of-Sample)\n'
+        f'Startkapital: {capital:.0f} USDT | Lookback: {lb}W | Test-Wochen: {n_oos}',
+        fontsize=11, pad=10)
+    ax1.set_ylabel('Equity (USDT, log)')
+    ax1.legend(fontsize=8, facecolor='#161b22', labelcolor='#c9d1d9', loc='upper left')
+
+    import matplotlib.dates as mdates
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+    ax1.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+    plt.setp(ax1.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=7)
+
+    labels_list = list(results.keys())
+    calmars     = [results[l]['calmar'] for l in labels_list]
+    colors      = [C4 if l == best_label else PALETTE[i % len(PALETTE)] for i, l in enumerate(labels_list)]
+    bars        = ax2.bar(labels_list, calmars, color=colors, width=0.6)
+    for bar, val, l in zip(bars, calmars, labels_list):
+        ax2.text(bar.get_x() + bar.get_width() / 2,
+                 bar.get_height() + max(abs(v) for v in calmars) * 0.02,
+                 f'{val:.1f}', ha='center', va='bottom',
+                 color='#f0f6fc', fontsize=9, fontweight='bold')
+        if l == best_label:
+            ax2.text(bar.get_x() + bar.get_width() / 2,
+                     min(0, bar.get_height()) - max(abs(v) for v in calmars) * 0.06,
+                     '★ BEST', ha='center', va='top', color=C4, fontsize=9, fontweight='bold')
+    ax2.axhline(0, color='#8b949e', linewidth=0.8)
+    ax2.set_title('Calmar Score pro Variante (hoeher = besser)', fontsize=10)
+    ax2.set_xlabel('Variante')
+    ax2.set_ylabel('Calmar Score (OOS)')
+    plt.setp(ax2.xaxis.get_majorticklabels(), rotation=20, ha='right', fontsize=8)
+
+    path = f'{TMP}/ltbbot_reopt_smoothing.png'
+    _send_fig(token, chat, fig, 'ltbbot Reoptimierungs-Snapshot-Glaettung', path, send_telegram)
+
+    lines = [f'ltbbot Reoptimierungs-Snapshot-Glaettung\nLookback: {lb}W | Startkapital: {capital:.0f} USDT | Test-Wochen: {n_oos}\n']
+    for label, r in results.items():
+        star = ' ← bestes Calmar' if label == best_label else ''
+        sign = '+' if r['pnl'] >= 0 else ''
+        lines.append(
+            f"{label:<24} PnL={sign}{r['pnl']:6.1f}% | DD={r['dd']:5.1f}% | "
+            f"Calmar={r['calmar']:7.1f} | Leerwochen={r['empty']:2d}{star}"
+        )
+    if best_label == 'Baseline (1 Snapshot)':
+        lines.append('\n-> Glaettung bringt hier keinen Vorteil, Baseline bleibt am besten.')
+    _send(token, chat, '\n'.join(lines), send_telegram)
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -999,6 +1219,7 @@ def main():
         7: lambda: analyse_regime(capital, lookback_days, send_tg, token, chat),
         8: lambda: analyse_time_of_day(capital, lookback_days, send_tg, token, chat),
         9: lambda: analyse_drawdown_duration(capital, lookback_days, send_tg, token, chat),
+        10: lambda: analyse_reopt_smoothing(capital, args.min_trades, send_tg, token, chat),
     }
 
     if m in fn_map:

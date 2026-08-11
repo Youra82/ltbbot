@@ -21,6 +21,37 @@ SLIPPAGE_PCT_EXIT  = 0.0005  # 0.05% Slippage auf Exit (Market Order TP/SL)
 SLIPPAGE_PCT_ENTRY = 0.0012  # 0.12% Slippage auf Entry (Trigger-Limit, beobachtet live: +0.10–0.20%)
 # --- ENDE KONSTANTEN ---
 
+# Feinere Timeframe je Strategie-Timeframe fuer die SL/TP-Intrabar-Reihenfolgen-
+# Aufloesung (oraclebot-Muster).
+FINE_TF_MAP = {
+    '5m': '1m', '15m': '1m', '30m': '1m',
+    '1h': '5m', '2h': '5m',
+    '4h': '15m', '6h': '15m',
+    '1d': '1h',
+}
+
+
+def _resolve_ambiguous_exit(fine_slice, sl_price, tp_price, side):
+    """
+    Wenn eine Coarse-Kerze SOWOHL SL als auch den (fuer diese Kerze aktuellen)
+    TP-MA-Wert beruehrt haette, per feineren Kerzen die tatsaechliche
+    Reihenfolge aufloesen, statt SL blind zu bevorzugen (bisherige Konvention).
+    """
+    if fine_slice is None or fine_slice.empty:
+        return None
+    for _, bar in fine_slice.iterrows():
+        if side == 'long':
+            if bar['low'] <= sl_price:
+                return sl_price
+            if bar['high'] >= tp_price:
+                return tp_price
+        else:
+            if bar['high'] >= sl_price:
+                return sl_price
+            if bar['low'] <= tp_price:
+                return tp_price
+    return None
+
 def load_data(symbol, timeframe, start_date_str, end_date_str):
     """Lädt historische OHLCV-Daten, entweder aus dem Cache oder von der Börse."""
     cache_dir = os.path.join(PROJECT_ROOT, 'data', 'cache')
@@ -96,7 +127,7 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
     return pd.DataFrame()
 
 # --- NEUER BACKTESTER FÜR ENVELOPE (MIT KORREKTUREN) ---
-def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, sim_start_date=None):
+def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, sim_start_date=None, fine_data=None):
     """
     Führt einen Backtest für die Envelope-Strategie durch.
     KORRIGIERT: Verwendet Startkapital für Positionsgrößen, simuliert Slippage und Max Position Size.
@@ -194,6 +225,7 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
     if show_progress:
         logger.info(f"Starte Backtest mit {total_candles} Kerzen...")
     progress_interval = max(1, total_candles // 20)  # 20 Updates (5% Schritte)
+    coarse_duration = df.index[1] - df.index[0] if len(df.index) >= 2 else None
 
     for i in range(len(df)):
         # Progress Bar Update
@@ -226,22 +258,38 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
             pos_amount = pos['amount_coins']
 
             # SL Prüfung
-            if pos_side == 'long' and current_candle['low'] <= pos_sl:
-                exit_price = pos_sl; exited = True
-            elif pos_side == 'short' and current_candle['high'] >= pos_sl:
-                exit_price = pos_sl; exited = True
+            sl_hit = (pos_side == 'long' and current_candle['low'] <= pos_sl) or \
+                     (pos_side == 'short' and current_candle['high'] >= pos_sl)
 
-            # TP Prüfung (nur wenn SL nicht getroffen)
-            # Dynamischer TP: aktueller MA jede Kerze (entspricht Live-Bot der TP jede Runde neu setzt)
-            if not exited:
-                tp_price_current = current_candle['average']
-                if not pd.isna(tp_price_current) and tp_price_current > 0:
-                    if pos_side == 'long' and current_candle['high'] >= tp_price_current:
-                        if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
-                            exit_price = tp_price_current; exited = True
-                    elif pos_side == 'short' and current_candle['low'] <= tp_price_current:
-                        if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
-                            exit_price = tp_price_current; exited = True
+            # TP Prüfung: Dynamischer TP (aktueller MA jede Kerze, entspricht Live-Bot
+            # der TP jede Runde neu setzt).
+            tp_price_current = current_candle['average']
+            tp_hit = False
+            if not pd.isna(tp_price_current) and tp_price_current > 0:
+                if pos_side == 'long' and current_candle['high'] >= tp_price_current:
+                    if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
+                        tp_hit = True
+                elif pos_side == 'short' and current_candle['low'] <= tp_price_current:
+                    if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
+                        tp_hit = True
+
+            if sl_hit and tp_hit:
+                # Beide Level in derselben Kerze moeglich -- Reihenfolge unklar
+                # ohne feinere Daten. Per fine_data (falls vorhanden) real
+                # aufloesen statt SL blind zu bevorzugen (oraclebot-Muster).
+                exit_price = None
+                if fine_data is not None and coarse_duration is not None:
+                    fine_slice = fine_data.loc[
+                        (fine_data.index >= timestamp) & (fine_data.index < timestamp + coarse_duration)
+                    ]
+                    exit_price = _resolve_ambiguous_exit(fine_slice, pos_sl, tp_price_current, pos_side)
+                if exit_price is None:
+                    exit_price = pos_sl  # Fallback: alte SL-first-Konvention
+                exited = True
+            elif sl_hit:
+                exit_price = pos_sl; exited = True
+            elif tp_hit:
+                exit_price = tp_price_current; exited = True
 
             # Wenn Ausstieg, PnL berechnen und Position entfernen
             if exited and exit_price is not None and exit_price > 0: # Stelle sicher, dass Exit-Preis gültig ist
