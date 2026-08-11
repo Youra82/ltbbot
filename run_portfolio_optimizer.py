@@ -52,7 +52,7 @@ def _scan_configs() -> list:
 
 
 def _build_strategies_data(config_files: list, start_date: str, end_date: str) -> dict:
-    from ltbbot.analysis.backtester import load_data
+    from ltbbot.analysis.backtester import load_data, FINE_TF_MAP
     strategies_data = {}
     for path in tqdm(config_files, desc='Lade Configs & Daten'):
         fname = os.path.basename(path)
@@ -68,11 +68,24 @@ def _build_strategies_data(config_files: list, start_date: str, end_date: str) -
             if data is None or data.empty or len(data) < 50:
                 print(f"  {Y}Uebersprungen (keine Daten): {fname}{NC}")
                 continue
+
+            # Feinere Kerzen fuer SL/TP-Intrabar-Reihenfolgen-Aufloesung (oraclebot-Muster).
+            fine_data = None
+            fine_tf = FINE_TF_MAP.get(timeframe)
+            if fine_tf:
+                try:
+                    fine_data = load_data(symbol, fine_tf, start_date, end_date)
+                    if fine_data is None or fine_data.empty:
+                        fine_data = None
+                except Exception:
+                    fine_data = None
+
             # portfolio_simulator erwartet 'params' als vollstaendiges Config-Dict
             strategies_data[fname] = {
                 'symbol':    symbol,
                 'timeframe': timeframe,
                 'data':      data,
+                'fine_data': fine_data,
                 'params':    config,
             }
         except Exception as e:
@@ -418,9 +431,17 @@ def main() -> int:
         print(f"{R}  Keine Daten geladen.{NC}")
         return 1
 
+    # Rangfolge-Glaettung: Wahl des "Star-Spielers" basiert auf dem Mittel mehrerer
+    # versetzter Trailing-Snapshots statt nur dem Stichtag (validiert in zerobot:
+    # Calmar 20.7 vs. 14.1 Baseline, OOS-Test).
+    smoothing_step_days = int(opt.get('smoothing_step_days', 2))
+    smoothing_samples   = int(opt.get('smoothing_samples', 7))
+
     from ltbbot.analysis.portfolio_optimizer import run_portfolio_optimizer
     result = run_portfolio_optimizer(capital, strategies_data, start_date, end_date,
-                                      max_portfolio_dd_constraint=max_dd / 100.0)
+                                      max_portfolio_dd_constraint=max_dd / 100.0,
+                                      smoothing_step_days=smoothing_step_days,
+                                      smoothing_samples=smoothing_samples)
 
     if not result or not result.get('optimal_portfolio'):
         print(f"{R}  Kein Portfolio erfuellt die Bedingungen (MaxDD <= {max_dd:.0f}%).{NC}\n")

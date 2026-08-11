@@ -14,6 +14,7 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 # Import necessary functions
 from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
+from ltbbot.analysis.backtester import _resolve_ambiguous_exit
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
 SLIPPAGE_PCT_EXIT  = 0.0005  # 0.05% Slippage auf Exit (Market Order TP/SL)
@@ -40,6 +41,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     # --- Daten vorbereiten ---
     all_timestamps = set()
     strategy_dfs = {}
+    strategy_fine_data = {}
+    strategy_coarse_duration = {}
     processed_data_count = 0
 
     logger.info("1/4: Berechne Indikatoren für alle Strategien...")
@@ -53,6 +56,11 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 logger.warning(f"Keine Indikatordaten für Strategie {strategy_id}. Wird ignoriert.")
                 continue
             strategy_dfs[strategy_id] = df_with_indicators
+            strategy_fine_data[strategy_id] = strat_info.get('fine_data')
+            strategy_coarse_duration[strategy_id] = (
+                df_with_indicators.index[1] - df_with_indicators.index[0]
+                if len(df_with_indicators.index) >= 2 else None
+            )
             all_timestamps.update(df_with_indicators.index)
             processed_data_count += 1
         except Exception as e:
@@ -164,21 +172,39 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 pos_amount    = layer['amount_coins']
 
                 # SL
-                if pos_side == 'long' and current_candle['low'] <= pos_sl:
-                    exit_price = pos_sl; exited = True
-                elif pos_side == 'short' and current_candle['high'] >= pos_sl:
-                    exit_price = pos_sl; exited = True
+                sl_hit = (pos_side == 'long' and current_candle['low'] <= pos_sl) or \
+                         (pos_side == 'short' and current_candle['high'] >= pos_sl)
 
-                # TP
-                if not exited:
-                    tp_price_current = current_candle['average']
-                    if not pd.isna(tp_price_current) and tp_price_current > 0:
-                        if pos_side == 'long' and current_candle['high'] >= tp_price_current:
-                            if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
-                                exit_price = tp_price_current; exited = True
-                        elif pos_side == 'short' and current_candle['low'] <= tp_price_current:
-                            if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
-                                exit_price = tp_price_current; exited = True
+                # TP (dynamischer MA-Wert dieser Kerze)
+                tp_price_current = current_candle['average']
+                tp_hit = False
+                if not pd.isna(tp_price_current) and tp_price_current > 0:
+                    if pos_side == 'long' and current_candle['high'] >= tp_price_current:
+                        if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
+                            tp_hit = True
+                    elif pos_side == 'short' and current_candle['low'] <= tp_price_current:
+                        if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
+                            tp_hit = True
+
+                if sl_hit and tp_hit:
+                    # Beide Level in derselben Kerze moeglich -- per Fein-Daten
+                    # (falls vorhanden) real aufloesen statt SL zu bevorzugen
+                    # (oraclebot-Muster).
+                    exit_price = None
+                    fine_data = strategy_fine_data.get(strategy_id)
+                    coarse_duration = strategy_coarse_duration.get(strategy_id)
+                    if fine_data is not None and coarse_duration is not None:
+                        fine_slice = fine_data.loc[
+                            (fine_data.index >= ts) & (fine_data.index < ts + coarse_duration)
+                        ]
+                        exit_price = _resolve_ambiguous_exit(fine_slice, pos_sl, tp_price_current, pos_side)
+                    if exit_price is None:
+                        exit_price = pos_sl  # Fallback: alte SL-first-Konvention
+                    exited = True
+                elif sl_hit:
+                    exit_price = pos_sl; exited = True
+                elif tp_hit:
+                    exit_price = tp_price_current; exited = True
 
                 if exited and exit_price is not None:
                     if pos_side == 'long':

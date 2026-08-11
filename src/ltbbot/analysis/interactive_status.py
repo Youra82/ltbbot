@@ -22,7 +22,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange
-from ltbbot.analysis.backtester import run_envelope_backtest, load_data, calculate_indicators_and_signals
+from ltbbot.analysis.backtester import run_envelope_backtest, load_data, calculate_indicators_and_signals, FINE_TF_MAP
 
 def setup_logging():
     logger = logging.getLogger('interactive_status')
@@ -506,9 +506,18 @@ def main():
             
             # ===== BACKTEST AUSFÜHREN =====
             logger.info("Führe Backtest durch...")
+            fine_df = None
+            fine_tf = FINE_TF_MAP.get(timeframe)
+            if fine_tf:
+                try:
+                    fine_df = exchange.fetch_historical_ohlcv(symbol, fine_tf, start_date_for_load, end_date_for_load)
+                    if fine_df is None or len(fine_df) == 0:
+                        fine_df = None
+                except Exception:
+                    fine_df = None
             backtest_result = None
             try:
-                backtest_result = run_envelope_backtest(df, config, start_capital=start_capital)
+                backtest_result = run_envelope_backtest(df, config, start_capital=start_capital, fine_data=fine_df)
                 logger.info(f"Backtest abgeschlossen: PnL={backtest_result.get('total_pnl_pct', 0):.2f}%, "
                            f"Trades={backtest_result.get('trades_count', 0)}, "
                            f"Win Rate={backtest_result.get('win_rate', 0):.1f}%")

@@ -29,6 +29,7 @@ print_menu() {
     echo -e "${C}  Walk-Forward / Robustheit${NC}"
     echo -e "  ${Y}1${NC}  Walk-Forward Lookback-Analyse"
     echo -e "  ${Y}2${NC}  Envelope Parameter Walk-Forward (SL / Period)"
+    echo -e "  ${Y}10${NC} Reoptimierungs-Snapshot-Glaettung"
     echo ""
     echo -e "${C}  Risiko / Kosten${NC}"
     echo -e "  ${Y}3${NC}  Slippage & Fee Impact"
@@ -68,7 +69,7 @@ run_mode() {
 # ── Hauptschleife ────────────────────────────────────────────────────────────
 while true; do
     print_menu
-    read -rp "  Analyse wählen (0-9, q=Beenden): " choice
+    read -rp "  Analyse wählen (0-10, q=Beenden): " choice
 
     case "$choice" in
     q|Q) echo -e "\n${G}Tschüss!${NC}"; exit 0 ;;
@@ -84,6 +85,17 @@ while true; do
         echo -e "\n${B}Envelope Parameter Walk-Forward${NC}"
         ask "Startkapital (USDT)"  "50"  CAP
         run_mode 2 "$CAP" "auto"
+        ;;
+
+    10)
+        echo -e "\n${B}Reoptimierungs-Snapshot-Glaettung${NC}"
+        echo "  backtest_lookback_weeks bleibt auf dem per Analyse 1 ermittelten Wert,"
+        echo "  Team wechselt weiterhin nur woechentlich. Testet, ob die woechentliche"
+        echo "  Einzelstrategie-Auswahl durch mehrere versetzte Trailing-Snapshots"
+        echo "  (statt einem einzelnen Stichtag) treffsicherer wird."
+        ask "Startkapital (USDT)"  "50"  CAP
+        ask "Min. Trades pro Fenster" "5"  MINT
+        run_mode 10 "$CAP" "auto" "--min-trades $MINT"
         ;;
 
     3)

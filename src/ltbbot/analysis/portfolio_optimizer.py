@@ -1,5 +1,6 @@
 # src/ltbbot/analysis/portfolio_optimizer.py
 import pandas as pd
+import numpy as np
 import itertools
 from tqdm import tqdm
 import logging
@@ -16,12 +17,64 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
 from ltbbot.analysis.backtester import run_envelope_backtest
 
+
+def _smoothed_score(strategy_id, strat_data, start_capital, start_date, end_date,
+                    step_days, num_samples):
+    """
+    Mittelt den Calmar-Score ueber mehrere, um step_days versetzte Snapshot-
+    Fenster gleicher Laenge (statt nur den aktuellen Stichtag zu messen) —
+    validiert in zerobot (2 Tage x 7 Snapshots: Calmar 20.7 vs. 14.1 Baseline,
+    OOS-Test). Reduziert die Anfaelligkeit der woechentlichen "Star-Spieler"-
+    Auswahl fuer einen Ausreisser-Trade kurz vor dem exakten Stichtag.
+    Aendert NICHTS an der tatsaechlich simulierten Team-Performance (die bleibt
+    auf dem realen, aktuellen Fenster) — nur an der Rangfolge der Kandidaten.
+
+    Laedt pro Snapshot frisch per load_data() (Cache-Hit im Normalfall), statt
+    das bereits geladene strat_data['data'] zu wiederverwenden — das Fenster ist
+    bei kurzen backtest_lookback_weeks (z.B. 1 Woche bei ltbbot) oft zu knapp
+    zugeschnitten, um zusaetzlich 12 Tage weiter zurueckzureichen.
+    """
+    from ltbbot.analysis.backtester import load_data
+    symbol, timeframe = strat_data['symbol'], strat_data['timeframe']
+    start_dt = pd.to_datetime(start_date, utc=True)
+    end_dt   = pd.to_datetime(end_date, utc=True)
+    window   = end_dt - start_dt
+    scores   = []
+    for k in range(num_samples):
+        shift        = pd.Timedelta(days=k * step_days)
+        anchor_end    = end_dt - shift
+        anchor_start  = anchor_end - window
+        anchor_end_str, anchor_start_str = anchor_end.strftime('%Y-%m-%d'), anchor_start.strftime('%Y-%m-%d')
+        try:
+            snap_data = load_data(symbol, timeframe, anchor_start_str, anchor_end_str)
+            if snap_data is None or snap_data.empty or len(snap_data) < 50:
+                continue
+            snap_strat = {**strat_data, 'data': snap_data}
+            res = run_portfolio_simulation(
+                start_capital, {strategy_id: snap_strat}, anchor_start_str, anchor_end_str)
+        except Exception:
+            continue
+        if not res or res.get('end_capital', 0) <= 0 or res.get('liquidation_date'):
+            continue
+        pnl_pct    = res.get('total_pnl_pct', -100.0)
+        max_dd_pct = max(res.get('max_drawdown_pct', 100.0), 0.1)
+        scores.append(pnl_pct / max_dd_pct if max_dd_pct > 0 else (pnl_pct if pnl_pct > 0 else -1000))
+    return float(np.mean(scores)) if scores else None
+
+
 # --- Portfolio Optimizer Logic (Greedy Approach) ---
-def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date, max_portfolio_dd_constraint=0.3): # NEU: max_portfolio_dd_constraint hinzugefügt
+def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date,
+                            max_portfolio_dd_constraint=0.3,
+                            smoothing_step_days=2, smoothing_samples=7): # NEU: max_portfolio_dd_constraint hinzugefügt
     """
     Findet eine gute Kombination von Envelope-Strategien mithilfe eines Greedy-Algorithmus.
     Optimierungsziel: Maximierung einer risikoadjustierten Metrik (vereinfachte Calmar Ratio).
     Stellt sicher, dass jedes Symbol nur einmal im Portfolio vorkommt und der Portfolio-Drawdown eingehalten wird.
+
+    smoothing_step_days/smoothing_samples: die Wahl des "Star-Spielers" (Startpunkt
+        des Greedy-Aufbaus) basiert auf dem Mittel mehrerer versetzter Trailing-
+        Snapshots statt nur dem aktuellen Stichtag. smoothing_samples<=1 schaltet
+        die Glaettung aus (altes Verhalten).
     """
     logger.info("\n--- Starte automatische Portfolio-Optimierung (Envelope, Symbol-Exklusiv, Portfolio DD Constraint)... ---")
 
@@ -31,6 +84,9 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
 
     # --- 1. Einzel-Performance analysieren (nur profitable, nicht liquidierte Strategien betrachten) ---
     logger.info("1/3: Analysiere Einzel-Performance jeder Strategie...")
+    use_smoothing = smoothing_samples and smoothing_samples > 1
+    if use_smoothing:
+        logger.info(f"    (Rangfolge geglaettet: {smoothing_samples} Snapshots alle {smoothing_step_days} Tage)")
     single_strategy_results = []
 
     for strategy_id, strat_data in tqdm(strategies_data.items(), desc="Bewerte Einzelstrategien"):
@@ -46,6 +102,14 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
                 # Score = Vereinfachte Calmar Ratio (PnL / Max Drawdown)
                 score = pnl_pct / max_dd_pct if max_dd_pct > 0 else pnl_pct if pnl_pct > 0 else -1000
 
+                sort_score = score
+                if use_smoothing:
+                    smoothed = _smoothed_score(strategy_id, strat_data, start_capital,
+                                               start_date, end_date,
+                                               smoothing_step_days, smoothing_samples)
+                    if smoothed is not None:
+                        sort_score = smoothed
+
                 # Nur Strategien berücksichtigen, deren EIGENER Drawdown unter dem Portfolio-Limit liegt
                 # (Optional, aber sinnvoll, um extrem riskante Einzelstrategien auszuschließen)
                 if max_dd_pct <= max_portfolio_dd_constraint * 100:
@@ -53,6 +117,7 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
                         'strategy_id': strategy_id,
                         'symbol': strat_data['symbol'], # Symbol für spätere Prüfung
                         'score': score,
+                        'sort_score': sort_score,
                         'pnl_pct': pnl_pct,
                         'max_dd_pct': max_dd_pct,
                         'result': result # Vollständiges Ergebnis speichern
@@ -73,7 +138,7 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
         return None
 
     # --- 2. Greedy-Algorithmus: Bestes Team aufbauen ---
-    single_strategy_results.sort(key=lambda x: x['score'], reverse=True)
+    single_strategy_results.sort(key=lambda x: x['sort_score'], reverse=True)
 
     best_portfolio_ids = [single_strategy_results[0]['strategy_id']]
     best_portfolio_symbols = {single_strategy_results[0]['symbol']} # Set mit Symbolen
@@ -174,7 +239,7 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
             try:
                 bt_result = run_envelope_backtest(
                     strat_data['data'].copy(), strat_data['params'], start_capital,
-                    show_progress=False
+                    show_progress=False, fine_data=strat_data.get('fine_data')
                 )
                 if not bt_result:
                     continue
