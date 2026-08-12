@@ -14,7 +14,7 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 # Import necessary functions
 from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
-from ltbbot.analysis.backtester import _resolve_ambiguous_exit
+from ltbbot.analysis.backtester import _resolve_ambiguous_exit, _get_fine_slice
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
 SLIPPAGE_PCT_EXIT  = 0.0005  # 0.05% Slippage auf Exit (Market Order TP/SL)
@@ -194,9 +194,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                     fine_data = strategy_fine_data.get(strategy_id)
                     coarse_duration = strategy_coarse_duration.get(strategy_id)
                     if fine_data is not None and coarse_duration is not None:
-                        fine_slice = fine_data.loc[
-                            (fine_data.index >= ts) & (fine_data.index < ts + coarse_duration)
-                        ]
+                        fine_slice = _get_fine_slice(fine_data, ts, ts + coarse_duration)
                         exit_price = _resolve_ambiguous_exit(fine_slice, pos_sl, tp_price_current, pos_side)
                     if exit_price is None:
                         exit_price = pos_sl  # Fallback: alte SL-first-Konvention

@@ -16,6 +16,8 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 from ltbbot.utils.exchange import Exchange # Für load_data
 from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
 
+secrets_cache = None
+
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
 SLIPPAGE_PCT_EXIT  = 0.0005  # 0.05% Slippage auf Exit (Market Order TP/SL)
 SLIPPAGE_PCT_ENTRY = 0.0012  # 0.12% Slippage auf Entry (Trigger-Limit, beobachtet live: +0.10–0.20%)
@@ -51,6 +53,75 @@ def _resolve_ambiguous_exit(fine_slice, sl_price, tp_price, side):
             if bar['low'] <= tp_price:
                 return tp_price
     return None
+
+
+class LazyFineData:
+    def __init__(self, symbol, fine_tf):
+        self.symbol = symbol
+        self.fine_tf = fine_tf
+        self._days = {}
+        self._exchange = None
+
+    def _get_exchange(self):
+        global secrets_cache
+        if self._exchange is not None:
+            return self._exchange
+        try:
+            if secrets_cache is None:
+                with open(os.path.join(PROJECT_ROOT, 'secret.json'), "r") as f:
+                    secrets_cache = json.load(f)
+            api_setup = None
+            if 'ltbbot' in secrets_cache and isinstance(secrets_cache['ltbbot'], list) and secrets_cache['ltbbot']:
+                api_setup = secrets_cache['ltbbot'][0]
+            if api_setup:
+                self._exchange = Exchange(api_setup)
+        except Exception:
+            self._exchange = None
+        return self._exchange
+
+    def _ensure_day(self, day):
+        if day in self._days:
+            return
+        exchange = self._get_exchange()
+        if exchange is None or not exchange.markets:
+            self._days[day] = None
+            return
+        try:
+            day_str = day.strftime('%Y-%m-%d')
+            next_day_str = (day + pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+            df = exchange.fetch_historical_ohlcv(self.symbol, self.fine_tf, day_str, next_day_str)
+            self._days[day] = df if df is not None and not df.empty else None
+        except Exception:
+            self._days[day] = None
+
+    def get_slice(self, start_ts, end_ts):
+        if self.fine_tf is None:
+            return None
+        start_ts = pd.Timestamp(start_ts)
+        end_ts = pd.Timestamp(end_ts)
+        first_day = start_ts.floor('D')
+        last_day = (end_ts - pd.Timedelta(microseconds=1)).floor('D')
+        parts = []
+        day = first_day
+        while day <= last_day:
+            self._ensure_day(day)
+            if self._days[day] is not None:
+                parts.append(self._days[day])
+            day += pd.Timedelta(days=1)
+        if not parts:
+            return None
+        combined = pd.concat(parts).sort_index()
+        combined = combined[~combined.index.duplicated(keep='first')]
+        return combined.loc[(combined.index >= start_ts) & (combined.index < end_ts)]
+
+
+def _get_fine_slice(fine_data, start_ts, end_ts):
+    if fine_data is None:
+        return None
+    if hasattr(fine_data, 'get_slice'):
+        return fine_data.get_slice(start_ts, end_ts)
+    return fine_data.loc[(fine_data.index >= start_ts) & (fine_data.index < end_ts)]
+
 
 def load_data(symbol, timeframe, start_date_str, end_date_str):
     """Lädt historische OHLCV-Daten, entweder aus dem Cache oder von der Börse."""
@@ -279,9 +350,7 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 # aufloesen statt SL blind zu bevorzugen (oraclebot-Muster).
                 exit_price = None
                 if fine_data is not None and coarse_duration is not None:
-                    fine_slice = fine_data.loc[
-                        (fine_data.index >= timestamp) & (fine_data.index < timestamp + coarse_duration)
-                    ]
+                    fine_slice = _get_fine_slice(fine_data, timestamp, timestamp + coarse_duration)
                     exit_price = _resolve_ambiguous_exit(fine_slice, pos_sl, tp_price_current, pos_side)
                 if exit_price is None:
                     exit_price = pos_sl  # Fallback: alte SL-first-Konvention

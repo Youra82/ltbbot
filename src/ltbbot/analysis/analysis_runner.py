@@ -24,7 +24,7 @@ import pandas as pd
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
 
-from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP
+from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP, LazyFineData, _get_fine_slice
 from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
 from ltbbot.utils.telegram import send_message, send_photo
 
@@ -93,17 +93,10 @@ def _load_config(symbol, timeframe):
 
 def _load_fine_data(symbol, timeframe, start_date, end_date):
     """Feinere Kerzen fuer SL/TP-Intrabar-Reihenfolgen-Aufloesung (oraclebot-Muster).
-    Best-effort: gibt None zurueck wenn keine passende Fein-Timeframe existiert
-    oder der Abruf fehlschlaegt -- Aufrufer fallen dann auf die alte SL-first-
-    Konvention zurueck."""
+    Liefert einen LazyFineData-Fetcher (on-demand, kein Eager-Download) oder
+    None wenn keine passende Fein-Timeframe existiert."""
     fine_tf = FINE_TF_MAP.get(timeframe)
-    if not fine_tf:
-        return None
-    try:
-        fine_df = load_data(symbol, fine_tf, start_date, end_date)
-        return fine_df if fine_df is not None and not fine_df.empty else None
-    except Exception:
-        return None
+    return LazyFineData(symbol, fine_tf) if fine_tf else None
 
 
 def _build_strategies_data(strategies, start_date, end_date):
@@ -204,7 +197,7 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
                 if len(df_is) < max(min_trades, 10):
                     continue
                 fine_df = pd_info.get('fine_df')
-                fine_is = fine_df.loc[(fine_df.index >= is_start) & (fine_df.index < is_end)] if fine_df is not None else None
+                fine_is = _get_fine_slice(fine_df, is_start, is_end)
                 try:
                     with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                         r = run_envelope_backtest(df_is, pd_info['cfg'], start_capital=capital, show_progress=False, fine_data=fine_is)
@@ -231,7 +224,7 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
                 continue
 
             best_fine = best.get('fine_df')
-            fine_oos = best_fine.loc[(best_fine.index >= oos_start) & (best_fine.index < oos_end)] if best_fine is not None else None
+            fine_oos = _get_fine_slice(best_fine, oos_start, oos_end)
             try:
                 with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                     r_oos = run_envelope_backtest(df_oos, best['cfg'], start_capital=eq, show_progress=False, fine_data=fine_oos)
@@ -388,7 +381,7 @@ def analyse_param_walkforward(capital, send_telegram, token, chat):
             if len(df_oos) < 5:
                 equity_series.append(eq)
                 continue
-            fine_oos = fine_df.loc[(fine_df.index >= oos_start) & (fine_df.index < oos_end)] if fine_df is not None else None
+            fine_oos = _get_fine_slice(fine_df, oos_start, oos_end)
             try:
                 with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                     r = run_envelope_backtest(df_oos, cfg, start_capital=eq, show_progress=False, fine_data=fine_oos)
@@ -1040,7 +1033,7 @@ def analyse_reopt_smoothing(capital, min_trades, send_telegram, token, chat):
         if len(df_is) < max(min_trades, 10):
             return None
         fine_df = pd_info.get('fine_df')
-        fine_is = fine_df.loc[(fine_df.index >= is_start) & (fine_df.index < is_end)] if fine_df is not None else None
+        fine_is = _get_fine_slice(fine_df, is_start, is_end)
         try:
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                 r = run_envelope_backtest(df_is, pd_info['cfg'], start_capital=capital, show_progress=False, fine_data=fine_is)
@@ -1091,7 +1084,7 @@ def analyse_reopt_smoothing(capital, min_trades, send_telegram, token, chat):
                 equity_series.append(eq)
                 continue
             best_fine = best.get('fine_df')
-            fine_oos = best_fine.loc[(best_fine.index >= oos_start) & (best_fine.index < oos_end)] if best_fine is not None else None
+            fine_oos = _get_fine_slice(best_fine, oos_start, oos_end)
             try:
                 with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                     r_oos = run_envelope_backtest(df_oos, best['cfg'], start_capital=eq, show_progress=False, fine_data=fine_oos)
