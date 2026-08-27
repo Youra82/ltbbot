@@ -8,6 +8,12 @@ echo "1. Erstelle ein Backup von 'secret.json' und lokalen settings.json-Overrid
 cp secret.json secret.json.bak
 
 # Sichere Analyse-Ergebnisse aus settings.json (werden durch git reset überschrieben)
+# WICHTIG (2026-08-27): backtest_lookback_weeks/oos_reference_date werden hier
+# bewusst aus dem AKTUELLEN LOKALEN Stand gesichert und nach dem Reset wieder
+# reingeschrieben -- ein Wert, der im Repo gepusht wird, hat auf diesem VPS
+# also KEINE Wirkung, solange hier schon ein (ggf. veralteter) lokaler Wert
+# steht. Soll ein neuer Wert dauerhaft gelten, muss er einmalig HIER manuell
+# in settings.json gesetzt werden, nicht nur im Repo.
 SAVED_LB=""
 SAVED_OOS=""
 if [ -f settings.json ]; then
