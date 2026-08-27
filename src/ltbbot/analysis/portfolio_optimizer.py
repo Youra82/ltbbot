@@ -51,7 +51,8 @@ def _smoothed_score(strategy_id, strat_data, start_capital, start_date, end_date
                 continue
             snap_strat = {**strat_data, 'data': snap_data}
             res = run_portfolio_simulation(
-                start_capital, {strategy_id: snap_strat}, anchor_start_str, anchor_end_str)
+                start_capital, {strategy_id: snap_strat}, anchor_start_str, anchor_end_str,
+                multi_band_entries=True)
         except Exception:
             continue
         if not res or res.get('end_capital', 0) <= 0 or res.get('liquidation_date'):
@@ -92,7 +93,8 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
     for strategy_id, strat_data in tqdm(strategies_data.items(), desc="Bewerte Einzelstrategien"):
         sim_data_single = {strategy_id: strat_data}
         try:
-            result = run_portfolio_simulation(start_capital, sim_data_single, start_date, end_date)
+            result = run_portfolio_simulation(start_capital, sim_data_single, start_date, end_date,
+                                               multi_band_entries=True)
 
             if result and result.get("end_capital", 0) > 0 and not result.get("liquidation_date"):
                 pnl_pct = result.get('total_pnl_pct', -100.0)
@@ -175,7 +177,8 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
 
             # --- Simulation für das potenzielle Team ---
             try:
-                result = run_portfolio_simulation(start_capital, current_team_data, start_date, end_date)
+                result = run_portfolio_simulation(start_capital, current_team_data, start_date, end_date,
+                                                   multi_band_entries=True)
 
                 # Bewerte das Ergebnis
                 if result and result.get("end_capital", 0) > 0 and not result.get("liquidation_date"):
@@ -263,7 +266,8 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
                 f"{best_bt_pnl:.2f}% > {portfolio_pnl:.2f}% PnL (DD: {best_bt_dd:.2f}%) → Wähle Einzelstrategie."
             )
             sim_data_winner = {best_bt_candidate_id: strategies_data[best_bt_candidate_id]}
-            winner_result = run_portfolio_simulation(start_capital, sim_data_winner, start_date, end_date)
+            winner_result = run_portfolio_simulation(start_capital, sim_data_winner, start_date, end_date,
+                                                      multi_band_entries=True)
             if winner_result:
                 best_portfolio_ids   = [best_bt_candidate_id]
                 best_portfolio_result = winner_result

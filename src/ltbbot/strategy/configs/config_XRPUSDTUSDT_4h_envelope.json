@@ -1,35 +1,35 @@
 {
     "_meta": {
-        "pnl_pct": 281.51,
-        "oos_pnl_pct": 82.17,
-        "oos_trades": 58,
-        "is_oos_split_date": "2025-09-29",
+        "pnl_pct": 79.22,
+        "oos_pnl_pct": 1.63,
+        "oos_trades": 69,
+        "is_oos_split_date": "2025-10-01",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
-        "optimized_at": "2026-08-21T21:17:51"
+        "optimized_at": "2026-08-26T10:08:29"
     },
     "market": {
         "symbol": "XRP/USDT:USDT",
-        "timeframe": "6h"
+        "timeframe": "4h"
     },
     "strategy": {
         "average_type": "WMA",
-        "average_period": 5,
+        "average_period": 7,
         "envelopes": [
-            0.021957225549126935,
-            0.027748902606212725,
-            0.13226317702717627
+            0.02457667006407543,
+            0.08510559264045019,
+            0.09281288206547345
         ],
-        "trigger_price_delta_pct": 0.1605,
+        "trigger_price_delta_pct": 0.0302,
         "disable_strong_trend_block": true,
         "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.97,
-        "leverage": 15,
-        "sl_to_env1_ratio": 0.1067
+        "risk_per_entry_pct": 0.64,
+        "leverage": 13,
+        "sl_to_env1_ratio": 0.1958
     },
     "behavior": {
         "use_longs": true,

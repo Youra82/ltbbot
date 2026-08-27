@@ -51,8 +51,13 @@ class Exchange:
                 ohlcv = self.exchange.fetch_ohlcv(symbol, timeframe, since, fetch_limit)
                 if not ohlcv: break
                 all_ohlcv.extend(ohlcv)
-                since = ohlcv[-1][0] + timeframe_duration_in_ms
-                time.sleep(self.exchange.rateLimit / 1000) 
+                # Bitgets since-Parameter ist EXKLUSIV (liefert nur timestamp > since).
+                # +timeframe_duration_in_ms trifft exakt den Timestamp der naechsten
+                # Kerze und ueberspringt sie dadurch -- gleicher Bug wie in
+                # dbot/dnabot/knnbot/oraclebot (siehe bugfix_exchange_pagination),
+                # hier gefixt auf +1ms.
+                since = ohlcv[-1][0] + 1
+                time.sleep(self.exchange.rateLimit / 1000)
             except ccxt.RateLimitExceeded as e:
                 logger.warning(f"Rate limit exceeded: {e}. Waiting...")
                 time.sleep(5)
@@ -106,7 +111,11 @@ class Exchange:
                 all_ohlcv.extend(ohlcv)
                 last_ts = ohlcv[-1][0]
                 if last_ts >= current_ts:
-                    current_ts = last_ts + timeframe_duration_in_ms
+                    # Gleicher Off-by-one wie oben in fetch_recent_ohlcv (siehe
+                    # bugfix_exchange_pagination/bugfix_periodic_91day_gap_historical_ohlcv):
+                    # +timeframe_duration_in_ms ueberspringt die naechste Kerze, weil
+                    # Bitgets since exklusiv ist. Fix: +1ms.
+                    current_ts = last_ts + 1
                 else:
                     logger.warning("WARNUNG: Kein Zeitfortschritt beim Datenabruf, breche ab.")
                     break
@@ -567,3 +576,29 @@ class Exchange:
         except Exception as e:
             logger.error(f"Kritischer Fehler beim Aufruf der impliziten TSL-Methode: {e}", exc_info=True)
             raise e
+
+
+def drop_incomplete_last_candle(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Entfernt die letzte Kerze, falls sie zum Abrufzeitpunkt noch nicht abgeschlossen ist.
+    Bitget liefert bei fetch_recent_ohlcv() die gerade laufende Kerze live mit. Der Live-
+    Cron laeuft alle 15 Min, deutlich oefter als die 6h-Strategie-Kerze -- ohne diesen Fix
+    berechnet calculate_indicators_and_signals() die Envelope-Baender teils auf einer noch
+    wandernden Kerze statt der letzten abgeschlossenen. Trade-Level-Rekonstruktion der 14
+    echten Live-Trades (2026-08-25, siehe ltbbot/WALKFORWARD_AUDIT_2026-08.md Abschnitt 2c)
+    bestaetigte das fuer Trades mit spuerbarer Intracandle-Bewegung (>=2%) sehr klar (bester
+    simulierter Live-Tick traf den echten Fill-Preis auf 0.01-0.06% genau, die fixe
+    Referenz auf 1-3% daneben).
+
+    Kerzendauer wird aus dem Abstand der letzten zwei Zeilen abgeleitet (kein Timeframe-
+    String-Parsing noetig) -- dadurch automatisch ein No-Op fuer historische Backtest-/
+    Analyse-Dataframes, die ohnehin nur abgeschlossene Kerzen enthalten (gleiches Muster
+    wie bugfix-dnabot-incomplete-candle-signal, 2026-08-25).
+    """
+    if df is None or len(df) < 2:
+        return df
+    candle_interval = df.index[-1] - df.index[-2]
+    now = pd.Timestamp.now(tz='UTC')
+    if now < df.index[-1] + candle_interval:
+        return df.iloc[:-1]
+    return df

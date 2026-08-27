@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "pnl_pct": 68.75,
+        "oos_pnl_pct": 13.32,
+        "oos_trades": 71,
+        "is_oos_split_date": "2025-10-02",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-08-27T12:02:18"
+    },
+    "market": {
+        "symbol": "ADA/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 5,
+        "envelopes": [
+            0.02313917404102254,
+            0.0438618660318207,
+            0.13001527912205335
+        ],
+        "trigger_price_delta_pct": 0.0168,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.18,
+        "leverage": 13,
+        "sl_to_env1_ratio": 0.149
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

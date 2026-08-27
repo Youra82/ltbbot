@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "pnl_pct": 11.65,
+        "oos_pnl_pct": 0.75,
+        "oos_trades": 11,
+        "is_oos_split_date": "2025-10-02",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-08-26T20:39:33"
+    },
+    "market": {
+        "symbol": "BTC/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 12,
+        "envelopes": [
+            0.04576910321609018,
+            0.051827947566407,
+            0.06248512195431158
+        ],
+        "trigger_price_delta_pct": 0.1646,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.52,
+        "leverage": 1,
+        "sl_to_env1_ratio": 0.244
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

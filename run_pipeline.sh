@@ -136,6 +136,20 @@ echo "  Tipp: 1d-Timeframe = max ~365 Kerzen/Jahr, Envelopes triggern selten."
 echo "  Empfehlung: 20 (locker) | 30 (ausgewogen) | 50 (streng)"
 read -p "Mindest-Trades/Jahr pro Strategie [Standard: 20]: " MIN_TRADES_PER_YEAR; MIN_TRADES_PER_YEAR=${MIN_TRADES_PER_YEAR:-20}
 
+# --- IS/OOS-Split + K-Fold-Robustheit (2026-08-21 Port von stbot) ---
+# Jede Optuna-Studie sieht nur IS_FRACTION der Historie; der Rest dient ausschliesslich
+# der Bestaetigung des besten Trials danach (siehe optimizer.py objective()/main()).
+# Behebt In-Sample-Overfitting (siehe LIVE_TRADE_FORENSIK_2026-08.md: voller 3-Jahres-
+# Backtest sagt "Gate AUS besser", juengste 3 Monate allein sagen "Gate AUS schlechter").
+DEFAULT_IS_FRACTION=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('is_fraction',0.70))" 2>/dev/null || echo "0.70")
+DEFAULT_K_FOLDS=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('k_folds',3))" 2>/dev/null || echo "3")
+DEFAULT_MIN_OOS_TRADES=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('min_oos_trades',10))" 2>/dev/null || echo "10")
+echo ""
+echo "  IS/OOS-Split: Anteil der Historie, den Optuna beim Optimieren sieht (Rest = Out-of-Sample-Bestaetigung danach)."
+read -p "In-Sample-Anteil [Standard: $DEFAULT_IS_FRACTION]: " IS_FRACTION; IS_FRACTION=${IS_FRACTION:-$DEFAULT_IS_FRACTION}
+read -p "K-Fold-Teilfenster fuer Robustheits-Score [Standard: $DEFAULT_K_FOLDS]: " K_FOLDS; K_FOLDS=${K_FOLDS:-$DEFAULT_K_FOLDS}
+read -p "Mindest-OOS-Trades fuer Bestaetigung [Standard: $DEFAULT_MIN_OOS_TRADES]: " MIN_OOS_TRADES; MIN_OOS_TRADES=${MIN_OOS_TRADES:-$DEFAULT_MIN_OOS_TRADES}
+
 
 echo ""
 echo -e "${YELLOW}Wähle einen Optimierungs-Modus:${NC}"
@@ -239,6 +253,9 @@ for symbol in $SYMBOLS; do
             --min_pnl       "$MIN_PNL" \
             --mode          "$OPTIM_MODE_ARG" \
             --min_trades_per_year "$MIN_TRADES_PER_YEAR" \
+            --is_fraction   "$IS_FRACTION" \
+            --k_folds       "$K_FOLDS" \
+            --min_oos_trades "$MIN_OOS_TRADES" \
             --config_suffix "_envelope"
 
         if [ $? -ne 0 ]; then

@@ -1,6 +1,7 @@
 {
     "_meta": {
-        "pnl_pct": 43.37
+        "pnl_pct": 43.37,
+        "note": "disable_strong_trend_block manuell auf true gesetzt (2026-08-21, siehe LIVE_TRADE_FORENSIK_2026-08.md) -- fairer Backtest 2023-09-01..2026-08-21 mit Gate AUS: 221.9% PnL / 191 Trades / WR 46.6% (vs. 136.1% / 127 / 44.1% mit Gate AN). Naechster Optuna-Re-Optimierungslauf ueberschreibt dies regulaer."
     },
     "market": {
         "symbol": "ETH/USDT:USDT",
@@ -14,7 +15,9 @@
             0.03477791448857635,
             0.04243852864913138
         ],
-        "trigger_price_delta_pct": 0.0921
+        "trigger_price_delta_pct": 0.0921,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",

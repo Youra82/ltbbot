@@ -33,6 +33,18 @@ logging.getLogger('ltbbot').setLevel(logging.ERROR)
 
 import tempfile
 TMP = tempfile.gettempdir()
+
+# Warmup-Puffer fuer Walk-Forward-Fenster-Slicing (Mode 1 + Mode 10). Ohne diesen
+# Puffer schneiden analyse_walkforward_lookback/analyse_reopt_smoothing IS-/OOS-
+# Fenster ohne Indikator-Anlaufzeit aus der Zeitreihe -- calculate_indicators_and_signals()
+# droppt dann per dropna() fast alle Zeilen eines kurzen Fensters (z.B. 1 Woche ~28
+# 6h-Kerzen), was in ta.trend.adx(window=14) u.ae. IndexErrors ausloest, die im
+# Original-Code per `except Exception: pass` verschluckt wurden -- praktisch keine
+# echte OOS-Pruefung. Fix (Port aus livemodus/walkforward_fixed.py, 2026-08-25/26):
+# Fenster um WARMUP_DAYS nach vorne erweitern, Indikatoren ueber den vollen Puffer
+# einlaufen lassen, aber sim_start_date=<Fensterbeginn> sorgt dafuer, dass Trades/
+# PnL/Drawdown nur ab dem eigentlichen Fensterbeginn zaehlen. Siehe WALKFORWARD_AUDIT_2026-08.md.
+WARMUP_DAYS = 20  # ~80 6h-Kerzen, deckt SMA50-Trendfilter + ATR/ADX(14) + average_period(<=20) ab
 DARK_BG = '#0d1117'
 C1, C2, C3 = '#2563eb', '#22c55e', '#ef4444'
 C4, C5, C6 = '#f59e0b', '#a855f7', '#06b6d4'
@@ -94,7 +106,17 @@ def _load_config(symbol, timeframe):
 def _load_fine_data(symbol, timeframe, start_date, end_date):
     """Feinere Kerzen fuer SL/TP-Intrabar-Reihenfolgen-Aufloesung (oraclebot-Muster).
     Liefert einen LazyFineData-Fetcher (on-demand, kein Eager-Download) oder
-    None wenn keine passende Fein-Timeframe existiert."""
+    None wenn keine passende Fein-Timeframe existiert.
+
+    LTBBOT_ANALYSIS_NO_FINE_DATA=1 deaktiviert das komplett (gleicher Trade-off wie
+    im IS/OOS-Port von optimizer.py 2026-08-21: LazyFineData holt pro Fenster
+    Tag-fuer-Tag einzeln vom Netzwerk, gemessen >40s/Wochen-Iteration bei
+    walk-forward-Loops mit hunderten Fenstern -- macht einen echten rollierenden
+    Walk-Forward-Test ueber Monate praktisch unbenutzbar. fine_data=None verwendet
+    stattdessen die grobe Naeherung (SL/TP-Reihenfolge per Heuristik statt 15m-
+    Intrabar-Aufloesung) -- Bruchteile einer Sekunde statt Minuten pro Fenster."""
+    if os.environ.get('LTBBOT_ANALYSIS_NO_FINE_DATA') == '1':
+        return None
     fine_tf = FINE_TF_MAP.get(timeframe)
     return LazyFineData(symbol, fine_tf) if fine_tf else None
 
@@ -153,7 +175,7 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
     lookbacks = [1, 2, 4, 8, 12, 26]
     end_date  = date.today()
     max_lb    = max(lookbacks)
-    full_days = max_lb * 7 + 52 * 7
+    full_days = max_lb * 7 + 52 * 7 + WARMUP_DAYS
     start_date = end_date - timedelta(days=full_days)
 
     print(f"  Lade Daten {start_date} → {end_date}...")
@@ -191,8 +213,9 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
 
             scored = []
             for key, pd_info in pairs_data.items():
+                buffered_is_start = is_start - timedelta(days=WARMUP_DAYS)
                 df_is = pd_info['df'].loc[
-                    (pd_info['df'].index >= is_start) & (pd_info['df'].index < is_end)
+                    (pd_info['df'].index >= buffered_is_start) & (pd_info['df'].index < is_end)
                 ]
                 if len(df_is) < max(min_trades, 10):
                     continue
@@ -200,7 +223,7 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
                 fine_is = _get_fine_slice(fine_df, is_start, is_end)
                 try:
                     with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                        r = run_envelope_backtest(df_is, pd_info['cfg'], start_capital=capital, show_progress=False, fine_data=fine_is)
+                        r = run_envelope_backtest(df_is, pd_info['cfg'], start_capital=capital, show_progress=False, fine_data=fine_is, sim_start_date=is_start)
                     if r and r.get('trades_count', 0) >= min_trades and r.get('max_drawdown_pct', 100) > 0:
                         c = _calmar(r['total_pnl_pct'], r['max_drawdown_pct'])
                         if c > 0:
@@ -216,8 +239,9 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
             scored.sort(reverse=True)
             best = scored[0][2]
 
+            buffered_oos_start = oos_start - timedelta(days=WARMUP_DAYS)
             df_oos = best['df'].loc[
-                (best['df'].index >= oos_start) & (best['df'].index < oos_end)
+                (best['df'].index >= buffered_oos_start) & (best['df'].index < oos_end)
             ]
             if len(df_oos) < 5:
                 equity_series.append(eq)
@@ -227,7 +251,7 @@ def analyse_walkforward_lookback(capital, min_trades, send_telegram, token, chat
             fine_oos = _get_fine_slice(best_fine, oos_start, oos_end)
             try:
                 with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                    r_oos = run_envelope_backtest(df_oos, best['cfg'], start_capital=eq, show_progress=False, fine_data=fine_oos)
+                    r_oos = run_envelope_backtest(df_oos, best['cfg'], start_capital=eq, show_progress=False, fine_data=fine_oos, sim_start_date=oos_start)
                 if r_oos:
                     eq = r_oos['end_capital']
             except Exception:
@@ -1004,7 +1028,7 @@ def analyse_reopt_smoothing(capital, min_trades, send_telegram, token, chat):
                          [v for v in variants.values() if v] or [(1, 1)])
 
     end_date  = date.today()
-    full_days = lb * 7 + max_extra_days + 52 * 7
+    full_days = lb * 7 + max_extra_days + 52 * 7 + WARMUP_DAYS
     start_date = end_date - timedelta(days=full_days)
 
     print(f"  Lookback fix bei {lb}W (aus settings.json) | Lade Daten {start_date} -> {end_date}...")
@@ -1029,14 +1053,15 @@ def analyse_reopt_smoothing(capital, min_trades, send_telegram, token, chat):
     from tqdm import tqdm
 
     def _score(pd_info, is_start, is_end):
-        df_is = pd_info['df'].loc[(pd_info['df'].index >= is_start) & (pd_info['df'].index < is_end)]
+        buffered_is_start = is_start - timedelta(days=WARMUP_DAYS)
+        df_is = pd_info['df'].loc[(pd_info['df'].index >= buffered_is_start) & (pd_info['df'].index < is_end)]
         if len(df_is) < max(min_trades, 10):
             return None
         fine_df = pd_info.get('fine_df')
         fine_is = _get_fine_slice(fine_df, is_start, is_end)
         try:
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                r = run_envelope_backtest(df_is, pd_info['cfg'], start_capital=capital, show_progress=False, fine_data=fine_is)
+                r = run_envelope_backtest(df_is, pd_info['cfg'], start_capital=capital, show_progress=False, fine_data=fine_is, sim_start_date=is_start)
             if r and r.get('trades_count', 0) >= min_trades and r.get('max_drawdown_pct', 100) > 0:
                 c = _calmar(r['total_pnl_pct'], r['max_drawdown_pct'])
                 return c if c > 0 else None
@@ -1079,7 +1104,8 @@ def analyse_reopt_smoothing(capital, min_trades, send_telegram, token, chat):
 
             scored.sort(reverse=True)
             best = scored[0][2]
-            df_oos = best['df'].loc[(best['df'].index >= oos_start) & (best['df'].index < oos_end)]
+            buffered_oos_start = oos_start - timedelta(days=WARMUP_DAYS)
+            df_oos = best['df'].loc[(best['df'].index >= buffered_oos_start) & (best['df'].index < oos_end)]
             if len(df_oos) < 5:
                 equity_series.append(eq)
                 continue
@@ -1087,7 +1113,7 @@ def analyse_reopt_smoothing(capital, min_trades, send_telegram, token, chat):
             fine_oos = _get_fine_slice(best_fine, oos_start, oos_end)
             try:
                 with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                    r_oos = run_envelope_backtest(df_oos, best['cfg'], start_capital=eq, show_progress=False, fine_data=fine_oos)
+                    r_oos = run_envelope_backtest(df_oos, best['cfg'], start_capital=eq, show_progress=False, fine_data=fine_oos, sim_start_date=oos_start)
                 if r_oos:
                     eq = r_oos['end_capital']
             except Exception:

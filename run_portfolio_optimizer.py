@@ -32,11 +32,18 @@ Y  = '\033[1;33m'
 R  = '\033[0;31m'
 NC = '\033[0m'
 
+# Muss deckungsgleich mit dem lookback_days-Mapping in run_pipeline.sh sein (das dort
+# jede Symbol/Timeframe-Optimierung inkl. deren IS/OOS-Split bestimmt) -- sonst waehlt/
+# bestaetigt der Portfolio-Optimizer Strategien auf einem ANDEREN Trainingsfenster als
+# dem, auf dem sie ueberhaupt gefittet und OOS-bestaetigt wurden. Vorher inkonsistent
+# (u.a. 1h: 365 hier vs. 548 in run_pipeline.sh, 4h: 730 vs. 1095, 1d: 1095 vs. 1825) --
+# angeglichen 2026-08-26 (PIPELINE_UPDATE_AND_28PAIR_SWEEP_2026-08.md).
 LOOKBACK_MAP = {
-    '5m': 60,  '15m': 90,
-    '30m': 365, '1h': 365,
-    '2h': 730,  '4h': 730,
-    '6h': 1095, '1d': 1095,
+    '5m': 90,   '15m': 90,
+    '30m': 548, '1h': 548,
+    '2h': 730,
+    '4h': 1095, '6h': 1095,
+    '1d': 1825,
 }
 BOT_NAME = 'ltbbot'
 
@@ -127,7 +134,8 @@ def _simulate_current_portfolio(settings: dict, strategies_data: dict,
     if not sim_data:
         return None
     with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-        return run_portfolio_simulation(start_capital, sim_data, start_date, end_date)
+        return run_portfolio_simulation(start_capital, sim_data, start_date, end_date,
+                                         multi_band_entries=True)
 
 
 def _get_telegram_creds():
@@ -176,21 +184,29 @@ def generate_trades_excel(final, strategies_data, capital, start_date, end_date)
         print(f'  {Y}openpyxl nicht installiert — Excel uebersprungen.{NC}')
         return None
 
-    trades = final.get('trade_history', [])
+    # `trades_df` ist der tatsaechliche Schluessel aus run_portfolio_simulation()
+    # (portfolio_simulator.py) -- eine DataFrame mit 'side'/'pnl_usd' statt
+    # 'direction'/'pnl'. Der vorherige Code las 'trade_history'/'direction'/'pnl',
+    # die es nie gab -- die Excel-Generierung war dadurch IMMER leer (auch im
+    # --replot-Pfad, nicht nur --auto-write), unabhaengig vom heutigen Fix.
+    trades_raw = final.get('trades_df')
+    if trades_raw is None or (hasattr(trades_raw, 'empty') and trades_raw.empty):
+        return None
+    trades = trades_raw.sort_values('exit_time').to_dict('records') if hasattr(trades_raw, 'sort_values') else trades_raw
     if not trades:
         return None
 
     equity = capital
     rows = []
     for i, t in enumerate(trades, 1):
-        pnl = t.get('pnl', 0.0)
+        pnl = t.get('pnl_usd', t.get('pnl', 0.0))
         equity += pnl
         rows.append({
             'Nr':            i,
-            'Datum':         str(t.get('entry_time', t.get('ts', '')))[:16].replace('T', ' '),
+            'Datum':         str(t.get('exit_time', t.get('entry_time', '')))[:16].replace('T', ' '),
             'Symbol':        t.get('symbol', '?'),
             'Timeframe':     t.get('timeframe', '?'),
-            'Richtung':      str(t.get('direction', '?')).upper(),
+            'Richtung':      str(t.get('side', t.get('direction', '?'))).upper(),
             'Ergebnis':      'TP erreicht' if pnl >= 0 else 'SL erreicht',
             'PnL (USDT)':    round(pnl, 4),
             'Gesamtkapital': round(equity, 4),
@@ -253,6 +269,19 @@ def generate_equity_html(final, capital, start_date, end_date, labels):
 
     eq_df = final.get('equity_curve')
     if eq_df is None or (hasattr(eq_df, 'empty') and eq_df.empty):
+        print(f'  {Y}Equity-Kurve leer — HTML-Chart uebersprungen.{NC}')
+        return None
+
+    # 'timestamp' kommt je nach Quelle als Spalte ODER als Index an: der
+    # --auto-write-Pfad bezieht `final` aus src/ltbbot/analysis/portfolio_optimizer.py
+    # (eigene interne Simulation, timestamp=Index), der --replot-Pfad aus
+    # portfolio_simulator.py::run_portfolio_simulation (timestamp=Spalte).
+    # reset_index() macht aus einem benannten Index wieder eine Spalte -- fuer
+    # den Spalten-Fall ein No-Op (Index ist dann einfach 0..n, harmlos).
+    if 'timestamp' not in eq_df.columns:
+        eq_df = eq_df.reset_index()
+    if 'timestamp' not in eq_df.columns:
+        print(f'  {Y}Equity-Kurve ohne "timestamp" (Spalte/Index) — HTML-Chart uebersprungen.{NC}')
         return None
 
     times = [str(t) for t in eq_df['timestamp']]
@@ -317,7 +346,8 @@ def _do_replot(settings: dict, capital: float, start_date: str, end_date: str) -
 
     from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
     with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-        final = run_portfolio_simulation(capital, strategies_data, start_date, end_date)
+        final = run_portfolio_simulation(capital, strategies_data, start_date, end_date,
+                                          multi_band_entries=True)
     if not final:
         print(f"{R}  Portfolio-Simulation fehlgeschlagen.{NC}")
         return 1
@@ -351,6 +381,60 @@ def _do_replot(settings: dict, capital: float, start_date: str, end_date: str) -
     return 0
 
 
+def compute_min_capital(portfolio_files: list, strategies_data: dict, safety_margin_pct: float = 20.0):
+    """
+    Berechnet je gewaehlter Strategie und Envelope-Band das Mindestkapital,
+    damit die Positionsgroesse (risk_amount_usd / SL-Abstand) Bitgets
+    5-USDT-Notional-Minimum erreicht (User-Anforderung 2026-08-27: "nach
+    allen Regeln" -- alle 3 Baender jeder gewaehlten Strategie muessen
+    einzeln die Mindestgroesse erreichen koennen, da bei multi_band_entries
+    jedes Band unabhaengig eine eigene Position eroeffnen kann).
+
+    Formel (sl_mode='ratio', Standard seit dem Optuna-Port in optimizer.py):
+      risk_amount_usd = capital * risk_per_entry_pct/100
+      notional         = risk_amount_usd / sl_pct  (sl_pct = SL-Abstand vom Entry)
+      notional >= 5  =>  capital >= 500 * sl_pct / risk_per_entry_pct
+    Nur der GROESSTE Wert ueber alle (Strategie, Band)-Kombinationen zaehlt --
+    das gemeinsame Kapital muss fuer die anspruchsvollste Kombination reichen,
+    nicht im Schnitt. ATR-basierte SL-Configs (marktabhaengig, keine feste
+    Formel ohne aktuelle Kursdaten) werden separat markiert, nicht berechnet.
+
+    Rueckgabe: (min_capital_exact, min_capital_recommended_mit_puffer, details-Liste)
+    """
+    MIN_NOTIONAL_USDT = 5.0
+    details = []
+    min_capital_exact = 0.0
+    for fname in portfolio_files:
+        sd = strategies_data.get(fname, {})
+        cfg = sd.get('params', {}) or {}
+        strat = cfg.get('strategy', {})
+        risk = cfg.get('risk', {})
+        symbol = sd.get('symbol', fname)
+        timeframe = sd.get('timeframe', '?')
+        risk_pct = risk.get('risk_per_entry_pct', 0.5)
+        envelopes = strat.get('envelopes', [])
+        if 'sl_to_env1_ratio' in risk and envelopes and risk_pct > 0:
+            sl_ratio = risk['sl_to_env1_ratio']
+            worst_band, worst_cap = None, 0.0
+            for k, env_pct in enumerate(envelopes, 1):
+                sl_pct = env_pct * sl_ratio
+                if sl_pct <= 0:
+                    continue
+                cap_needed = MIN_NOTIONAL_USDT * 100.0 * sl_pct / risk_pct
+                if cap_needed > worst_cap:
+                    worst_cap, worst_band = cap_needed, k
+            details.append({'symbol': symbol, 'timeframe': timeframe,
+                             'worst_band': worst_band, 'min_capital': round(worst_cap, 2)})
+            min_capital_exact = max(min_capital_exact, worst_cap)
+        else:
+            details.append({'symbol': symbol, 'timeframe': timeframe,
+                             'worst_band': None, 'min_capital': None,
+                             'note': 'ATR-basierter SL -- marktabhaengig, nicht analytisch berechenbar'})
+
+    min_capital_recommended = min_capital_exact * (1 + safety_margin_pct / 100.0) if min_capital_exact > 0 else 0.0
+    return min_capital_exact, min_capital_recommended, details
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description='ltbbot Portfolio-Optimizer (Envelope)')
     parser.add_argument('--capital',    type=float, default=None)
@@ -368,39 +452,44 @@ def main() -> int:
     capital   = args.capital or float(opt.get('start_capital', 50))
     max_dd    = args.max_dd
 
-    # OOS: oos_reference_date → 70/30-Split; Portfolio-Optimizer sieht nur Training
-    oos_ref = opt.get('oos_reference_date')
-    if oos_ref:
-        ref_dt       = date.fromisoformat(str(oos_ref))
-        # Für Portfolio-Optimizer: kürzester OOS = kleinster Lookback (15m=90d → 27d OOS)
-        # Wir nehmen 30% des aktiven Timeframe-Lookbacks — konservativ: min. Lookback
-        active_tfs   = [s.get('timeframe', '1h')
-                        for s in settings.get('live_trading_settings', {}).get('active_strategies', [])
-                        if s.get('active', True)]
-        min_lookback = min((LOOKBACK_MAP.get(tf, 365) for tf in active_tfs), default=365)
-        oos_days     = min_lookback * 30 // 100
+    # Lookback (in Tagen) IMMER zuerst bestimmen -- backtest_lookback_weeks hat
+    # Vorrang (aus Walk-Forward-Analyse), sonst LOOKBACK_MAP-Fallback ueber die
+    # aktiven Timeframes. Dieser EINE Wert treibt sowohl start_date als auch die
+    # OOS-Reserve unten -- vorher wurden beide unabhaengig voneinander berechnet
+    # (Lookback ueber backtest_lookback_weeks, OOS-Reserve ueber das theoretische
+    # Timeframe-Maximum aus LOOKBACK_MAP), wodurch bei kurzem backtest_lookback_weeks
+    # (z.B. 1 Woche) end_date (Trainingsende, OOS-Reserve-abhaengig) weiter in der
+    # Vergangenheit lag als start_date -- ein rueckwaerts laufendes, leeres Fenster.
+    lookback_weeks = opt.get('backtest_lookback_weeks')
+    if lookback_weeks:
+        lookback = int(lookback_weeks) * 7
+        print(f"  Lookback: {lookback_weeks} Wochen (aus backtest_lookback_weeks)")
+    else:
+        active_tfs = [
+            s.get('timeframe', '1h')
+            for s in settings.get('live_trading_settings', {}).get('active_strategies', [])
+            if s.get('active', True)
+        ]
+        lookback = max((LOOKBACK_MAP.get(tf, 365) for tf in active_tfs), default=365)
+
+    start_date = args.start_date or (date.today() - timedelta(days=lookback)).strftime('%Y-%m-%d')
+
+    # OOS: 70/30-Split, Portfolio-Optimizer sieht nur Training. Referenzdatum ist
+    # IMMER "heute" (rollierend) -- User-Entscheidung 2026-08-27: das statische
+    # `oos_reference_date` aus settings.json (eingefuehrt 2026-06-21, Commit 6174880,
+    # Zweck: "Portfolio-Optimizer sieht niemals OOS-Daten") wurde nie aktualisiert
+    # und fror das OOS-Fenster dauerhaft auf den Einfuehrungs-Zeitpunkt ein. Die
+    # OOS-Reserve ist jetzt 30% des TATSAECHLICH genutzten Lookback-Fensters
+    # (nicht mehr des theoretischen Timeframe-Maximums) -- bleibt dadurch immer
+    # konsistent mit start_date, egal wie lang/kurz backtest_lookback_weeks ist.
+    if opt.get('oos_reference_date') and not args.end_date:  # Vorhandensein des Keys = OOS-Schutz aktiv/deaktivierbar
+        ref_dt       = date.today()
+        oos_days     = max(1, lookback * 30 // 100)
         oos_start_dt = ref_dt - timedelta(days=oos_days)
         end_date     = (oos_start_dt - timedelta(days=1)).strftime('%Y-%m-%d')
-        print(f"  OOS 70/30: ref={oos_ref} oos_start={oos_start_dt} end={end_date}")
+        print(f"  OOS 70/30: ref={ref_dt} (rollierend=heute) oos_start={oos_start_dt} end={end_date}")
     else:
         end_date = args.end_date or date.today().strftime('%Y-%m-%d')
-
-    # Lookback bestimmen: backtest_lookback_weeks hat Vorrang (aus Walk-Forward Analyse)
-    if args.start_date:
-        start_date = args.start_date
-    else:
-        lookback_weeks = opt.get('backtest_lookback_weeks')
-        if lookback_weeks:
-            lookback   = int(lookback_weeks) * 7
-            print(f"  Lookback: {lookback_weeks} Wochen (aus backtest_lookback_weeks)")
-        else:
-            active_tfs = [
-                s.get('timeframe', '1h')
-                for s in settings.get('live_trading_settings', {}).get('active_strategies', [])
-                if s.get('active', True)
-            ]
-            lookback = max((LOOKBACK_MAP.get(tf, 365) for tf in active_tfs), default=365)
-        start_date = (date.today() - timedelta(days=lookback)).strftime('%Y-%m-%d')
 
     if args.replot:
         return _do_replot(settings, capital, start_date, end_date)
@@ -452,6 +541,17 @@ def main() -> int:
         print(f"\n  Endkapital: {final.get('end_capital', 0):.2f} USDT  "
               f"| PnL: {pnl:+.1f}%  "
               f"| MaxDD: {final.get('max_drawdown_pct', 0):.2f}%")
+
+    min_cap_exact, min_cap_reco, min_cap_details = compute_min_capital(portfolio_files, strategies_data)
+    if min_cap_exact > 0:
+        print(f"\n  {B}Mindestkapital (alle Baender jeder Strategie erreichen 5-USDT-Notional):{NC}")
+        for d in min_cap_details:
+            if d.get('min_capital') is not None:
+                print(f"    {d['symbol']:<20} / {d['timeframe']:<4}  Band {d['worst_band']} massgeblich  "
+                      f"->  {d['min_capital']:.2f} USDT")
+            else:
+                print(f"    {d['symbol']:<20} / {d['timeframe']:<4}  {d.get('note', '')}")
+        print(f"  Exaktes Minimum: {min_cap_exact:.2f} USDT  |  Empfohlen (+20% Puffer): {min_cap_reco:.2f} USDT")
     print(f"{'='*72}\n")
 
     # Vergleich mit aktuellem Portfolio
@@ -511,6 +611,8 @@ def main() -> int:
                    f"{len(portfolio_files)} Strategien | {n} Trades | WR: {wr:.1f}%\n"
                    f"PnL: {pnl:+.1f}% | MaxDD: {dd:.1f}% | Equity: {eq:.2f} USDT\n"
                    f"Zeitraum: {start_date} -> {end_date}")
+        if min_cap_exact > 0:
+            summary += f"\n\nMindestkapital: {min_cap_exact:.2f} USDT (empfohlen mit Puffer: {min_cap_reco:.2f} USDT)"
         _send_telegram(summary)
         xlsx = generate_trades_excel(final, strategies_data, capital, start_date, end_date)
         if xlsx:

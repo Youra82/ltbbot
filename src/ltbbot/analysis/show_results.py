@@ -542,7 +542,8 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital, auto_
     else: # Manueller Modus
         try:
             logger.info(f"Starte manuelle Portfolio-Simulation für {len(strategies_data_for_sim)} Strategien...")
-            results = run_portfolio_simulation(start_capital, strategies_data_for_sim, start_date, end_date)
+            results = run_portfolio_simulation(start_capital, strategies_data_for_sim, start_date, end_date,
+                                                multi_band_entries=True)
             if results:
                 print("\n" + "="*60); print("  Portfolio-Simulations-Ergebnis (Manuell)"); print("="*60)
                 print(f"Zeitraum: {start_date} bis {end_date}\nStartkapital: {results.get('start_capital', start_capital):,.2f} USDT")
