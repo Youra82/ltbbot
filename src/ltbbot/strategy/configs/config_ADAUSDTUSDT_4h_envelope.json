@@ -1,35 +1,35 @@
 {
     "_meta": {
-        "pnl_pct": 68.75,
-        "oos_pnl_pct": 13.32,
-        "oos_trades": 71,
-        "is_oos_split_date": "2025-10-02",
+        "pnl_pct": 437.1,
+        "oos_pnl_pct": 18.31,
+        "oos_trades": 40,
+        "is_oos_split_date": "2025-10-03",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
-        "optimized_at": "2026-08-27T12:02:18"
+        "optimized_at": "2026-08-27T20:47:12"
     },
     "market": {
         "symbol": "ADA/USDT:USDT",
         "timeframe": "4h"
     },
     "strategy": {
-        "average_type": "WMA",
+        "average_type": "EMA",
         "average_period": 5,
         "envelopes": [
-            0.02313917404102254,
-            0.0438618660318207,
-            0.13001527912205335
+            0.03127190375086524,
+            0.08447427473334453,
+            0.12870113170177058
         ],
-        "trigger_price_delta_pct": 0.0168,
+        "trigger_price_delta_pct": 0.1392,
         "disable_strong_trend_block": true,
         "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.18,
-        "leverage": 13,
-        "sl_to_env1_ratio": 0.149
+        "risk_per_entry_pct": 0.74,
+        "leverage": 4,
+        "sl_to_env1_ratio": 0.1111
     },
     "behavior": {
         "use_longs": true,
