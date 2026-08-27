@@ -150,6 +150,37 @@ read -p "In-Sample-Anteil [Standard: $DEFAULT_IS_FRACTION]: " IS_FRACTION; IS_FR
 read -p "K-Fold-Teilfenster fuer Robustheits-Score [Standard: $DEFAULT_K_FOLDS]: " K_FOLDS; K_FOLDS=${K_FOLDS:-$DEFAULT_K_FOLDS}
 read -p "Mindest-OOS-Trades fuer Bestaetigung [Standard: $DEFAULT_MIN_OOS_TRADES]: " MIN_OOS_TRADES; MIN_OOS_TRADES=${MIN_OOS_TRADES:-$DEFAULT_MIN_OOS_TRADES}
 
+# --- Automatischer Trial-Nachlauf (2026-08-27) ---
+# Bei vielen Symbol/Timeframe-Kombinationen reicht ein fester Trial-Wert nicht
+# immer aus, um unter den IS/OOS+K-Fold-Constraints ueberhaupt einen gueltigen
+# Trial zu finden ("no_valid_trials") -- beim 28-Kombinationen-Lauf am
+# 2026-08-26/27 brauchten mehrere Paare (u.a. BTC/2h, ETH/6h, SOL/2h) einen
+# Nachlauf mit deutlich mehr Trials. Betrifft v.a. lange, unbeaufsichtigte
+# Batch-Laeufe ueber viele Paare -- bei einzelnen manuellen Laeufen kann man
+# das genauso gut selbst per Hand mit mehr Trials wiederholen.
+echo ""
+read -p "Bei 'no_valid_trials' automatisch mit mehr Trials nachlegen? (j/n) [Standard: j]: " AUTO_RETRY_CHOICE
+AUTO_RETRY_CHOICE=${AUTO_RETRY_CHOICE:-j}
+RETRY_TRIALS=0
+if [[ "$AUTO_RETRY_CHOICE" == "j" || "$AUTO_RETRY_CHOICE" == "J" ]]; then
+    read -p "Trials fuer den Nachlauf [Standard: 600]: " RETRY_TRIALS; RETRY_TRIALS=${RETRY_TRIALS:-600}
+fi
+
+# --- Re-Optimierungs-Sperre umgehen (2026-08-27, Overfeeding-Schutz in optimizer.py) ---
+# Standardmaessig ueberspringt optimizer.py bereits bestaetigte/kuerzlich
+# gefittete Configs (siehe optimizer.py --recheck-confirmed/--recheck-after-days).
+# Fuer eine bewusste komplette Neubewertung (z.B. nach Loeschen aller Configs,
+# oder nach einer Methodik-Aenderung wie multi_band_entries/Compounding) muss
+# das hier ausdruecklich umgangen werden, sonst werden erst kuerzlich
+# bestaetigte Paare blind uebersprungen statt neu geprueft.
+echo ""
+read -p "Bereits bestaetigte/kuerzlich optimierte Configs TROTZDEM neu pruefen? (j/n) [Standard: n]: " RECHECK_CHOICE
+RECHECK_CHOICE=${RECHECK_CHOICE:-n}
+RECHECK_ARGS=""
+if [[ "$RECHECK_CHOICE" == "j" || "$RECHECK_CHOICE" == "J" ]]; then
+    RECHECK_ARGS="--recheck-confirmed --recheck-after-days 0"
+fi
+
 
 echo ""
 echo -e "${YELLOW}Wähle einen Optimierungs-Modus:${NC}"
@@ -239,26 +270,48 @@ for symbol in $SYMBOLS; do
             fi
         fi
 
-        echo -e "\n${GREEN}>>> Starte Optimierung für $symbol ($timeframe)...${NC}"
-        "$PYTHON" "$OPTIMIZER" \
-            --symbols       "$symbol" \
-            --timeframes    "$timeframe" \
-            --start_date    "$CURRENT_START_DATE" \
-            --end_date      "$CURRENT_END_DATE" \
-            --jobs          "$N_CORES" \
-            --max_drawdown  "$MAX_DD" \
-            --start_capital "$START_CAPITAL" \
-            --min_win_rate  "$MIN_WR" \
-            --trials        "$N_TRIALS" \
-            --min_pnl       "$MIN_PNL" \
-            --mode          "$OPTIM_MODE_ARG" \
-            --min_trades_per_year "$MIN_TRADES_PER_YEAR" \
-            --is_fraction   "$IS_FRACTION" \
-            --k_folds       "$K_FOLDS" \
-            --min_oos_trades "$MIN_OOS_TRADES" \
-            --config_suffix "_envelope"
+        run_optimizer_once() {
+            local trials="$1"
+            local tmp_log
+            tmp_log=$(mktemp)
+            "$PYTHON" "$OPTIMIZER" \
+                --symbols       "$symbol" \
+                --timeframes    "$timeframe" \
+                --start_date    "$CURRENT_START_DATE" \
+                --end_date      "$CURRENT_END_DATE" \
+                --jobs          "$N_CORES" \
+                --max_drawdown  "$MAX_DD" \
+                --start_capital "$START_CAPITAL" \
+                --min_win_rate  "$MIN_WR" \
+                --trials        "$trials" \
+                --min_pnl       "$MIN_PNL" \
+                --mode          "$OPTIM_MODE_ARG" \
+                --min_trades_per_year "$MIN_TRADES_PER_YEAR" \
+                --is_fraction   "$IS_FRACTION" \
+                --k_folds       "$K_FOLDS" \
+                --min_oos_trades "$MIN_OOS_TRADES" \
+                --config_suffix "_envelope" \
+                $RECHECK_ARGS 2>&1 | tee "$tmp_log"
+            local rc=${PIPESTATUS[0]}
+            NO_VALID_TRIALS=0
+            if grep -qE "konnte keine g.ltige Konfiguration gefunden werden|no_valid_trials" "$tmp_log"; then
+                NO_VALID_TRIALS=1
+            fi
+            rm -f "$tmp_log"
+            return $rc
+        }
 
-        if [ $? -ne 0 ]; then
+        echo -e "\n${GREEN}>>> Starte Optimierung für $symbol ($timeframe) ($N_TRIALS Trials)...${NC}"
+        run_optimizer_once "$N_TRIALS"
+        RC=$?
+
+        if [ "$RETRY_TRIALS" -gt 0 ] && [ "$NO_VALID_TRIALS" -eq 1 ]; then
+            echo -e "${YELLOW}⚠  Kein gueltiger Trial bei $N_TRIALS Trials -- Nachlauf mit $RETRY_TRIALS Trials...${NC}"
+            run_optimizer_once "$RETRY_TRIALS"
+            RC=$?
+        fi
+
+        if [ $RC -ne 0 ]; then
             echo -e "${RED}Fehler im Optimierer für $symbol ($timeframe). Überspringe...${NC}"
         else
             echo -e "${GREEN}✔ Optimierung für $symbol ($timeframe) abgeschlossen.${NC}"
