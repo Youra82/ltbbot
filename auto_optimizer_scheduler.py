@@ -27,7 +27,13 @@ CACHE_DIR          = os.path.join(PROJECT_ROOT, 'data', 'cache')
 LOG_DIR            = os.path.join(PROJECT_ROOT, 'logs')
 SETTINGS_FILE      = os.path.join(PROJECT_ROOT, 'settings.json')
 SECRET_FILE        = os.path.join(PROJECT_ROOT, 'secret.json')
-SHOW_RESULTS_SCRIPT = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'analysis', 'show_results.py')
+
+# Direkter Aufruf von run_portfolio_optimizer.py (Muster aus titanbot uebernommen,
+# 2026-08-27): der Docstring dieses Skripts sagt selbst "automatisch (Scheduler)"
+# -- vorher rief dieser Scheduler stattdessen show_results.py --mode 3 auf, einen
+# ANDEREN Code-Pfad (portfolio_optimizer.py-Modul) als das hier eigentlich vorgesehene
+# Skript. show_results.py Mode 3 bleibt fuer die manuelle Nutzung (show_results.sh) da.
+PORTFOLIO_SCRIPT = os.path.join(PROJECT_ROOT, 'run_portfolio_optimizer.py')
 PORTFOLIO_RESULTS  = os.path.join(PROJECT_ROOT, 'artifacts', 'results', 'portfolio_optimization_results.json')
 LAST_RUN_FILE      = os.path.join(CACHE_DIR, '.last_optimization_run')
 IN_PROGRESS_FILE   = os.path.join(CACHE_DIR, '.optimization_in_progress')
@@ -235,7 +241,13 @@ def run_portfolio_optimization(opt_settings: dict, reason: str):
     success    = False
 
     try:
-        cmd = [sys.executable, '-u', SHOW_RESULTS_SCRIPT, '--mode', '3', '--auto']
+        capital = str(opt_settings.get('start_capital', 50))
+        max_dd  = str(opt_settings.get('constraints', {}).get('max_drawdown_pct', 30))
+        from datetime import timedelta
+        start_date = (datetime.now() - timedelta(weeks=lookback_weeks)).strftime('%Y-%m-%d')
+        cmd = [sys.executable, '-u', PORTFOLIO_SCRIPT,
+               '--capital', capital, '--max-dd', max_dd,
+               '--start-date', start_date, '--auto-write']
         _log(f"PORTFOLIO_OPTIMIZER_START cmd={' '.join(cmd)}")
         with open(TRIGGER_LOG, 'a', encoding='utf-8') as _lf:
             rc = subprocess.run(cmd, stdout=_lf, stderr=_lf).returncode

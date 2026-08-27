@@ -18,7 +18,7 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.telegram import send_message, send_photo
 from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
-from ltbbot.utils.exchange import Exchange # Import hinzugefügt, falls Type Hinting verwendet wird (optional)
+from ltbbot.utils.exchange import Exchange, drop_incomplete_last_candle # Import hinzugefügt, falls Type Hinting verwendet wird (optional)
 
 
 # --- Chart-Generierung ---
@@ -256,6 +256,7 @@ def calculate_atr_adjusted_stop_loss(exchange: Exchange, symbol: str, base_sl_pc
         
         # Hole aktuelle Kerzen für ATR-Berechnung (14 Perioden + etwas Buffer)
         ohlcv_df = exchange.fetch_recent_ohlcv(symbol, timeframe, limit=50)
+        ohlcv_df = drop_incomplete_last_candle(ohlcv_df)
         if ohlcv_df is None or len(ohlcv_df) < 14:
             logger.warning(f"Nicht genug Daten für ATR-Berechnung. Verwende Basis-SL: {base_sl_pct*100:.2f}%")
             return base_sl_pct
@@ -950,17 +951,23 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     # Aktueller Schlusskurs für SL-Sofort-Prüfung (vermeidet sofortigen SL-Trigger)
     current_close = float(df['close'].iloc[-1]) if df is not None and not df.empty else None
 
-    # *** RISIKOBASIS: start_capital aus settings.json (konsistent mit Backtester) ***
-    # Fallback-Reihenfolge: 1) initial_capital_live in Config, 2) start_capital aus settings.json, 3) aktueller Kontostand
-    risk_base_capital = params.get('initial_capital_live')
+    # *** RISIKOBASIS: echter, aktueller Kontostand (Compounding, konsistent mit Backtester) ***
+    # User-Entscheidung 2026-08-26: Positionsgroesse soll vom TATSAECHLICHEN
+    # Gesamtkapital abhaengen, kein statischer Referenzwert als kuenstliche
+    # Bremse mehr. `balance` ist der echte, gerade erst via fetch_balance_usdt()
+    # abgerufene Kontostand (siehe Aufrufer). Fallback-Reihenfolge:
+    # 1) initial_capital_live in Config (expliziter Override, falls gesetzt),
+    # 2) aktueller Kontostand, 3) nur falls beides fehlt/ungueltig: statischer
+    # Wert aus settings.json als letzte Notbremse (z.B. API-Fehler lieferte 0).
+    risk_base_capital = params.get('initial_capital_live') or balance
     if not risk_base_capital:
         try:
             settings_path = os.path.join(PROJECT_ROOT, 'settings.json')
             with open(settings_path, 'r') as _f:
                 _settings = json.load(_f)
-            risk_base_capital = _settings.get('optimization_settings', {}).get('start_capital', balance)
+            risk_base_capital = _settings.get('optimization_settings', {}).get('start_capital', 10)
         except Exception:
-            risk_base_capital = balance
+            risk_base_capital = 10
     logger.info(f"Risikoberechnung basiert auf: {risk_base_capital:.2f} USDT")
 
     new_sl_ids = []
@@ -1365,6 +1372,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # Brauchen genug Daten für den längsten Indikator (average_period) + etwas Puffer
         required_candles = params['strategy'].get('average_period', 20) + 50 # Puffer erhöht
         data = exchange.fetch_recent_ohlcv(symbol, timeframe, limit=required_candles)
+        data = drop_incomplete_last_candle(data)
         if data.empty or len(data) < params['strategy'].get('average_period', 1):
             logger.warning(f"Nicht genügend Daten für {symbol} ({timeframe}) erhalten ({len(data)} Kerzen). Überspringe Zyklus.")
             return

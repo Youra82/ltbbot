@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "pnl_pct": 96.73,
+        "oos_pnl_pct": 57.63,
+        "oos_trades": 34,
+        "is_oos_split_date": "2025-10-02",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-08-27T11:45:24"
+    },
+    "market": {
+        "symbol": "SOL/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 5,
+        "envelopes": [
+            0.031821407039282386,
+            0.07038029626357457,
+            0.07692621619593826
+        ],
+        "trigger_price_delta_pct": 0.1922,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 35.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.65,
+        "leverage": 1,
+        "sl_to_env1_ratio": 0.1237
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

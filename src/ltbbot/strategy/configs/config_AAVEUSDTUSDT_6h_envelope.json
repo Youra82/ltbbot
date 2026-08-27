@@ -1,6 +1,7 @@
 {
     "_meta": {
-        "pnl_pct": 195.33
+        "pnl_pct": 195.33,
+        "note": "disable_strong_trend_block manuell auf true gesetzt (2026-08-21, siehe LIVE_TRADE_FORENSIK_2026-08.md) -- fairer Backtest 2023-09-01..2026-08-21 mit Gate AUS: 399.3% PnL / 317 Trades / WR 36.0% (vs. 359.0% / 240 / 36.7% mit Gate AN). Naechster Optuna-Re-Optimierungslauf ueberschreibt dies regulaer."
     },
     "market": {
         "symbol": "AAVE/USDT:USDT",
@@ -14,7 +15,9 @@
             0.05665249064881177,
             0.13213166069705767
         ],
-        "trigger_price_delta_pct": 0.1103
+        "trigger_price_delta_pct": 0.1103,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",

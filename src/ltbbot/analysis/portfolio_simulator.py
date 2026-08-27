@@ -22,12 +22,15 @@ SLIPPAGE_PCT_ENTRY = 0.0012  # 0.12% Slippage auf Entry (Trigger-Limit, wie back
 # --- ENDE KONSTANTEN ---
 
 
-def run_portfolio_simulation(start_capital, strategies_data, start_date, end_date):
+def run_portfolio_simulation(start_capital, strategies_data, start_date, end_date, multi_band_entries=False):
     """
     Führt eine chronologische Portfolio-Simulation mit mehreren Envelope-Strategien durch.
-    EINHEITLICHE LOGIK mit backtester.py:
-    - Max. 1 offene Position pro Strategie (wie Live Bot)
-    - Statisches Startkapital für Risiko-Berechnung (kein Compounding)
+    EINHEITLICHE LOGIK mit backtester.py (2026-08-27 nachgezogen, siehe dortiger
+    multi_band_entries-Docstring): Standard (multi_band_entries=False) bleibt wie
+    bisher Band-1-only + statisches Kapital, damit alte Aufrufer/Vergleiche
+    unveraendert bleiben. multi_band_entries=True + laufendes `equity` als
+    Risikobasis bilden das echte Live-Verhalten ab (alle Baender gleichzeitig,
+    Compounding) -- fuer den Portfolio-Optimizer (--auto-write) jetzt Standard.
     - SL 1.5x breiter im TREND (ADX 25-30)
     - Trend-Bias: Im Uptrend nur Longs, im Downtrend nur Shorts
     - Kein Trading bei STRONG_TREND (ADX > 30)
@@ -318,8 +321,11 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 sl_multiplier  = 1.5 if regime in ("TREND", "STRONG_TREND") else 1.0
                 effective_sl_pct = stop_loss_pct_param * sl_multiplier if _sl_mode == 'fixed' else None
 
-                # Risiko basiert auf STARTKAPITAL (statisch – wie Live Bot)
-                risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0)
+                # Risiko basiert auf dem AKTUELLEN gemeinsamen Portfolio-Kapital
+                # (Compounding, wie Live Bot -- 2026-08-27 analog backtester.py
+                # korrigiert). `equity` ist das gemeinsame, ueber alle Strategien
+                # geteilte realisierte Kapital dieser Portfolio-Simulation.
+                risk_amount_usd = equity * (risk_per_entry_pct / 100.0)
                 if risk_amount_usd <= 0:
                     continue
 
@@ -328,8 +334,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 trigger_delta_pct = strategy_params.get('trigger_price_delta_pct', 0.05) / 100.0
                 MIN_NOTIONAL_USDT = 5.0
                 candle_open   = current_candle['open']
-                long_candidate  = None
-                short_candidate = None
+                long_candidates  = []
+                short_candidates = []
                 prev_candle = strat_df.iloc[df_idx - 1] if df_idx > 0 else None
 
                 if current_use_longs:
@@ -356,9 +362,10 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                             if sl_dist <= 0: continue
                             amount_coins = risk_amount_usd / sl_dist
                             if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
-                            long_candidate = (entry_limit_price, sl_price, amount_coins,
-                                              abs(candle_open - entry_trigger_price))
-                            break
+                            long_candidates.append((entry_limit_price, sl_price, amount_coins,
+                                                     abs(candle_open - entry_trigger_price)))
+                            if not multi_band_entries:
+                                break
 
                 if current_use_shorts:
                     for k in range(1, num_envelopes + 1):
@@ -384,26 +391,28 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                             if sl_dist <= 0: continue
                             amount_coins = risk_amount_usd / sl_dist
                             if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
-                            short_candidate = (entry_limit_price, sl_price, amount_coins,
-                                               abs(candle_open - entry_trigger_price))
-                            break
+                            short_candidates.append((entry_limit_price, sl_price, amount_coins,
+                                                      abs(candle_open - entry_trigger_price)))
+                            if not multi_band_entries:
+                                break
 
-                # Wenn beide gleichzeitig: näherer Trigger zum Open gewinnt
-                if long_candidate and short_candidate:
-                    if long_candidate[3] <= short_candidate[3]:
-                        short_candidate = None
+                # Wenn beide Seiten gleichzeitig: naeherer Trigger zum Open gewinnt
+                # (Prinzip wie backtester.py, auf Listen erweitert)
+                if long_candidates and short_candidates:
+                    nearest_long = min(c[3] for c in long_candidates)
+                    nearest_short = min(c[3] for c in short_candidates)
+                    if nearest_long <= nearest_short:
+                        short_candidates = []
                     else:
-                        long_candidate = None
+                        long_candidates = []
 
-                if long_candidate:
-                    ep, sl, amt, _ = long_candidate
+                for ep, sl, amt, _ in long_candidates:
                     open_portfolio_positions[strategy_id].append({
                         'entry_price': ep, 'amount_coins': amt, 'side': 'long',
                         'sl_price': sl, 'tp_price': current_candle['average'],
                         'leverage': leverage, 'entry_time': ts,
                     })
-                elif short_candidate:
-                    ep, sl, amt, _ = short_candidate
+                for ep, sl, amt, _ in short_candidates:
                     open_portfolio_positions[strategy_id].append({
                         'entry_price': ep, 'amount_coins': amt, 'side': 'short',
                         'sl_price': sl, 'tp_price': current_candle['average'],

@@ -40,3 +40,4 @@ cython_debug/
 #*.db # Wird oben schon ignoriert
 #*.csv # Wird oben schon ignoriert
 artifacts/db/*.db
+.venv_new/

@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "pnl_pct": 167.65,
+        "oos_pnl_pct": 42.18,
+        "oos_trades": 53,
+        "is_oos_split_date": "2026-01-19",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-08-26T13:12:34"
+    },
+    "market": {
+        "symbol": "AAVE/USDT:USDT",
+        "timeframe": "2h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 5,
+        "envelopes": [
+            0.02436255392693673,
+            0.03136416990680302,
+            0.03697266296885702
+        ],
+        "trigger_price_delta_pct": 0.0135,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.58,
+        "leverage": 9,
+        "sl_to_env1_ratio": 0.1039
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

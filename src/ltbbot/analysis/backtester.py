@@ -198,10 +198,24 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
     return pd.DataFrame()
 
 # --- NEUER BACKTESTER FÜR ENVELOPE (MIT KORREKTUREN) ---
-def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, sim_start_date=None, fine_data=None):
+def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, sim_start_date=None, fine_data=None, multi_band_entries=False):
     """
     Führt einen Backtest für die Envelope-Strategie durch.
     KORRIGIERT: Verwendet Startkapital für Positionsgrößen, simuliert Slippage und Max Position Size.
+
+    multi_band_entries (Default False, GEAENDERTES Verhalten nur bei True):
+    Der Live-Bot (trade_manager.py) platziert pro Kerze IMMER Orders fuer ALLE
+    konfigurierten Envelope-Baender gleichzeitig (z.B. 3 offene Limit-Orders pro
+    Seite). Mit multi_band_entries=False (Standard, unveraendertes Verhalten wie
+    bisher) oeffnet der Backtester dagegen pro Kerze/Seite hoechstens EINE
+    Position -- das flachste passende Band gewinnt, tiefere Baender werden nie
+    geprueft (empirisch verifiziert 2026-08-26: 0 von 1363 Trades ueber 4 Configs
+    nutzten Band 2/3). Alle bisherigen Optimierungen/OOS-Bestaetigungen (siehe
+    PIPELINE_UPDATE_AND_28PAIR_SWEEP_2026-08.md) basieren auf diesem Standardpfad
+    und bleiben dadurch unveraendert gueltig. multi_band_entries=True oeffnet
+    stattdessen ALLE an diesem Kerzenschritt qualifizierenden Baender als
+    getrennte Positionen (naeher am echten Live-Verhalten) -- nur fuer explizite
+    Simulationen/Vergleiche gedacht, NICHT fuer den produktiven Optimizer.
     """
     if data.empty:
         logger.warning("Leeres DataFrame an Backtester übergeben.")
@@ -287,6 +301,17 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
     _hl2_pre   = (df['high'] + df['low']) / 2
     _upper_pre = _hl2_pre + (3.0 * _atr_pre)
     _lower_pre = _hl2_pre - (3.0 * _atr_pre)
+
+    # Regime-Gate-Overrides (Opt-in, Default = bisheriges Verhalten unveraendert).
+    # Live-Trade-Forensik + FAIRER Backtest-Test ueber alle 6 Configs (2026-08-21,
+    # siehe LIVE_TRADE_FORENSIK_2026-08.md) zeigten: der volle STRONG_TREND-Block
+    # (ADX>30 sperrt Trading komplett) kostet in 5/6 Configs deutlich Performance
+    # (Gate AUS: Summe-PnL +321% ggue. Baseline ueber alle 6 Configs). Deshalb als
+    # per-Symbol Optuna-Suchparameter verdrahtet (optimizer.py), NICHT hart entfernt --
+    # ein Config (BNB) profitierte im fairen Test von einem ENGEREN statt lockererem
+    # Gate, ein einzelner globaler Wert waere hier also falsch.
+    _disable_strong_trend_block = strategy_params.get('disable_strong_trend_block', False)
+    _strong_trend_adx_threshold = strategy_params.get('strong_trend_adx_threshold', 30.0)
 
     # sim_start_date: Warmup-Kerzen werden für Indikatoren genutzt, Trades erst ab hier
     sim_start_ts = pd.to_datetime(sim_start_date, utc=True) if sim_start_date else None
@@ -379,7 +404,13 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 pnl -= entry_slippage_cost + exit_slippage_cost
 
                 exit_pnl_current_candle += pnl
-                closed_trades.append({'pnl': pnl, 'side': pos_side})
+                exit_reason = 'SL' if (sl_hit and (not tp_hit or exit_price == pos_sl)) else 'TP'
+                closed_trades.append({
+                    'pnl': pnl, 'side': pos_side, 'band': pos.get('band'),
+                    'entry_time': pos.get('entry_time'), 'exit_time': timestamp,
+                    'entry_price': pos_entry, 'exit_price': exit_price,
+                    'exit_reason': exit_reason,
+                })
             else:
                 remaining_positions.append(pos) # Position bleibt offen
 
@@ -410,8 +441,12 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 _st = ("BULLISH" if (pd.notna(_u) and _cur_price > _u)
                        else "BEARISH" if (pd.notna(_l) and _cur_price < _l)
                        else "NEUTRAL")
-                if _cur_adx > 30:
-                    regime, trade_allowed, trend_direction = "STRONG_TREND", False, _td
+                if _cur_adx > _strong_trend_adx_threshold:
+                    if _disable_strong_trend_block:
+                        # Gate deaktiviert: wie TREND behandeln statt komplett zu sperren
+                        regime, trade_allowed, trend_direction = "TREND", True, _td
+                    else:
+                        regime, trade_allowed, trend_direction = "STRONG_TREND", False, _td
                 elif _cur_adx > 25:
                     regime, trade_allowed, trend_direction = "TREND", True, _td
                 elif _cur_adx < 20 and _price_dist < 3:
@@ -437,8 +472,11 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
             sl_multiplier = 1.5 if regime in ("TREND", "STRONG_TREND") else 1.0
             effective_sl_pct = stop_loss_pct_param * sl_multiplier if _sl_mode == 'fixed' else None
 
-            # Risiko basiert auf STARTKAPITAL (statisch, kein Compounding - wie Live Bot)
-            risk_amount_usd = start_capital * (risk_per_entry_pct / 100.0)
+            # Risiko basiert auf dem AKTUELLEN realisierten Kapital (Compounding,
+            # konsistent mit Live Bot -- User-Entscheidung 2026-08-26: "keine
+            # kuenstliche Bremse", Positionsgroesse soll mit dem Gesamtkapital
+            # mitwachsen/-schrumpfen statt an einem fixen Startwert zu kleben).
+            risk_amount_usd = capital * (risk_per_entry_pct / 100.0)
             if risk_amount_usd <= 0:
                 continue
 
@@ -447,8 +485,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
             # Trigger-Preis näher am Kerzeneröffnungspreis liegt (= zuerst ausgelöst).
             MIN_NOTIONAL_USDT = 5.0
             candle_open = current_candle['open']
-            long_candidate = None   # (entry_price, sl_price, amount_coins, trigger_dist)
-            short_candidate = None
+            long_candidates = []   # Liste von (entry_price, sl_price, amount_coins, trigger_dist, k)
+            short_candidates = []
 
             prev_candle = df.iloc[i - 1] if i > 0 else None
 
@@ -484,8 +522,9 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                         amount_coins = risk_amount_usd / sl_dist
                         if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
                         trigger_dist = abs(candle_open - entry_trigger_price)
-                        long_candidate = (entry_limit_price, sl_price, amount_coins, trigger_dist)
-                        break
+                        long_candidates.append((entry_limit_price, sl_price, amount_coins, trigger_dist, k))
+                        if not multi_band_entries:
+                            break
 
             if current_use_shorts:
                 for k in range(1, num_envelopes + 1):
@@ -519,30 +558,37 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                         amount_coins = risk_amount_usd / sl_dist
                         if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
                         trigger_dist = abs(candle_open - entry_trigger_price)
-                        short_candidate = (entry_limit_price, sl_price, amount_coins, trigger_dist)
-                        break
+                        short_candidates.append((entry_limit_price, sl_price, amount_coins, trigger_dist, k))
+                        if not multi_band_entries:
+                            break
 
-            # Wenn beide gleichzeitig getriggert: näherer Trigger zum Open gewinnt
-            if long_candidate and short_candidate:
-                if long_candidate[3] <= short_candidate[3]:
-                    short_candidate = None  # Long war näher am Open → zuerst ausgelöst
+            # Wenn beide Seiten gleichzeitig getriggert: naeherer Trigger zum Open gewinnt
+            # (bei multi_band_entries wird das ueber den jeweils naechstgelegenen
+            # Kandidaten je Seite entschieden, die ganze Gegenseite entfaellt dann --
+            # unveraendertes Prinzip, nur auf Listen statt Einzelkandidaten erweitert)
+            if long_candidates and short_candidates:
+                nearest_long = min(c[3] for c in long_candidates)
+                nearest_short = min(c[3] for c in short_candidates)
+                if nearest_long <= nearest_short:
+                    short_candidates = []
                 else:
-                    long_candidate = None   # Short war näher am Open → zuerst ausgelöst
+                    long_candidates = []
 
-            # Gewinner in Positions-Liste eintragen
-            if long_candidate:
-                entry_price, sl_price, amount_coins, _ = long_candidate
+            # Gewinner in Positions-Liste eintragen (bei multi_band_entries=False
+            # enthaelt jede Liste durch das break oben ohnehin hoechstens 1 Eintrag)
+            for entry_price, sl_price, amount_coins, _, band_k in long_candidates:
                 positions.append({
                     'entry_price': entry_price, 'amount_coins': amount_coins,
                     'side': 'long', 'sl_price': sl_price,
-                    'tp_price': current_candle['average'], 'leverage': leverage
+                    'tp_price': current_candle['average'], 'leverage': leverage,
+                    'band': band_k, 'entry_time': timestamp
                 })
-            elif short_candidate:
-                entry_price, sl_price, amount_coins, _ = short_candidate
+            for entry_price, sl_price, amount_coins, _, band_k in short_candidates:
                 positions.append({
                     'entry_price': entry_price, 'amount_coins': amount_coins,
                     'side': 'short', 'sl_price': sl_price,
-                    'tp_price': current_candle['average'], 'leverage': leverage
+                    'tp_price': current_candle['average'], 'leverage': leverage,
+                    'band': band_k, 'entry_time': timestamp
                 })
 
 
@@ -625,6 +671,7 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
         "max_drawdown_pct": round(calculated_max_dd_pct, 2), # Verwende berechneten DD
         "end_capital": round(final_total_equity, 2), # Verwende finales Gesamtkapital
         "start_capital": start_capital,
-        "equity_curve": equity_curve_data  # Füge Equity Curve hinzu für Chart-Darstellung
+        "equity_curve": equity_curve_data,  # Füge Equity Curve hinzu für Chart-Darstellung
+        "trades": closed_trades  # Vollstaendige Trade-Liste (Band/Zeiten/Preise) fuer Introspektion
     }
     return results

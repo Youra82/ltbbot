@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "pnl_pct": 1.81,
+        "oos_pnl_pct": 13.91,
+        "oos_trades": 11,
+        "is_oos_split_date": "2026-01-20",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-08-26T12:45:26"
+    },
+    "market": {
+        "symbol": "ADA/USDT:USDT",
+        "timeframe": "1h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 16,
+        "envelopes": [
+            0.02946902020056536,
+            0.03935549755013898,
+            0.13248695974084623
+        ],
+        "trigger_price_delta_pct": 0.0474,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 21.82
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.82,
+        "leverage": 4,
+        "sl_to_env1_ratio": 0.1206
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

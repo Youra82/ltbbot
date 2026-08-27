@@ -6,18 +6,25 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def detect_market_regime(df, avg_period=14, silent=False):
+def detect_market_regime(df, avg_period=14, silent=False, strategy_params=None):
     """
     Erkennt das aktuelle Marktregime (TREND vs RANGE) mit Supertrend-Filter.
-    
+
     Args:
         df: DataFrame mit OHLC-Daten
         avg_period: Periode für Durchschnittsberechnung
         silent: Wenn True, keine Log-Ausgaben (für Backtest)
-    
+        strategy_params: optionales dict mit Overrides für das ADX-Regime-Gate
+            (disable_strong_trend_block, strong_trend_adx_threshold) -- muss
+            IDENTISCH zu den Overrides im Backtester (run_envelope_backtest)
+            interpretiert werden, damit Live und Backtest konsistent bleiben.
+
     Returns:
         tuple: (regime_name: str, trade_allowed: bool, trend_direction: str, supertrend_direction: str)
     """
+    strategy_params = strategy_params or {}
+    disable_strong_trend_block = strategy_params.get('disable_strong_trend_block', False)
+    strong_trend_adx_threshold = strategy_params.get('strong_trend_adx_threshold', 30.0)
     try:
         # ADX für Trendstärke berechnen
         adx = ta.trend.adx(df['high'], df['low'], df['close'], window=14)
@@ -82,9 +89,14 @@ def detect_market_regime(df, avg_period=14, silent=False):
             trend_direction = "NEUTRAL"
 
         # Regime-Entscheidung mit detailliertem Grund
-        if current_adx > 30:  # Sehr starker Trend
+        if current_adx > strong_trend_adx_threshold:  # Sehr starker Trend
+            if disable_strong_trend_block:
+                if not silent:
+                    logger.info(f"TREND (Gate deaktiviert): ADX={current_adx:.2f} > {strong_trend_adx_threshold:.1f}. "
+                                f"Supertrend={supertrend_direction}. Trading in Trendrichtung erlaubt (Block deaktiviert).")
+                return "TREND", True, trend_direction, supertrend_direction
             if not silent:
-                logger.warning(f"STRONG_TREND: ADX={current_adx:.2f} > 30.0. Supertrend={supertrend_direction}. Trading gesperrt.")
+                logger.warning(f"STRONG_TREND: ADX={current_adx:.2f} > {strong_trend_adx_threshold:.1f}. Supertrend={supertrend_direction}. Trading gesperrt.")
             return "STRONG_TREND", False, trend_direction, supertrend_direction
         elif current_adx > 25:  # Starker Trend
             if not silent:
@@ -166,8 +178,10 @@ def calculate_indicators_and_signals(df, params):
 
     df_copy.dropna(inplace=True)
     
-    # Marktregime erkennen
-    regime, trade_allowed, trend_direction, supertrend_direction = detect_market_regime(df_copy, avg_period)
+    # Marktregime erkennen (Regime-Gate-Overrides aus strategy_params, falls gesetzt --
+    # muss konsistent mit den Overrides im Backtester (run_envelope_backtest) sein)
+    regime, trade_allowed, trend_direction, supertrend_direction = detect_market_regime(
+        df_copy, avg_period, strategy_params=strategy_params)
 
     # ADX und price_distance_pct für Logging extrahieren
     try:

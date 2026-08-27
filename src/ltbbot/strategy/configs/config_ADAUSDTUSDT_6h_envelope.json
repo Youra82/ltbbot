@@ -1,6 +1,7 @@
 {
     "_meta": {
-        "pnl_pct": 140.13
+        "pnl_pct": 140.13,
+        "note": "disable_strong_trend_block manuell auf true gesetzt (2026-08-21, siehe LIVE_TRADE_FORENSIK_2026-08.md) -- fairer Backtest 2023-09-01..2026-08-21 mit Gate AUS: 411.4% PnL / 300 Trades / WR 46.0% (vs. 315.6% / 193 / 46.6% mit Gate AN). Naechster Optuna-Re-Optimierungslauf ueberschreibt dies regulaer."
     },
     "market": {
         "symbol": "ADA/USDT:USDT",
@@ -14,7 +15,9 @@
             0.08516904278697136,
             0.09045335078502881
         ],
-        "trigger_price_delta_pct": 0.0456
+        "trigger_price_delta_pct": 0.0456,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",
