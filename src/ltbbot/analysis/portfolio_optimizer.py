@@ -242,7 +242,8 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
             try:
                 bt_result = run_envelope_backtest(
                     strat_data['data'].copy(), strat_data['params'], start_capital,
-                    show_progress=False, fine_data=strat_data.get('fine_data')
+                    show_progress=False, sim_start_date=start_date, fine_data=strat_data.get('fine_data'),
+                    multi_band_entries=True
                 )
                 if not bt_result:
                     continue
