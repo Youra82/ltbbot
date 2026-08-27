@@ -60,64 +60,33 @@ print(' '.join(dict.fromkeys(p['timeframe'] for p in pairs)))
     echo -e "  ${BLUE}Auto-Zeitfenster: $TIMEFRAMES${NC}"
 fi
 
-# --- OOS-SPLIT ---
-echo ""
-echo -e "${BLUE}=======================================================${NC}"
-echo "  Walk-Forward Out-of-Sample Test (optional)"
-echo -e "${BLUE}=======================================================${NC}"
-echo ""
-echo "  Konzept:"
-echo "    Du gibst ein End-Datum ein (z.B. heute)."
-echo "    Der 70/30-Split wird automatisch je Timeframe berechnet:"
-echo "    30% des Lookbacks = verborgen, 70% = Training."
-echo ""
-echo "      1d  → 1825 Tage: 1277 Training + 548 OOS (ab ~2024-12)"
-echo "      4h  → 1095 Tage:  766 Training + 329 OOS (ab ~2025-07)"
-echo "      1h  →  548 Tage:  383 Training + 165 OOS (ab ~2026-01)"
-echo "      15m →   90 Tage:   63 Training +  27 OOS (ab ~2026-05)"
-echo ""
-echo "  Optionen:  JJJJ-MM-TT (End-Datum, z.B. heute) | leer=kein OOS"
-echo ""
-read -p "End-Datum für 70/30-Split eingeben [leer=kein OOS]: " OOS_INPUT
-
-OOS_MODE=""
-OOS_REF_DATE=""
-
-if [ -n "$OOS_INPUT" ]; then
-    OOS_MODE="auto"
-    OOS_REF_DATE="$OOS_INPUT"
-    echo ""
-    echo -e "${GREEN}✔ 70/30-Split aktiv — End-Datum: $OOS_REF_DATE${NC}"
-    echo "  (OOS-Startpunkt wird je Timeframe automatisch berechnet)"
-    "$PYTHON" -c "
-import json
-s = json.load(open('settings.json'))
-s.setdefault('optimization_settings', {})['oos_reference_date'] = '${OOS_REF_DATE}'
-s['optimization_settings']['_oos_note'] = 'End-Datum fuer 70/30-Split. OOS-Start automatisch je Timeframe.'
-json.dump(s, open('settings.json', 'w'), indent=4)
-" 2>/dev/null || true
-else
-    echo -e "${GREEN}✔ Kein OOS — kompletter Zeitraum wird genutzt.${NC}"
-    "$PYTHON" -c "
-import json
-s = json.load(open('settings.json'))
-s.setdefault('optimization_settings', {})['oos_reference_date'] = None
-json.dump(s, open('settings.json', 'w'), indent=4)
-" 2>/dev/null || true
-fi
+# --- OOS-Split ---
+# Der frühere, eigene "Walk-Forward Out-of-Sample"-Mechanismus auf dieser
+# Ebene (End-Datum -> 70/30-Split je Timeframe, schnitt VOR dem Optimizer-
+# Aufruf schon die juengsten 30% der Historie komplett weg) wurde am
+# 2026-08-27 entfernt: seit dem IS/OOS-Port von stbot (2026-08-21) macht
+# optimizer.py selbst per --is_fraction/--k_folds/--min_oos_trades einen
+# eigenen, robusteren IS/OOS-Split auf der VOLLEN uebergebenen Historie.
+# Beide Mechanismen gleichzeitig zu nutzen (wie hier vorher moeglich) fuehrte
+# zu einem doppelten, sich ueberlappenden Ausschluss -- der Optimizer trainierte
+# dann nur noch auf ~49% statt ~70% der Historie, und die "Bestaetigung" lief
+# auf laengst veralteten statt den echten juengsten Daten. Validiert im
+# 28-Kombinationen-Sweep vom 2026-08-26/27: volle Historie rein, optimizer.py
+# regelt IS/OOS allein (siehe PIPELINE_UPDATE_AND_28PAIR_SWEEP_2026-08.md).
 
 # --- Startdatum ---
 echo ""
-echo -e "${BLUE}--- Empfehlung: Optimaler Rückblick-Zeitraum ---${NC}"
-printf "+------------------+----------------------------------------------+\n"
-printf "| Zeitfenster      | Lookback  | 70%% Training | 30%% OOS           |\n"
-printf "+------------------+----------------------------------------------+\n"
-printf "| 5m, 15m          |  90 Tage  |  63 Tage      |  27 Tage           |\n"
-printf "| 30m, 1h          | 548 Tage  | 383 Tage      | 165 Tage           |\n"
-printf "| 2h               | 730 Tage  | 511 Tage      | 219 Tage           |\n"
-printf "| 4h, 6h           |1095 Tage  | 766 Tage      | 329 Tage           |\n"
-printf "| 1d               |1825 Tage  |1277 Tage      | 548 Tage           |\n"
-printf "+------------------+----------------------------------------------+\n"
+echo -e "${BLUE}--- Empfehlung: Rückblick-Zeitraum je Timeframe (Standard bei 'a') ---${NC}"
+printf "+------------------+-----------+\n"
+printf "| Zeitfenster      | Lookback  |\n"
+printf "+------------------+-----------+\n"
+printf "| 5m, 15m          |  90 Tage  |\n"
+printf "| 30m, 1h          | 548 Tage  |\n"
+printf "| 2h               | 730 Tage  |\n"
+printf "| 4h, 6h           |1095 Tage  |\n"
+printf "| 1d               |1825 Tage  |\n"
+printf "+------------------+-----------+\n"
+echo "  (IS/OOS-Aufteilung dieser Historie erfolgt weiter unten separat per --is_fraction)"
 echo ""
 read -p "Startdatum (JJJJ-MM-TT) oder 'a' für Automatik [Standard: a]: " START_DATE_INPUT
 START_DATE_INPUT=${START_DATE_INPUT:-a}
@@ -214,42 +183,18 @@ for symbol in $SYMBOLS; do
             1d)     lookback_days=1825 ;;
         esac
 
-        # OOS-Split pro Timeframe berechnen
-        if [ "$OOS_MODE" == "auto" ]; then
-            # 30% des Lookbacks rückwärts vom Referenz-Datum = OOS-Startpunkt
-            oos_days_tf=$(( lookback_days * 30 / 100 ))
-            OOS_START_TF=$(date -d "$OOS_REF_DATE - $oos_days_tf days" +%F)
-            CURRENT_END_DATE=$(date -d "$OOS_START_TF - 1 day" +%F)
-            if [ "$START_DATE_INPUT" == "a" ]; then
-                CURRENT_START_DATE=$(date -d "$OOS_REF_DATE - $lookback_days days" +%F)
-            else
-                CURRENT_START_DATE="$START_DATE_INPUT"
-            fi
+        # Volle Historie -- optimizer.py macht den IS/OOS-Split selbst (--is_fraction)
+        if [ "$START_DATE_INPUT" == "a" ]; then
+            CURRENT_START_DATE=$(date -d "$lookback_days days ago" +%F)
         else
-            OOS_START_TF=""
-            if [ "$START_DATE_INPUT" == "a" ]; then
-                CURRENT_START_DATE=$(date -d "$lookback_days days ago" +%F)
-            else
-                CURRENT_START_DATE="$START_DATE_INPUT"
-            fi
-            CURRENT_END_DATE="$TODAY"
+            CURRENT_START_DATE="$START_DATE_INPUT"
         fi
+        CURRENT_END_DATE="$TODAY"
 
         echo ""
         echo -e "${BLUE}=======================================================${NC}"
         echo -e "${BLUE}  Bearbeite Pipeline für: $symbol ($timeframe)${NC}"
-        echo -e "${BLUE}  Trainingszeitraum: $CURRENT_START_DATE  →  $CURRENT_END_DATE${NC}"
-        if [ -n "$OOS_START_TF" ]; then
-            oos_days_show=$(( ($(date +%s) - $(date -d "$OOS_START_TF" +%s)) / 86400 ))
-            train_days_show=$(( lookback_days - oos_days_show ))
-            echo ""
-            echo "  ────────────────────────────────────────────────────────────────"
-            printf "  ◄── TRAINING (%d Tage) ──►  ◄── OOS (%d Tage, verborgen) ──►\n" \
-                "$train_days_show" "$oos_days_show"
-            printf "  %-24s %-14s  %-12s  %s\n" \
-                "$CURRENT_START_DATE" "$CURRENT_END_DATE" "$OOS_START_TF" "$TODAY"
-            echo "  ────────────────────────────────────────────────────────────────"
-        fi
+        echo -e "${BLUE}  Zeitraum: $CURRENT_START_DATE  →  $CURRENT_END_DATE  (IS/OOS-Split intern: $IS_FRACTION)${NC}"
         echo -e "${BLUE}=======================================================${NC}"
 
         # Config-Existenz prüfen (skip/overwrite/all) — Wildcard wie titanbot
