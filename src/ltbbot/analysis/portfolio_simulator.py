@@ -22,7 +22,7 @@ SLIPPAGE_PCT_ENTRY = 0.0012  # 0.12% Slippage auf Entry (Trigger-Limit, wie back
 # --- ENDE KONSTANTEN ---
 
 
-def run_portfolio_simulation(start_capital, strategies_data, start_date, end_date, multi_band_entries=False):
+def run_portfolio_simulation(start_capital, strategies_data, start_date, end_date, multi_band_entries=True):
     """
     Führt eine chronologische Portfolio-Simulation mit mehreren Envelope-Strategien durch.
     EINHEITLICHE LOGIK mit backtester.py (2026-08-27 nachgezogen, siehe dortiger
@@ -35,7 +35,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     - Trend-Bias: Im Uptrend nur Longs, im Downtrend nur Shorts
     - Kein Trading bei STRONG_TREND (ADX > 30)
     """
-    logger.info("\n--- Starte Portfolio-Simulation (Live-Bot-Logik, max. 1 Pos/Strategie)... ---")
+    _band_desc = "alle Baender gleichzeitig" if multi_band_entries else "max. 1 Pos/Strategie (Band-1-only)"
+    logger.info(f"\n--- Starte Portfolio-Simulation (Live-Bot-Logik, {_band_desc})... ---")
 
     if not strategies_data:
         logger.error("Keine Strategie-Daten für die Simulation übergeben.")
