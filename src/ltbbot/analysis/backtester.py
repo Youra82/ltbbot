@@ -198,24 +198,25 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
     return pd.DataFrame()
 
 # --- NEUER BACKTESTER FÜR ENVELOPE (MIT KORREKTUREN) ---
-def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, sim_start_date=None, fine_data=None, multi_band_entries=False):
+def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, sim_start_date=None, fine_data=None, multi_band_entries=True):
     """
     Führt einen Backtest für die Envelope-Strategie durch.
     KORRIGIERT: Verwendet Startkapital für Positionsgrößen, simuliert Slippage und Max Position Size.
 
-    multi_band_entries (Default False, GEAENDERTES Verhalten nur bei True):
+    multi_band_entries (Default True seit 2026-08-27):
     Der Live-Bot (trade_manager.py) platziert pro Kerze IMMER Orders fuer ALLE
     konfigurierten Envelope-Baender gleichzeitig (z.B. 3 offene Limit-Orders pro
-    Seite). Mit multi_band_entries=False (Standard, unveraendertes Verhalten wie
-    bisher) oeffnet der Backtester dagegen pro Kerze/Seite hoechstens EINE
-    Position -- das flachste passende Band gewinnt, tiefere Baender werden nie
-    geprueft (empirisch verifiziert 2026-08-26: 0 von 1363 Trades ueber 4 Configs
-    nutzten Band 2/3). Alle bisherigen Optimierungen/OOS-Bestaetigungen (siehe
-    PIPELINE_UPDATE_AND_28PAIR_SWEEP_2026-08.md) basieren auf diesem Standardpfad
-    und bleiben dadurch unveraendert gueltig. multi_band_entries=True oeffnet
-    stattdessen ALLE an diesem Kerzenschritt qualifizierenden Baender als
-    getrennte Positionen (naeher am echten Live-Verhalten) -- nur fuer explizite
-    Simulationen/Vergleiche gedacht, NICHT fuer den produktiven Optimizer.
+    Seite). War urspruenglich (2026-08-26) als Opt-in mit Default False eingefuehrt
+    worden, um bestehende Aufrufer nicht zu veraendern -- das fuehrte aber
+    wiederholt dazu, dass neue/uebersehene Aufrufstellen (u.a. show_results.py
+    Einzel-Analyse-Modus, erst am 2026-08-27 durch einen Live-Test auf dem VPS
+    aufgefallen) weiterhin die alte, NICHT live-konsistente Logik nutzten, ohne
+    dass es auffiel. Mit multi_band_entries=False (jetzt explizit anzufordern)
+    oeffnet der Backtester pro Kerze/Seite weiterhin hoechstens EINE Position --
+    das flachste passende Band gewinnt, tiefere Baender werden nie geprueft
+    (empirisch verifiziert 2026-08-26: 0 von 1363 Trades ueber 4 Configs nutzten
+    Band 2/3) -- nur noch fuer explizite historische Vergleiche mit dem
+    urspruenglichen (Band-1-only) 12-Konfigurationen-Sweep gedacht.
     """
     if data.empty:
         logger.warning("Leeres DataFrame an Backtester übergeben.")
