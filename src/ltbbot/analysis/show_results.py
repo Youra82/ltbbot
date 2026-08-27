@@ -307,7 +307,8 @@ def run_single_analysis(start_date, end_date, start_capital):
             fine_tf = FINE_TF_MAP.get(timeframe)
             fine_data = LazyFineData(symbol, fine_tf) if fine_tf else None
 
-            result = run_envelope_backtest(data.copy(), config, start_capital, sim_start_date=start_date, fine_data=fine_data)
+            result = run_envelope_backtest(data.copy(), config, start_capital, sim_start_date=start_date, fine_data=fine_data,
+                                            multi_band_entries=True)
 
             if result:
                  # *** NEU: Status prüfen ***
