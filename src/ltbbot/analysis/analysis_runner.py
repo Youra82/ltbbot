@@ -565,20 +565,56 @@ def analyse_monte_carlo(capital, lookback_days, n_sims, send_telegram, token, ch
         _send(token, chat, "Zu wenig Trades für Monte Carlo.", send_telegram)
         return
 
-    pnls = trades['pnl_usd'].values.astype(float)
+    # Trade-Ereignisse als (outcome, sl_pct, pnl_pct, risk_pct) statt fixer USD-Betraege:
+    # frueher wurden reale pnl_usd-Werte aus dem EINEN Original-Backtest permutiert und
+    # additiv aufsummiert (capital + cumsum) -- da Addition kommutativ ist, ergab jede
+    # der 10.000 Permutationen exakt dieselbe End-Equity (nur die Reihenfolge/Drawdown
+    # variierte). Das widerspricht dem Compounding-Prinzip von Live-Bot und Backtester
+    # (risk_amount haengt vom AKTUELLEN Kapital ab, siehe backtester.py Zeile ~480) --
+    # bei einer anderen Trade-Reihenfolge waere auch die Positionsgroesse je Trade eine
+    # andere gewesen. Fix: pro simuliertem Pfad Equity und risk_amount schrittweise neu
+    # berechnen, wie in dnabot/analysis/monte_carlo_momentum_exit.py::simulate_path.
+    risk_pct_by_strategy = {
+        sid: float(d.get('params', {}).get('risk', {}).get('risk_per_entry_pct', 0.5))
+        for sid, d in sd.items()
+    }
+    events = []
+    for row in trades.itertuples(index=False):
+        entry_price = float(row.entry_price)
+        sl_price    = float(row.sl_price)
+        sl_pct      = abs(entry_price - sl_price) / entry_price * 100.0 if entry_price else 0.01
+        events.append((
+            str(row.reason).upper() == 'WIN',
+            max(sl_pct, 0.01),
+            float(row.pnl_pct),
+            risk_pct_by_strategy.get(row.strategy_id, 0.5),
+        ))
+
     rng  = np.random.default_rng(42)
     final_equities = []
     max_dds        = []
     ruin_count     = 0
+    idx = np.arange(len(events))
 
     for _ in range(n_sims):
-        shuffled = rng.permutation(pnls)
-        eq = np.concatenate([[capital], capital + np.cumsum(shuffled)])
-        peak  = np.maximum.accumulate(eq)
-        dd    = (peak - eq) / peak * 100
-        final_equities.append(float(eq[-1]))
-        max_dds.append(float(dd.max()))
-        if eq[-1] < capital * 0.5:
+        order = rng.permutation(idx)
+        equity = capital
+        peak   = equity
+        max_dd = 0.0
+        for i in order:
+            is_win, sl_pct, pnl_pct, risk_pct = events[i]
+            risk_amount = equity * (risk_pct / 100.0)
+            pnl = risk_amount * (pnl_pct / sl_pct) if is_win else -risk_amount
+            equity += pnl
+            if equity > peak:
+                peak = equity
+            elif peak > 0:
+                dd = (peak - equity) / peak * 100.0
+                if dd > max_dd:
+                    max_dd = dd
+        final_equities.append(float(equity))
+        max_dds.append(float(max_dd))
+        if equity < capital * 0.5:
             ruin_count += 1
 
     fe  = np.array(final_equities)
