@@ -338,8 +338,8 @@ Die optimierten Konfigurationen werden **automatisch geladen**:
 | 4 | Walk-Forward-Analyse |
 
 Alle Modi nutzen denselben einheitlichen Backtesting-Engine:
-- ✅ Max. 1 offene Position pro Strategie (Live-Bot-Alignment)
-- ✅ Statisches Startkapital (kein Compounding) für realistische Risikobewertung
+- ✅ Mehrere gleichzeitig offene Bänder pro Strategie (Live-Bot-Alignment — der Live-Bot öffnet jedes qualifizierende Band unabhängig, nicht nur Band 1)
+- ✅ Compounding: Positionsgröße = aktuelles (laufendes) Kapital × Risiko%, nicht das eingefrorene Startkapital
 - ✅ SL 1.5× breiter im TREND-Regime (ADX 25–30)
 - ✅ Trend-Bias: UPTREND = nur Longs, DOWNTREND = nur Shorts
 
@@ -347,7 +347,7 @@ Alle Modi nutzen denselben einheitlichen Backtesting-Engine:
 
 ## 🔬 Strategie-Analysen (`run_analysis.sh`)
 
-Das **`run_analysis.sh`** Script bietet 9 tiefe Analysen zur Bewertung und Optimierung der Envelope-Strategie — ähnlich wie das Analyse-Script beim dnabot, aber passend für Mean-Reversion.
+Das **`run_analysis.sh`** Script bietet 10 tiefe Analysen zur Bewertung und Optimierung der Envelope-Strategie — ähnlich wie das Analyse-Script beim dnabot, aber passend für Mean-Reversion.
 
 ### Starten
 
@@ -366,6 +366,7 @@ Ein interaktives Menü erscheint:
   Walk-Forward / Robustheit
   1  Walk-Forward Lookback-Analyse
   2  Envelope Parameter Walk-Forward (SL / Period)
+  10 Reoptimierungs-Snapshot-Glaettung
 
   Risiko / Kosten
   3  Slippage & Fee Impact
@@ -389,15 +390,16 @@ Alle Analysen verwenden die `active_strategies` aus `settings.json` und senden E
 
 | # | Analyse | Frage |
 |---|---------|-------|
-| 1 | **Walk-Forward Lookback** | Wie viele Wochen zurück soll der Auto-Optimizer schauen? Rolling WF für 1/2/4/8/12/26 Wochen — Calmar-Vergleich auf demselben OOS-Zeitraum. Bestes Calmar → direkt in `optimization_settings.backtest_lookback_weeks` übernehmbar. |
+| 1 | **Walk-Forward Lookback** | Wie viele Wochen zurück soll der Auto-Optimizer schauen? Rolling WF für 1/2/4/8/12/26 Wochen — Calmar-Vergleich auf demselben OOS-Zeitraum. Bestes Calmar → direkt in `optimization_settings.backtest_lookback_weeks` übernehmbar. Achtung: Calmar-Werte sind nur bedingt vergleichbar, da die Anzahl der "Leerwochen" (keine gültige Strategie im IS-Fenster) mit kürzerem Lookback stark steigt — weniger aktive Wochen bedeutet mechanisch weniger Drawdown-Exposition. |
 | 2 | **Envelope Parameter Walk-Forward** | Ist der aktuelle Stop-Loss-Wert optimal? WF-Vergleich für SL ×0.5, ×0.75, ×1.0, ×1.5, ×2.0 — ohne Lookahead. |
 | 3 | **Slippage & Fee Impact** | Ist der Bot nach realen Gebühren noch profitabel? Gebühren-Sweep 0–0.20%/Seite + Slippage-Sweep bei SL-Execution. Break-Even-Gebühr wird berechnet (Bitget Taker = 0.06%). |
-| 4 | **Monte Carlo** | Was ist das realistisch schlechteste Ergebnis? 10.000 zufällige Permutationen der echten Trade-Sequenz. 5./50./95. Perzentil der Equity + Ruin-Wahrscheinlichkeit (<50% Kapital). |
+| 4 | **Monte Carlo** | Wie riskant ist die Trade-Reihenfolge (Drawdown/Ruin)? 10.000 zufällige Permutationen der echten Trade-Sequenz mit Compounding-Positionsgröße je simuliertem Pfad. Liefert die Max-Drawdown- und Ruin-Wahrscheinlichkeits-Verteilung (<50% Kapital). Die End-Equity ist bei reinem Reihenfolge-Shuffle mathematisch immer identisch zum realen `end_capital` (Summe/Produkt ist ordnungsinvariant) — das ist kein Bug, sondern zeigt lediglich, dass die Trade-*Reihenfolge* die Gesamtrendite nicht beeinflusst, nur den Pfad dorthin. |
 | 5 | **Anti-Korrelations-Portfolio** | Welche Pairs verlieren und gewinnen selten gleichzeitig? Pearson-Korrelationsmatrix der wöchentlichen PnL je Pair. Stark positiv korrelierte Pairs (>0.7) bringen keinen Diversifikationsvorteil. |
 | 6 | **Kelly Position Sizing** | Wie viel sollte man pro Pair riskieren — mathematisch optimal? Kelly-Kriterium pro aktivem Pair. Half-Kelly (empfohlen) vs. aktueller SL-Prozentsatz. |
 | 7 | **Regime Performance** | In welchen Marktphasen funktioniert Envelope am besten? Win-Rate und PnL nach Regime (RANGE / TREND / UNCERTAIN / STRONG\_TREND) für alle aktiven Pairs. |
 | 8 | **Tageszeit-Analyse** | Performen Entries zu bestimmten Stunden besser? Win-Rate und PnL pro Einstiegs-Stunde (UTC) + Session-Auswertung (Asia / Europe / US). |
 | 9 | **Drawdown Duration** | Wie lange dauern Verlustphasen? Scatter (Tiefe vs. Erholungsdauer), Histogramm der Erholungsdauern, Equity-Kurve mit markierten DD-Zonen. |
+| 10 | **Reoptimierungs-Snapshot-Glaettung** | Wird die wöchentliche Star-Spieler-Auswahl treffsicherer, wenn man mehrere Snapshots statt nur einem Stichtag mittelt? Vergleicht die aktuelle Einzel-Stichtag-Auswahl gegen eine über mehrere Tage geglättete Rangfolge (Methode wie in zerobot validiert). |
 
 ### Direkt aufrufen (ohne Menü)
 
@@ -595,16 +597,49 @@ rm -f ~/ltbbot/data/cache/.optimization_in_progress
 
 ## 🆕 Aktuelle Verbesserungen
 
-### Backtester & Live-Bot Alignment
-- **Max. 1 Position pro Strategie** — identisch mit Live-Bot-Verhalten
-- **Statisches Startkapital** für Positionsgrößen-Berechnung (kein Compounding)
+### Backtester & Live-Bot Alignment (2026-08)
+- **Multi-Band-Entries**: Der Live-Bot öffnet jedes qualifizierende Envelope-Band unabhängig (nicht nur Band 1) — Backtester und Portfolio-Simulator wurden auf dasselbe Verhalten umgestellt (`multi_band_entries=True` als Default in `run_envelope_backtest()` und `run_portfolio_simulation()`), da vorher band 2/3 wegen der schwächeren Trigger-Bedingung von Band 1 praktisch nie ausgelöst wurden
+- **Compounding**: Positionsgröße = `aktuelles Kapital × risk_per_entry_pct`, nicht das eingefrorene Startkapital — gilt jetzt konsistent für Live-Bot (`trade_manager.py`, Basis: echter Bitget-Kontostand) und Backtest
 - **Regime-Filter**: STRONG_TREND (ADX > 30) → keine neuen Entries; TREND (ADX 25–30) → SL 1.5× breiter
 - **Trend-Bias**: UPTREND (EMA up) = nur Longs; DOWNTREND = nur Shorts
 
+```mermaid
+flowchart TB
+    MA["Moving Average<br/>(Mittellinie)"]
+    B1["Band 1 (eng)"]
+    B2["Band 2 (mittel)"]
+    B3["Band 3 (weit)"]
+    P1["Position @ Band 1"]
+    P2["Position @ Band 2"]
+    P3["Position @ Band 3"]
+    EQ["Gemeinsames Portfolio-Kapital<br/>(Compounding je Fill)"]
+
+    MA --> B1 --> P1
+    MA --> B2 --> P2
+    MA --> B3 --> P3
+    P1 --> EQ
+    P2 --> EQ
+    P3 --> EQ
+```
+*Alle drei Bänder können gleichzeitig offene Positionen haben (Multi-Band); jede Position bemisst sich am dann aktuellen Portfolio-Kapital (Compounding).*
+
 ### Portfolio-Optimizer: Einzelstrategie-Prüfung
-Der greedy Portfolio-Optimizer prüft jetzt nach der Portfolio-Zusammenstellung, ob eine einzelne Strategie das Portfolio in Bezug auf **rohen PnL%** schlägt:
-- Verwendet `run_envelope_backtest()` (kein Compounding, echte Drawdown-Messung) für den Vergleich
-- Falls eine Einzelstrategie besser ist und das DD-Constraint erfüllt → wird diese gewählt
+Der greedy Portfolio-Optimizer prüft nach der Portfolio-Zusammenstellung, ob eine einzelne Strategie das Portfolio in Bezug auf **rohen PnL%** schlägt (`run_envelope_backtest()`-Verifikation mit `sim_start_date` — vergleicht auf demselben Zeitfenster wie die Portfolio-Simulation, nicht auf der längeren Warmup-Historie). Falls eine Einzelstrategie besser ist und das DD-Constraint erfüllt → wird diese gewählt. Der Portfolio-Optimizer schlägt am Ende zusätzlich das laut allen Regeln (Mindest-Notional, Risiko%, SL-Distanz je Band) benötigte **Mindestkapital** für das gefundene Portfolio vor.
+
+```mermaid
+flowchart LR
+    A["Alle Configs laden"] --> B["Einzel-Performance<br/>je Strategie (geglättet)"]
+    B --> C["Greedy Team-Suche<br/>(Symbol-exklusiv, DD-Constraint)"]
+    C --> D["Einzelstrategie-Verifikation<br/>(echter Backtester, gleiches Fenster)"]
+    D -->|Einzelstrategie besser| E["Einzelstrategie waehlen"]
+    D -->|Portfolio besser| F["Portfolio-Team waehlen"]
+    E --> G["Mindestkapital-Empfehlung"]
+    F --> G
+    G --> H["Chart + Excel<br/>(dnabot-Optik)"]
+```
+
+### Reports: Chart & Excel
+Equity-Chart (`run_portfolio_optimizer.py`) und Trade-Excel sind optisch an die dnabot-Reports angeglichen: Einzelstrategie-Equity-Linien auf einer Sekundärachse, Entry-/Exit-Marker (▲ Entry, ● Exit TP, ✗ Exit SL), horizontale Legende; die Excel-Tabelle zeigt zusätzlich Coin sowie Entry-/Exit-Preis je Trade.
 
 ### Exchange-Log-Vereinfachung
 Daten-Downloads loggen jetzt nur noch eine einzige Zusammenfassungszeile:

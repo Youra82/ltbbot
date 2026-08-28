@@ -476,7 +476,7 @@ def analyse_fee_impact(capital, lookback_days, send_telegram, token, chat):
         for _, t in df.iterrows():
             notional = abs(float(t.get('amount_coins', 0)) * float(t.get('entry_price', 0)))
             fee_cost  = notional * (extra_fee_pct / 100) * 2
-            slip_cost = notional * (extra_slip_pct / 100) if t.get('reason') == 'sl' else 0
+            slip_cost = notional * (extra_slip_pct / 100) if t.get('reason') == 'SL' else 0
             adjusted  = float(t.get('pnl_usd', 0)) - fee_cost - slip_cost
             total    += adjusted
             if adjusted > 0:
