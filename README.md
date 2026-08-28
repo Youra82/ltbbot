@@ -44,6 +44,11 @@ flowchart LR
 ```
 
 ### 📈 Trade-Beispiel (Entry/SL/TP)
+
+![ltbbot Beispiel-Trade: Entry an der unteren Envelope, Exit an der Mittellinie](docs/trade_example.png)
+
+*Echter Trade aus dem Backtest (ADA/USDT:USDT, 4h, 2026-01-19): Long-Entry beim Touch der unteren Hülle (Band 1), Exit beim Rücklauf zur EMA-Mittellinie (TP) — ohne Trailing-Erweiterung, siehe Varianten unten.*
+
 - **Setup**: Preis dippt an die untere Envelope; Volumen ok; MA-Slope leicht steigend (Uptrend-Filter)
 - **Entry**: Long an der unteren Hülle mit Telegram-Alert
 - **Initial SL**: Unter letztem Swing-Low oder unter der unteren Hülle - x% Puffer
