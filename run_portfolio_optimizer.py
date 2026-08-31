@@ -60,6 +60,7 @@ def _scan_configs() -> list:
 
 def _build_strategies_data(config_files: list, start_date: str, end_date: str) -> dict:
     from ltbbot.analysis.backtester import load_data, FINE_TF_MAP, LazyFineData
+    from ltbbot.analysis.show_results import get_warmup_start_date
     strategies_data = {}
     for path in tqdm(config_files, desc='Lade Configs & Daten'):
         fname = os.path.basename(path)
@@ -71,7 +72,16 @@ def _build_strategies_data(config_files: list, start_date: str, end_date: str) -
             timeframe = market.get('timeframe', '')
             if not symbol or not timeframe:
                 continue
-            data = load_data(symbol, timeframe, start_date, end_date)
+            # Ohne Warmup-Puffer starten Indikatoren (EMA/ADX/ATR/SuperTrend) kalt
+            # genau an start_date -- die ersten ~300 Kerzen wurden dadurch mit
+            # unausgereiften Werten gehandelt. run_portfolio_simulation() und
+            # run_envelope_backtest() nutzen ihre eigenen start_date/sim_start_date-
+            # Parameter bereits, um Trades trotzdem erst ab start_date zu zaehlen --
+            # die Vorlaufkerzen dienen nur dem Indikator-Warmup (wie in show_results.py
+            # Mode 1/2 seit je her, hier aber gefehlt: identischer NEAR/30m-Testlauf
+            # zeigte 174.4%/10.18%DD hier vs. 198.05%/7.99%DD in Mode 1, 2026-08-31).
+            warmup_start = get_warmup_start_date(start_date, timeframe)
+            data = load_data(symbol, timeframe, warmup_start, end_date)
             if data is None or data.empty or len(data) < 50:
                 print(f"  {Y}Uebersprungen (keine Daten): {fname}{NC}")
                 continue
