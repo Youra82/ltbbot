@@ -1,35 +1,35 @@
 {
     "_meta": {
-        "pnl_pct": 324.13,
-        "oos_pnl_pct": 30.62,
-        "oos_trades": 62,
-        "is_oos_split_date": "2025-10-03",
+        "pnl_pct": 500.03,
+        "oos_pnl_pct": 55.3,
+        "oos_trades": 44,
+        "is_oos_split_date": "2025-10-04",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
-        "optimized_at": "2026-08-29T17:16:52"
+        "optimized_at": "2026-08-30T11:18:02"
     },
     "market": {
-        "symbol": "BNB/USDT:USDT",
+        "symbol": "DOT/USDT:USDT",
         "timeframe": "6h"
     },
     "strategy": {
         "average_type": "WMA",
         "average_period": 6,
         "envelopes": [
-            0.024340886478900182,
-            0.031440580342531894,
-            0.03928084356180198
+            0.03843483367860535,
+            0.046026393155356615,
+            0.14841788838530473
         ],
-        "trigger_price_delta_pct": 0.0855,
+        "trigger_price_delta_pct": 0.0455,
         "disable_strong_trend_block": true,
         "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.66,
-        "leverage": 6,
-        "sl_to_env1_ratio": 0.1278
+        "risk_per_entry_pct": 0.77,
+        "leverage": 2,
+        "sl_to_env1_ratio": 0.1036
     },
     "behavior": {
         "use_longs": true,

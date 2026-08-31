@@ -1,35 +1,35 @@
 {
     "_meta": {
-        "pnl_pct": 56.72,
-        "oos_pnl_pct": 6.36,
-        "oos_trades": 12,
+        "pnl_pct": 146.65,
+        "oos_pnl_pct": 13.33,
+        "oos_trades": 11,
         "is_oos_split_date": "2026-01-21",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
-        "optimized_at": "2026-08-29T05:39:02"
+        "optimized_at": "2026-08-28T06:35:49"
     },
     "market": {
-        "symbol": "AAVE/USDT:USDT",
+        "symbol": "XRP/USDT:USDT",
         "timeframe": "2h"
     },
     "strategy": {
         "average_type": "EMA",
-        "average_period": 5,
+        "average_period": 8,
         "envelopes": [
-            0.03860022923190057,
-            0.07229799680488445,
-            0.13164031206488383
+            0.036444689483498965,
+            0.06354148282922263,
+            0.0816583426569991
         ],
-        "trigger_price_delta_pct": 0.1022,
+        "trigger_price_delta_pct": 0.0874,
         "disable_strong_trend_block": true,
         "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.86,
-        "leverage": 12,
-        "sl_to_env1_ratio": 0.152
+        "risk_per_entry_pct": 0.92,
+        "leverage": 2,
+        "sl_to_env1_ratio": 0.1052
     },
     "behavior": {
         "use_longs": true,

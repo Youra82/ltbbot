@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "pnl_pct": 378.2,
+        "oos_pnl_pct": 93.94,
+        "oos_trades": 53,
+        "is_oos_split_date": "2025-10-04",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-08-31T04:35:27"
+    },
+    "market": {
+        "symbol": "ARB/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 6,
+        "envelopes": [
+            0.03787221629974727,
+            0.06770576512930629,
+            0.07390116245188362
+        ],
+        "trigger_price_delta_pct": 0.0142,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 32.43
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.97,
+        "leverage": 4,
+        "sl_to_env1_ratio": 0.1001
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

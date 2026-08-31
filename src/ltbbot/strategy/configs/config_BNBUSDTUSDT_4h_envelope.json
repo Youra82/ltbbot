@@ -1,35 +1,35 @@
 {
     "_meta": {
-        "pnl_pct": 27.87,
-        "oos_pnl_pct": 3.13,
-        "oos_trades": 25,
+        "pnl_pct": 193.19,
+        "oos_pnl_pct": 30.0,
+        "oos_trades": 28,
         "is_oos_split_date": "2025-10-03",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
-        "optimized_at": "2026-08-27T23:28:43"
+        "optimized_at": "2026-08-29T17:57:19"
     },
     "market": {
-        "symbol": "BTC/USDT:USDT",
-        "timeframe": "6h"
+        "symbol": "BNB/USDT:USDT",
+        "timeframe": "4h"
     },
     "strategy": {
         "average_type": "WMA",
-        "average_period": 5,
+        "average_period": 8,
         "envelopes": [
-            0.021169578053136417,
-            0.028192287041486554,
-            0.03990920945271957
+            0.03158097326865415,
+            0.07596224728365418,
+            0.08248567891583601
         ],
-        "trigger_price_delta_pct": 0.0767,
+        "trigger_price_delta_pct": 0.0523,
         "disable_strong_trend_block": true,
         "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.39,
-        "leverage": 11,
-        "sl_to_env1_ratio": 0.2388
+        "risk_per_entry_pct": 0.92,
+        "leverage": 13,
+        "sl_to_env1_ratio": 0.1001
     },
     "behavior": {
         "use_longs": true,

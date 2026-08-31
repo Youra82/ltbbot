@@ -1,29 +1,35 @@
 {
     "_meta": {
-        "pnl_pct": 195.33,
-        "note": "disable_strong_trend_block manuell auf true gesetzt (2026-08-21, siehe LIVE_TRADE_FORENSIK_2026-08.md) -- fairer Backtest 2023-09-01..2026-08-21 mit Gate AUS: 399.3% PnL / 317 Trades / WR 36.0% (vs. 359.0% / 240 / 36.7% mit Gate AN). Naechster Optuna-Re-Optimierungslauf ueberschreibt dies regulaer."
+        "pnl_pct": 111.24,
+        "oos_pnl_pct": 25.27,
+        "oos_trades": 40,
+        "is_oos_split_date": "2025-10-03",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-08-29T04:04:09"
     },
     "market": {
         "symbol": "AAVE/USDT:USDT",
         "timeframe": "6h"
     },
     "strategy": {
-        "average_type": "EMA",
+        "average_type": "SMA",
         "average_period": 5,
         "envelopes": [
-            0.02854819719684041,
-            0.05665249064881177,
-            0.13213166069705767
+            0.04444400073106207,
+            0.05105505287239176,
+            0.07119281877581066
         ],
-        "trigger_price_delta_pct": 0.1103,
-        "disable_strong_trend_block": true,
-        "strong_trend_adx_threshold": 30.0
+        "trigger_price_delta_pct": 0.1944,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 30.08
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.98,
-        "leverage": 14,
-        "sl_to_env1_ratio": 0.1004
+        "risk_per_entry_pct": 0.42,
+        "leverage": 2,
+        "sl_to_env1_ratio": 0.1167
     },
     "behavior": {
         "use_longs": true,

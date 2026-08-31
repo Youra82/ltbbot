@@ -1,7 +1,13 @@
 {
     "_meta": {
-        "pnl_pct": 43.37,
-        "note": "disable_strong_trend_block manuell auf true gesetzt (2026-08-21, siehe LIVE_TRADE_FORENSIK_2026-08.md) -- fairer Backtest 2023-09-01..2026-08-21 mit Gate AUS: 221.9% PnL / 191 Trades / WR 46.6% (vs. 136.1% / 127 / 44.1% mit Gate AN). Naechster Optuna-Re-Optimierungslauf ueberschreibt dies regulaer."
+        "pnl_pct": 79.82,
+        "oos_pnl_pct": 6.81,
+        "oos_trades": 16,
+        "is_oos_split_date": "2025-10-03",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-08-28T11:25:36"
     },
     "market": {
         "symbol": "ETH/USDT:USDT",
@@ -11,19 +17,19 @@
         "average_type": "WMA",
         "average_period": 5,
         "envelopes": [
-            0.022012431403254266,
-            0.03477791448857635,
-            0.04243852864913138
+            0.03212877008207337,
+            0.07879359893080784,
+            0.10538206954466121
         ],
-        "trigger_price_delta_pct": 0.0921,
+        "trigger_price_delta_pct": 0.1611,
         "disable_strong_trend_block": true,
         "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.95,
-        "leverage": 13,
-        "sl_to_env1_ratio": 0.101
+        "risk_per_entry_pct": 0.77,
+        "leverage": 6,
+        "sl_to_env1_ratio": 0.1051
     },
     "behavior": {
         "use_longs": true,

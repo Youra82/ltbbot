@@ -1,35 +1,35 @@
 {
     "_meta": {
-        "pnl_pct": 49.57,
-        "oos_pnl_pct": 13.26,
-        "oos_trades": 66,
-        "is_oos_split_date": "2025-10-03",
+        "pnl_pct": 22667.13,
+        "oos_pnl_pct": 57.06,
+        "oos_trades": 112,
+        "is_oos_split_date": "2025-10-04",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
-        "optimized_at": "2026-08-28T12:17:58"
+        "optimized_at": "2026-08-30T17:57:40"
     },
     "market": {
-        "symbol": "ETH/USDT:USDT",
+        "symbol": "NEAR/USDT:USDT",
         "timeframe": "4h"
     },
     "strategy": {
         "average_type": "WMA",
         "average_period": 5,
         "envelopes": [
-            0.020457666267615433,
-            0.040141471623060546,
-            0.048440345420753865
+            0.030071153006555905,
+            0.041854254097282315,
+            0.050711832927917866
         ],
-        "trigger_price_delta_pct": 0.1785,
+        "trigger_price_delta_pct": 0.0173,
         "disable_strong_trend_block": true,
         "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.34,
-        "leverage": 12,
-        "sl_to_env1_ratio": 0.1357
+        "risk_per_entry_pct": 0.92,
+        "leverage": 2,
+        "sl_to_env1_ratio": 0.1095
     },
     "behavior": {
         "use_longs": true,
