@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "pnl_pct": 131.03,
+        "oos_pnl_pct": 12.77,
+        "oos_trades": 52,
+        "is_oos_split_date": "2025-10-04",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-08-30T06:19:37"
+    },
+    "market": {
+        "symbol": "AVAX/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "SMA",
+        "average_period": 5,
+        "envelopes": [
+            0.035581835410911325,
+            0.08585254397713221,
+            0.1393065370508944
+        ],
+        "trigger_price_delta_pct": 0.0226,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.55,
+        "leverage": 10,
+        "sl_to_env1_ratio": 0.1104
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

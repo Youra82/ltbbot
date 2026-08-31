@@ -1,35 +1,35 @@
 {
     "_meta": {
-        "pnl_pct": 123.55,
-        "oos_pnl_pct": 8.15,
-        "oos_trades": 11,
-        "is_oos_split_date": "2025-10-03",
+        "pnl_pct": 747.51,
+        "oos_pnl_pct": 59.73,
+        "oos_trades": 41,
+        "is_oos_split_date": "2025-10-04",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
-        "optimized_at": "2026-08-28T17:28:04"
+        "optimized_at": "2026-08-30T05:43:53"
     },
     "market": {
-        "symbol": "SOL/USDT:USDT",
+        "symbol": "AVAX/USDT:USDT",
         "timeframe": "6h"
     },
     "strategy": {
         "average_type": "EMA",
         "average_period": 6,
         "envelopes": [
-            0.04878400126587145,
-            0.06842864035647349,
-            0.07791555602009499
+            0.03829250880717595,
+            0.07080356326344388,
+            0.07954118515018063
         ],
-        "trigger_price_delta_pct": 0.0999,
+        "trigger_price_delta_pct": 0.0935,
         "disable_strong_trend_block": true,
         "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.95,
-        "leverage": 15,
-        "sl_to_env1_ratio": 0.128
+        "risk_per_entry_pct": 0.94,
+        "leverage": 1,
+        "sl_to_env1_ratio": 0.1015
     },
     "behavior": {
         "use_longs": true,

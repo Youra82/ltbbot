@@ -3,8 +3,8 @@
         "use_auto_optimizer_results": true,
         "active_strategies": [
             {
-                "symbol": "ADA/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "NEAR/USDT:USDT",
+                "timeframe": "30m",
                 "active": true
             }
         ]
@@ -14,8 +14,8 @@
         "_info": "Optimizer nutzt alle vorhandenen Configs aus src/ltbbot/strategy/configs/ \u2014 kein Pool noetig.",
         "oos_reference_date": "2026-08-26",
         "_oos_note": "End-Datum fuer 70/30-Split. OOS-Start automatisch je Timeframe.",
-        "backtest_lookback_weeks": 12,
-        "_backtest_lookback_note": "Wie viele Wochen zurueck der Portfolio-Optimizer schaut. Optimal per run_analysis.sh Analyse 1 ermittelt -- korrigierter Walk-Forward-Test 2026-08-25 (WALKFORWARD_AUDIT_2026-08.md) fand 12W als besten Lookback (Calmar 2.41, PnL +38.7%, durchgehend Ergebnisse \u00fcber 50 Testwochen). Vorher faelschlich auf 1 (nur 6 Trades/50 Wochen, 45 Leerwochen -- nie auf den Analyse-Befund aktualisiert).",
+        "backtest_lookback_weeks": 26,
+        "_backtest_lookback_note": "Wie viele Wochen zurueck der Portfolio-Optimizer schaut. Optimal per run_analysis.sh Analyse 1 ermittelt.",
         "smoothing_step_days": 2,
         "smoothing_samples": 7,
         "symbols_to_optimize": "auto",

@@ -1,13 +1,13 @@
 {
     "_meta": {
-        "pnl_pct": 208.34,
-        "oos_pnl_pct": 33.01,
+        "pnl_pct": 4261.99,
+        "oos_pnl_pct": 55.93,
         "oos_trades": 63,
-        "is_oos_split_date": "2026-01-19",
+        "is_oos_split_date": "2026-01-21",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
-        "optimized_at": "2026-08-26T13:50:59"
+        "optimized_at": "2026-08-29T12:07:06"
     },
     "market": {
         "symbol": "DOGE/USDT:USDT",
@@ -17,19 +17,19 @@
         "average_type": "WMA",
         "average_period": 5,
         "envelopes": [
-            0.01728713058995429,
-            0.07410352083048874,
-            0.10539814998973561
+            0.017963783774989323,
+            0.02836076656288815,
+            0.09795834469375418
         ],
-        "trigger_price_delta_pct": 0.0142,
+        "trigger_price_delta_pct": 0.0101,
         "disable_strong_trend_block": true,
         "strong_trend_adx_threshold": 30.0
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.62,
-        "leverage": 6,
-        "sl_to_env1_ratio": 0.1341
+        "risk_per_entry_pct": 0.93,
+        "leverage": 4,
+        "sl_to_env1_ratio": 0.1249
     },
     "behavior": {
         "use_longs": true,

@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "pnl_pct": 969.92,
+        "oos_pnl_pct": 82.67,
+        "oos_trades": 74,
+        "is_oos_split_date": "2025-10-04",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-08-30T17:20:13"
+    },
+    "market": {
+        "symbol": "NEAR/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 5,
+        "envelopes": [
+            0.030727790901236243,
+            0.05166266689591852,
+            0.07150355606265472
+        ],
+        "trigger_price_delta_pct": 0.1571,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 30.89
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.83,
+        "leverage": 5,
+        "sl_to_env1_ratio": 0.105
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}
