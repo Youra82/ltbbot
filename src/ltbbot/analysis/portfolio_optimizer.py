@@ -154,7 +154,16 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
 
     while True:
         best_next_addition_candidate = None
-        best_score_with_addition = best_portfolio_score
+        # Akzeptanzkriterium: absolute PnL muss steigen (DD-Constraint ist bereits
+        # ein harter Filter weiter unten) -- NICHT mehr "Calmar-Ratio muss steigen".
+        # Die Ratio-Regel liess den Greedy-Aufbau nach dem ersten Kandidaten mit
+        # aussergewoehnlich hoher Solo-Ratio abbrechen, da jede weitere (fuer sich
+        # genommen gute) Ergaenzung die BLENDED Ratio zunaechst verwaesserte --
+        # obwohl das DD-Budget noch laengst nicht ausgeschoepft war. Gefunden beim
+        # manuellen Test eines 11-Paar-Portfolios (743.5% PnL/24.1% DD, weit unter
+        # dem 30%-Limit) gegen die vom alten Kriterium gewaehlte Einzelstrategie
+        # (159.8%/10.18% DD) -- 2026-08-31.
+        best_pnl_with_addition = best_portfolio_result.get('total_pnl_pct', -100.0)
         current_best_result_with_addition = best_portfolio_result
 
         candidates_to_evaluate = list(candidate_pool)
@@ -186,16 +195,14 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
                     max_dd_pct = result.get('max_drawdown_pct', 100.0)
                     if max_dd_pct < 0.1: max_dd_pct = 0.1
 
-                    # *** NEU: Portfolio DD Constraint Check ***
+                    # *** Portfolio DD Constraint Check (harte Grenze) ***
                     if max_dd_pct > max_portfolio_dd_constraint * 100:
                          # logger.debug(f"Potenzielles Team mit {candidate_id} überschreitet Portfolio DD Limit ({max_dd_pct:.1f}% > {max_portfolio_dd_constraint*100:.1f}%).")
                          continue # Dieses Team ist ungültig
 
-                    score = pnl_pct / max_dd_pct if max_dd_pct > 0 else pnl_pct if pnl_pct > 0 else -1000
-
-                    # Wenn dieser Kandidat das Team verbessert (und DD einhält), merke ihn dir
-                    if score > best_score_with_addition:
-                        best_score_with_addition = score
+                    # Wenn dieser Kandidat das Team verbessert (mehr PnL, DD im Budget), merke ihn dir
+                    if pnl_pct > best_pnl_with_addition:
+                        best_pnl_with_addition = pnl_pct
                         best_next_addition_candidate = candidate
                         current_best_result_with_addition = result
 
@@ -207,11 +214,13 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
         if best_next_addition_candidate:
             best_next_id = best_next_addition_candidate['strategy_id']
             best_next_symbol = best_next_addition_candidate['symbol']
+            new_dd = max(current_best_result_with_addition.get('max_drawdown_pct', 100.0), 0.1)
+            best_portfolio_score = best_pnl_with_addition / new_dd
 
-            logger.info(f"-> Füge hinzu: {best_next_id} (Symbol: {best_next_symbol}, Neuer Score: {best_score_with_addition:.2f})")
+            logger.info(f"-> Füge hinzu: {best_next_id} (Symbol: {best_next_symbol}, "
+                        f"Neues PnL: {best_pnl_with_addition:.2f}%, DD: {new_dd:.2f}%)")
             best_portfolio_ids.append(best_next_id)
             best_portfolio_symbols.add(best_next_symbol) # Symbol zum Set hinzufügen
-            best_portfolio_score = best_score_with_addition
             best_portfolio_result = current_best_result_with_addition
 
             # Entferne hinzugefügten Kandidaten aus Pool
