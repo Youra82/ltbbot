@@ -564,6 +564,7 @@ def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: 
             return False
         closed_by_id = {str(o.get('id')): o for o in closed_triggers}
 
+        band_sl_prices = tracker_info.get("band_sl_prices") or {"long": {}, "short": {}}
         any_triggered = False
         for side_key in ("long", "short"):
             still_open = {}
@@ -580,13 +581,16 @@ def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: 
                     if int(band_str) in committed.get(side_key, []):
                         committed[side_key].remove(int(band_str))
                     tracker_info["committed_bands"] = committed
+                    band_sl_prices.get(side_key, {}).pop(band_str, None)
                 else:
                     # Nicht mehr offen, aber auch nicht 'closed' -- z.B. bereits
                     # anderweitig entfernt. Sicherheitshalber einfach fallen lassen.
                     logger.debug(f"Band-SL {sl_id} ({side_key} Band {band_str}) nicht mehr offen (Status={status}).")
+                    band_sl_prices.get(side_key, {}).pop(band_str, None)
             band_sl_orders[side_key] = still_open
 
         tracker_info["band_sl_orders"] = band_sl_orders
+        tracker_info["band_sl_prices"] = band_sl_prices
 
         committed = tracker_info.get("committed_bands") or {"long": [], "short": []}
         fully_flat = not committed.get("long") and not committed.get("short")
@@ -597,6 +601,7 @@ def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: 
             # mehrere gleichzeitig ausgeloeste Band-SLs passieren).
             tracker_info["status"] = "stop_loss_triggered" if any_triggered else tracker_info.get("status", "ok_to_trade")
             tracker_info["pending_band_orders"] = {"long": {}, "short": {}}
+            tracker_info["band_sl_prices"] = {"long": {}, "short": {}}
             if 'last_notified_entry_price' in tracker_info:
                 del tracker_info['last_notified_entry_price']
             if 'last_notified_side' in tracker_info:
@@ -674,6 +679,7 @@ def check_take_profit_trigger(exchange: Exchange, symbol: str, tracker_file_path
                 "committed_bands": {"long": [], "short": []},
                 "pending_band_orders": {"long": {}, "short": {}},
                 "band_sl_orders": {"long": {}, "short": {}},
+                "band_sl_prices": {"long": {}, "short": {}},
             })
             # Position wurde geschlossen, lösche gemeldete Position aus Tracker
             if 'last_notified_entry_price' in tracker_info:
@@ -697,6 +703,109 @@ def check_take_profit_trigger(exchange: Exchange, symbol: str, tracker_file_path
     except Exception as e:
         logger.error(f"Fehler beim Prüfen geschlossener TP-Orders für {symbol}: {e}", exc_info=True)
         return False
+
+
+def check_catastrophic_band_breach(exchange: Exchange, symbol: str, params: dict, tracker_file_path: str,
+                                    telegram_config: dict, logger: logging.Logger) -> bool:
+    """
+    Notfall-Failsafe (User-Vorgabe 2026-09-01): Fuer Band 1/2 ist ein verpasster
+    oder verzoegerter SL tolerierbar (kleinere, engere Positionen). Fuer das
+    AEUSSERSTE (breiteste) Band gilt das NICHT -- durchbricht der Live-Preis
+    dessen SL-Niveau, obwohl die native Bitget-SL-Order das eigentlich haette
+    verhindern muessen (z.B. bei Unklarheiten in der Trigger-Richtung des
+    generischen Plan-Order-Endpoints, siehe Recherche 2026-09-01), wird die
+    GESAMTE Position sofort per Market-Order zwangsgeschlossen, ALLE Orders
+    fuer das Symbol storniert und eine dringende Telegram-Meldung verschickt.
+
+    Muss VOR sync_band_fills()/cancel_strategy_orders() im Zyklus laufen, damit
+    band_sl_prices/committed_bands noch den vollen, unveraenderten Stand haben.
+    """
+    try:
+        tracker_info = read_tracker_file(tracker_file_path)
+        band_sl_prices = tracker_info.get("band_sl_prices") or {"long": {}, "short": {}}
+        committed = tracker_info.get("committed_bands") or {"long": [], "short": []}
+        num_envelopes = len(params.get('strategy', {}).get('envelopes', []))
+        if num_envelopes == 0:
+            return False
+        last_band = str(num_envelopes)
+
+        checks = (('long', lambda live, sl: live < sl), ('short', lambda live, sl: live > sl))
+        for side_key, is_breached in checks:
+            if int(last_band) not in committed.get(side_key, []):
+                continue
+            sl_price = band_sl_prices.get(side_key, {}).get(last_band)
+            if sl_price is None:
+                continue
+            try:
+                ticker = exchange.fetch_ticker(symbol)
+                live_price = float(ticker['last']) if ticker and ticker.get('last') else None
+            except Exception as e:
+                logger.warning(f"Notfall-Check: Konnte Live-Preis für {symbol} nicht abrufen: {e}")
+                continue
+            if live_price is None or not is_breached(live_price, float(sl_price)):
+                continue
+
+            logger.critical(
+                f"🚨🚨 NOTFALL für {symbol}: Live-Preis {live_price:.6g} hat die SL des äußersten "
+                f"Bands {last_band} ({side_key}, SL={float(sl_price):.6g}) durchbrochen, ohne dass "
+                f"die native SL-Order gefeuert hat! Löse Zwangsschließung aus."
+            )
+            _emergency_force_close(exchange, symbol, side_key, tracker_file_path, telegram_config,
+                                    logger, live_price, float(sl_price), last_band)
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Fehler im Notfall-Breach-Check für {symbol}: {e}", exc_info=True)
+        return False
+
+
+def _emergency_force_close(exchange: Exchange, symbol: str, pos_side: str, tracker_file_path: str,
+                            telegram_config: dict, logger: logging.Logger,
+                            live_price: float, sl_price: float, band_num: str):
+    """Storniert ALLE Orders (inkl. reduceOnly) und schliesst die Position per
+    Market-Order zwangsweise -- Notfallpfad, siehe check_catastrophic_band_breach()."""
+    try:
+        exchange.cancel_all_orders_for_symbol(symbol)
+    except Exception as e:
+        logger.error(f"Fehler beim Stornieren aller Orders während Notfall-Schließung ({symbol}): {e}")
+
+    try:
+        positions = exchange.fetch_open_positions(symbol)
+        if positions:
+            amount = float(positions[0].get('contracts', 0))
+            if amount > 0:
+                close_side = 'sell' if pos_side == 'long' else 'buy'
+                exchange.place_market_order(symbol, close_side, amount, reduce=True)
+                logger.critical(f"Position {symbol} zwangsgeschlossen (Market {close_side}, Menge {amount}).")
+        else:
+            logger.info(f"Notfall-Schließung {symbol}: Keine offene Position mehr vorhanden (evtl. bereits geschlossen).")
+    except Exception as e:
+        logger.error(f"FEHLER beim Zwangsschließen der Position {symbol}: {e}", exc_info=True)
+
+    tracker_info = read_tracker_file(tracker_file_path)
+    tracker_info.update({
+        "status": "emergency_closed",
+        "committed_bands": {"long": [], "short": []},
+        "pending_band_orders": {"long": {}, "short": {}},
+        "band_sl_orders": {"long": {}, "short": {}},
+        "band_sl_prices": {"long": {}, "short": {}},
+        "take_profit_ids": [],
+    })
+    if 'last_notified_entry_price' in tracker_info:
+        del tracker_info['last_notified_entry_price']
+    if 'last_notified_side' in tracker_info:
+        del tracker_info['last_notified_side']
+    update_tracker_file(tracker_file_path, tracker_info)
+
+    msg = (
+        f"🚨🚨🚨 NOTFALL-SCHLIESSUNG {symbol}\n\n"
+        f"Live-Preis ({live_price:.6g}) hat die SL des äußersten Bands {band_num} "
+        f"({sl_price:.6g}) durchbrochen, OHNE dass die native SL-Order gefeuert hat.\n"
+        f"Alle Orders storniert, Position per Market-Order zwangsgeschlossen.\n"
+        f"BITTE MANUELL AUF BITGET PRÜFEN!"
+    )
+    send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), msg)
+
 
 def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, logger: logging.Logger):
     """
@@ -999,6 +1108,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     logger.info(f"Risikoberechnung basiert auf: {risk_base_capital:.2f} USDT")
 
     new_sl_ids = {'long': {}, 'short': {}}
+    new_sl_prices = {'long': {}, 'short': {}}
     new_pending_entries = {'long': {}, 'short': {}}
 
     # --- Long Orders ---
@@ -1098,6 +1208,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 logger.debug(f"  SL für Long Entry {i+1} @ {sl_price:.4f} platziert.")
                 if sl_order and 'id' in sl_order:
                     new_sl_ids['long'][i + 1] = sl_order['id']
+                new_sl_prices['long'][i + 1] = sl_price
                 time.sleep(0.1)
 
                 # Dann Entry Order (Trigger Limit)
@@ -1229,6 +1340,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 logger.debug(f"  SL für Short Entry {i+1} @ {sl_price:.4f} platziert.")
                 if sl_order and 'id' in sl_order:
                     new_sl_ids['short'][i + 1] = sl_order['id']
+                new_sl_prices['short'][i + 1] = sl_price
                 time.sleep(0.1)
 
                 # Dann Entry Order (Trigger Limit)
@@ -1281,15 +1393,25 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     if any_new_sl or any_new_pending:
         tracker_info = read_tracker_file(tracker_file_path)
         band_sl_orders = tracker_info.get("band_sl_orders") or {"long": {}, "short": {}}
+        band_sl_prices = tracker_info.get("band_sl_prices") or {"long": {}, "short": {}}
         pending = tracker_info.get("pending_band_orders") or {"long": {}, "short": {}}
         for side_key in ("long", "short"):
             band_sl_orders.setdefault(side_key, {})
+            band_sl_prices.setdefault(side_key, {})
             pending.setdefault(side_key, {})
             for band_num, order_id in new_sl_ids[side_key].items():
                 band_sl_orders[side_key][str(band_num)] = order_id
+            for band_num, price_val in new_sl_prices[side_key].items():
+                band_sl_prices[side_key][str(band_num)] = price_val
             for band_num, order_id in new_pending_entries[side_key].items():
                 pending[side_key][str(band_num)] = order_id
         tracker_info["band_sl_orders"] = band_sl_orders
+        # band_sl_prices: die tatsaechlichen SL-PREISE (nicht nur Order-IDs) pro
+        # Band, persistiert fuer check_catastrophic_band_breach() -- der Notfall-
+        # Failsafe braucht den Preis auch dann noch, wenn die native SL-Order aus
+        # irgendeinem Grund nicht wie erwartet feuert (User-Vorgabe 2026-09-01:
+        # "wenn Trade bei Band 3 unter SL, dann alles automatisch schliessen").
+        tracker_info["band_sl_prices"] = band_sl_prices
         tracker_info["pending_band_orders"] = pending
         # WICHTIG: Wenn neue Entries platziert werden, ist der Cooldown definitiv vorbei
         tracker_info["status"] = "ok_to_trade"
@@ -1359,6 +1481,12 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
                 manage_existing_position(exchange, position_list[0], band_prices, params, tracker_file_path, logger)
             return  # Beende Zyklus früh
 
+
+        # --- 1b. Notfall-Failsafe: aeusserstes Band durchbrochen trotz aktiver SL? ---
+        # Muss VOR allem anderen laufen, das committed_bands/band_sl_prices veraendert.
+        if check_catastrophic_band_breach(exchange, symbol, params, tracker_file_path, telegram_config, logger):
+            logger.critical(f"Notfall-Zwangsschließung für {symbol} ausgelöst -- Zyklus wird beendet.")
+            return
 
         # --- 2. Prüfen, ob TP/SL ausgelöst wurden SEIT dem letzten Lauf ---
         check_take_profit_trigger(exchange, symbol, tracker_file_path, logger)
