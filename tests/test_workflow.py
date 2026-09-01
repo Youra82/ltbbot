@@ -145,14 +145,16 @@ def test_place_entry_orders_on_bitget(test_setup):
 
     print("\n[Schritt 2/2] Überprüfe, ob die Trigger-Orders erstellt wurden...")
     try:
-        # Erwarte Trigger-Orders: 3x Long Entry, 3x Long TP, 3x Long SL, 3x Short Entry, 3x Short TP, 3x Short SL = 18 Orders
-        # ABER: TP/SL werden *NACH* Entry ausgelöst. Da hier kein Entry stattfindet, sollten nur Entry-Trigger erstellt werden?
-        # NEIN: Die Logik in place_entry_orders platziert Entry, TP und SL direkt nacheinander.
-        # Es sollten also pro Band 3 Orders erstellt werden (Entry Trigger Limit, TP Trigger Market, SL Trigger Market)
-        # Für Longs und Shorts, also 3 Bänder * 3 Order-Typen * 2 Richtungen = 18 Trigger Orders.
+        # Multi-Band-Redesign (2026-09-01): place_entry_orders() platziert pro Band
+        # nur noch Entry + dessen EIGENE feste SL (2 Order-Typen) -- der TP ist fuer
+        # alle Baender identisch (aktuelle MA) und wird stattdessen gebuendelt von
+        # manage_existing_position() gesetzt, sobald eine Position existiert (hier
+        # nicht der Fall, da wir nur place_entry_orders() isoliert aufrufen, ohne
+        # dass etwas gefuellt wurde). Erwartung also: 3 Bänder * 2 Order-Typen
+        # (Entry + SL) * 2 Richtungen = 12 Trigger Orders.
 
         open_trigger_orders = exchange.fetch_open_trigger_orders(symbol)
-        expected_orders = len(params['strategy']['envelopes']) * 3 * 2 # Bänder * (Entry+TP+SL) * (Long+Short)
+        expected_orders = len(params['strategy']['envelopes']) * 2 * 2 # Bänder * (Entry+SL) * (Long+Short)
 
         print(f"-> Erwartete Trigger Orders: {expected_orders}")
         print(f"-> Gefundene Trigger Orders: {len(open_trigger_orders)}")

@@ -532,92 +532,78 @@ def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logg
 # --- Stop Loss Trigger Check ---
 
 def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: str, logger: logging.Logger):
-    """Prüft, ob ein von dieser Strategie gesetzter SL ausgelöst wurde."""
+    """Prüft PRO BAND, ob dessen eigene, feste SL ausgelöst wurde (Multi-Band,
+    2026-09-01: jedes Band hat seine eigene SL-Order, siehe place_entry_orders()
+    -- nicht mehr EIN SL fuer die gesamte genettete Position). Ein ausgeloestes
+    Band-SL schliesst NUR dieses Band; die anderen (falls noch offen) bleiben
+    unberuehrt. Erst wenn KEIN Band mehr committed ist, gilt die Position als
+    komplett geschlossen (Tracker-Vollreset inkl. last_notified_*)."""
     tracker_info = read_tracker_file(tracker_file_path)
-    current_sl_ids = tracker_info.get("stop_loss_ids", [])
-    if not current_sl_ids:
-        logger.debug("Keine aktiven SL-Order-IDs im Tracker gefunden.")
-        return False # Kein SL war gesetzt oder wurde verfolgt
+    band_sl_orders = tracker_info.get("band_sl_orders") or {"long": {}, "short": {}}
+    all_sl_ids = list(band_sl_orders.get("long", {}).values()) + list(band_sl_orders.get("short", {}).values())
+    if not all_sl_ids:
+        logger.debug("Keine aktiven per-Band SL-Order-IDs im Tracker gefunden.")
+        return False
 
-    logger.debug(f"Prüfe {len(current_sl_ids)} SL-Order-IDs im Tracker: {current_sl_ids}")
+    logger.debug(f"Prüfe {len(all_sl_ids)} per-Band SL-Order-IDs im Tracker: {all_sl_ids}")
 
     try:
-        # Hole die letzten ~10 geschlossenen Trigger Orders (mehr Puffer)
-        # Wichtig: 'fetchClosedOrders' könnte zuverlässiger sein, falls 'fetchOrders' nicht alle Trigger liefert
+        open_triggers = exchange.fetch_open_trigger_orders(symbol)
+        open_ids = {str(o['id']) for o in open_triggers}
+
         closed_triggers = []
+        params = {'stop': True} if 'bitget' in exchange.exchange.id else {}
         if exchange.exchange.has['fetchClosedOrders']:
-             # Einige Börsen benötigen 'stop': True auch hier
-             params = {'stop': True} if 'bitget' in exchange.exchange.id else {}
-             closed_triggers = exchange.exchange.fetchClosedOrders(symbol, limit=10, params=params)
-             # Filtere manuell nach stopPrice, da fetchClosedOrders auch normale Orders liefern kann
-             closed_triggers = [o for o in closed_triggers if o.get('stopPrice') is not None]
-        elif exchange.exchange.has['fetchOrders']: # Fallback
-             params = {'stop': True} if 'bitget' in exchange.exchange.id else {}
-             all_orders = exchange.exchange.fetchOrders(symbol, limit=20, params=params) # Mehr holen
-             closed_triggers = [o for o in all_orders if o.get('stopPrice') is not None and o['status'] in ['closed', 'canceled']]
+            closed_triggers = exchange.exchange.fetchClosedOrders(symbol, limit=15, params=params)
+            closed_triggers = [o for o in closed_triggers if o.get('stopPrice') is not None]
+        elif exchange.exchange.has['fetchOrders']:
+            all_orders = exchange.exchange.fetchOrders(symbol, limit=25, params=params)
+            closed_triggers = [o for o in all_orders if o.get('stopPrice') is not None and o['status'] in ['closed', 'canceled']]
         else:
-             logger.warning("Weder fetchClosedOrders noch fetchOrders wird unterstützt, um SL-Trigger zu prüfen.")
-             return False
-
-        if not closed_triggers:
-            logger.debug(f"Keine kürzlich geschlossenen Trigger-Orders für {symbol} gefunden.")
-            # Sicherheitshalber prüfen, ob die Orders noch offen sind
-            open_triggers = exchange.fetch_open_trigger_orders(symbol)
-            open_trigger_ids = {o['id'] for o in open_triggers}
-            still_open_sl_ids = [sl_id for sl_id in current_sl_ids if sl_id in open_trigger_ids]
-            if set(still_open_sl_ids) != set(current_sl_ids):
-                 logger.info("Einige SL-IDs aus dem Tracker sind nicht mehr offen. Aktualisiere Tracker.")
-                 tracker_info["stop_loss_ids"] = still_open_sl_ids
-                 update_tracker_file(tracker_file_path, tracker_info)
+            logger.warning("Weder fetchClosedOrders noch fetchOrders wird unterstützt, um SL-Trigger zu prüfen.")
             return False
+        closed_by_id = {str(o.get('id')): o for o in closed_triggers}
 
-        triggered_sl_found = False
-        pos_side = None # Seite der Position, die geschlossen wurde
+        any_triggered = False
+        for side_key in ("long", "short"):
+            still_open = {}
+            for band_str, sl_id in list(band_sl_orders.get(side_key, {}).items()):
+                if str(sl_id) in open_ids:
+                    still_open[band_str] = sl_id
+                    continue
+                closed_order = closed_by_id.get(str(sl_id))
+                status = closed_order.get('status') if closed_order else None
+                if status == 'closed':
+                    logger.warning(f"🚨 STOP LOSS für Band {band_str} ({side_key}) von {symbol} ausgelöst! Order ID: {sl_id}")
+                    any_triggered = True
+                    committed = tracker_info.get("committed_bands") or {"long": [], "short": []}
+                    if int(band_str) in committed.get(side_key, []):
+                        committed[side_key].remove(int(band_str))
+                    tracker_info["committed_bands"] = committed
+                else:
+                    # Nicht mehr offen, aber auch nicht 'closed' -- z.B. bereits
+                    # anderweitig entfernt. Sicherheitshalber einfach fallen lassen.
+                    logger.debug(f"Band-SL {sl_id} ({side_key} Band {band_str}) nicht mehr offen (Status={status}).")
+            band_sl_orders[side_key] = still_open
 
-        logger.debug(f"Prüfe {len(closed_triggers)} geschlossene Trigger Orders gegen Tracker-IDs.")
-        for closed_order in closed_triggers:
-            closed_id = closed_order['id']
-            if closed_id in current_sl_ids:
-                # Ein bekannter SL wurde geschlossen. Status 'closed' bedeutet meistens Auslösung.
-                # 'canceled' wird ignoriert, da wir sie selbst stornieren.
-                if closed_order.get('status') == 'closed':
-                    logger.warning(f"🚨 STOP LOSS wurde für {symbol} ausgelöst! Order ID: {closed_id}")
-                    triggered_sl_found = True
-                    # Die Seite der *Position* ist das Gegenteil der SL-Order-Seite
-                    pos_side = 'long' if closed_order['side'] == 'sell' else 'short'
-                    break # Nur der erste gefundene Trigger zählt
+        tracker_info["band_sl_orders"] = band_sl_orders
 
-        if triggered_sl_found:
-            # Update Tracker: Setze Status auf 'stop_loss_triggered' und merke dir die Seite
-            tracker_info = read_tracker_file(tracker_file_path)
-            tracker_info["status"] = "stop_loss_triggered"
-            tracker_info["last_side"] = pos_side
-            tracker_info["stop_loss_ids"] = []  # IDs löschen, da SL ausgelöst/geschlossen
-            # SL schließt IMMER die komplette genettete Position (manage_existing_position
-            # setzt eine Gesamt-SL für alle gefüllten Bänder) -- alle Bänder sind wieder frei.
-            tracker_info["committed_bands"] = {"long": [], "short": []}
+        committed = tracker_info.get("committed_bands") or {"long": [], "short": []}
+        fully_flat = not committed.get("long") and not committed.get("short")
+        if fully_flat and (any_triggered or not (band_sl_orders.get("long") or band_sl_orders.get("short"))):
+            # Keine Baender mehr offen -- Position ist komplett zu, wie ein
+            # klassisches "ein SL hat alles geschlossen" (kann durch ein
+            # einzelnes Band, das zufaellig das letzte war, oder durch
+            # mehrere gleichzeitig ausgeloeste Band-SLs passieren).
+            tracker_info["status"] = "stop_loss_triggered" if any_triggered else tracker_info.get("status", "ok_to_trade")
             tracker_info["pending_band_orders"] = {"long": {}, "short": {}}
-            # Position wurde geschlossen, lösche gemeldete Position aus Tracker
             if 'last_notified_entry_price' in tracker_info:
                 del tracker_info['last_notified_entry_price']
             if 'last_notified_side' in tracker_info:
                 del tracker_info['last_notified_side']
-            update_tracker_file(tracker_file_path, tracker_info)
-            return True
-        else:
-            # Wenn keiner der bekannten SLs als 'closed' gefunden wurde,
-            # prüfen wir sicherheitshalber nochmal, ob sie noch offen sind
-            # (redundant zur Prüfung oben, aber sicher ist sicher)
-            open_triggers = exchange.fetch_open_trigger_orders(symbol)
-            open_trigger_ids = {o['id'] for o in open_triggers}
-            still_open_sl_ids = [sl_id for sl_id in current_sl_ids if sl_id in open_trigger_ids]
-            if set(still_open_sl_ids) != set(current_sl_ids):
-                logger.info("Einige SL-IDs aus dem Tracker sind nicht mehr offen (erneute Prüfung). Aktualisiere Tracker.")
-                tracker_info["stop_loss_ids"] = still_open_sl_ids
-                update_tracker_file(tracker_file_path, tracker_info)
-            else:
-                 logger.debug("Keine ausgelösten SLs gefunden. Alle bekannten SLs sind entweder noch offen oder wurden nicht als 'closed' gemeldet.")
-            return False
+
+        update_tracker_file(tracker_file_path, tracker_info)
+        return any_triggered
 
     except Exception as e:
         logger.error(f"Fehler beim Prüfen geschlossener SL-Orders für {symbol}: {e}", exc_info=True)
@@ -669,13 +655,25 @@ def check_take_profit_trigger(exchange: Exchange, symbol: str, tracker_file_path
                     break
 
         if triggered_tp_found:
+            # TP schließt IMMER die komplette genettete Position (sized auf die
+            # aktuelle Gesamtgröße, siehe manage_existing_position()) -- alle
+            # Bänder sind wieder frei. Etwaige noch offene per-Band SL-Orders
+            # sind jetzt verwaist (keine Position mehr zum Reduzieren) und
+            # werden explizit storniert statt sie stehen zu lassen.
+            band_sl_orders = tracker_info.get("band_sl_orders") or {"long": {}, "short": {}}
+            for side_key in ("long", "short"):
+                for band_str, sl_id in band_sl_orders.get(side_key, {}).items():
+                    try:
+                        exchange.cancel_trigger_order(sl_id, symbol)
+                        logger.debug(f"Verwaiste Band-SL {sl_id} ({side_key} Band {band_str}) nach TP storniert.")
+                    except Exception as _ce:
+                        logger.debug(f"Verwaiste Band-SL {sl_id} bereits entfernt oder Fehler: {_ce}")
             tracker_info.update({
                 "status": "take_profit_triggered",
                 "take_profit_ids": [],
-                # TP schließt IMMER die komplette genettete Position (siehe SL-Pendant
-                # in check_stop_loss_trigger) -- alle Bänder sind wieder frei.
                 "committed_bands": {"long": [], "short": []},
                 "pending_band_orders": {"long": {}, "short": {}},
+                "band_sl_orders": {"long": {}, "short": {}},
             })
             # Position wurde geschlossen, lösche gemeldete Position aus Tracker
             if 'last_notified_entry_price' in tracker_info:
@@ -768,212 +766,131 @@ def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, log
 # --- Positions-Management ---
 
 def manage_existing_position(exchange: Exchange, position: dict, band_prices: dict, params: dict, tracker_file_path: str, logger: logging.Logger):
-    """Verwaltet eine bestehende Position: Aktualisiert TP und SL."""
+    """Verwaltet eine bestehende Position: aktualisiert NUR den gebündelten TP
+    (aktuelle MA, jeden Zyklus neu, sized auf die aktuelle genettete Positionsgröße).
+
+    SL wird hier NICHT mehr gesetzt/angefasst -- jedes Band hat seine eigene,
+    feste SL-Order (siehe place_entry_orders()), die unveraendert bestehen
+    bleibt bis sie feuert (sync_band_sl_fills()) oder der gebündelte TP die
+    komplette Position schließt (check_take_profit_trigger()). Das matcht
+    backtester.py, wo jede Band-Position ihre eigene feste SL hat und nur
+    der TP fuer alle gemeinsam dynamisch ist (2026-09-01, "das muss sauber
+    sein" -- vorher wurde hier faelschlich EINE SL fuer die gesamte genettete
+    Position neu berechnet, was Band-1-SL-Level ignorierte sobald Band 2/3
+    zu einem guenstigeren Average-Entry dazukamen).
+    """
     symbol = params['market']['symbol']
-    risk_params = params['risk']
     pos_side = position['side']
-    logger.info(f"Verwalte bestehende {pos_side}-Position für {symbol} (Größe: {position.get('contracts', 'N/A')}).")
+    logger.info(f"Verwalte bestehende {pos_side}-Position für {symbol} (Größe: {position.get('contracts', 'N/A')}) -- aktualisiere gebündelten TP.")
 
-    # Alle alten TP/SL-Orders (reduceOnly) explizit stornieren bevor neue gesetzt werden
-    try:
-        _old_triggers = exchange.fetch_open_trigger_orders(symbol)
-        _cancelled_count = 0
-        for _ord in _old_triggers:
-            if _ord.get('reduceOnly'):
-                try:
-                    exchange.cancel_trigger_order(_ord['id'], symbol)
-                    _cancelled_count += 1
-                    logger.debug(f"Alter TP/SL storniert: {_ord['id']}")
-                except Exception as _ce:
-                    logger.debug(f"TP/SL {_ord['id']} bereits entfernt oder Fehler: {_ce}")
-        if _cancelled_count > 0:
-            logger.info(f"🗑 {_cancelled_count} alte TP/SL-Order(s) storniert.")
-    except Exception as _e:
-        logger.warning(f"Fehler beim Stornieren alter TP/SL Orders: {_e}")
-
-    # Neuen TP (am Moving Average) und SL setzen
     amount_contracts = position['contracts']
     try:
         amount_contracts_float = float(amount_contracts)
         if amount_contracts_float == 0:
-             logger.warning("Positionsgröße ist 0, kann TP/SL nicht setzen.")
+             logger.warning("Positionsgröße ist 0, kann TP nicht setzen.")
              return
     except (ValueError, TypeError) as e:
         logger.error(f"Konnte Positionsgröße ('{amount_contracts}') nicht in Float umwandeln: {e}")
         return
 
-    new_sl_ids = []
+    # NUR die zuvor getrackten TP-Order(s) stornieren -- die per-Band SL-Orders
+    # (ebenfalls reduceOnly) bleiben unangetastet.
+    tracker_info = read_tracker_file(tracker_file_path)
+    old_tp_ids = tracker_info.get("take_profit_ids", [])
+    if old_tp_ids:
+        for _tp_id in old_tp_ids:
+            try:
+                exchange.cancel_trigger_order(_tp_id, symbol)
+                logger.debug(f"Alter TP storniert: {_tp_id}")
+            except Exception as _ce:
+                logger.debug(f"TP {_tp_id} bereits entfernt oder Fehler: {_ce}")
+
     new_tp_ids = []
-
     try:
-        # Entry-Preis frühzeitig ermitteln, damit TP-Berechnung darauf zugreifen kann
-        avg_entry_price_str = position.get('entryPrice', position.get('info', {}).get('avgOpenPrice'))
-        if avg_entry_price_str is None:
-            avg_entry_price_str = position.get('info', {}).get('openPriceAvg')
-        if avg_entry_price_str is None:
-            logger.error("Konnte Einstiegspreis für TP/SL-Berechnung nicht ermitteln!")
-            return
-        try:
-            avg_entry_price = float(avg_entry_price_str)
-        except (ValueError, TypeError):
-            logger.error(f"Konnte Entry Preis '{avg_entry_price_str}' nicht in Float umwandeln.")
-            return
-
-        # Neuer Stop Loss — sl_ratio (neu) → ATR (Zwischen) → fixed % (alt)
-        regime = band_prices.get('regime', 'UNCERTAIN')
-        trailing_callback_rate = risk_params.get('trailing_callback_rate_pct', 0.0) / 100.0
-        if 'sl_to_env1_ratio' in risk_params:
-            _envelopes_m = params.get('strategy', {}).get('envelopes', [0.03])
-            env1_m = _envelopes_m[0] if _envelopes_m else 0.03
-            sl_pct = env1_m * risk_params['sl_to_env1_ratio']
-        elif 'stop_loss_atr_multiplier' in risk_params:
-            _atr_mult_m = risk_params['stop_loss_atr_multiplier']
-            _min_sl_m   = risk_params.get('min_stop_loss_pct', 0.5) / 100.0
-            _atr_m      = band_prices.get('atr')
-            if _atr_m and _atr_m > 0 and avg_entry_price > 0:
-                sl_pct = max(_atr_m * _atr_mult_m / avg_entry_price, _min_sl_m)
-            else:
-                sl_pct = _min_sl_m
+        tp_price = band_prices.get('average')
+        if tp_price is None or pd.isna(tp_price) or tp_price <= 0:
+            logger.error("Ungültiger Average-Preis für TP. Überspringe TP-Platzierung.")
         else:
-            sl_pct = risk_params['stop_loss_pct'] / 100.0
-        if regime in ("TREND", "STRONG_TREND"):
-            sl_pct *= 1.5
-            logger.info(f"📈 Trend-Markt: SL auf {sl_pct*100:.2f}% erweitert (Regime: {regime})")
-        if pos_side == 'long':
-            sl_price = avg_entry_price * (1 - sl_pct)
-            sl_side = 'sell'
-        else: # short
-            sl_price = avg_entry_price * (1 + sl_pct)
-            sl_side = 'buy'
+            tp_side = 'sell' if pos_side == 'long' else 'buy'
 
-        # Stelle sicher, dass SL-Preis gültig ist
-        if sl_price <= 0:
-            logger.error(f"Ungültiger SL-Preis berechnet ({sl_price:.4f}). Überspringe SL/TP-Platzierung.")
-        else:
-            # Neuer Take Profit: aktueller MA (dynamisch, wird jeden Zyklus neu gesetzt)
-            tp_price_base = band_prices.get('average')
-            if tp_price_base is None or pd.isna(tp_price_base) or tp_price_base <= 0:
-                logger.error("Ungültiger Average-Preis für TP. Überspringe TP-Platzierung.")
-            else:
-                tp_price = tp_price_base
+            use_native_tp = params.get('risk', {}).get('use_native_trailing_tp', False)
+            tp_callback_rate = params.get('risk', {}).get('tp_trailing_callback_rate_pct', 0.5) / 100.0
+            tp_activation_delta = params.get('strategy', {}).get('tp_activation_delta_pct', 0.5) / 100.0
+            avg_entry_price_str = position.get('entryPrice', position.get('info', {}).get('avgOpenPrice'))
+            if avg_entry_price_str is None:
+                avg_entry_price_str = position.get('info', {}).get('openPriceAvg')
+            try:
+                avg_entry_price = float(avg_entry_price_str) if avg_entry_price_str is not None else tp_price
+            except (ValueError, TypeError):
+                avg_entry_price = tp_price
 
-                tp_side = 'sell' if pos_side == 'long' else 'buy'
-
-                # Native trailing TP falls konfiguriert
-                use_native_tp = params.get('risk', {}).get('use_native_trailing_tp', False)
-                tp_callback_rate = params.get('risk', {}).get('tp_trailing_callback_rate_pct', 0.5) / 100.0
-                tp_activation_delta = params.get('strategy', {}).get('tp_activation_delta_pct', 0.5) / 100.0
-
-                if use_native_tp:
-                    # activation price: leicht über/unter dem Entry, oder basierend auf tp_price
-                    if pos_side == 'long':
-                        activation_price = max(tp_price, avg_entry_price * (1 + tp_activation_delta))
-                    else:
-                        activation_price = min(tp_price, avg_entry_price * (1 - tp_activation_delta))
-                    try:
-                        resp = exchange.place_trailing_stop_order(
-                            symbol=symbol,
-                            side=tp_side,
-                            amount=amount_contracts_float,
-                            activation_price=activation_price,
-                            callback_rate_decimal=tp_callback_rate,
-                            params={'reduceOnly': True}
-                        )
-                        # Versuche, eine ID aus der Antwort zu extrahieren
-                        tp_id = None
-                        if isinstance(resp, dict):
-                            if 'data' in resp and isinstance(resp['data'], dict):
-                                for key in ('orderId', 'planId', 'id'):
-                                    if key in resp['data']:
-                                        tp_id = resp['data'][key]
-                                        break
-                            for key in ('orderId', 'planId', 'id'):
-                                if not tp_id and key in resp:
-                                    tp_id = resp[key]
-                        if tp_id:
-                            new_tp_ids.append(tp_id)
-                        logger.info(f"Neuen native Trailing-TP für {pos_side} gesetzt (activation={activation_price:.4f}, callback={tp_callback_rate*100:.2f}%). RespID={tp_id}")
-                    except Exception as e:
-                        logger.warning(f"Native Trailing-TP nicht möglich, fallback auf Trigger-TP: {e}")
-                        tp_order = exchange.place_trigger_market_order(symbol, tp_side, amount_contracts_float, tp_price, reduce=True)
-                        if tp_order and 'id' in tp_order:
-                            new_tp_ids.append(tp_order['id'])
-                        logger.info(f"Neuen TP für {pos_side} @ {tp_price:.4f} gesetzt (Entry war @ {avg_entry_price:.4f}).")
+            if use_native_tp:
+                if pos_side == 'long':
+                    activation_price = max(tp_price, avg_entry_price * (1 + tp_activation_delta))
                 else:
+                    activation_price = min(tp_price, avg_entry_price * (1 - tp_activation_delta))
+                try:
+                    resp = exchange.place_trailing_stop_order(
+                        symbol=symbol, side=tp_side, amount=amount_contracts_float,
+                        activation_price=activation_price, callback_rate_decimal=tp_callback_rate,
+                        params={'reduceOnly': True}
+                    )
+                    tp_id = None
+                    if isinstance(resp, dict):
+                        if 'data' in resp and isinstance(resp['data'], dict):
+                            for key in ('orderId', 'planId', 'id'):
+                                if key in resp['data']:
+                                    tp_id = resp['data'][key]
+                                    break
+                        for key in ('orderId', 'planId', 'id'):
+                            if not tp_id and key in resp:
+                                tp_id = resp[key]
+                    if tp_id:
+                        new_tp_ids.append(tp_id)
+                    logger.info(f"Neuen native Trailing-TP für {pos_side} gesetzt (activation={activation_price:.4f}, callback={tp_callback_rate*100:.2f}%). RespID={tp_id}")
+                except Exception as e:
+                    logger.warning(f"Native Trailing-TP nicht möglich, fallback auf Trigger-TP: {e}")
                     tp_order = exchange.place_trigger_market_order(symbol, tp_side, amount_contracts_float, tp_price, reduce=True)
                     if tp_order and 'id' in tp_order:
                         new_tp_ids.append(tp_order['id'])
-                    logger.info(f"Neuen TP für {pos_side} @ {tp_price:.4f} gesetzt (Entry war @ {avg_entry_price:.4f}).")
-                time.sleep(0.1) # Kleine Pause
-
-        # SL-Preis ist bereits oben berechnet (inkl. Regime-Multiplikator)
-        # Stelle sicher, dass SL-Preis gültig ist
-        if sl_price <= 0:
-             logger.error(f"Ungültiger SL-Preis berechnet ({sl_price:.4f}). Überspringe SL-Platzierung.")
-        else:
-            # Verwende Trailing Stop Loss wenn trailing_callback_rate gesetzt ist
-            if trailing_callback_rate > 0:
-                try:
-                    sl_order = exchange.place_trailing_stop_order(
-                        symbol=symbol,
-                        side=sl_side,
-                        amount=amount_contracts_float,
-                        activation_price=sl_price,
-                        callback_rate_decimal=trailing_callback_rate
-                    )
-                    logger.info(f"✅ Trailing Stop Loss für {pos_side} gesetzt: Aktivierung @ {sl_price:.4f}, Callback {trailing_callback_rate*100:.2f}%")
-                except (ccxt.NotSupported, AttributeError) as e:
-                    logger.warning(f"⚠️ Trailing Stop nicht unterstützt, verwende normalen Stop Loss: {e}")
-                    sl_order = exchange.place_trigger_market_order(symbol, sl_side, amount_contracts_float, sl_price, reduce=True)
-                    logger.info(f"Neuen SL für {pos_side} @ {sl_price:.4f} gesetzt.")
+                    logger.info(f"Neuen TP für {pos_side} @ {tp_price:.4f} gesetzt (Größe: {amount_contracts_float:.4f}).")
             else:
-                sl_order = exchange.place_trigger_market_order(symbol, sl_side, amount_contracts_float, sl_price, reduce=True)
-                logger.info(f"Neuen SL für {pos_side} @ {sl_price:.4f} gesetzt.")
-            
-            if sl_order and 'id' in sl_order:
-                new_sl_ids.append(sl_order['id'])
+                tp_order = exchange.place_trigger_market_order(symbol, tp_side, amount_contracts_float, tp_price, reduce=True)
+                if tp_order and 'id' in tp_order:
+                    new_tp_ids.append(tp_order['id'])
+                logger.info(f"Neuen TP für {pos_side} @ {tp_price:.4f} gesetzt (Größe: {amount_contracts_float:.4f}).")
+            time.sleep(0.1)
 
     except ccxt.InsufficientFunds as e:
-         logger.error(f"Nicht genügend Guthaben zum Setzen von TP/SL (sollte bei reduceOnly nicht passieren): {e}")
+         logger.error(f"Nicht genügend Guthaben zum Setzen von TP (sollte bei reduceOnly nicht passieren): {e}")
     except ccxt.ExchangeError as e:
-         # Spezifische Fehler wie "Trigger price is too close" behandeln
-         logger.warning(f"Börsenfehler beim Setzen von TP/SL für {symbol}: {e}")
-         # Hier könnte man versuchen, den Preis leicht anzupassen und es erneut zu versuchen
+         logger.warning(f"Börsenfehler beim Setzen von TP für {symbol}: {e}")
     except Exception as e:
-        logger.error(f"Fehler beim Setzen von neuem TP/SL für {symbol}: {e}", exc_info=True)
-        # Versuchen aufzuräumen (erneut canceln), falls Teilaufträge platziert wurden
-        cancel_strategy_orders(exchange, symbol, logger)
+        logger.error(f"Fehler beim Setzen von neuem TP für {symbol}: {e}", exc_info=True)
 
-    # Tracker mit neuen SL IDs aktualisieren (alte werden durch cancel überschrieben)
     tracker_info = read_tracker_file(tracker_file_path)
-    tracker_info["stop_loss_ids"] = new_sl_ids # Nur die neu gesetzten IDs speichern
-    if new_tp_ids:
-        tracker_info["take_profit_ids"] = new_tp_ids
+    tracker_info["take_profit_ids"] = new_tp_ids
     update_tracker_file(tracker_file_path, tracker_info)
 
 
 # --- Entry Order Platzierung ---
 
 def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, balance: float, tracker_file_path: str, telegram_config: dict, logger: logging.Logger, df: pd.DataFrame = None,
-                       restrict_side: str = None, include_tp_sl: bool = True, committed_bands: dict = None):
-    """Platziert die gestaffelten Entry-, TP- und SL-Orders basierend auf Risiko.
+                       restrict_side: str = None, committed_bands: dict = None):
+    """Platziert die gestaffelten Entry- und (pro Band eigene, feste) SL-Orders
+    basierend auf Risiko. Der TP wird NICHT hier gesetzt -- er ist fuer alle
+    Baender identisch (aktuelle MA) und wird deshalb gebuendelt, sized auf die
+    jeweils aktuelle genettete Positionsgroesse, von manage_existing_position()
+    verwaltet, sobald eine Position existiert.
 
     Multi-Band: pro Zyklus werden ALLE Baender geprueft (kein break mehr nach dem
-    ersten Treffer), da Bitget Positionen pro Symbol nettet und daher mehrere
-    gleichzeitig gefuellte Baender ohnehin zu EINER aggregierten Position
-    verschmelzen -- deren SL/TP wird zentral von manage_existing_position()
-    anhand des aktuellen genetteten Average-Entry neu berechnet.
+    ersten Treffer) -- matcht backtester.py, das ebenfalls jede Kerze alle
+    qualifizierenden Baender oeffnet.
 
     restrict_side: 'long'/'short' beschraenkt auf eine Seite (wird gesetzt, wenn
         bereits eine Position offen ist -- verhindert, dass zusaetzlich die
         Gegenseite eroeffnet wird, was in Bitgets One-Way-Modus die bestehende
         Position teilweise gegenrechnen wuerde).
-    include_tp_sl: False, wenn eine Position bereits existiert -- dann setzt
-        NICHT diese Funktion TP/SL (das wuerde die von manage_existing_position()
-        fuer die Gesamtposition gesetzten Order-IDs im Tracker ueberschreiben),
-        sondern nur ein blanker Entry-Trigger wird platziert; die naechste
-        manage_existing_position()-Runde erfasst die dann groessere genettete
-        Position automatisch und setzt eine neue, passende Gesamt-SL/TP.
     committed_bands: {'long': [1,2,...], 'short': [...]} -- Baender, die laut
         Tracker bereits GEFUELLT sind (nicht mehr nur pending) und daher nicht
         erneut eroeffnet werden duerfen.
@@ -1067,8 +984,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
             risk_base_capital = 10
     logger.info(f"Risikoberechnung basiert auf: {risk_base_capital:.2f} USDT")
 
-    new_sl_ids = []
-    new_tp_ids = []
+    new_sl_ids = {'long': {}, 'short': {}}
     new_pending_entries = {'long': {}, 'short': {}}
 
     # --- Long Orders ---
@@ -1153,72 +1069,24 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct_cfg)
 
 
-                tp_price = band_prices.get('average')
-                tp_price_valid = tp_price is not None and not pd.isna(tp_price) and tp_price > 0
-                if not include_tp_sl:
-                    logger.debug(f"Long Band {i+1}: Position bereits offen -- setze nur Entry, kombinierte SL/TP folgt via manage_existing_position().")
-                else:
-                    # ZUERST TP platzieren
-                    if not tp_price_valid:
-                        logger.error("Ungültiger Average-Preis für TP. Überspringe TP.")
-                    else:
-                        # TP = aktueller MA (kein 1:2 R:R erzwingen)
+                # Eigene, FESTE SL fuer GENAU dieses Band platzieren (reduceOnly,
+                # auf amount_coins dieses Bands begrenzt) -- bleibt unveraendert
+                # bestehen bis sie feuert oder die Position komplett schliesst,
+                # wird NICHT von manage_existing_position() angefasst (das
+                # verwaltet nur noch den gebuendelten TP). Matcht den Backtester,
+                # der pro Band ebenfalls eine feste, bei Entry berechnete SL nutzt
+                # (backtester.py: pos['sl_price']), statt einer bei jedem Zyklus
+                # neu berechneten SL fuer die gesamte genettete Position.
+                sl_order = exchange.place_trigger_market_order(
+                    symbol=symbol, side='sell', amount=amount_coins,
+                    trigger_price=sl_price, reduce=True
+                )
+                logger.debug(f"  SL für Long Entry {i+1} @ {sl_price:.4f} platziert.")
+                if sl_order and 'id' in sl_order:
+                    new_sl_ids['long'][i + 1] = sl_order['id']
+                time.sleep(0.1)
 
-                        # Native trailing TP falls aktiviert
-                        use_native_tp = risk_params.get('use_native_trailing_tp', False)
-                        tp_callback_rate = risk_params.get('tp_trailing_callback_rate_pct', 0.5) / 100.0
-                        tp_activation_delta = strategy_params.get('tp_activation_delta_pct', 0.5) / 100.0
-                        if use_native_tp:
-                            activation_price = max(tp_price, entry_limit_price * (1 + tp_activation_delta))
-                            try:
-                                resp = exchange.place_trailing_stop_order(
-                                    symbol=symbol, side='sell', amount=amount_coins,
-                                    activation_price=activation_price, callback_rate_decimal=tp_callback_rate,
-                                    params={'reduceOnly': True}
-                                )
-                                tp_id = None
-                                if isinstance(resp, dict):
-                                    if 'data' in resp and isinstance(resp['data'], dict):
-                                        for key in ('orderId', 'planId', 'id'):
-                                            if key in resp['data']:
-                                                tp_id = resp['data'][key]
-                                                break
-                                    for key in ('orderId', 'planId', 'id'):
-                                        if not tp_id and key in resp:
-                                            tp_id = resp[key]
-                                if tp_id:
-                                    new_tp_ids.append(tp_id)
-                                logger.debug(f"  Native TP(TSL) für Long Entry {i+1} platziert. activation={activation_price:.4f}, id={tp_id}")
-                            except Exception as e:
-                                logger.warning(f"Native Trailing-TP fehlgeschlagen, fallback: {e}")
-                                tp_order = exchange.place_trigger_market_order(
-                                    symbol=symbol, side='sell', amount=amount_coins,
-                                    trigger_price=tp_price, reduce=True
-                                )
-                                if tp_order and 'id' in tp_order:
-                                    new_tp_ids.append(tp_order['id'])
-                                logger.debug(f"  TP für Long Entry {i+1} @ {tp_price:.4f} platziert. ID={tp_order.get('id') if tp_order else 'N/A'}")
-                        else:
-                            tp_order = exchange.place_trigger_market_order(
-                                symbol=symbol, side='sell', amount=amount_coins,
-                                trigger_price=tp_price, reduce=True
-                            )
-                            if tp_order and 'id' in tp_order:
-                                new_tp_ids.append(tp_order['id'])
-                            logger.debug(f"  TP für Long Entry {i+1} @ {tp_price:.4f} platziert. ID={tp_order.get('id') if tp_order else 'N/A'}")
-                        time.sleep(0.1)
-
-                    # Dann SL platzieren
-                    sl_order = exchange.place_trigger_market_order(
-                        symbol=symbol, side='sell', amount=amount_coins,
-                        trigger_price=sl_price, reduce=True
-                    )
-                    logger.debug(f"  SL für Long Entry {i+1} @ {sl_price:.4f} platziert.")
-                    if sl_order and 'id' in sl_order:
-                        new_sl_ids.append(sl_order['id'])
-                    time.sleep(0.1)
-
-                # Dann Entry Order (Trigger Limit) -- immer, unabhaengig von include_tp_sl
+                # Dann Entry Order (Trigger Limit)
                 entry_order = exchange.place_trigger_limit_order(
                     symbol=symbol, side=side, amount=amount_coins,
                     trigger_price=entry_trigger_price, price=entry_limit_price
@@ -1228,26 +1096,26 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 logger.info(f"✅ Long Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 time.sleep(0.1)
 
-                # Telegram: Text + Chart
-                if include_tp_sl and tp_price and sl_price and tp_price > 0 and sl_price > 0:
-                    sl_pct_msg = stop_loss_pct_param * 100
-                    tp_pct_msg = abs(tp_price - entry_limit_price) / entry_limit_price * 100 if entry_limit_price > 0 else 0
-                    rr_msg = tp_pct_msg / sl_pct_msg if sl_pct_msg > 0 else 0
+                # Telegram (kein TP-Preis mehr hier -- der gebuendelte TP wird
+                # von manage_existing_position() gesetzt, sobald die Position
+                # existiert, und deckt dann alle offenen Baender gemeinsam ab)
+                if sl_price and sl_price > 0:
+                    sl_pct_msg = abs(entry_limit_price - sl_price) / entry_limit_price * 100 if entry_limit_price > 0 else 0
                     regime_msg = band_prices.get('regime', '')
                     trend_msg  = band_prices.get('trend_direction', '')
                     msg = (
                         f"LONG ENTRY-ORDER PLATZIERT\n\n"
                         f"Symbol: {symbol} ({timeframe})\n"
                         f"Entry: {entry_limit_price:.6g} USDT (Band {i+1})\n"
-                        f"SL: {sl_price:.6g} USDT (-{sl_pct_msg:.2f}%)\n"
-                        f"TP: {tp_price:.6g} USDT (+{tp_pct_msg:.2f}%) [MA]\n"
-                        f"R:R 1:{rr_msg:.1f} | Hebel: {leverage}x\n"
+                        f"SL: {sl_price:.6g} USDT (-{sl_pct_msg:.2f}%, fest für dieses Band)\n"
+                        f"TP: folgt gebündelt via MA sobald gefüllt\n"
+                        f"Hebel: {leverage}x\n"
                         f"Regime: {regime_msg} | Trend: {trend_msg}"
                     )
                     send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), msg)
                     if df is not None:
                         _send_ltbbot_chart(df, band_prices, 'buy', entry_limit_price,
-                                           sl_price, tp_price, symbol, timeframe,
+                                           sl_price, band_prices.get('average'), symbol, timeframe,
                                            telegram_config, logger)
                 # Kein break mehr: alle qualifizierenden Baender pruefen (Multi-Band,
                 # 2026-09-01) -- Bitget nettet ohnehin zu einer Position pro Symbol.
@@ -1338,71 +1206,18 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct_cfg)
 
 
-                tp_price = band_prices.get('average')
-                if not include_tp_sl:
-                    logger.debug(f"Short Band {i+1}: Position bereits offen -- setze nur Entry, kombinierte SL/TP folgt via manage_existing_position().")
-                else:
-                    # ZUERST TP platzieren
-                    if tp_price is None or pd.isna(tp_price) or tp_price <= 0:
-                        logger.error("Ungültiger Average-Preis für TP. Überspringe TP.")
-                    else:
-                        # TP = aktueller MA (kein 1:2 R:R erzwingen)
+                # Eigene, FESTE SL fuer GENAU dieses Band (siehe Long-Block-Kommentar
+                # weiter oben -- matcht backtester.py's pos['sl_price']-Modell).
+                sl_order = exchange.place_trigger_market_order(
+                    symbol=symbol, side='buy', amount=amount_coins,
+                    trigger_price=sl_price, reduce=True
+                )
+                logger.debug(f"  SL für Short Entry {i+1} @ {sl_price:.4f} platziert.")
+                if sl_order and 'id' in sl_order:
+                    new_sl_ids['short'][i + 1] = sl_order['id']
+                time.sleep(0.1)
 
-                        # Native trailing TP falls aktiviert
-                        use_native_tp = risk_params.get('use_native_trailing_tp', False)
-                        tp_callback_rate = risk_params.get('tp_trailing_callback_rate_pct', 0.5) / 100.0
-                        tp_activation_delta = strategy_params.get('tp_activation_delta_pct', 0.5) / 100.0
-                        if use_native_tp:
-                            activation_price = min(tp_price, entry_limit_price * (1 - tp_activation_delta))
-                            try:
-                                resp = exchange.place_trailing_stop_order(
-                                    symbol=symbol, side='buy', amount=amount_coins,
-                                    activation_price=activation_price, callback_rate_decimal=tp_callback_rate,
-                                    params={'reduceOnly': True}
-                                )
-                                tp_id = None
-                                if isinstance(resp, dict):
-                                    if 'data' in resp and isinstance(resp['data'], dict):
-                                        for key in ('orderId', 'planId', 'id'):
-                                            if key in resp['data']:
-                                                tp_id = resp['data'][key]
-                                                break
-                                    for key in ('orderId', 'planId', 'id'):
-                                        if not tp_id and key in resp:
-                                            tp_id = resp[key]
-                                if tp_id:
-                                    new_tp_ids.append(tp_id)
-                                logger.debug(f"  Native TP(TSL) für Short Entry {i+1} platziert. activation={activation_price:.4f}, id={tp_id}")
-                            except Exception as e:
-                                logger.warning(f"Native Trailing-TP fehlgeschlagen, fallback: {e}")
-                                tp_order = exchange.place_trigger_market_order(
-                                    symbol=symbol, side='buy', amount=amount_coins,
-                                    trigger_price=tp_price, reduce=True
-                                )
-                                if tp_order and 'id' in tp_order:
-                                    new_tp_ids.append(tp_order['id'])
-                                logger.debug(f"  TP für Short Entry {i+1} @ {tp_price:.4f} platziert. ID={tp_order.get('id') if tp_order else 'N/A'}")
-                        else:
-                            tp_order = exchange.place_trigger_market_order(
-                                symbol=symbol, side='buy', amount=amount_coins,
-                                trigger_price=tp_price, reduce=True
-                            )
-                            if tp_order and 'id' in tp_order:
-                                new_tp_ids.append(tp_order['id'])
-                            logger.debug(f"  TP für Short Entry {i+1} @ {tp_price:.4f} platziert. ID={tp_order.get('id') if tp_order else 'N/A'}")
-                        time.sleep(0.1)
-
-                    # Dann SL platzieren
-                    sl_order = exchange.place_trigger_market_order(
-                        symbol=symbol, side='buy', amount=amount_coins,
-                        trigger_price=sl_price, reduce=True
-                    )
-                    logger.debug(f"  SL für Short Entry {i+1} @ {sl_price:.4f} platziert.")
-                    if sl_order and 'id' in sl_order:
-                        new_sl_ids.append(sl_order['id'])
-                    time.sleep(0.1)
-
-                # Dann Entry Order (Trigger Limit) -- immer, unabhaengig von include_tp_sl
+                # Dann Entry Order (Trigger Limit)
                 entry_order = exchange.place_trigger_limit_order(
                     symbol=symbol, side=side, amount=amount_coins,
                     trigger_price=entry_trigger_price, price=entry_limit_price
@@ -1412,26 +1227,24 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 logger.info(f"✅ Short Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 time.sleep(0.1)
 
-                # Telegram: Text + Chart
-                if include_tp_sl and tp_price and sl_price and tp_price > 0 and sl_price > 0:
-                    sl_pct_msg = stop_loss_pct_param * 100
-                    tp_pct_msg = abs(tp_price - entry_limit_price) / entry_limit_price * 100 if entry_limit_price > 0 else 0
-                    rr_msg = tp_pct_msg / sl_pct_msg if sl_pct_msg > 0 else 0
+                # Telegram (kein TP-Preis mehr hier -- siehe Long-Block-Kommentar)
+                if sl_price and sl_price > 0:
+                    sl_pct_msg = abs(sl_price - entry_limit_price) / entry_limit_price * 100 if entry_limit_price > 0 else 0
                     regime_msg = band_prices.get('regime', '')
                     trend_msg  = band_prices.get('trend_direction', '')
                     msg = (
                         f"SHORT ENTRY-ORDER PLATZIERT\n\n"
                         f"Symbol: {symbol} ({timeframe})\n"
                         f"Entry: {entry_limit_price:.6g} USDT (Band {i+1})\n"
-                        f"SL: {sl_price:.6g} USDT (+{sl_pct_msg:.2f}%)\n"
-                        f"TP: {tp_price:.6g} USDT (-{tp_pct_msg:.2f}%) [MA]\n"
-                        f"R:R 1:{rr_msg:.1f} | Hebel: {leverage}x\n"
+                        f"SL: {sl_price:.6g} USDT (+{sl_pct_msg:.2f}%, fest für dieses Band)\n"
+                        f"TP: folgt gebündelt via MA sobald gefüllt\n"
+                        f"Hebel: {leverage}x\n"
                         f"Regime: {regime_msg} | Trend: {trend_msg}"
                     )
                     send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), msg)
                     if df is not None:
                         _send_ltbbot_chart(df, band_prices, 'sell', entry_limit_price,
-                                           sl_price, tp_price, symbol, timeframe,
+                                           sl_price, band_prices.get('average'), symbol, timeframe,
                                            telegram_config, logger)
                 # Kein break mehr: alle qualifizierenden Baender pruefen (Multi-Band,
                 # 2026-09-01) -- Bitget nettet ohnehin zu einer Position pro Symbol.
@@ -1445,49 +1258,38 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 logger.error(f"Allg. Fehler beim Platzieren der Short-Order-Gruppe {i+1}: {e}", exc_info=True)
 
 
-    # Tracker aktualisieren: neue SL/TP-IDs (nur im Flat-Start-Fall, include_tp_sl=True)
-    # UND/ODER neue pending Band-Entry-Order-IDs (immer, fuer sync_band_fills()).
+    # Tracker aktualisieren: neue per-Band SL-IDs + neue pending Band-Entry-IDs
+    # (beide zusammenfuehren, nicht ueberschreiben -- andere Baender/Seiten
+    # koennen bereits eigene Eintraege haben, die noch nicht durch
+    # sync_band_fills()/check_stop_loss_trigger() aufgeloest wurden).
+    any_new_sl = bool(new_sl_ids['long']) or bool(new_sl_ids['short'])
     any_new_pending = bool(new_pending_entries['long']) or bool(new_pending_entries['short'])
-    if new_sl_ids or any_new_pending:
+    if any_new_sl or any_new_pending:
         tracker_info = read_tracker_file(tracker_file_path)
-        if include_tp_sl:
-            # Füge neue IDs hinzu, ohne alte zu löschen (falls manage_existing_position welche gesetzt hat - obwohl alte ja storniert wurden)
-            # Sicherer ist, nur die neuen zu speichern.
-            tracker_info["stop_loss_ids"] = new_sl_ids
-            if new_tp_ids:
-                tracker_info["take_profit_ids"] = new_tp_ids
-            # WICHTIG: Wenn neue Entries platziert werden, ist der Cooldown definitiv vorbei
-            tracker_info["status"] = "ok_to_trade"
-            tracker_info["last_side"] = None
-        # Pending Band-Entry-IDs zusammenfuehren (nicht überschreiben -- andere
-        # Bänder/Seiten können bereits eigene pending Einträge haben, die noch
-        # nicht durch sync_band_fills() aufgelöst wurden).
+        band_sl_orders = tracker_info.get("band_sl_orders") or {"long": {}, "short": {}}
         pending = tracker_info.get("pending_band_orders") or {"long": {}, "short": {}}
         for side_key in ("long", "short"):
+            band_sl_orders.setdefault(side_key, {})
             pending.setdefault(side_key, {})
+            for band_num, order_id in new_sl_ids[side_key].items():
+                band_sl_orders[side_key][str(band_num)] = order_id
             for band_num, order_id in new_pending_entries[side_key].items():
                 pending[side_key][str(band_num)] = order_id
+        tracker_info["band_sl_orders"] = band_sl_orders
         tracker_info["pending_band_orders"] = pending
+        # WICHTIG: Wenn neue Entries platziert werden, ist der Cooldown definitiv vorbei
+        tracker_info["status"] = "ok_to_trade"
+        tracker_info["last_side"] = None
         update_tracker_file(tracker_file_path, tracker_info)
-        if new_sl_ids:
-            logger.info(f"Tracker mit {len(new_sl_ids)} neuen SL Order IDs aktualisiert (Status: ok_to_trade).")
+        if any_new_sl:
+            logger.info(f"Tracker mit neuen per-Band SL-IDs aktualisiert: {new_sl_ids}")
         if any_new_pending:
             logger.info(f"Tracker mit pending Band-Entries aktualisiert: {new_pending_entries}")
     elif not any(p is not None and not pd.isna(p) for p in band_prices.get('long', [])) and \
          not any(p is not None and not pd.isna(p) for p in band_prices.get('short', [])): # Keine gültigen Preise gefunden
            logger.info("Keine gültigen Entry-Preise gefunden, keine Orders platziert.")
-           # Sicherstellen, dass keine alten SL-IDs im Tracker verbleiben
-           tracker_info = read_tracker_file(tracker_file_path)
-           if tracker_info.get("stop_loss_ids"):
-               tracker_info["stop_loss_ids"] = []
-               update_tracker_file(tracker_file_path, tracker_info)
     else:
            logger.info("Keine Entry-Orders platziert (ggf. Menge zu klein, Margin, Max Pos Size oder Fehler).")
-            # Sicherstellen, dass keine alten SL-IDs im Tracker verbleiben
-           tracker_info = read_tracker_file(tracker_file_path)
-           if tracker_info.get("stop_loss_ids"):
-               tracker_info["stop_loss_ids"] = []
-               update_tracker_file(tracker_file_path, tracker_info)
 
 # --- Haupt-Zyklus ---
 
@@ -1564,16 +1366,17 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
 
         if position:
             manage_existing_position(exchange, position, band_prices, params, tracker_file_path, logger)
-            logger.info(f"Position für {symbol} ist offen ({position['side']} {position['contracts']}). Nur TP/SL verwaltet.")
+            logger.info(f"Position für {symbol} ist offen ({position['side']} {position['contracts']}). TP aktualisiert.")
             check_and_notify_new_position(exchange, position, params, tracker_file_path, telegram_config, logger)
 
             # Multi-Band: auf derselben Seite koennen weitere, noch nicht committete
-            # Baender dazukommen (Bitget nettet zu EINER Position; SL/TP fuer die
-            # dann groessere Position setzt manage_existing_position() im naechsten
-            # Zyklus automatisch neu, sobald sie sich vergroessert hat).
+            # Baender dazukommen (Bitget nettet zu EINER Position; jedes neue Band
+            # bekommt seine eigene feste SL, der gebuendelte TP wird im naechsten
+            # Zyklus von manage_existing_position() automatisch auf die dann
+            # groessere Positionsgroesse angepasst).
             current_balance = exchange.fetch_balance_usdt()
             place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger,
-                               df=data_with_indicators, restrict_side=position['side'], include_tp_sl=False,
+                               df=data_with_indicators, restrict_side=position['side'],
                                committed_bands=committed_bands)
 
         else:
