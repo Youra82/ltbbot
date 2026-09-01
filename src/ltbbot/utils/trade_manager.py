@@ -962,8 +962,22 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     min_amount_tradable = exchange.fetch_min_amount_tradable(symbol)
     trigger_delta_pct_cfg = strategy_params.get('trigger_price_delta_pct', 0.05) / 100.0
 
-    # Aktueller Schlusskurs für SL-Sofort-Prüfung (vermeidet sofortigen SL-Trigger)
-    current_close = float(df['close'].iloc[-1]) if df is not None and not df.empty else None
+    # Aktueller LIVE-Preis fuer SL-Sofort-Pruefung (vermeidet sofortigen SL-Trigger).
+    # Vorher wurde hier df['close'].iloc[-1] verwendet -- der Schlusskurs der letzten
+    # ABGESCHLOSSENEN Kerze, bis zu einem ganzen Timeframe (z.B. 30 Min) alt. Beobachtet
+    # 2026-09-01: Preis fiel zwischen Kerzen-Close und Zyklus-Auswertung so weit, dass er
+    # den SL-Level bereits unterschritten hatte, WAEHREND der stale Kerzen-Close-Check noch
+    # "ueber SL" zeigte -- die Entry-Order (samt SL) wurde trotzdem platziert. Fix: echten
+    # Live-Preis per Ticker abfragen statt der potenziell veralteten Kerze.
+    current_close = None
+    try:
+        _ticker = exchange.fetch_ticker(symbol)
+        if _ticker and _ticker.get('last'):
+            current_close = float(_ticker['last'])
+    except Exception as e:
+        logger.warning(f"Konnte Live-Ticker für Sofort-SL-Pruefung nicht abrufen ({e}), nutze Kerzen-Close als Fallback.")
+    if current_close is None and df is not None and not df.empty:
+        current_close = float(df['close'].iloc[-1])
 
     # *** RISIKOBASIS: echter, aktueller Kontostand (Compounding, konsistent mit Backtester) ***
     # User-Entscheidung 2026-08-26: Positionsgroesse soll vom TATSAECHLICHEN
