@@ -17,7 +17,7 @@ TRACKER_DIR = os.path.join(PROJECT_ROOT, 'artifacts', 'tracker')
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.telegram import send_message, send_photo
-from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
+from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals, calculate_position_margin, margin_fits
 from ltbbot.utils.exchange import Exchange, drop_incomplete_last_candle # Import hinzugefügt, falls Type Hinting verwendet wird (optional)
 
 
@@ -1111,6 +1111,21 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     new_sl_prices = {'long': {}, 'short': {}}
     new_pending_entries = {'long': {}, 'short': {}}
 
+    # Margin ist eine gemeinsame, endliche Ressource -- dasselbe Problem wie im
+    # Backtester (siehe backtester.py/portfolio_simulator.py, 2026-09-02): ein
+    # einzelnes Band, dessen Margin-Bedarf (risk_pct / sl_pct / leverage) nahe
+    # oder ueber 100% des Kontos liegt (typischerweise bei niedrigem Hebel +
+    # engem SL), wuerde sonst blind praktisch das GESAMTE Guthaben binden und
+    # jedem weiteren Band -- dieser ODER jeder anderen, parallel als eigener
+    # Prozess laufenden Strategie -- keinen Spielraum mehr lassen. `balance` ist
+    # der echte, gerade erst abgerufene freie Kontostand (spiegelt bereits alle
+    # AKTUELL offenen Positionen anderer Symbole wider, da ein Bitget-Konto die
+    # Margin teilt) -- used_margin_this_cycle verhindert zusaetzlich, dass
+    # mehrere Baender INNERHALB dieses einen Aufrufs sich gegenseitig ueberbieten.
+    # Der bestehende ccxt.InsufficientFunds-Handler bleibt als letzte Absicherung
+    # gegen den verbleibenden Race zwischen parallel laufenden Symbol-Prozessen.
+    used_margin_this_cycle = 0.0
+
     # --- Long Orders ---
     if behavior_params.get('use_longs', True) and restrict_side in (None, 'long'):
         side = 'buy'
@@ -1184,8 +1199,19 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     logger.warning(f"Notional-Wert {notional_value:.2f} USDT für Long Layer {i+1} unter Bitget-Minimum {MIN_NOTIONAL_USDT} USDT (Kapital zu klein für diesen SL-Abstand). Überspringe.")
                     continue
 
-                # 5. Benötigte Margin (nur zur Info)
-                margin_required = (amount_coins * entry_price_for_calc) / leverage
+                # 5. Benötigte Margin berechnen und gegen das TATSAECHLICH freie
+                # Guthaben pruefen -- reicht es nicht, wird dieses Band uebersprungen
+                # (= wie eine Ablehnung durch die Boerse), statt blind zu oeffnen.
+                # Geteilte Funktion mit backtester.py/portfolio_simulator.py (siehe
+                # envelope_logic.py) -- Live und Backtest muessen identisch rechnen.
+                margin_required = calculate_position_margin(amount_coins, entry_price_for_calc, leverage)
+                if not margin_fits(used_margin_this_cycle, margin_required, balance):
+                    logger.warning(
+                        f"⚠️ Long Layer {i+1}: Margin {margin_required:.2f} USDT wuerde freies "
+                        f"Guthaben ({balance - used_margin_this_cycle:.2f} USDT) uebersteigen. Überspringe."
+                    )
+                    continue
+                used_margin_this_cycle += margin_required
                 logger.debug(f"Long Layer {i+1}: Risk={risk_amount_usd:.2f}$, Size={amount_coins:.8f}, MarginReq={margin_required:.2f}$ (Verfügbar ca.: {balance:.2f})")
 
                 # KORRIGIERT: Trigger UNTER dem Limit-Preis für Long
@@ -1322,8 +1348,16 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     logger.warning(f"Notional-Wert {notional_value:.2f} USDT für Short Layer {i+1} unter Bitget-Minimum {MIN_NOTIONAL_USDT} USDT (Kapital zu klein für diesen SL-Abstand). Überspringe.")
                     continue
 
-                # 5. Benötigte Margin (nur zur Info)
-                margin_required = (amount_coins * entry_price_for_calc) / leverage
+                # 5. Benötigte Margin berechnen und gegen das TATSAECHLICH freie
+                # Guthaben pruefen (siehe Long-Block-Kommentar weiter oben).
+                margin_required = calculate_position_margin(amount_coins, entry_price_for_calc, leverage)
+                if not margin_fits(used_margin_this_cycle, margin_required, balance):
+                    logger.warning(
+                        f"⚠️ Short Layer {i+1}: Margin {margin_required:.2f} USDT wuerde freies "
+                        f"Guthaben ({balance - used_margin_this_cycle:.2f} USDT) uebersteigen. Überspringe."
+                    )
+                    continue
+                used_margin_this_cycle += margin_required
                 logger.debug(f"Short Layer {i+1}: Risk={risk_amount_usd:.2f}$, Size={amount_coins:.8f}, MarginReq={margin_required:.2f}$ (Verfügbar ca.: {balance:.2f})")
 
                 # KORRIGIERT: Trigger ÜBER dem Limit-Preis für Short
