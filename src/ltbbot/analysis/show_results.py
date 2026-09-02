@@ -22,6 +22,7 @@ from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
 from ltbbot.analysis.portfolio_optimizer import run_portfolio_optimizer
 from ltbbot.analysis.evaluator import evaluate_dataset
 from ltbbot.utils.telegram import send_document
+from ltbbot.strategy.envelope_logic import calculate_position_margin
 
 try:
     import openpyxl
@@ -64,11 +65,11 @@ def _generate_trades_excel(trades_df, start_capital, start_date, end_date, out_p
     loss_fill   = PatternFill('solid', fgColor='FAD7D7')
     alt_fill    = PatternFill('solid', fgColor='F2F2F2')
 
-    headers = ['Nr', 'Datum', 'Strategie', 'Richtung', 'Hebel',
+    headers = ['Nr', 'Datum', 'Strategie', 'Richtung', 'Band', 'Hebel',
                'Einsatz (USDT)', 'SL-Bereich', 'TSL Akt.', 'TSL Callback',
                'Entry', 'Exit', 'Ergebnis', 'PnL (USDT)', 'Kapital']
     col_widths = {
-        'Nr': 5, 'Datum': 18, 'Strategie': 22, 'Richtung': 10,
+        'Nr': 5, 'Datum': 18, 'Strategie': 22, 'Richtung': 10, 'Band': 8,
         'Hebel': 8, 'Einsatz (USDT)': 16, 'SL-Bereich': 16,
         'TSL Akt.': 10, 'TSL Callback': 13,
         'Entry': 14, 'Exit': 14, 'Ergebnis': 14,
@@ -92,12 +93,13 @@ def _generate_trades_excel(trades_df, start_capital, start_date, end_date, out_p
         strat = f"{t.symbol.split('/')[0]}/{t.timeframe}"
         lev = float(t.leverage) if hasattr(t, 'leverage') and t.leverage else 1.0
         coins = float(t.amount_coins) if hasattr(t, 'amount_coins') and t.amount_coins else 0.0
-        margin = round(coins * float(t.entry_price) / lev, 2) if coins and lev else 0.0
+        margin = round(calculate_position_margin(coins, float(t.entry_price), lev), 2)
         rows.append({
             'Nr':              i + 1,
             'Datum':           datum,
             'Strategie':       strat,
             'Richtung':        t.side.upper(),
+            'Band':            getattr(t, 'band', '?'),
             'Hebel':           int(lev),
             'Einsatz (USDT)':  margin,
             'SL-Bereich':      sl_str,

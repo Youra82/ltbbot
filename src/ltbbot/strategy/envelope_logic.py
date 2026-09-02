@@ -6,6 +6,33 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+def calculate_position_margin(amount_coins: float, entry_price: float, leverage: float) -> float:
+    """Isolierte Margin einer Position, exakt wie Bitget sie anzeigt: Notional/Hebel.
+
+    Geteilte Funktion fuer Live (trade_manager.py) UND Backtest/Portfolio-Simulator
+    (backtester.py, portfolio_simulator.py) -- 2026-09-02 eingefuehrt, nachdem die
+    Margin-Verfuegbarkeitspruefung zunaechst dreimal separat inline kopiert wurde.
+    Live und Backtest muessen bei sowas immer dieselbe Funktion nutzen, sonst
+    driften sie unbemerkt auseinander (siehe [[feedback_live_backtest_must_match]]).
+    """
+    if not leverage:
+        return 0.0
+    return (amount_coins * entry_price) / leverage
+
+
+def margin_fits(used_margin: float, margin_required: float, available_capital: float) -> bool:
+    """True, wenn eine zusaetzliche Position noch in die freie Margin passt.
+
+    available_capital ist bei Live der echte, gerade abgerufene Kontostand
+    (spiegelt bereits alle anderen offenen Positionen wider), bei Backtest/
+    Portfolio-Simulator das aktuelle realisierte Kapital. Reicht es nicht, wuerde
+    die Order live mit InsufficientFunds abgelehnt -- also NICHT oeffnen, statt
+    auf Kredit zu simulieren/handeln.
+    """
+    return (used_margin + margin_required) <= available_capital
+
+
 def detect_market_regime(df, avg_period=14, silent=False, strategy_params=None):
     """
     Erkennt das aktuelle Marktregime (TREND vs RANGE) mit Supertrend-Filter.

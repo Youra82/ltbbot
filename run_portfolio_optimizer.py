@@ -206,11 +206,20 @@ def generate_trades_excel(final, strategies_data, capital, start_date, end_date)
     if not trades:
         return None
 
+    from ltbbot.strategy.envelope_logic import calculate_position_margin
+
     equity = capital
     rows = []
     for i, t in enumerate(trades, 1):
-        pnl    = t.get('pnl_usd', t.get('pnl', 0.0))
-        symbol = t.get('symbol', '?')
+        pnl      = t.get('pnl_usd', t.get('pnl', 0.0))
+        symbol   = t.get('symbol', '?')
+        entry_p  = t.get('entry_price', 0.0)
+        leverage = t.get('leverage', 1) or 1
+        coins    = t.get('amount_coins', 0.0) or 0.0
+        # Margin wie bei Bitget angezeigt (isolierte Margin dieser Position) --
+        # geteilte Funktion mit der Margin-Verfuegbarkeitspruefung in
+        # backtester.py/portfolio_simulator.py/trade_manager.py.
+        margin = round(calculate_position_margin(coins, entry_p, leverage), 4)
         equity += pnl
         rows.append({
             'Nr':            i,
@@ -220,8 +229,10 @@ def generate_trades_excel(final, strategies_data, capital, start_date, end_date)
             'Timeframe':     t.get('timeframe', '?'),
             'Richtung':      str(t.get('side', t.get('direction', '?'))).upper(),
             'Ergebnis':      'TP erreicht' if str(t.get('reason', '')).upper() == 'WIN' else 'SL erreicht',
-            'Entry-Preis':   t.get('entry_price', 0.0),
+            'Band':          t.get('band', '?'),
+            'Entry-Preis':   entry_p,
             'Exit-Preis':    t.get('exit_price', 0.0),
+            'Margin (USDT)': margin,
             'PnL (USDT)':    round(pnl, 4),
             'Gesamtkapital': round(equity, 4),
         })
@@ -236,7 +247,8 @@ def generate_trades_excel(final, strategies_data, capital, start_date, end_date)
     brd  = Border(left=Side(style='thin', color='CCCCCC'), right=Side(style='thin', color='CCCCCC'),
                   top=Side(style='thin', color='CCCCCC'), bottom=Side(style='thin', color='CCCCCC'))
     cw   = {'Nr': 6, 'Datum': 18, 'Coin': 10, 'Symbol': 22, 'Timeframe': 12, 'Richtung': 10,
-             'Ergebnis': 14, 'Entry-Preis': 14, 'Exit-Preis': 14, 'PnL (USDT)': 14, 'Gesamtkapital': 16}
+             'Ergebnis': 14, 'Band': 8, 'Entry-Preis': 14, 'Exit-Preis': 14, 'Margin (USDT)': 14,
+             'PnL (USDT)': 14, 'Gesamtkapital': 16}
     hdrs = list(rows[0].keys())
     for c, h in enumerate(hdrs, 1):
         cell = ws.cell(row=1, column=c, value=h)
@@ -257,7 +269,7 @@ def generate_trades_excel(final, strategies_data, capital, start_date, end_date)
             cell.alignment = Alignment(horizontal='center', vertical='center')
             if key in ('Entry-Preis', 'Exit-Preis'):
                 cell.number_format = '#,##0.000000'
-            elif key in ('PnL (USDT)', 'Gesamtkapital'):
+            elif key in ('Margin (USDT)', 'PnL (USDT)', 'Gesamtkapital'):
                 cell.number_format = '#,##0.0000'
         ws.row_dimensions[ri].height = 18
     pnl = final.get('total_pnl_pct', 0)

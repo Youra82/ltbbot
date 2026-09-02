@@ -14,7 +14,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange # Für load_data
-from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
+from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals, calculate_position_margin, margin_fits
 
 secrets_cache = None
 
@@ -282,9 +282,17 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
     # peak_capital = start_capital # Höchststand inkl. unreal. PnL (wird jetzt aus equity_curve berechnet)
     # max_drawdown_pct = 0.0 # (wird jetzt aus equity_curve berechnet)
 
-    positions = [] # [{entry_price, amount_coins, side, sl_price, tp_price, leverage}, ...]
+    positions = [] # [{entry_price, amount_coins, side, sl_price, tp_price, leverage, margin}, ...]
     closed_trades = [] # [{pnl, side}, ...]
     equity_curve_data = [] # Für Drawdown-Berechnung am Ende
+
+    # Margin ist eine gemeinsame, endliche Ressource (wie beim echten Exchange-Konto):
+    # jede offene Position bindet capital/leverage USDT Margin. used_margin trackt die
+    # Summe ueber alle aktuell offenen Positionen; vor jeder neuen Order wird geprueft,
+    # ob genug FREIE Margin (capital - used_margin) uebrig ist -- sonst wuerde die
+    # Order live mit InsufficientFunds abgelehnt (User-Vorgabe 2026-09-02: ein Trade,
+    # der schon (fast) das ganze Kapital bindet, darf einen zweiten NICHT zulassen).
+    used_margin = 0.0
     
     # Starte Equity Curve mit Start Capital
     if not df.empty:
@@ -412,10 +420,12 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                     'entry_price': pos_entry, 'exit_price': exit_price,
                     'exit_reason': exit_reason,
                 })
+                used_margin -= pos.get('margin', 0.0) # Margin wieder freigeben
             else:
                 remaining_positions.append(pos) # Position bleibt offen
 
         positions = remaining_positions
+        used_margin = max(0.0, used_margin) # Rundungsdrift abfangen
         capital += exit_pnl_current_candle # Realisiertes Kapital nach Ausstiegen aktualisieren
         
         # --- Equity Curve aktualisieren (nur bei Trade-Exit) ---
@@ -576,20 +586,32 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                     long_candidates = []
 
             # Gewinner in Positions-Liste eintragen (bei multi_band_entries=False
-            # enthaelt jede Liste durch das break oben ohnehin hoechstens 1 Eintrag)
+            # enthaelt jede Liste durch das break oben ohnehin hoechstens 1 Eintrag).
+            # Reihenfolge Band 1->3 = engste (naeheste) Baender zuerst, wie sie live
+            # auch zuerst ausloesen wuerden. Jede Order muss sich gegen die noch FREIE
+            # Margin behaupten -- reicht sie nicht mehr, wird die Order uebersprungen
+            # (= live InsufficientFunds), NICHT auf Kredit geoeffnet.
             for entry_price, sl_price, amount_coins, _, band_k in long_candidates:
+                margin_required = calculate_position_margin(amount_coins, entry_price, leverage)
+                if not margin_fits(used_margin, margin_required, capital):
+                    continue
+                used_margin += margin_required
                 positions.append({
                     'entry_price': entry_price, 'amount_coins': amount_coins,
                     'side': 'long', 'sl_price': sl_price,
                     'tp_price': current_candle['average'], 'leverage': leverage,
-                    'band': band_k, 'entry_time': timestamp
+                    'band': band_k, 'entry_time': timestamp, 'margin': margin_required
                 })
             for entry_price, sl_price, amount_coins, _, band_k in short_candidates:
+                margin_required = calculate_position_margin(amount_coins, entry_price, leverage)
+                if not margin_fits(used_margin, margin_required, capital):
+                    continue
+                used_margin += margin_required
                 positions.append({
                     'entry_price': entry_price, 'amount_coins': amount_coins,
                     'side': 'short', 'sl_price': sl_price,
                     'tp_price': current_candle['average'], 'leverage': leverage,
-                    'band': band_k, 'entry_time': timestamp
+                    'band': band_k, 'entry_time': timestamp, 'margin': margin_required
                 })
 
 

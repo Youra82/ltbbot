@@ -13,7 +13,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 # Import necessary functions
-from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals
+from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals, calculate_position_margin, margin_fits
 from ltbbot.analysis.backtester import _resolve_ambiguous_exit, _get_fine_slice
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
@@ -103,6 +103,16 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     # --- Simulationsvariablen initialisieren ---
     equity = start_capital
     liquidation_date = None
+
+    # Margin ist ueber ALLE Strategien/Symbole hinweg eine gemeinsame, endliche
+    # Ressource (ein Bitget-Konto, kein Konto pro Strategie). used_margin trackt die
+    # Summe ueber alle aktuell offenen Layer (jede Strategie, jedes Band); vor jeder
+    # neuen Order wird geprueft ob genug FREIE Margin (equity - used_margin) uebrig
+    # ist -- sonst wuerde die Order live mit InsufficientFunds abgelehnt (User-Vorgabe
+    # 2026-09-02: ein Trade der schon (fast) das ganze Kapital bindet darf einen
+    # zweiten, gleichzeitigen -- egal ob anderes Band oder anderes Symbol -- NICHT
+    # zulassen).
+    used_margin = 0.0
 
     open_portfolio_positions = {strategy_id: [] for strategy_id in strategy_dfs.keys()}
     closed_trades_portfolio = []
@@ -230,6 +240,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         'symbol':       strategies_data[strategy_id]['symbol'],
                         'timeframe':    strategies_data[strategy_id]['timeframe'],
                         'side':         pos_side,
+                        'band':         layer.get('band'),
                         'entry_price':  round(pos_entry, 6),
                         'exit_price':   round(exit_price, 6),
                         'sl_price':     round(pos_sl, 6),
@@ -240,11 +251,13 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         'reason':       reason,
                         'strategy_id':  strategy_id,
                     })
+                    used_margin -= layer.get('margin', 0.0) # Margin wieder freigeben
                 else:
                     remaining_layers.append(layer)
 
             open_portfolio_positions[strategy_id] = remaining_layers
 
+        used_margin = max(0.0, used_margin) # Rundungsdrift abfangen
         equity += total_exit_pnl_this_step
 
         # --- Einstiege prüfen ---
@@ -364,7 +377,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                             amount_coins = risk_amount_usd / sl_dist
                             if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
                             long_candidates.append((entry_limit_price, sl_price, amount_coins,
-                                                     abs(candle_open - entry_trigger_price)))
+                                                     abs(candle_open - entry_trigger_price), k))
                             if not multi_band_entries:
                                 break
 
@@ -393,7 +406,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                             amount_coins = risk_amount_usd / sl_dist
                             if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
                             short_candidates.append((entry_limit_price, sl_price, amount_coins,
-                                                      abs(candle_open - entry_trigger_price)))
+                                                      abs(candle_open - entry_trigger_price), k))
                             if not multi_band_entries:
                                 break
 
@@ -407,17 +420,34 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                     else:
                         long_candidates = []
 
-                for ep, sl, amt, _ in long_candidates:
+                # Reihenfolge Band 1->3 = engste (naeheste) Baender zuerst, wie sie live
+                # auch zuerst ausloesen wuerden. Jede Order muss sich gegen die noch
+                # FREIE Margin behaupten -- ueber ALLE Strategien/Symbole hinweg, da ein
+                # einzelnes Bitget-Konto die Margin teilt. Reicht sie nicht mehr, wird
+                # die Order uebersprungen (= live InsufficientFunds), NICHT auf Kredit
+                # geoeffnet. Das gilt genauso fuer die naechste Strategie in dieser
+                # Zeitscheibe, da used_margin ausserhalb der Strategie-Schleife lebt.
+                for ep, sl, amt, _, band_k in long_candidates:
+                    margin_required = calculate_position_margin(amt, ep, leverage)
+                    if not margin_fits(used_margin, margin_required, equity):
+                        continue
+                    used_margin += margin_required
                     open_portfolio_positions[strategy_id].append({
                         'entry_price': ep, 'amount_coins': amt, 'side': 'long',
                         'sl_price': sl, 'tp_price': current_candle['average'],
-                        'leverage': leverage, 'entry_time': ts,
+                        'leverage': leverage, 'entry_time': ts, 'margin': margin_required,
+                        'band': band_k,
                     })
-                for ep, sl, amt, _ in short_candidates:
+                for ep, sl, amt, _, band_k in short_candidates:
+                    margin_required = calculate_position_margin(amt, ep, leverage)
+                    if not margin_fits(used_margin, margin_required, equity):
+                        continue
+                    used_margin += margin_required
                     open_portfolio_positions[strategy_id].append({
                         'entry_price': ep, 'amount_coins': amt, 'side': 'short',
                         'sl_price': sl, 'tp_price': current_candle['average'],
-                        'leverage': leverage, 'entry_time': ts,
+                        'leverage': leverage, 'entry_time': ts, 'margin': margin_required,
+                        'band': band_k,
                     })
 
     # --- Endauswertung ---
@@ -431,7 +461,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     win_rate = (wins / trade_count * 100) if trade_count > 0 else 0
 
     trades_df = pd.DataFrame(closed_trades_portfolio) if closed_trades_portfolio else pd.DataFrame(
-        columns=['exit_time','entry_time','symbol','timeframe','side','entry_price','exit_price','sl_price','leverage','amount_coins','pnl_usd','pnl_pct','reason','strategy_id'])
+        columns=['exit_time','entry_time','symbol','timeframe','side','band','entry_price','exit_price','sl_price','leverage','amount_coins','pnl_usd','pnl_pct','reason','strategy_id'])
 
     pnl_per_strategy_df    = trades_df.groupby('strategy_id')['pnl_usd'].sum().reset_index().rename(columns={'pnl_usd':'pnl'}) if not trades_df.empty else pd.DataFrame(columns=['strategy_id', 'pnl'])
     trades_per_strategy_df = trades_df.groupby('strategy_id').size().reset_index(name='trades') if not trades_df.empty else pd.DataFrame(columns=['strategy_id', 'trades'])
