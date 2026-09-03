@@ -470,8 +470,30 @@ def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logg
 
     Optional: wenn `tracker_file_path` übergeben wird und Orders storniert wurden,
     werden die im Tracker gespeicherten SL-/TP-IDs gelöscht, um Inkonsistenzen zu vermeiden.
+
+    protected_order_ids (aus dem Tracker, falls tracker_file_path uebergeben):
+    IDs der eigenen, per-Band FIXEN SL-Orders (band_sl_orders) UND des aktuellen
+    TP (take_profit_ids) -- diese werden NIEMALS storniert, unabhaengig vom
+    reduceOnly-Flag der Boerse. Live beobachtet 2026-09-03: Bitgets Trigger-
+    Order-Liste (fetch_open_trigger_orders -> ccxt 'normal_plan'-Orders) meldet
+    reduceOnly beim Zurueck-Lesen NICHT zuverlaessig (obwohl beim Platzieren
+    korrekt gesetzt), wodurch die eigene per-Band SL trotz der reduceOnly-Pruefung
+    weiter unten JEDEN Zyklus storniert und NIE wieder neu gesetzt wurde, sobald
+    das Band einmal committed war (place_entry_orders() platziert dann nichts
+    mehr fuer dieses Band). Der eigene Tracker ist die zuverlaessige Quelle,
+    NICHT die Boerse.
     """
     cancelled_count = 0
+    protected_order_ids = set()
+    if tracker_file_path:
+        try:
+            _tracker = read_tracker_file(tracker_file_path)
+            _band_sl = _tracker.get("band_sl_orders") or {}
+            for _side_ids in _band_sl.values():
+                protected_order_ids.update(str(v) for v in (_side_ids or {}).values())
+            protected_order_ids.update(str(v) for v in (_tracker.get("take_profit_ids") or []))
+        except Exception as e:
+            logger.debug(f"Konnte Tracker fuer geschuetzte Order-IDs nicht lesen: {e}")
     try:
         # Normale Limit-Orders (könnten Reste sein)
         # Wichtig: Nur Orders für DIESES Symbol stornieren!
@@ -492,11 +514,12 @@ def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logg
         trigger_orders = exchange.fetch_open_trigger_orders(symbol)
         logger.debug(f"Gefundene offene Trigger Orders für {symbol}: {len(trigger_orders)}")
         for order in trigger_orders:
-            # WICHTIG: Trigger-Orders, die als reduceOnly markiert sind (TP/SL),
-            # nicht automatisch stornieren — das führt sonst dazu, dass TPs
-            # bei jedem Master-Zyklus verschwinden und wieder neu gesetzt werden.
-            if order.get('reduceOnly'):
-                logger.debug(f"Überspringe reduceOnly Trigger Order {order['id']} ({order.get('side')} {order.get('amount')} @ Trigger {order.get('stopPrice', 'N/A')}).")
+            # WICHTIG: eigene, getrackte SL-/TP-Orders NIEMALS stornieren -- das
+            # reduceOnly-Flag der Boerse ist beim Zurueck-Lesen NICHT
+            # zuverlaessig (siehe Docstring), daher zaehlt NUR der eigene
+            # Tracker als Schutz, nicht order.get('reduceOnly').
+            if str(order['id']) in protected_order_ids:
+                logger.debug(f"Überspringe getrackte SL/TP Trigger Order {order['id']} ({order.get('side')} {order.get('amount')} @ Trigger {order.get('stopPrice', 'N/A')}).")
                 continue
             try:
                 exchange.cancel_trigger_order(order['id'], symbol)
@@ -1537,7 +1560,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # Bei starkem Trend: Nur bestehende Positionen verwalten
         if regime == "STRONG_TREND" and not trade_allowed:
             logger.warning(f"⚠️ STARKER TREND erkannt - Keine neuen Entries erlaubt! (ADX={adx})")
-            cancel_strategy_orders(exchange, symbol, logger)
+            cancel_strategy_orders(exchange, symbol, logger, tracker_file_path=tracker_file_path)
             # Prüfe ob Position existiert
             position_list = exchange.fetch_open_positions(symbol)
             if position_list:
@@ -1562,7 +1585,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         sync_band_fills(exchange, symbol, tracker_file_path, logger)
 
         # --- 3. Alle alten Orders der Strategie stornieren (wichtig!) ---
-        cancel_strategy_orders(exchange, symbol, logger)
+        cancel_strategy_orders(exchange, symbol, logger, tracker_file_path=tracker_file_path)
 
         # --- 4. Offene Position prüfen und verwalten ---
         position_list = exchange.fetch_open_positions(symbol)
