@@ -531,13 +531,23 @@ def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logg
 
 # --- Stop Loss Trigger Check ---
 
-def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: str, logger: logging.Logger):
+def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: str, logger: logging.Logger,
+                            current_candle_ts=None):
     """Prüft PRO BAND, ob dessen eigene, feste SL ausgelöst wurde (Multi-Band,
     2026-09-01: jedes Band hat seine eigene SL-Order, siehe place_entry_orders()
     -- nicht mehr EIN SL fuer die gesamte genettete Position). Ein ausgeloestes
     Band-SL schliesst NUR dieses Band; die anderen (falls noch offen) bleiben
     unberuehrt. Erst wenn KEIN Band mehr committed ist, gilt die Position als
-    komplett geschlossen (Tracker-Vollreset inkl. last_notified_*)."""
+    komplett geschlossen (Tracker-Vollreset inkl. last_notified_*).
+
+    current_candle_ts: Zeitstempel der aktuell letzten ABGESCHLOSSENEN Kerze
+        (aus data_with_indicators.index[-1]). Wird pro Band gespeichert, wenn
+        dessen SL feuert -- verhindert in place_entry_orders() einen sofortigen
+        Re-Entry INNERHALB derselben Kerze (der Live-Cronjob laeuft alle 15 Min,
+        die Close-Confirmation aendert sich aber erst mit der naechsten Kerze;
+        ohne diese Bremse wuerde ein Band bei sehr engem SL innerhalb einer
+        einzigen Kerze wiederholt eroeffnet und sofort wieder gestoppt --
+        beobachtet 2026-09-03 bei ADA/6h, SL-Abstand nur 0.246%)."""
     tracker_info = read_tracker_file(tracker_file_path)
     band_sl_orders = tracker_info.get("band_sl_orders") or {"long": {}, "short": {}}
     all_sl_ids = list(band_sl_orders.get("long", {}).values()) + list(band_sl_orders.get("short", {}).values())
@@ -582,6 +592,10 @@ def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: 
                         committed[side_key].remove(int(band_str))
                     tracker_info["committed_bands"] = committed
                     band_sl_prices.get(side_key, {}).pop(band_str, None)
+                    if current_candle_ts is not None:
+                        sl_fired_candle_ts = tracker_info.get("sl_fired_candle_ts") or {"long": {}, "short": {}}
+                        sl_fired_candle_ts.setdefault(side_key, {})[band_str] = str(current_candle_ts)
+                        tracker_info["sl_fired_candle_ts"] = sl_fired_candle_ts
                 else:
                     # Nicht mehr offen, aber auch nicht 'closed' -- z.B. bereits
                     # anderweitig entfernt. Sicherheitshalber einfach fallen lassen.
@@ -985,7 +999,7 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
 # --- Entry Order Platzierung ---
 
 def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, balance: float, tracker_file_path: str, telegram_config: dict, logger: logging.Logger, df: pd.DataFrame = None,
-                       restrict_side: str = None, committed_bands: dict = None):
+                       restrict_side: str = None, committed_bands: dict = None, sl_fired_candle_ts: dict = None):
     """Platziert die gestaffelten Entry- und (pro Band eigene, feste) SL-Orders
     basierend auf Risiko. Der TP wird NICHT hier gesetzt -- er ist fuer alle
     Baender identisch (aktuelle MA) und wird deshalb gebuendelt, sized auf die
@@ -1003,9 +1017,19 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     committed_bands: {'long': [1,2,...], 'short': [...]} -- Baender, die laut
         Tracker bereits GEFUELLT sind (nicht mehr nur pending) und daher nicht
         erneut eroeffnet werden duerfen.
+    sl_fired_candle_ts: {'long': {'1': ts, ...}, 'short': {...}} -- pro Band der
+        Zeitstempel der Kerze, in der dessen SL zuletzt ausgeloest wurde (siehe
+        check_stop_loss_trigger()). Ist die aktuelle letzte Kerze (df.index[-1])
+        dieselbe, wird dieses Band NICHT erneut eroeffnet -- verhindert, dass
+        ein Band mit engem SL innerhalb derselben Kerze wiederholt (alle 15 Min
+        Cronjob) neu getriggert und sofort wieder gestoppt wird, was der
+        Backtester (nur 1 Ergebnis pro Kerze) so nie sehen wuerde.
     """
     if committed_bands is None:
         committed_bands = {'long': [], 'short': []}
+    if sl_fired_candle_ts is None:
+        sl_fired_candle_ts = {'long': {}, 'short': {}}
+    current_candle_ts = str(df.index[-1]) if df is not None and not df.empty else None
     symbol = params['market']['symbol']
     timeframe = params['market']['timeframe']
     risk_params = params['risk']
@@ -1133,6 +1157,9 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
         for i, entry_limit_price in enumerate(band_prices.get('long', [])):
             if (i + 1) in committed_bands.get('long', []):
                 logger.debug(f"Long Band {i+1} bereits gefuellt (Tracker). Ueberspringe.")
+                continue
+            if current_candle_ts is not None and sl_fired_candle_ts.get('long', {}).get(str(i + 1)) == current_candle_ts:
+                logger.info(f"Long Band {i+1}: SL bereits INNERHALB dieser Kerze ausgeloest -- kein Re-Entry bis zur naechsten Kerze.")
                 continue
             if entry_limit_price is None or pd.isna(entry_limit_price) or entry_limit_price <= 0:
                 logger.warning(f"Ungültiger Long-Entry-Preis ({entry_limit_price}) für Band {i+1}. Überspringe.")
@@ -1288,6 +1315,9 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
         for i, entry_limit_price in enumerate(band_prices.get('short', [])):
             if (i + 1) in committed_bands.get('short', []):
                 logger.debug(f"Short Band {i+1} bereits gefuellt (Tracker). Ueberspringe.")
+                continue
+            if current_candle_ts is not None and sl_fired_candle_ts.get('short', {}).get(str(i + 1)) == current_candle_ts:
+                logger.info(f"Short Band {i+1}: SL bereits INNERHALB dieser Kerze ausgeloest -- kein Re-Entry bis zur naechsten Kerze.")
                 continue
             if entry_limit_price is None or pd.isna(entry_limit_price) or entry_limit_price <= 0:
                 logger.warning(f"Ungültiger Short-Entry-Preis ({entry_limit_price}) für Band {i+1}. Überspringe.")
@@ -1524,7 +1554,8 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
 
         # --- 2. Prüfen, ob TP/SL ausgelöst wurden SEIT dem letzten Lauf ---
         check_take_profit_trigger(exchange, symbol, tracker_file_path, logger)
-        check_stop_loss_trigger(exchange, symbol, tracker_file_path, logger)
+        check_stop_loss_trigger(exchange, symbol, tracker_file_path, logger,
+                                current_candle_ts=data_with_indicators.index[-1])
 
         # --- 2b. Multi-Band: pending Entry-Orders mit der Börse abgleichen (gefüllt
         # vs. storniert), BEVOR cancel_strategy_orders() sie gleich wegwirft ---
@@ -1539,6 +1570,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
 
         tracker_info = read_tracker_file(tracker_file_path)
         committed_bands = tracker_info.get("committed_bands") or {"long": [], "short": []}
+        sl_fired_candle_ts = tracker_info.get("sl_fired_candle_ts") or {"long": {}, "short": {}}
 
         if position:
             manage_existing_position(exchange, position, band_prices, params, tracker_file_path, logger)
@@ -1553,7 +1585,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
             current_balance = exchange.fetch_balance_usdt()
             place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger,
                                df=data_with_indicators, restrict_side=position['side'],
-                               committed_bands=committed_bands)
+                               committed_bands=committed_bands, sl_fired_candle_ts=sl_fired_candle_ts)
 
         else:
               logger.info(f"Keine offene Position für {symbol}.")
@@ -1574,7 +1606,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
                   logger.warning(f"Konnte Margin Mode/Leverage nicht setzen (evtl. schon korrekt?): {e}")
 
               place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger,
-                                 df=data_with_indicators, committed_bands=committed_bands)
+                                 df=data_with_indicators, committed_bands=committed_bands, sl_fired_candle_ts=sl_fired_candle_ts)
 
 
     except ccxt.AuthenticationError as e:
