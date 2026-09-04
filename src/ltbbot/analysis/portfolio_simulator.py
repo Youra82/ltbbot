@@ -335,11 +335,19 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 sl_multiplier  = 1.5 if regime in ("TREND", "STRONG_TREND") else 1.0
                 effective_sl_pct = stop_loss_pct_param * sl_multiplier if _sl_mode == 'fixed' else None
 
-                # Risiko basiert auf dem AKTUELLEN gemeinsamen Portfolio-Kapital
-                # (Compounding, wie Live Bot -- 2026-08-27 analog backtester.py
-                # korrigiert). `equity` ist das gemeinsame, ueber alle Strategien
-                # geteilte realisierte Kapital dieser Portfolio-Simulation.
-                risk_amount_usd = equity * (risk_per_entry_pct / 100.0)
+                # Risiko basiert auf dem AKTUELL FREIEN Portfolio-Kapital, nicht auf
+                # dem vollen `equity` (2026-09-04 korrigiert): Live nutzt fuer
+                # risk_base_capital den tatsaechlich freien Kontostand
+                # (fetch_balance_usdt() -> Bitgets 'free', bereits abzueglich der
+                # Margin aller anderen offenen Positionen -- ein Konto, geteilte
+                # Margin ueber alle Strategien). Vorher rechnete dieser Simulator
+                # mit dem VOLLEN equity, unabhaengig davon wie viel used_margin
+                # bereits durch andere gleichzeitig offene Positionen gebunden war
+                # -- die margin_fits()-Pruefung weiter unten sagte nur "passt/passt
+                # nicht", schrumpfte die Positionsgroesse aber nicht mit, wie es
+                # live automatisch passiert.
+                available_capital = max(0.0, equity - used_margin)
+                risk_amount_usd = available_capital * (risk_per_entry_pct / 100.0)
                 if risk_amount_usd <= 0:
                     continue
 
