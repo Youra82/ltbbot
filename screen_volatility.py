@@ -51,6 +51,20 @@ CSV_PATH = os.path.join(PROJECT_ROOT, 'artifacts', 'results', 'screen_volatility
 
 METRIC_COLS = ['range_pct', 'trend_pct', 'strong_trend_pct', 'atr_pct', 'touches_per_week']
 
+# Lookback-Tage, die run_pipeline.sh je Timeframe fuer die volle Optuna-
+# Optimierung anfordert (siehe dortige Tabelle) -- ein Kandidat mit weniger
+# tatsaechlich verfuegbarer Historie als das wuerde die volle Pipeline nur
+# mit "Keine historischen OHLCV-Daten gefunden" verschwenden (live beobachtet
+# 2026-09-04: CTK/SPCX/1000CAT/RARE waren erst seit wenigen Tagen gelistet,
+# obwohl der 16-Wochen-Screen-Zeitraum hier genug Daten fand).
+PIPELINE_LOOKBACK_DAYS = {
+    '5m': 90, '15m': 90,
+    '30m': 548, '1h': 548,
+    '2h': 730,
+    '4h': 1095, '6h': 1095,
+    '1d': 1825,
+}
+
 
 def _log(msg: str):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
@@ -101,8 +115,30 @@ def compute_fit_stats(df: pd.DataFrame, avg_period: int, env_pct: float,
         'strong_trend_pct': round(strong_trend.sum() / n_valid * 100, 2),
         'atr_pct': round(float((atr / close)[valid].mean() * 100), 4),
         'touches_per_week': round(total_touches / weeks, 3),
+        'history_days': round(span_days, 1),
         'n_candles': n_valid,
     }
+
+
+def has_sufficient_history(symbol: str, timeframe: str, secrets: dict, required_days: int) -> bool | None:
+    """Prueft NICHT das genaue Listing-Datum (ccxt's einfaches fetch_ohlcv mit
+    altem `since` liefert bei Bitget ab ~300-400 Tagen Rueckstand leer --
+    das ist ein API-Limit der einfachen Methode, keine echte Datengrenze,
+    wie der Test mit BTC/USDT bei 800 Tagen zeigte). Stattdessen: gezielte
+    Anfrage per fetch_historical_ohlcv() (dieselbe paginierte Methode, die
+    auch der volle Download nutzt) fuer ein schmales 2-Tage-Fenster GENAU am
+    benoetigten Schwellenwert -- liefert das Kerzen, existierte das Symbol
+    zu diesem Zeitpunkt bereits. Eigenes Exchange-Objekt pro Aufruf
+    (thread-sicher, siehe load_data() in backtester.py)."""
+    try:
+        ex = Exchange(secrets['ltbbot'][0])
+        target = pd.Timestamp.now(tz='UTC') - pd.Timedelta(days=required_days)
+        start = target.strftime('%Y-%m-%d')
+        end = (target + pd.Timedelta(days=2)).strftime('%Y-%m-%d')
+        df = ex.fetch_historical_ohlcv(symbol, timeframe, start, end)
+        return df is not None and not df.empty
+    except Exception:
+        return None
 
 
 def build_reference_profile(lookback_weeks: int) -> pd.DataFrame:
@@ -198,7 +234,13 @@ def main():
             df = load_data(symbol, tf, start_date, end_date)
             stats = compute_fit_stats(df, generic_avg_period, generic_env_pct)
             if stats:
-                stats.update({'symbol': symbol, 'timeframe': tf})
+                required = PIPELINE_LOOKBACK_DAYS.get(tf, 730)
+                sufficient = has_sufficient_history(symbol, tf, secrets, required)
+                stats.update({
+                    'symbol': symbol, 'timeframe': tf,
+                    'required_history_days': required,
+                    'sufficient_history': sufficient,
+                })
                 return stats
         except Exception as e:
             _log(f"  {symbol} ({tf}): Fehler {e}")
@@ -233,14 +275,26 @@ def main():
     os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
     ranked.to_csv(CSV_PATH, index=False)
 
-    print(f"\n{'='*95}")
+    n_too_new = int((ranked['sufficient_history'] == False).sum())  # noqa: E712
+    ranked_ok = ranked[ranked['sufficient_history'] != False]  # noqa: E712 (True oder None/unbekannt durchlassen)
+
+    def _hist_flag(r):
+        if r['sufficient_history'] is True:
+            return 'OK'
+        if r['sufficient_history'] is False:
+            return f"ZU NEU (<{r['required_history_days']:.0f}d)"
+        return '?'
+
+    print(f"\n{'='*100}")
     print(f"  Top 30 nach Aehnlichkeit zum Referenz-Profil (kleinste fit_distance zuerst)")
-    print(f"{'='*95}")
-    print(f"  {'Symbol':<14}{'TF':<6}{'Range%':<9}{'Trend%':<9}{'STrend%':<9}{'ATR%':<8}{'Touch/Wo':<10}{'Distanz':<8}")
-    for _, r in ranked.head(30).iterrows():
+    print(f"  {n_too_new} Kombination(en) wegen zu kurzer Historie fuer die volle Pipeline ausgeblendet "
+          f"(siehe screen_volatility.csv fuer die volle Liste inkl. dieser).")
+    print(f"{'='*100}")
+    print(f"  {'Symbol':<14}{'TF':<6}{'Range%':<9}{'Trend%':<9}{'STrend%':<9}{'ATR%':<8}{'Touch/Wo':<10}{'Hist':<12}{'Distanz':<8}")
+    for _, r in ranked_ok.head(30).iterrows():
         print(f"  {r['symbol']:<14}{r['timeframe']:<6}{r['range_pct']:<9}{r['trend_pct']:<9}"
-              f"{r['strong_trend_pct']:<9}{r['atr_pct']:<8}{r['touches_per_week']:<10}{r['fit_distance']:.3f}")
-    print(f"{'='*95}")
+              f"{r['strong_trend_pct']:<9}{r['atr_pct']:<8}{r['touches_per_week']:<10}{_hist_flag(r):<12}{r['fit_distance']:.3f}")
+    print(f"{'='*100}")
     print(f"  Referenz-Median (13 aktive Strategien): {ref_df[METRIC_COLS].median().to_dict()}")
     print(f"  Volle Ergebnisliste: {CSV_PATH}")
 
