@@ -198,7 +198,13 @@ def main():
     parser.add_argument('--recheck-after-days', type=int, default=7,
                         help='Unabhaengig von --recheck-confirmed: JEDES Paar (bestaetigt oder nicht) wird '
                              'uebersprungen, wenn seine Config vor weniger als N Tagen optimiert wurde. 0 deaktiviert die Sperre.')
+    parser.add_argument('--results_file', type=str, default=None,
+                        help='Alternativer Pfad statt artifacts/results/last_optimizer_run.json -- wichtig fuer '
+                             'Ad-hoc-/Screening-Laeufe (z.B. viele Symbole mit wenigen Trials), damit deren Ergebnisse '
+                             'NICHT in die Datei fliessen, die master_runner.py als Live-Trading-Fallback liest, '
+                             'falls active_strategies mal leer ist.')
     args = parser.parse_args()
+    results_file = args.results_file or RESULTS_FILE
 
     # Globale Variablen setzen
     CONFIG_SUFFIX = args.config_suffix
@@ -219,10 +225,10 @@ def main():
     optuna_results = []
 
     # last_optimizer_run.json: lesen falls vorhanden (Scheduler initialisiert vor Pipeline-Start)
-    os.makedirs(os.path.dirname(RESULTS_FILE), exist_ok=True)
-    if os.path.exists(RESULTS_FILE):
+    os.makedirs(os.path.dirname(results_file), exist_ok=True)
+    if os.path.exists(results_file):
         try:
-            with open(RESULTS_FILE, 'r', encoding='utf-8') as f:
+            with open(results_file, 'r', encoding='utf-8') as f:
                 run_results = json.load(f)
             run_results.setdefault('saved', [])
             run_results.setdefault('skipped', [])
@@ -539,13 +545,13 @@ def main():
             })
 
 
-    # --- last_optimizer_run.json aktualisieren ---
+    # --- Ergebnisdatei aktualisieren (results_file, default last_optimizer_run.json) ---
     run_results['run_end'] = _dt.now().isoformat(timespec='seconds')
     try:
-        with open(RESULTS_FILE, 'w', encoding='utf-8') as f:
+        with open(results_file, 'w', encoding='utf-8') as f:
             json.dump(run_results, f, indent=2)
     except Exception as e:
-        logger.warning(f"Konnte last_optimizer_run.json nicht schreiben: {e}")
+        logger.warning(f"Konnte {results_file} nicht schreiben: {e}")
 
     # --- Zusammenfassung ---
     if optuna_results:
