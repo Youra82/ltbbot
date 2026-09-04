@@ -763,7 +763,9 @@ Bitget listet 700+ USDT-Perpetuals — jeden davon einzeln mit voller Optuna-Suc
 
 ### 1. `screen_volatility.py` — schnelle Vorfilterung (empfohlen als erster Schritt)
 
-Berechnet reine Kerzen-Kennzahlen (ADX-Regime-Verteilung, ATR-Volatilität, Envelope-Berührungshäufigkeit) für alle aktiven Bitget-USDT-Perpetuals und vergleicht sie mit dem Profil der aktuell **aktiven, bestätigten** Strategien aus `settings.json`. **Kein Backtest, kein Optuna** — nur Pandas/TA-Berechnungen auf Kerzendaten, daher extrem schnell (~0.75s pro Symbol/Timeframe-Kombination, parallelisiert).
+Berechnet reine Kerzen-Kennzahlen (ADX-Regime-Verteilung, ATR-Volatilität, Envelope-Berührungshäufigkeit) für alle aktiven Bitget-USDT-Perpetuals und vergleicht sie mit dem Profil der aktuell **aktiven, bestätigten** Strategien aus `settings.json`. **Kein Backtest, kein Optuna** — nur Pandas/TA-Berechnungen auf Kerzendaten, daher extrem schnell (~1.2s pro Symbol/Timeframe-Kombination inkl. Historien-Check, parallelisiert).
+
+Prüft zusätzlich, ob genug Kerzen-Historie für den vollen `run_pipeline.sh`-Lookback existiert (2h=730 Tage, 4h/6h=1095 Tage, siehe `PIPELINE_LOOKBACK_DAYS`) — frisch gelistete Coins tauchen sonst als vielversprechend auf, scheitern aber in der vollen Pipeline mit "Keine historischen OHLCV-Daten gefunden". Solche Kandidaten werden aus der Top-30-Ausgabe ausgeblendet (bleiben aber, klar markiert, in der vollen CSV).
 
 ```bash
 # Alle aktiven USDT-Perpetuals screenen (Standard-Timeframes 30m/1h/2h/4h/6h)
