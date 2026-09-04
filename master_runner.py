@@ -83,6 +83,60 @@ def main():
             logging.info("Modus: Manuell. Lese Strategien aus den manuellen Einstellungen...")
             strategy_list = live_settings.get('active_strategies', [])
 
+        # ==========================================================
+        # Housekeeper: verwaiste Positionen aufspueren und mitlaufen lassen
+        # ==========================================================
+        # Wird ein Symbol aus active_strategies entfernt (manuell oder durch den
+        # woechentlichen Auto-Optimizer, der hier gerade aktiv ist -- siehe
+        # use_auto_optimizer_results oben), aber es liegt noch eine offene
+        # Position vor, wuerde master_runner sie nie wieder anfassen: kein
+        # SL/TP-Management, kein Trailing mehr, obwohl der zugehoerige
+        # SL/TP-Trigger auf Bitget weiterlaeuft -- Ghost-Trigger-Risiko, exakt
+        # das Muster das bei mbot gefunden und dort per active_positions.json +
+        # kontoweitem Position-Check gefixt wurde (siehe master_runner.py dort).
+        # ltbbot hat keine zentrale active_positions.json, aber pro Symbol/TF
+        # eine Tracker-Datei in artifacts/tracker/ -- daraus laesst sich die
+        # wahrscheinliche (Symbol, Timeframe)-Kombination einer verwaisten
+        # Position ableiten (juengste Tracker-Datei fuer das Symbol, da Bitget
+        # Positionen nicht nach Strategie/Timeframe taggt).
+        try:
+            from ltbbot.utils.exchange import Exchange
+            active_symbols = {s.get('symbol') for s in strategy_list if isinstance(s, dict)}
+            position_symbols = set()
+            for account in secrets.get('ltbbot', []):
+                exch = Exchange(account)
+                if not exch.markets:
+                    continue
+                for p in exch.fetch_all_open_positions():
+                    if p.get('symbol'):
+                        position_symbols.add(p['symbol'])
+            orphaned_symbols = position_symbols - active_symbols
+
+            if orphaned_symbols:
+                tracker_dir = os.path.join(SCRIPT_DIR, 'artifacts', 'tracker')
+                for orph_symbol in orphaned_symbols:
+                    safe_prefix = orph_symbol.replace('/', '-').replace(':', '-') + '_'
+                    candidates = []
+                    if os.path.isdir(tracker_dir):
+                        for fn in os.listdir(tracker_dir):
+                            if fn.startswith(safe_prefix) and fn.endswith('.json'):
+                                candidates.append((os.path.getmtime(os.path.join(tracker_dir, fn)), fn))
+                    if not candidates:
+                        logging.warning(
+                            f"Verwaiste Position auf {orph_symbol}, aber keine Tracker-Datei in "
+                            f"artifacts/tracker/ gefunden -- kann Timeframe nicht bestimmen, überspringe."
+                        )
+                        continue
+                    candidates.sort(reverse=True)
+                    orph_timeframe = candidates[0][1][len(safe_prefix):-len('.json')]
+                    logging.warning(
+                        f"Verwaiste Position gefunden: {orph_symbol} ({orph_timeframe}) — "
+                        f"nicht mehr in active_strategies, wird trotzdem weiter verwaltet."
+                    )
+                    strategy_list.append({'symbol': orph_symbol, 'timeframe': orph_timeframe, 'active': True})
+        except Exception as _e:
+            logging.error(f"Housekeeper-Check für verwaiste Positionen fehlgeschlagen: {_e}", exc_info=True)
+
         if not strategy_list:
             logging.warning("Keine aktiven Strategien zum Ausführen gefunden.")
             return

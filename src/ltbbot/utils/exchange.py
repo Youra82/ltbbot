@@ -351,6 +351,32 @@ class Exchange:
         return cancelled_count
 
 
+    def fetch_all_open_positions(self):
+        """
+        Kontoweiter Positions-Fetch OHNE Symbol-Filter -- fuer die Housekeeper-
+        Reconciliation in master_runner.py (siehe Kommentar dort): findet auch
+        Positionen zu Symbolen, die gerade NICHT in active_strategies stehen
+        (z.B. weil der Auto-Optimizer sie diese Woche entfernt hat), damit die
+        fuer sie noch aktiven SL/TP-Trigger nicht zu Ghost-Orders werden.
+        """
+        if not self.markets: return []
+        try:
+            params = {'productType': 'USDT-FUTURES', 'marginCoin': 'USDT'}
+            positions = self.exchange.fetch_positions(params=params)
+            open_positions = []
+            for p in positions:
+                try:
+                    size_key = 'contracts' if 'contracts' in p else 'contractSize'
+                    contracts_str = p.get(size_key)
+                    if contracts_str is not None and abs(float(contracts_str)) > 1e-9:
+                        open_positions.append(p)
+                except (ValueError, TypeError, KeyError):
+                    continue
+            return open_positions
+        except Exception as e:
+            logger.error(f"Fehler beim kontoweiten Abrufen offener Positionen: {e}", exc_info=True)
+            return []
+
     def fetch_open_positions(self, symbol):
         if not self.markets: return []
         try:
