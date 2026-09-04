@@ -757,7 +757,49 @@ Das Script staged automatisch alle `config_*_envelope.json` + `settings.json`, e
 
 ---
 
+## 🔎 Coin-Screening (bevor die Pipeline läuft)
+
+Bitget listet 700+ USDT-Perpetuals — jeden davon einzeln mit voller Optuna-Suche (`run_pipeline.sh`, 500 Trials) zu testen, dauert pro Kombination mehrere Minuten bis Stunden. Zwei Screening-Scripts filtern vorab, welche Symbol/Timeframe-Kombinationen überhaupt vielversprechend sind, bevor man Zeit in die teure volle Pipeline investiert.
+
+### 1. `screen_volatility.py` — schnelle Vorfilterung (empfohlen als erster Schritt)
+
+Berechnet reine Kerzen-Kennzahlen (ADX-Regime-Verteilung, ATR-Volatilität, Envelope-Berührungshäufigkeit) für alle aktiven Bitget-USDT-Perpetuals und vergleicht sie mit dem Profil der aktuell **aktiven, bestätigten** Strategien aus `settings.json`. **Kein Backtest, kein Optuna** — nur Pandas/TA-Berechnungen auf Kerzendaten, daher extrem schnell (~0.75s pro Symbol/Timeframe-Kombination, parallelisiert).
+
+```bash
+# Alle aktiven USDT-Perpetuals screenen (Standard-Timeframes 30m/1h/2h/4h/6h)
+python screen_volatility.py
+
+# Nur die Top 100 nach 24h-Volumen, andere Timeframes, mehr/weniger parallele Worker
+python screen_volatility.py --top-n 100 --timeframes "1h 4h 6h" --workers 10
+
+# Längerer Vergleichszeitraum (Standard: 16 Wochen)
+python screen_volatility.py --lookback-weeks 26
+```
+
+Ergebnis: eine nach Ähnlichkeit sortierte Rangliste (`artifacts/results/screen_volatility.csv`) — Symbole mit der kleinsten `fit_distance` zum Profil der bestätigten Strategien sind die vielversprechendsten Kandidaten für den nächsten Schritt.
+
+### 2. `screen_candidates.py` — echter, aber reduzierter Optuna-Screen (optional, gründlicher)
+
+Ruft den **echten** `optimizer.py`-Code auf (identische Such-/Bewertungslogik wie die volle Pipeline), aber mit stark reduzierten Trials und kürzerem Zeitraum — schneller, aber nicht so belastbar wie ein voller Pipeline-Lauf. Läuft komplett isoliert von der Produktion (eigener `_screen`-Config-Suffix, eigene Ergebnisdatei — landet nie in `settings.json`/`active_strategies` oder im Live-Trading-Fallback).
+
+```bash
+# Top 100 nach Volumen, 30 Trials, 12 Wochen Lookback (Vorsicht: mehrstündige Laufzeit)
+python screen_candidates.py --top-n 100 --trials 30 --lookback-weeks 12
+
+# Abgebrochenen Lauf fortsetzen (überspringt bereits gescreente Symbole)
+python screen_candidates.py --resume
+```
+
+### Empfohlener Workflow
+
+1. `screen_volatility.py` laufen lassen → Kandidatenliste sichten (CSV oder Konsolen-Ausgabe).
+2. Die vielversprechendsten ~5–15 Kandidaten (kleinste `fit_distance`) auswählen.
+3. Nur für diese gezielt `run_pipeline.sh` (volle 500-Trial-Optimierung) laufen lassen — Symbol/Timeframe direkt bei den interaktiven Prompts eingeben.
+4. Ergebnisse mit `show_results.sh` (siehe [Integration mit Live-Trading](#integration-mit-live-trading)) backtesten und sichten, bevor eine neu bestätigte Config in `active_strategies` übernommen wird.
+
 ## Coin & Timeframe Empfehlungen
+
+> **Hinweis:** Die folgende Tabelle ist eine ältere, manuell kuratierte Einschätzung. Sie wird inzwischen von den Screening-Scripts oben (datenbasiert, auf echten Kennzahlen) teilweise widerlegt — z.B. läuft DOGE/6h aktuell erfolgreich als bestätigte Live-Strategie, obwohl unten als "Schlecht" eingestuft. Für eine aktuelle Einschätzung lieber `screen_volatility.py` laufen lassen statt sich auf diese Tabelle zu verlassen.
 
 LTBBot ist eine **Mean-Reversion-Strategie** — er wartet, dass der Preis von einer Envelope-Band zur gleitenden Mitte zurückfindet. Das Gegenteil von Trendfolge: gefragt sind Coins, die schwingen statt dauerhaft zu trenden. STRONG_TREND (ADX > 30) blockiert alle Einträge komplett.
 
