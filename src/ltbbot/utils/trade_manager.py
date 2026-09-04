@@ -533,18 +533,17 @@ def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logg
 
         if cancelled_count > 0:
             logger.info(f"{cancelled_count} offene Order(s) für {symbol} erfolgreich storniert.")
-            # Falls ein Tracker-Pfad übergeben wurde, Tracker-Einträge bereinigen
-            try:
-                if tracker_file_path:
-                    tracker_info = read_tracker_file(tracker_file_path)
-                    # Entferne bekannte SL/TP IDs, da Orders gelöscht wurden
-                    if tracker_info.get("stop_loss_ids") or tracker_info.get("take_profit_ids"):
-                        tracker_info["stop_loss_ids"] = []
-                        tracker_info["take_profit_ids"] = []
-                        update_tracker_file(tracker_file_path, tracker_info)
-                        logger.info(f"Tracker ({tracker_file_path}) nach Orderstorno bereinigt.")
-            except Exception as e:
-                logger.debug(f"Konnte Tracker nach Orderstorno nicht bereinigen: {e}")
+            # HINWEIS: Frueher wurde hier bei JEDER Stornierung pauschal
+            # tracker_info["take_profit_ids"]/["stop_loss_ids"] geleert -- auch
+            # wenn die TP/SL selbst gar nicht betroffen war (z.B. weil nur eine
+            # veraltete Entry-Order storniert wurde). Das liess manage_existing_
+            # position() beim naechsten Aufruf "vergessen", welche TP sie
+            # eigentlich stornieren sollte -> Waisen-TP blieb liegen, neue kam
+            # dazu (live beobachtet 2026-09-04: staendig 2 fast identische TP-
+            # Orders fuer XRP). protected_order_ids oben sorgt bereits dafuer,
+            # dass eine getrackte SL/TP hier NIE storniert wird -- der Tracker
+            # darf also gar nicht mehr beruehrt werden, das macht ausschliesslich
+            # manage_existing_position()/check_stop_loss_trigger() selbst.
         else:
             logger.debug(f"Keine offenen Orders für {symbol} zum Stornieren gefunden.")
         return cancelled_count
