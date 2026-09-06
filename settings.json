@@ -3,8 +3,73 @@
         "use_auto_optimizer_results": true,
         "active_strategies": [
             {
+                "symbol": "ETH/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
                 "symbol": "NEAR/USDT:USDT",
                 "timeframe": "30m",
+                "active": true
+            },
+            {
+                "symbol": "PEPE/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "ARB/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "AAVE/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "DOT/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "SOL/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "LTC/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "LINK/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "XRP/USDT:USDT",
+                "timeframe": "30m",
+                "active": true
+            },
+            {
+                "symbol": "AVAX/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "BTC/USDT:USDT",
+                "timeframe": "6h",
                 "active": true
             }
         ]

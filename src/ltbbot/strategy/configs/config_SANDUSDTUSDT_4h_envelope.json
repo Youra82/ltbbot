@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "pnl_pct": 568.85,
+        "oos_pnl_pct": 59.42,
+        "oos_trades": 50,
+        "is_oos_split_date": "2025-10-11",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-09-04T20:22:39"
+    },
+    "market": {
+        "symbol": "SAND/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 5,
+        "envelopes": [
+            0.034019523209763036,
+            0.03986408416097662,
+            0.1461742216543633
+        ],
+        "trigger_price_delta_pct": 0.0171,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.94,
+        "leverage": 12,
+        "sl_to_env1_ratio": 0.1002
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}
