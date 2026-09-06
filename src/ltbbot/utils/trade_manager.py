@@ -849,12 +849,24 @@ def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, log
     mit der Boerse ab, BEVOR cancel_strategy_orders() sie storniert (das wuerde
     sonst die Unterscheidung "gefuellt vs. nie getriggert" zerstoeren).
 
-    - Order nicht mehr offen UND Status 'closed' -> Band wurde tatsaechlich
-      GEFUELLT -> nach committed_bands verschoben (place_entry_orders() eroeffnet
-      dieses Band danach nicht mehr erneut).
-    - Order nicht mehr offen, aber nicht 'closed' (z.B. von cancel_strategy_orders()
-      im letzten Zyklus storniert, weil sie nie getriggert hat) -> einfach aus
-      pending_band_orders entfernt, Band bleibt frei fuer die naechste Auswertung.
+    Live beobachtet 2026-09-06 (DOGE/4h): der `status`-Wert aus fetchClosedOrders()
+    erkannte einen tatsaechlich GEFUELLTEN Entry (Order verschwand korrekt aus den
+    offenen Triggern, die Position wuchs auf der Boerse nachweislich) NICHT
+    zuverlaessig als 'closed' -- dieselbe Art Bitget/ccxt-Status-Unschaerfe bei
+    Hedge-Mode-Plan-Orders wie schon bei reduceOnly (siehe cancel_strategy_orders()).
+    Band 1 wurde dadurch NIE als committed markiert und JEDEN Zyklus erneut
+    "eroeffnet" -- jede neue SL-ID ueberschrieb die vorherige im Tracker, die
+    dadurch verwaist und beim naechsten Zyklus von cancel_strategy_orders()
+    (zu Recht) storniert wurde. Endresultat: die real wachsende Position verlor
+    schleichend JEDE Absicherung, bis nur noch die zuletzt getrackte (kleinste)
+    Teilmenge eine SL hatte.
+
+    Fix: die tatsaechliche POSITION auf der Boerse ist das robuste Signal, nicht
+    der fragile Status-String. Existiert nach Verschwinden der Pending-Order
+    eine reale Position auf dieser Seite, wird das Band als committed markiert
+    -- im schlimmsten Fall (Order war doch nur storniert) bedeutet das nur ein
+    uebersprungenes Signal fuer eine Kerze, NIEMALS eine unentdeckt wachsende,
+    ungeschuetzte Position wie zuvor.
     """
     tracker_info = read_tracker_file(tracker_file_path)
     pending = tracker_info.get("pending_band_orders") or {"long": {}, "short": {}}
@@ -868,10 +880,22 @@ def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, log
         logger.warning(f"Konnte offene Trigger-Orders für Band-Fill-Abgleich nicht laden: {e}")
         return
 
+    has_position = {"long": False, "short": False}
+    try:
+        for p in exchange.fetch_open_positions(symbol):
+            side = p.get('side')
+            if side in has_position and float(p.get('contracts') or 0) > 0:
+                has_position[side] = True
+    except Exception as e:
+        logger.warning(f"Konnte Position für Band-Fill-Abgleich nicht laden: {e}")
+        # Ohne Positionsdaten NICHT raten -- lieber pending stehen lassen als
+        # faelschlich als "storniert" freigeben (siehe Docstring: Sicherheit
+        # geht vor verpasstem Signal).
+        return
+
     committed = tracker_info.get("committed_bands") or {"long": [], "short": []}
     new_pending = {"long": {}, "short": {}}
     changed = False
-    closed_cache = None
 
     for side_key in ("long", "short"):
         for band_str, order_id in pending.get(side_key, {}).items():
@@ -879,28 +903,15 @@ def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, log
                 new_pending[side_key][band_str] = order_id
                 continue
             changed = True
-            if closed_cache is None:
-                closed_cache = []
-                try:
-                    params = {'stop': True} if 'bitget' in exchange.exchange.id else {}
-                    if exchange.exchange.has['fetchClosedOrders']:
-                        closed_cache = exchange.exchange.fetchClosedOrders(symbol, limit=15, params=params)
-                    elif exchange.exchange.has['fetchOrders']:
-                        closed_cache = exchange.exchange.fetchOrders(symbol, limit=25, params=params)
-                except Exception as e:
-                    logger.debug(f"Konnte geschlossene Orders für Band-Fill-Abgleich nicht laden: {e}")
-            status = None
-            for o in closed_cache or []:
-                if str(o.get('id')) == str(order_id):
-                    status = o.get('status')
-                    break
             band_num = int(band_str)
-            if status == 'closed':
+            if has_position[side_key]:
                 if band_num not in committed.get(side_key, []):
                     committed.setdefault(side_key, []).append(band_num)
-                logger.info(f"✅ Band {band_num} ({side_key}) für {symbol} wurde GEFÜLLT (Order {order_id}) -- als committed markiert.")
+                logger.info(f"✅ Band {band_num} ({side_key}) für {symbol} wurde GEFÜLLT (Order {order_id}, "
+                            f"reale Position vorhanden) -- als committed markiert.")
             else:
-                logger.debug(f"Band {band_num} ({side_key}) Entry-Order {order_id} nicht mehr offen (Status={status}) -- vermutlich storniert, Band wird wieder frei.")
+                logger.debug(f"Band {band_num} ({side_key}) Entry-Order {order_id} nicht mehr offen, "
+                             f"KEINE Position auf {side_key} vorhanden -- vermutlich storniert, Band wird wieder frei.")
 
     if changed:
         tracker_info["pending_band_orders"] = new_pending
