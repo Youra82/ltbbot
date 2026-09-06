@@ -843,6 +843,136 @@ def _emergency_force_close(exchange: Exchange, symbol: str, pos_side: str, track
     send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), msg)
 
 
+def check_naked_position(exchange: Exchange, symbol: str, tracker_file_path: str,
+                          telegram_config: dict, logger: logging.Logger) -> bool:
+    """
+    Zweiter, vom Tracker UNABHAENGIGER Notfall-Check (User-Vorgabe 2026-09-06,
+    nach dem DOGE/4h-Vorfall): sync_band_fills() hatte einen tatsaechlich
+    gefuellten Entry nicht als committed erkannt, wodurch die reale Position
+    ueber Stunden immer weniger Deckung hatte (jede neue "Band 1"-SL ueberschrieb
+    die vorherige im Tracker, die dann von cancel_strategy_orders() als
+    "nicht mehr getrackt" storniert wurde) -- am Ende war nur noch ein Bruchteil
+    der Position abgesichert, ohne dass der Bot das je gemerkt haette.
+
+    Prueft DIREKT an der Boerse (nicht ueber committed_bands/band_sl_orders,
+    die ja gerade Ursache des Problems waren): wie viele Contracts der
+    aktuellen Position sind durch eine echte SL-RICHTUNGS-Order gedeckt
+    (Trigger auf der Verlustseite vom Entry -- TP-Orders zaehlen nicht, die
+    schuetzen nicht vor Verlust)? Prueft dabei BEIDE Bitget-Order-Kategorien:
+    normale Trigger (fetch_open_trigger_orders, planType=normal_plan) UND die
+    separate "Position TP/SL"-Kategorie (fetch_position_tpsl_orders,
+    planType=profit_loss) -- letztere war live beobachtet fuer den Bot
+    komplett unsichtbar, obwohl der User dort manuell eine SL gesetzt hatte.
+
+    Deckung < 90% der Position -> sofortige Zwangsschliessung + Telegram,
+    exakt wie beim bestehenden check_catastrophic_band_breach()-Failsafe.
+    """
+    try:
+        positions = exchange.fetch_open_positions(symbol)
+        if not positions:
+            return False
+        position = positions[0]
+        pos_side = position.get('side')
+        contracts = float(position.get('contracts') or 0)
+        entry_price = float(position.get('entryPrice') or 0)
+        if contracts <= 0 or entry_price <= 0:
+            return False
+
+        try:
+            protective_orders = exchange.fetch_open_trigger_orders(symbol) + exchange.fetch_position_tpsl_orders(symbol)
+        except Exception as e:
+            logger.warning(f"Naked-Position-Check: Konnte Schutz-Orders für {symbol} nicht abrufen: {e}")
+            return False
+
+        sl_covered = 0.0
+        for o in protective_orders:
+            info = o.get('info', {}) or {}
+            if info.get('tradeSide') != 'close':
+                continue  # keine reduzierende (schliessende) Order -- ignorieren
+            trigger_price = o.get('stopPrice')
+            if trigger_price is None:
+                trigger_price = info.get('triggerPrice')
+            amount = o.get('amount')
+            if amount is None:
+                amount = info.get('size')
+            try:
+                trigger_price = float(trigger_price)
+                amount = float(amount)
+            except (TypeError, ValueError):
+                continue
+            if amount <= 0:
+                continue
+            # SL-Richtung: fuer Short ueber dem Entry (Preis steigt = Verlust),
+            # fuer Long unter dem Entry (Preis faellt = Verlust). TP-Richtung
+            # (die andere Seite) zaehlt hier bewusst NICHT als Schutz.
+            is_sl_direction = (trigger_price > entry_price) if pos_side == 'short' else (trigger_price < entry_price)
+            if is_sl_direction:
+                sl_covered += amount
+
+        coverage = sl_covered / contracts
+        if coverage >= 0.9:
+            return False
+
+        logger.critical(
+            f"🚨🚨 NOTFALL für {symbol}: Offene {pos_side}-Position ({contracts:.4f} Contracts) hat nur "
+            f"{coverage*100:.1f}% SL-Deckung ({sl_covered:.4f} Contracts)! Löse Zwangsschließung aus."
+        )
+        _emergency_close_naked_position(exchange, symbol, pos_side, tracker_file_path, telegram_config,
+                                         logger, contracts, coverage)
+        return True
+    except Exception as e:
+        logger.error(f"Fehler im Naked-Position-Check für {symbol}: {e}", exc_info=True)
+        return False
+
+
+def _emergency_close_naked_position(exchange: Exchange, symbol: str, pos_side: str, tracker_file_path: str,
+                                     telegram_config: dict, logger: logging.Logger,
+                                     contracts: float, coverage: float):
+    """Storniert ALLE Orders (inkl. reduceOnly) und schliesst die Position per
+    Market-Order zwangsweise -- Notfallpfad, siehe check_naked_position()."""
+    try:
+        exchange.cancel_all_orders_for_symbol(symbol)
+    except Exception as e:
+        logger.error(f"Fehler beim Stornieren aller Orders während Notfall-Schließung ({symbol}): {e}")
+
+    try:
+        positions = exchange.fetch_open_positions(symbol)
+        if positions:
+            amount = float(positions[0].get('contracts', 0))
+            if amount > 0:
+                close_side = 'sell' if pos_side == 'long' else 'buy'
+                exchange.place_market_order(symbol, close_side, amount, reduce=True)
+                logger.critical(f"Position {symbol} zwangsgeschlossen (Market {close_side}, Menge {amount}).")
+        else:
+            logger.info(f"Notfall-Schließung {symbol}: Keine offene Position mehr vorhanden (evtl. bereits geschlossen).")
+    except Exception as e:
+        logger.error(f"FEHLER beim Zwangsschließen der Position {symbol}: {e}", exc_info=True)
+
+    tracker_info = read_tracker_file(tracker_file_path)
+    tracker_info.update({
+        "status": "emergency_closed_naked_position",
+        "committed_bands": {"long": [], "short": []},
+        "pending_band_orders": {"long": {}, "short": {}},
+        "band_sl_orders": {"long": {}, "short": {}},
+        "band_sl_prices": {"long": {}, "short": {}},
+        "take_profit_ids": [],
+    })
+    if 'last_notified_entry_price' in tracker_info:
+        del tracker_info['last_notified_entry_price']
+    if 'last_notified_side' in tracker_info:
+        del tracker_info['last_notified_side']
+    update_tracker_file(tracker_file_path, tracker_info)
+
+    msg = (
+        f"🚨🚨🚨 NOTFALL-SCHLIESSUNG {symbol}\n\n"
+        f"Offene {pos_side}-Position ({contracts:.4f} Contracts) hatte nur {coverage*100:.1f}% SL-Deckung "
+        f"(unabhaengig vom internen Tracker direkt an der Börse geprüft).\n"
+        f"Alle Orders storniert, Position per Market-Order zwangsgeschlossen.\n"
+        f"BITTE MANUELL AUF BITGET PRÜFEN!"
+    )
+    send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), msg)
+
+
 def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, logger: logging.Logger):
     """
     Multi-Band: gleicht die im Tracker gemerkten "pending" Band-Entry-Order-IDs
@@ -1583,6 +1713,15 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # Muss VOR allem anderen laufen, das committed_bands/band_sl_prices veraendert.
         if check_catastrophic_band_breach(exchange, symbol, params, tracker_file_path, telegram_config, logger):
             logger.critical(f"Notfall-Zwangsschließung für {symbol} ausgelöst -- Zyklus wird beendet.")
+            return
+
+        # --- 1c. Notfall-Failsafe #2: reale Position ohne ausreichende SL-Deckung?
+        # Bewusst UNABHAENGIG vom Tracker (committed_bands/band_sl_orders) --
+        # genau deren Fehlannahme war Ursache des DOGE/4h-Vorfalls 2026-09-06
+        # (sync_band_fills() erkannte einen Fill nicht, Position wuchs stundenlang
+        # ohne dass der Bot es merkte). Prueft direkt an der Boerse.
+        if check_naked_position(exchange, symbol, tracker_file_path, telegram_config, logger):
+            logger.critical(f"Notfall-Zwangsschließung (fehlende SL-Deckung) für {symbol} ausgelöst -- Zyklus wird beendet.")
             return
 
         # --- 2. Prüfen, ob TP/SL ausgelöst wurden SEIT dem letzten Lauf ---

@@ -271,6 +271,23 @@ class Exchange:
             logger.error(f"Fehler beim Abrufen offener Trigger-Orders für {symbol}: {e}")
             return []
 
+    def fetch_position_tpsl_orders(self, symbol: str):
+        """Separate Bitget-Order-Kategorie ("Position TP/SL", planType='profit_loss'/
+        'loss_plan'/'profit_plan') -- taucht NICHT in fetch_open_trigger_orders()
+        auf (das nutzt implizit nur planType='normal_plan'). Live beobachtet
+        2026-09-06: ein manuell ueber Bitgets "TP/SL"-Tab gesetzter Stop war fuer
+        fetch_open_trigger_orders() komplett unsichtbar -- fuer den Naked-Position-
+        Check (siehe check_naked_position() in trade_manager.py) muss diese
+        Kategorie SEPARAT abgefragt werden, sonst zaehlt ein vom User manuell
+        gesetzter Schutz faelschlich als "keine SL vorhanden"."""
+        if not self.markets: return []
+        try:
+            params = {'stop': True, 'planType': 'profit_loss', 'productType': 'USDT-FUTURES'}
+            return self.exchange.fetch_open_orders(symbol, params=params)
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen von Position-TP/SL-Orders für {symbol}: {e}")
+            return []
+
     def fetch_closed_trigger_orders(self, symbol: str, limit: int = 20):
         if not self.markets: return []
         try:
