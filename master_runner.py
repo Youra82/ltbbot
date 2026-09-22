@@ -203,6 +203,19 @@ def main():
                 stderr=subprocess.STDOUT,
             )
 
+        # --- Taeglicher Live-vs-Backtest-Vergleich im Hintergrund starten ---
+        # Prueft selbst (wie auto_optimizer_scheduler.py oben), ob ein Lauf
+        # faellig ist -- siehe [[research_ltbbot_live_vs_backtest_2026_09]].
+        daily_check_script = os.path.join(SCRIPT_DIR, 'daily_live_vs_backtest_check.py')
+        if os.path.exists(daily_check_script):
+            logs_dir = os.path.join(SCRIPT_DIR, 'logs')
+            os.makedirs(logs_dir, exist_ok=True)
+            subprocess.Popen(
+                [python_executable, daily_check_script],
+                stdout=open(os.path.join(logs_dir, 'daily_live_vs_backtest_check.log'), 'a'),
+                stderr=subprocess.STDOUT,
+            )
+
     except FileNotFoundError as e:
         logging.critical(f"Fehler: Eine wichtige Datei wurde nicht gefunden: {e}")
     except json.JSONDecodeError as e:

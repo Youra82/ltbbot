@@ -23,17 +23,26 @@ class Exchange:
             'secret': self.account.get('secret'),
             'password': self.account.get('password'),
             'options': {
-                'defaultType': 'swap', 
+                'defaultType': 'swap',
+                'adjustForTimeDifference': True,
             },
-            'enableRateLimit': True, 
+            'enableRateLimit': True,
         })
 
         try:
             self.markets = self.exchange.load_markets()
+            # Kalibriert den lokalen Uhr-Offset gegen Bitgets Serverzeit einmalig
+            # beim Start -- ohne das (bzw. ohne adjustForTimeDifference oben)
+            # schlagen signierte Requests bei ausreichend Zeit-Drift sporadisch mit
+            # ccxt.InvalidNonce ("Request timestamp expired") fehl. Live beobachtet
+            # 2026-09-22 in tests/test_workflow.py (mehrere Order-Platzierungen
+            # scheiterten deshalb), reines Read-Only-Skript-Testing zeigte ~30s
+            # Drift auf diesem Rechner.
+            self.exchange.load_time_difference()
             logger.info("Märkte erfolgreich geladen.")
         except Exception as e:
             logger.critical(f"Konnte Märkte nicht laden! API-Keys oder Verbindung prüfen. Fehler: {e}")
-            self.markets = {} 
+            self.markets = {}
 
     # --- OHLCV Methoden ---
     def fetch_recent_ohlcv(self, symbol, timeframe, limit=1000):
@@ -305,6 +314,44 @@ class Exchange:
         except Exception as e:
             logger.error(f"Fehler beim Abrufen geschlossener Trigger-Orders für {symbol}: {e}")
             return []
+
+
+    def fetch_closed_positions_history(self, since_ms: int, limit: int = 100):
+        """Holt ALLE geschlossenen Positionen (realisierter PnL, Entry/Exit,
+        Fees, Funding) seit `since_ms` -- ueber alle Symbole des Accounts,
+        nicht auf eines beschraenkt. Paginiert per Bitgets 'endId'-Cursor
+        (idLessThan), bis keine weiteren Eintraege mehr zurueckkommen oder
+        der since_ms-Zeitraum unterschritten wird. Live verifiziert
+        2026-09-22 (siehe [[research_ltbbot_live_vs_backtest_2026_09]]) --
+        Endpoint: privateMixGetV2MixPositionHistoryPosition."""
+        if not self.markets: return []
+        all_positions = []
+        cursor = None
+        try:
+            while True:
+                params = {'productType': 'USDT-FUTURES', 'limit': limit}
+                if cursor:
+                    params['idLessThan'] = cursor
+                resp = self.exchange.privateMixGetV2MixPositionHistoryPosition(params)
+                data = resp.get('data', {}) or {}
+                page = data.get('list', []) or []
+                if not page:
+                    break
+                stop = False
+                for p in page:
+                    if int(p.get('ctime', 0)) < since_ms:
+                        stop = True
+                        continue
+                    all_positions.append(p)
+                if stop or len(page) < limit:
+                    break
+                end_id = data.get('endId')
+                if not end_id or end_id == cursor:
+                    break
+                cursor = end_id
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen der Positions-Historie: {e}")
+        return all_positions
 
 
     def cancel_order(self, id: str, symbol: str):
