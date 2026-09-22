@@ -46,7 +46,7 @@ TRIGGER_LOG    = os.path.join(LOG_DIR, 'daily_live_vs_backtest_check.log')
 
 DEFAULT_SETTINGS = {
     'enabled': True,
-    'rolling_window_days': 30,
+    'rolling_window_days': 7,
     'send_hour': 8,
     'start_capital_per_strategy': 50,
 }
