@@ -585,11 +585,21 @@ def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: 
 
         closed_triggers = []
         params = {'stop': True} if 'bitget' in exchange.exchange.id else {}
+        # limit=100 (Bitget-Maximum) statt vormals 15: cancel_strategy_orders()
+        # erzeugt jeden ~15-Min-Zyklus 2-3 neue "canceled"-Plan-Order-Eintraege
+        # (storniert nicht getroffene Band-Orders) -- bei limit=15 scrollte eine
+        # tatsaechlich gefeuerte SL innerhalb von ca. 1-2h aus dem Fenster, BEVOR
+        # sie als status='closed' erkannt wurde. Live beobachtet 2026-09-22
+        # (ARB/6h): Band 1 wurde dadurch 7x innerhalb EINER Kerze neu eroeffnet
+        # und sofort wieder gestoppt, weil sl_fired_candle_ts (siehe
+        # place_entry_orders()) nie gesetzt wurde -- die Same-Candle-Re-Entry-
+        # Bremse von 2026-09-03 (Commit d1c8e92) war dadurch seit ihrer
+        # Einfuehrung faktisch wirkungslos.
         if exchange.exchange.has['fetchClosedOrders']:
-            closed_triggers = exchange.exchange.fetchClosedOrders(symbol, limit=15, params=params)
+            closed_triggers = exchange.exchange.fetchClosedOrders(symbol, limit=100, params=params)
             closed_triggers = [o for o in closed_triggers if o.get('stopPrice') is not None]
         elif exchange.exchange.has['fetchOrders']:
-            all_orders = exchange.exchange.fetchOrders(symbol, limit=25, params=params)
+            all_orders = exchange.exchange.fetchOrders(symbol, limit=100, params=params)
             closed_triggers = [o for o in all_orders if o.get('stopPrice') is not None and o['status'] in ['closed', 'canceled']]
         else:
             logger.warning("Weder fetchClosedOrders noch fetchOrders wird unterstützt, um SL-Trigger zu prüfen.")
@@ -663,13 +673,17 @@ def check_take_profit_trigger(exchange: Exchange, symbol: str, tracker_file_path
 
     try:
         closed_triggers = []
+        # limit=100 statt vormals 10 -- selbes Rauschen-Problem wie in
+        # check_stop_loss_trigger() (siehe dortiger Kommentar): routinemaessige
+        # Order-Stornierungen fluten das kleine Fenster, bevor die tatsaechlich
+        # gefeuerte TP-Order als status='closed' erkannt wird.
         if exchange.exchange.has['fetchClosedOrders']:
             params = {'stop': True} if 'bitget' in exchange.exchange.id else {}
-            closed_triggers = exchange.exchange.fetchClosedOrders(symbol, limit=10, params=params)
+            closed_triggers = exchange.exchange.fetchClosedOrders(symbol, limit=100, params=params)
             closed_triggers = [o for o in closed_triggers if o.get('stopPrice') is not None]
         elif exchange.exchange.has['fetchOrders']:
             params = {'stop': True} if 'bitget' in exchange.exchange.id else {}
-            all_orders = exchange.exchange.fetchOrders(symbol, limit=20, params=params)
+            all_orders = exchange.exchange.fetchOrders(symbol, limit=100, params=params)
             closed_triggers = [o for o in all_orders if o.get('stopPrice') is not None and o['status'] in ['closed', 'canceled']]
         else:
             logger.warning("Weder fetchClosedOrders noch fetchOrders wird unterstützt, um TP-Trigger zu prüfen.")
@@ -1047,6 +1061,54 @@ def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, log
         tracker_info["pending_band_orders"] = new_pending
         tracker_info["committed_bands"] = committed
         update_tracker_file(tracker_file_path, tracker_info)
+
+
+def arm_same_candle_reentry_guard(tracker_file_path: str, committed_bands_before: dict,
+                                   current_candle_ts, logger: logging.Logger, symbol: str) -> dict:
+    """Setzt sl_fired_candle_ts fuer jedes Band, das seit `committed_bands_before`
+    (Snapshot VOR check_take_profit_trigger()/check_stop_loss_trigger()/
+    sync_band_fills() in full_trade_cycle()) nicht mehr committed ist -- diese
+    Baender haben irgendwie geschlossen (SL, TP oder ein Notfall-Failsafe) und
+    duerfen laut place_entry_orders() erst wieder ab der naechsten Kerze neu
+    eroeffnet werden.
+
+    Ersetzt die urspruengliche Same-Candle-Re-Entry-Bremse (Commit d1c8e92,
+    2026-09-03), die sl_fired_candle_ts NUR aus check_stop_loss_trigger()s
+    Interpretation von Bitgets Order-Status setzte (fetchClosedOrders sucht
+    einen bestimmten sl_id in einer begrenzten, moeglicherweise falsch
+    kategorisierten Liste -- siehe check_naked_position()s Docstring zur
+    zweiten, separaten "profit_loss"-Plan-Kategorie). Live beobachtet
+    2026-09-15/16 (ARB/6h): Band 1 wurde trotz aktiver Bremse 7x innerhalb
+    EINER Kerze neu eroeffnet und sofort wieder gestoppt.
+
+    committed_bands ist dagegen bereits die robuste Quelle: sync_band_fills()
+    markiert ein Band NUR als committed, wenn eine ECHTE Position an der Boerse
+    existiert (Fix 2026-09-06, siehe dortiger Docstring). Ein einfacher
+    Vorher/Nachher-Diff darauf braucht keine Interpretation von Bitgets
+    Order-Status-Strings mehr und ist dadurch unabhaengig von limit-Fenstern
+    oder Plan-Order-Kategorien korrekt.
+
+    Gibt das (ggf. aktualisierte) sl_fired_candle_ts-Dict zurueck, zu
+    Testzwecken -- der Live-Aufrufer braucht den Rueckgabewert nicht."""
+    current_candle_ts_str = str(current_candle_ts)
+    tracker_info = read_tracker_file(tracker_file_path)
+    committed_bands_after = tracker_info.get("committed_bands") or {"long": [], "short": []}
+    newly_closed = {
+        side_key: sorted(set(committed_bands_before.get(side_key, [])) - set(committed_bands_after.get(side_key, [])))
+        for side_key in ("long", "short")
+    }
+    sl_fired_candle_ts = tracker_info.get("sl_fired_candle_ts") or {"long": {}, "short": {}}
+    if not newly_closed["long"] and not newly_closed["short"]:
+        return sl_fired_candle_ts
+
+    for side_key, bands in newly_closed.items():
+        for band_num in bands:
+            sl_fired_candle_ts.setdefault(side_key, {})[str(band_num)] = current_candle_ts_str
+            logger.info(f"🔒 Band {band_num} ({side_key}) für {symbol} wurde diese Kerze geschlossen -- "
+                        f"kein Re-Entry bis zur naechsten Kerze.")
+    tracker_info["sl_fired_candle_ts"] = sl_fired_candle_ts
+    update_tracker_file(tracker_file_path, tracker_info)
+    return sl_fired_candle_ts
 
 
 # --- Positions-Management ---
@@ -1725,6 +1787,10 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
             return
 
         # --- 2. Prüfen, ob TP/SL ausgelöst wurden SEIT dem letzten Lauf ---
+        # committed_bands VOR den Checks merken (Snapshot) -- Grundlage fuer den
+        # robusten Re-Entry-Schutz direkt im Anschluss (siehe Kommentar dort).
+        committed_bands_before = read_tracker_file(tracker_file_path).get("committed_bands") or {"long": [], "short": []}
+
         check_take_profit_trigger(exchange, symbol, tracker_file_path, logger)
         check_stop_loss_trigger(exchange, symbol, tracker_file_path, logger,
                                 current_candle_ts=data_with_indicators.index[-1])
@@ -1732,6 +1798,14 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # --- 2b. Multi-Band: pending Entry-Orders mit der Börse abgleichen (gefüllt
         # vs. storniert), BEVOR cancel_strategy_orders() sie gleich wegwirft ---
         sync_band_fills(exchange, symbol, tracker_file_path, logger)
+
+        # --- 2c. Robuster Re-Entry-Schutz (siehe arm_same_candle_reentry_guard()
+        # fuer die vollstaendige Begruendung): JEDES Band, das VOR diesem Zyklus
+        # noch committed war und es jetzt nicht mehr ist, hat diese Kerze
+        # geschlossen -- unabhaengig davon, ob check_stop_loss_trigger() das per
+        # Bitget-Order-Status zuverlaessig erkennen konnte.
+        arm_same_candle_reentry_guard(tracker_file_path, committed_bands_before,
+                                       data_with_indicators.index[-1], logger, symbol)
 
         # --- 3. Alle alten Orders der Strategie stornieren (wichtig!) ---
         cancel_strategy_orders(exchange, symbol, logger, tracker_file_path=tracker_file_path)
