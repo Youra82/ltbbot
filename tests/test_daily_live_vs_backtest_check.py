@@ -75,3 +75,109 @@ def test_build_message_flags_live_only_symbol_without_crashing():
     backtest = {}
     msg = mod.build_message(live, backtest, window_days=30)
     assert 'XRP' in msg
+
+
+def test_build_message_includes_flags_section():
+    msg = mod.build_message({}, {}, window_days=7, flags=["⚠️ Testhinweis"])
+    assert "Testhinweis" in msg
+    assert "Automatische Hinweise" in msg
+
+
+def test_build_message_without_flags_has_no_hint_section():
+    msg = mod.build_message({}, {}, window_days=7, flags=[])
+    assert "Automatische Hinweise" not in msg
+
+
+# --- detect_outlier_trade_flag ---
+
+def _trade(symbol, side, pnl_usd, ctime, utime=None):
+    return {'symbol': symbol, 'side': side, 'pnl_usd': pnl_usd, 'ctime': ctime, 'utime': utime or ctime + 60000}
+
+
+def test_outlier_trade_flag_reproduces_ada_incident():
+    """Reproduziert den ADA-Vorfall vom 2026-09-03: ein Trade macht ~89% des
+    Wochen-PnL-Volumens aus -- muss geflaggt werden."""
+    trades = [
+        _trade('ADA', 'short', -10.23, 1000, 2000),
+        _trade('ADA', 'short', -0.14, 3000),
+        _trade('AAVE', 'long', 0.68, 4000),
+        _trade('XRP', 'short', -0.07, 5000),
+    ]
+    flag = mod.detect_outlier_trade_flag(trades)
+    assert flag is not None
+    assert 'ADA' in flag
+
+
+def test_outlier_trade_flag_not_triggered_for_evenly_spread_losses():
+    trades = [
+        _trade('ADA', 'short', -0.3, 1000),
+        _trade('AAVE', 'long', -0.25, 2000),
+        _trade('XRP', 'short', -0.28, 3000),
+        _trade('ARB', 'short', -0.31, 4000),
+    ]
+    assert mod.detect_outlier_trade_flag(trades) is None
+
+
+def test_outlier_trade_flag_skipped_below_min_trades():
+    trades = [_trade('ADA', 'short', -10.0, 1000), _trade('ADA', 'short', -0.1, 2000)]
+    assert mod.detect_outlier_trade_flag(trades, min_trades=3) is None
+
+
+# --- detect_cluster_flags ---
+
+def test_cluster_flag_reproduces_arb_repeated_reentry():
+    """Reproduziert das ARB/6h-Muster vom 2026-09-15/16: 7 Trades desselben
+    Symbols innerhalb weniger Stunden."""
+    base_ts = 1000 * 3600 * 1000
+    trades = [_trade('ARB', 'short', -0.2, base_ts + i * 15 * 60 * 1000) for i in range(7)]
+    flags = mod.detect_cluster_flags(trades, window_hours=3.0, min_count=3)
+    assert len(flags) == 1
+    assert 'ARB' in flags[0]
+
+
+def test_cluster_flag_not_triggered_for_spread_out_trades():
+    base_ts = 1000 * 3600 * 1000
+    trades = [_trade('ARB', 'short', -0.2, base_ts + i * 6 * 3600 * 1000) for i in range(5)]
+    assert mod.detect_cluster_flags(trades, window_hours=3.0, min_count=3) == []
+
+
+# --- detect_trend_flags ---
+
+def test_trend_flag_triggers_on_persistent_low_winrate():
+    history = [
+        {'date': '2026-09-20', 'trades': 5, 'win_rate': 10.0, 'pnl_usd': -1.0},
+        {'date': '2026-09-21', 'trades': 6, 'win_rate': 15.0, 'pnl_usd': -0.5},
+        {'date': '2026-09-22', 'trades': 4, 'win_rate': 0.0, 'pnl_usd': -2.0},
+    ]
+    flags = mod.detect_trend_flags(history, lookback=3, wr_threshold=20.0)
+    assert any('WR' in f for f in flags)
+    assert any('PnL' in f for f in flags)
+
+
+def test_trend_flag_not_triggered_if_one_good_day_breaks_streak():
+    history = [
+        {'date': '2026-09-20', 'trades': 5, 'win_rate': 10.0, 'pnl_usd': -1.0},
+        {'date': '2026-09-21', 'trades': 6, 'win_rate': 50.0, 'pnl_usd': 2.0},
+        {'date': '2026-09-22', 'trades': 4, 'win_rate': 0.0, 'pnl_usd': -2.0},
+    ]
+    assert mod.detect_trend_flags(history, lookback=3, wr_threshold=20.0) == []
+
+
+def test_trend_flag_not_triggered_with_insufficient_history():
+    history = [{'date': '2026-09-22', 'trades': 4, 'win_rate': 0.0, 'pnl_usd': -2.0}]
+    assert mod.detect_trend_flags(history, lookback=3) == []
+
+
+# --- history persistence ---
+
+def test_append_history_persists_and_trims(tmp_path, monkeypatch):
+    history_file = tmp_path / 'history.json'
+    monkeypatch.setattr(mod, 'HISTORY_FILE', str(history_file))
+    monkeypatch.setattr(mod, 'CACHE_DIR', str(tmp_path))
+
+    for i in range(35):
+        mod._append_history(live_trades=i, live_wr=10.0, live_pnl=-1.0)
+
+    history = mod._load_history()
+    assert len(history) == 30  # auf die letzten 30 getrimmt
+    assert history[-1]['trades'] == 34

@@ -174,7 +174,10 @@ def run_backtest_side(strategies: list, start_date: str, end_date: str, start_ca
     return per_symbol
 
 
-def run_live_side(strategies: list, since_ms: int) -> dict:
+def run_live_side(strategies: list, since_ms: int) -> tuple:
+    """Gibt (per_symbol_aggregat, raw_trades) zurueck -- raw_trades wird fuer
+    die automatischen Flags (Ausreisser-Trade, Wiederholungs-Cluster)
+    gebraucht, das Aggregat fuer die Kopfzahlen/Divergenz-Tabelle."""
     with open(SECRET_FILE) as f:
         secret = json.load(f)
     acc = secret['ltbbot'][0]
@@ -184,23 +187,124 @@ def run_live_side(strategies: list, since_ms: int) -> dict:
     positions = exchange.fetch_closed_positions_history(since_ms)
 
     per_symbol = {}
+    raw_trades = []
     for p in positions:
         base = p['symbol'].replace('USDT', '')
         if base not in active_bases:
             continue  # nur Symbole, die AKTUELL im Portfolio sind
+        pnl_usd = float(p.get('netProfit', 0))
         entry = per_symbol.setdefault(base, {'trades': 0, 'wins': 0, 'pnl_usd': 0.0})
         entry['trades'] += 1
         if float(p.get('pnl', 0)) > 0:
             entry['wins'] += 1
-        entry['pnl_usd'] += float(p.get('netProfit', 0))
+        entry['pnl_usd'] += pnl_usd
+        raw_trades.append({
+            'symbol': base,
+            'side': p.get('holdSide'),
+            'pnl_usd': pnl_usd,
+            'ctime': int(p.get('ctime', 0)),
+            'utime': int(p.get('utime', 0)),
+        })
 
     for base, entry in per_symbol.items():
         entry['win_rate'] = (entry['wins'] / entry['trades'] * 100) if entry['trades'] else 0.0
 
-    return per_symbol
+    raw_trades.sort(key=lambda t: t['ctime'])
+    return per_symbol, raw_trades
 
 
-def build_message(live: dict, backtest: dict, window_days: int) -> str:
+HISTORY_FILE = os.path.join(CACHE_DIR, '.live_vs_backtest_history.json')
+
+
+def _load_history() -> list:
+    if not os.path.exists(HISTORY_FILE):
+        return []
+    try:
+        with open(HISTORY_FILE) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def _append_history(live_trades: int, live_wr: float, live_pnl: float) -> list:
+    history = _load_history()
+    history.append({
+        'date': datetime.now().strftime('%Y-%m-%d'),
+        'trades': live_trades,
+        'win_rate': live_wr,
+        'pnl_usd': live_pnl,
+    })
+    history = history[-30:]  # nur die letzten 30 Laeufe behalten
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    with open(HISTORY_FILE, 'w') as f:
+        json.dump(history, f, indent=2)
+    return history
+
+
+def detect_outlier_trade_flag(raw_trades: list, min_trades: int = 3, share_threshold: float = 0.4) -> str | None:
+    """Flag, wenn ein einzelner Trade >= share_threshold des gesamten
+    absoluten PnL-Volumens dieser Woche ausmacht -- genau das Muster, das den
+    ADA-Vorfall vom 2026-09-03 dominiert hat (siehe
+    [[research_ltbbot_live_vs_backtest_2026_09]])."""
+    if len(raw_trades) < min_trades:
+        return None
+    total_abs = sum(abs(t['pnl_usd']) for t in raw_trades)
+    if total_abs <= 0:
+        return None
+    worst = max(raw_trades, key=lambda t: abs(t['pnl_usd']))
+    share = abs(worst['pnl_usd']) / total_abs
+    if share < share_threshold:
+        return None
+    dur_min = (worst['utime'] - worst['ctime']) / 60000
+    return (f"⚠️ Einzelner Trade dominiert: {worst['symbol']} {worst['side']} "
+            f"{worst['pnl_usd']:+.2f}$ ({share*100:.0f}% des Wochen-PnL-Volumens, "
+            f"{dur_min:.0f} Min Haltedauer)")
+
+
+def detect_cluster_flags(raw_trades: list, window_hours: float = 3.0, min_count: int = 3) -> list:
+    """Flag pro Symbol, wenn min_count oder mehr Trades innerhalb eines
+    window_hours-Fensters liegen -- Proxy fuer wiederholtes Neu-Eroeffnen
+    desselben Bands (siehe ARB/6h-Vorfall 2026-09-15/16, urspruenglich Ursache
+    fuer [[bugfix_ltbbot_same_candle_reentry_guard_was_ineffective]])."""
+    flags = []
+    by_symbol = {}
+    for t in raw_trades:
+        by_symbol.setdefault(t['symbol'], []).append(t)
+
+    window_ms = window_hours * 3600 * 1000
+    for symbol, trades in by_symbol.items():
+        trades = sorted(trades, key=lambda t: t['ctime'])
+        i = 0
+        for j in range(len(trades)):
+            while trades[j]['ctime'] - trades[i]['ctime'] > window_ms:
+                i += 1
+            count = j - i + 1
+            if count >= min_count:
+                flags.append(
+                    f"🔁 {symbol}: {count} Trades innerhalb von {window_hours:.0f}h "
+                    f"(moegliches Wiederholungsmuster)"
+                )
+                break  # ein Hinweis pro Symbol reicht
+    return flags
+
+
+def detect_trend_flags(history: list, lookback: int = 3, wr_threshold: float = 20.0) -> list:
+    """Flag, wenn die Live-WR bzw. der Live-PnL ueber die letzten `lookback`
+    Laeufe DURCHGEHEND schlecht war -- unterscheidet einen einzelnen
+    schlechten Tag von einem anhaltenden Problem."""
+    flags = []
+    if len(history) < lookback:
+        return flags
+    recent = history[-lookback:]
+    if all(h.get('trades', 0) >= 2 for h in recent):
+        if all(h.get('win_rate', 100) < wr_threshold for h in recent):
+            flags.append(f"📉 Live-WR seit {lookback} Laeufen in Folge unter {wr_threshold:.0f}%")
+        if all(h.get('pnl_usd', 1) < 0 for h in recent):
+            flags.append(f"📉 Live-PnL seit {lookback} Laeufen in Folge negativ")
+    return flags
+
+
+def build_message(live: dict, backtest: dict, window_days: int, flags: list | None = None) -> str:
     all_symbols = sorted(set(live.keys()) | set(backtest.keys()))
 
     live_trades = sum(v['trades'] for v in live.values())
@@ -220,6 +324,11 @@ def build_message(live: dict, backtest: dict, window_days: int) -> str:
         f"Backtest:  {bt_trades} Trades | WR {bt_wr:.1f}% | PnL {bt_pnl:+.2f} USDT",
         "",
     ]
+
+    if flags:
+        lines.append("Automatische Hinweise:")
+        lines.extend(flags)
+        lines.append("")
 
     # Groesste Abweichungen: Symbole mit Live-Trades, deren WR am staerksten
     # vom Backtest abweicht (Betrag), max. 5 Zeilen.
@@ -259,7 +368,7 @@ def run_check(window_days: int, send_hour: int, start_capital: float, send: bool
     _log(f"START window_days={window_days} strategies={len(strategies)}")
 
     try:
-        live = run_live_side(strategies, since_ms)
+        live, raw_trades = run_live_side(strategies, since_ms)
         backtest = run_backtest_side(strategies, start_date, end_date, start_capital)
     except Exception as e:
         _log(f"ERROR {e}")
@@ -267,7 +376,20 @@ def run_check(window_days: int, send_hour: int, start_capital: float, send: bool
             _send_telegram(f"❌ ltbbot Live-vs-Backtest-Check fehlgeschlagen: {e}")
         return
 
-    message = build_message(live, backtest, window_days)
+    live_trades_n = sum(v['trades'] for v in live.values())
+    live_wins_n = sum(v['wins'] for v in live.values())
+    live_pnl_total = sum(v['pnl_usd'] for v in live.values())
+    live_wr_total = (live_wins_n / live_trades_n * 100) if live_trades_n else 0.0
+    history = _append_history(live_trades_n, live_wr_total, live_pnl_total)
+
+    flags = []
+    outlier_flag = detect_outlier_trade_flag(raw_trades)
+    if outlier_flag:
+        flags.append(outlier_flag)
+    flags.extend(detect_cluster_flags(raw_trades))
+    flags.extend(detect_trend_flags(history))
+
+    message = build_message(live, backtest, window_days, flags)
     elapsed = round(time.time() - start_perf, 1)
     _log(f"FINISH elapsed_s={elapsed}\n{message}")
 
