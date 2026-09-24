@@ -261,11 +261,22 @@ def detect_outlier_trade_flag(raw_trades: list, min_trades: int = 3, share_thres
             f"{dur_min:.0f} Min Haltedauer)")
 
 
-def detect_cluster_flags(raw_trades: list, window_hours: float = 3.0, min_count: int = 3) -> list:
+def detect_cluster_flags(raw_trades: list, window_hours: float = 3.0, min_count: int = 3,
+                          recent_only_hours: float = 48.0, now_ms: int | None = None) -> list:
     """Flag pro Symbol, wenn min_count oder mehr Trades innerhalb eines
     window_hours-Fensters liegen -- Proxy fuer wiederholtes Neu-Eroeffnen
     desselben Bands (siehe ARB/6h-Vorfall 2026-09-15/16, urspruenglich Ursache
-    fuer [[bugfix_ltbbot_same_candle_reentry_guard_was_ineffective]])."""
+    fuer [[bugfix_ltbbot_same_candle_reentry_guard_was_ineffective]]).
+
+    Nur Cluster INNERHALB der letzten `recent_only_hours` werden geflaggt --
+    ein 7-Tage-Rolling-Fenster zeigt sonst denselben, laengst vorbeigezogenen
+    Cluster jeden Tag erneut, bis er von selbst aus dem Fenster faellt (live
+    beobachtet 2026-09-24: PEPE-Cluster vom 17.09. wurde noch am 24.09.
+    gemeldet, obwohl der Same-Candle-Fix seit dem 22.09. deployed war)."""
+    if now_ms is None:
+        now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    recent_cutoff_ms = now_ms - recent_only_hours * 3600 * 1000
+
     flags = []
     by_symbol = {}
     for t in raw_trades:
@@ -279,9 +290,10 @@ def detect_cluster_flags(raw_trades: list, window_hours: float = 3.0, min_count:
             while trades[j]['ctime'] - trades[i]['ctime'] > window_ms:
                 i += 1
             count = j - i + 1
-            if count >= min_count:
+            if count >= min_count and trades[j]['ctime'] >= recent_cutoff_ms:
+                cluster_date = datetime.fromtimestamp(trades[i]['ctime'] / 1000, tz=timezone.utc).strftime('%d.%m. %H:%M')
                 flags.append(
-                    f"🔁 {symbol}: {count} Trades innerhalb von {window_hours:.0f}h "
+                    f"🔁 {symbol}: {count} Trades innerhalb von {window_hours:.0f}h ab {cluster_date} UTC "
                     f"(moegliches Wiederholungsmuster)"
                 )
                 break  # ein Hinweis pro Symbol reicht
@@ -386,7 +398,7 @@ def run_check(window_days: int, send_hour: int, start_capital: float, send: bool
     outlier_flag = detect_outlier_trade_flag(raw_trades)
     if outlier_flag:
         flags.append(outlier_flag)
-    flags.extend(detect_cluster_flags(raw_trades))
+    flags.extend(detect_cluster_flags(raw_trades, now_ms=int(now.timestamp() * 1000)))
     flags.extend(detect_trend_flags(history))
 
     message = build_message(live, backtest, window_days, flags)

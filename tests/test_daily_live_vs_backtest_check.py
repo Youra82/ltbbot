@@ -127,10 +127,12 @@ def test_outlier_trade_flag_skipped_below_min_trades():
 
 def test_cluster_flag_reproduces_arb_repeated_reentry():
     """Reproduziert das ARB/6h-Muster vom 2026-09-15/16: 7 Trades desselben
-    Symbols innerhalb weniger Stunden."""
+    Symbols innerhalb weniger Stunden. now_ms liegt kurz nach dem letzten
+    Trade, damit der recent_only_hours-Filter nicht dazwischenfunkt."""
     base_ts = 1000 * 3600 * 1000
     trades = [_trade('ARB', 'short', -0.2, base_ts + i * 15 * 60 * 1000) for i in range(7)]
-    flags = mod.detect_cluster_flags(trades, window_hours=3.0, min_count=3)
+    flags = mod.detect_cluster_flags(trades, window_hours=3.0, min_count=3,
+                                      now_ms=trades[-1]['ctime'] + 3600 * 1000)
     assert len(flags) == 1
     assert 'ARB' in flags[0]
 
@@ -138,7 +140,31 @@ def test_cluster_flag_reproduces_arb_repeated_reentry():
 def test_cluster_flag_not_triggered_for_spread_out_trades():
     base_ts = 1000 * 3600 * 1000
     trades = [_trade('ARB', 'short', -0.2, base_ts + i * 6 * 3600 * 1000) for i in range(5)]
-    assert mod.detect_cluster_flags(trades, window_hours=3.0, min_count=3) == []
+    flags = mod.detect_cluster_flags(trades, window_hours=3.0, min_count=3,
+                                      now_ms=trades[-1]['ctime'] + 3600 * 1000)
+    assert flags == []
+
+
+def test_cluster_flag_not_triggered_if_cluster_is_older_than_recent_only_hours():
+    """Reproduziert live beobachtetes Verhalten 2026-09-24: ein Cluster vom
+    17.09. wurde am 24.09. (7 Tage rollierendes Fenster) noch als 'aktuell'
+    gemeldet, obwohl der Same-Candle-Fix laengst deployed war. Ein Cluster
+    ausserhalb von recent_only_hours darf NICHT mehr geflaggt werden."""
+    base_ts = 1000 * 3600 * 1000
+    trades = [_trade('PEPE', 'short', -0.15, base_ts + i * 15 * 60 * 1000) for i in range(3)]
+    now_ms = trades[-1]['ctime'] + 7 * 24 * 3600 * 1000  # 7 Tage nach dem Cluster
+    flags = mod.detect_cluster_flags(trades, window_hours=3.0, min_count=3,
+                                      recent_only_hours=48.0, now_ms=now_ms)
+    assert flags == []
+
+
+def test_cluster_flag_includes_date_when_triggered():
+    base_ts = 1000 * 3600 * 1000
+    trades = [_trade('ARB', 'short', -0.2, base_ts + i * 15 * 60 * 1000) for i in range(3)]
+    flags = mod.detect_cluster_flags(trades, window_hours=3.0, min_count=3,
+                                      now_ms=trades[-1]['ctime'] + 3600 * 1000)
+    assert len(flags) == 1
+    assert 'UTC' in flags[0]
 
 
 # --- detect_trend_flags ---
