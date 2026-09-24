@@ -48,7 +48,7 @@ DEFAULT_SETTINGS = {
     'enabled': True,
     'rolling_window_days': 7,
     'send_hour': 8,
-    'start_capital_per_strategy': 50,
+    'start_capital_fallback': 50,  # nur falls der echte Kontostand nicht abrufbar ist
 }
 
 
@@ -141,14 +141,26 @@ def _config_path_for(symbol: str, timeframe: str) -> str | None:
 
 
 def run_backtest_side(strategies: list, start_date: str, end_date: str, start_capital: float) -> dict:
-    """Faire Backtest-Seite: fuer jede AKTUELL aktive Strategie ueber das
-    rollierende Fenster, identische Methodik wie run_fair_backtest.py aus
-    der manuellen Analyse."""
-    per_symbol = {}
+    """Faire Backtest-Seite ueber den PORTFOLIO-Simulator (geteiltes Kapital),
+    NICHT mehr 12 unabhaengige Einzel-Backtests mit je eigenen 50 USDT.
+
+    Live beobachtet 2026-09-24: bei ~20 USDT echtem Kontostand braucht selbst
+    NUR Band 1 aller 12 aktiven Strategien gleichzeitig ~127 USDT Margin
+    (6.2x das Guthaben) -- der Live-Bot lehnt die meisten Bands live per
+    margin_fits() ab, ein Backtest mit unabhaengigem Kapital pro Strategie
+    sieht diese Konkurrenz nie und ist dadurch strukturell zu optimistisch.
+
+    portfolio_simulator.run_portfolio_simulation() modelliert das bereits
+    exakt wie trade_manager.py (dieselbe margin_fits()-Funktion, EIN
+    gemeinsamer used_margin-Topf ueber alle Strategien/Symbole) -- wird hier
+    wiederverwendet statt neu gebaut, siehe run_portfolio_optimizer.py fuer
+    das Referenz-Aufrufmuster (_build_strategies_data/_simulate_current_portfolio)."""
+    from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
+
+    strategies_data = {}
     for strat in strategies:
         symbol, timeframe = strat['symbol'], strat['timeframe']
         cfg_path = _config_path_for(symbol, timeframe)
-        base = symbol.split('/')[0]
         if not cfg_path:
             _log(f"WARN keine Config gefunden fuer {symbol} ({timeframe})")
             continue
@@ -161,16 +173,34 @@ def run_backtest_side(strategies: list, start_date: str, end_date: str, start_ca
                 continue
             fine_tf = FINE_TF_MAP.get(timeframe)
             fine_data = LazyFineData(symbol, fine_tf) if fine_tf else None
-            result = run_envelope_backtest(data.copy(), config, start_capital, show_progress=False,
-                                            sim_start_date=start_date, fine_data=fine_data,
-                                            multi_band_entries=True)
-            per_symbol[base] = {
-                'trades': result.get('trades_count', 0),
-                'win_rate': result.get('win_rate', 0),
-                'pnl_usd': result.get('end_capital', start_capital) - start_capital,
+            strategies_data[os.path.basename(cfg_path)] = {
+                'symbol': symbol, 'timeframe': timeframe,
+                'data': data, 'fine_data': fine_data, 'params': config,
             }
         except Exception as e:
-            _log(f"WARN Backtest fehlgeschlagen fuer {symbol} ({timeframe}): {e}")
+            _log(f"WARN Daten laden fehlgeschlagen fuer {symbol} ({timeframe}): {e}")
+
+    if not strategies_data:
+        return {}
+
+    result = run_portfolio_simulation(start_capital, strategies_data, start_date, end_date,
+                                       multi_band_entries=True)
+    if not result:
+        return {}
+
+    per_symbol = {}
+    trades_df = result.get('trades_df')
+    if trades_df is None or trades_df.empty:
+        return per_symbol
+    for symbol, grp in trades_df.groupby('symbol'):
+        base = symbol.split('/')[0]
+        n = len(grp)
+        wins = int((grp['pnl_usd'] > 0).sum())
+        per_symbol[base] = {
+            'trades': n,
+            'win_rate': (wins / n * 100) if n else 0.0,
+            'pnl_usd': float(grp['pnl_usd'].sum()),
+        }
     return per_symbol
 
 
@@ -365,7 +395,24 @@ def build_message(live: dict, backtest: dict, window_days: int, flags: list | No
     return "\n".join(lines)
 
 
-def run_check(window_days: int, send_hour: int, start_capital: float, send: bool):
+def _get_real_account_balance(fallback: float) -> float:
+    """Realer Kontostand statt eines angenommenen Werts -- der Portfolio-
+    Simulator braucht die ECHTE Kapitalbasis, um dieselbe Margin-Knappheit
+    wie live abzubilden (siehe run_backtest_side()-Docstring)."""
+    try:
+        with open(SECRET_FILE) as f:
+            secret = json.load(f)
+        acc = secret['ltbbot'][0]
+        exchange = Exchange(acc)
+        balance = exchange.fetch_balance_usdt()
+        if balance and balance > 0:
+            return float(balance)
+    except Exception as e:
+        _log(f"WARN Konnte echten Kontostand nicht abrufen, nutze Fallback {fallback}: {e}")
+    return fallback
+
+
+def run_check(window_days: int, send_hour: int, start_capital_fallback: float, send: bool):
     start_perf = time.time()
     now = datetime.now(timezone.utc)
     since_ms = int((now - timedelta(days=window_days)).timestamp() * 1000)
@@ -377,7 +424,8 @@ def run_check(window_days: int, send_hour: int, start_capital: float, send: bool
         _log("SKIP keine active_strategies in settings.json")
         return
 
-    _log(f"START window_days={window_days} strategies={len(strategies)}")
+    start_capital = _get_real_account_balance(start_capital_fallback)
+    _log(f"START window_days={window_days} strategies={len(strategies)} start_capital(real)={start_capital:.2f}")
 
     try:
         live, raw_trades = run_live_side(strategies, since_ms)
@@ -435,7 +483,7 @@ def main():
         return
 
     send = args.send or (args.force is False)  # regulaerer (nicht --force) Lauf sendet immer
-    run_check(int(cfg['rolling_window_days']), int(cfg['send_hour']), float(cfg['start_capital_per_strategy']), send)
+    run_check(int(cfg['rolling_window_days']), int(cfg['send_hour']), float(cfg['start_capital_fallback']), send)
     if not args.force:
         _set_last_run()
 

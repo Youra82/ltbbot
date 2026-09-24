@@ -1,9 +1,10 @@
 {
     "live_trading_settings": {
         "use_auto_optimizer_results": true,
+        "_active_strategies_note": "Nur ein FALLBACK/Startwert fuer neue Clones -- der VPS-eigene Auto-Optimizer-Lauf ueberschreibt das lokal, update.sh schuetzt diesen lokalen Stand seit 2026-09-24 vor git reset --hard. Stand hier: letztes bekanntes echtes Portfolio vom User bestaetigt (2026-09-22, 12 Strategien, kein DOGE/AVAX mehr).",
         "active_strategies": [
             {
-                "symbol": "ETH/USDT:USDT",
+                "symbol": "SOL/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             },
@@ -23,8 +24,8 @@
                 "active": true
             },
             {
-                "symbol": "DOGE/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "2h",
                 "active": true
             },
             {
@@ -33,18 +34,13 @@
                 "active": true
             },
             {
-                "symbol": "DOT/USDT:USDT",
+                "symbol": "ETH/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             },
             {
-                "symbol": "ADA/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "SOL/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "DOT/USDT:USDT",
+                "timeframe": "6h",
                 "active": true
             },
             {
@@ -60,11 +56,6 @@
             {
                 "symbol": "XRP/USDT:USDT",
                 "timeframe": "30m",
-                "active": true
-            },
-            {
-                "symbol": "AVAX/USDT:USDT",
-                "timeframe": "4h",
                 "active": true
             },
             {
