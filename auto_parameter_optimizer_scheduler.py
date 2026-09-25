@@ -190,7 +190,7 @@ def run_parameter_search(opt_settings: dict, search_settings: dict):
         '--is_fraction', str(opt_settings.get('is_fraction', 0.7)),
         '--k_folds', str(opt_settings.get('k_folds', 3)),
         '--min_oos_trades', str(opt_settings.get('min_oos_trades', 10)),
-        '--min_oos_win_rate', str(opt_settings.get('min_oos_win_rate', 0.35)),
+        '--min_oos_profit_factor', str(opt_settings.get('min_oos_profit_factor', 1.3)),
         '--config_suffix', config_suffix,
         '--recheck-confirmed',
     ]
@@ -220,6 +220,7 @@ def run_parameter_search(opt_settings: dict, search_settings: dict):
             result_summary = (f"✅ Bestaetigt -- neue Config gespeichert.\n"
                               f"IS PnL: {new_meta.get('pnl_pct', 0):+.1f}% | "
                               f"OOS PnL: {new_meta.get('oos_pnl_pct', 0):+.1f}% | "
+                              f"OOS Profit-Faktor: {new_meta.get('oos_profit_factor', 0):.2f} | "
                               f"OOS WR: {new_meta.get('oos_win_rate', 0):.1f}%")
         else:
             result_summary = "⏭ Nicht bestaetigt -- alte Config bleibt aktiv (siehe Log fuer Details)."

@@ -48,8 +48,9 @@ MIN_TRADES_PER_YEAR_GLOBAL = 20  # User-Eingabe in Trades/Jahr
 SL_MAX_RATIO = 0.333             # Garantiert R:R ≥ 2:1 (sl_ratio = SL/env1, max 1/3)
 IS_FRACTION = 0.70      # analog stbot/dnabot: 70% In-Sample, 30% Out-of-Sample
 MIN_OOS_TRADES = 10     # Bestaetigung erfordert genug OOS-Trades fuer eine belastbare Aussage
-MIN_OOS_WIN_RATE = 0.35  # Bestaetigung erfordert OOS-WR spuerbar ueber R:R-Breakeven (~33.3%
-                          # bei SL_MAX_RATIO=1/3) -- siehe Docstring bei confirmed= weiter unten
+MIN_OOS_PROFIT_FACTOR = 1.3  # Bestaetigung erfordert winrate-unabhaengigen OOS-Profit-Faktor
+                              # (Summe Gewinne / |Summe Verluste|) spuerbar ueber 1.0 -- siehe
+                              # Docstring bei confirmed= weiter unten
 K_FOLDS = 3              # IS-Teilfenster fuer den Robustheits-Score (siehe objective())
 
 def create_safe_filename(symbol, timeframe):
@@ -163,7 +164,7 @@ def objective(trial):
 
 # --- Main Funktion ---
 def main():
-    global HISTORICAL_DATA, IS_DATA, OOS_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO, IS_FRACTION, MIN_OOS_TRADES, MIN_OOS_WIN_RATE, K_FOLDS
+    global HISTORICAL_DATA, IS_DATA, OOS_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO, IS_FRACTION, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, K_FOLDS
 
     parser = argparse.ArgumentParser(description="Parameter-Optimierung für ltbbot (Envelope-Strategie)")
     parser.add_argument('--symbols', required=True, type=str)
@@ -188,10 +189,12 @@ def main():
                         help='Anteil In-Sample (Rest ist Out-of-Sample-Validierung), Standard 0.70')
     parser.add_argument('--min_oos_trades', type=int, default=10,
                         help='Mindestanzahl OOS-Trades fuer eine belastbare Bestaetigung, Standard 10')
-    parser.add_argument('--min_oos_win_rate', type=float, default=0.35,
-                        help='Mindest-OOS-Winrate (Anteil, nicht Prozent) fuer eine Bestaetigung, Standard 0.35 '
-                             '-- verhindert Configs, die nur durch hauchduenn positives OOS-PnL bestaetigt wurden '
-                             '(siehe research_ltbbot_live_vs_backtest_2026_09, 2026-09-25)')
+    parser.add_argument('--min_oos_profit_factor', type=float, default=1.3,
+                        help='Mindest-OOS-Profit-Faktor (Summe Gewinne / |Summe Verluste|, winrate-unabhaengig) '
+                             'fuer eine Bestaetigung, Standard 1.3 -- verhindert Configs, die nur durch hauchduenn '
+                             'positives OOS-PnL bestaetigt wurden (siehe research_ltbbot_live_vs_backtest_2026_09, '
+                             '2026-09-25 -- bewusst Profit-Faktor statt Winrate, User-Vorgabe: profitabel '
+                             'unabhaengig von der Winrate)')
     parser.add_argument('--k_folds', type=int, default=3,
                         help='Anzahl IS-Teilfenster fuer den Robustheits-Score (Minimum ueber alle Fenster), Standard 3')
     # Re-Optimierungs-Sperre (Port von dnabots alphabet_optimizer.py-Muster,
@@ -223,7 +226,7 @@ def main():
     MIN_TRADES_PER_YEAR_GLOBAL = args.min_trades_per_year
     IS_FRACTION = args.is_fraction
     MIN_OOS_TRADES = args.min_oos_trades
-    MIN_OOS_WIN_RATE = args.min_oos_win_rate
+    MIN_OOS_PROFIT_FACTOR = args.min_oos_profit_factor
     K_FOLDS = args.k_folds
 
     symbols, timeframes = args.symbols.split(), args.timeframes.split()
@@ -496,17 +499,35 @@ def main():
         # 0.004), UND die Live-WR blieb trotzdem bei ~0% ueber 43 Trades (p=1.5e-11
         # gegen die vom Backtest behauptete Edge). Die alte Schwelle bestaetigte
         # jeden Trial mit auch nur hauchduenn positivem OOS-PnL, unabhaengig von
-        # OOS-Winrate oder OOS-Drawdown -- kein Schutz gegen genau das Overfitting-
-        # Muster, das K_FOLDS eigentlich verhindern sollte. Neu: OOS-Winrate muss
-        # spuerbar ueber dem R:R-Breakeven liegen (SL_MAX_RATIO=1/3 garantiert
-        # TP >= 2x SL, Breakeven-WR ~33.3%) UND OOS-Drawdown darf denselben
-        # Constraint wie IS nicht verletzen.
-        oos_win_rate = best_oos.get('win_rate', 0.0)  # 0-100 (Prozent), siehe backtester.py win_rate-Berechnung
+        # tatsaechlicher Profitabilitaet oder OOS-Drawdown -- kein Schutz gegen genau
+        # das Overfitting-Muster, das K_FOLDS eigentlich verhindern sollte.
+        #
+        # BEWUSST PROFIT-FAKTOR statt Winrate (User-Vorgabe 2026-09-25): "das soll
+        # profitabel sein, unabhaengig von der Winrate" -- eine Strategie mit 25% WR
+        # und starkem R:R kann profitabler sein als eine mit 60% WR und schwachem
+        # R:R. Profit-Faktor (Summe Gewinne / |Summe Verluste| ueber die EINZELNEN
+        # OOS-Trades, nicht die kumulierte %-Rendite) ist der winrate-unabhaengige
+        # Standardmassstab dafuer und zusaetzlich robust gegen Compounding-Artefakte
+        # in total_pnl_pct. >1.0 = profitabel, MIN_OOS_PROFIT_FACTOR gibt eine
+        # Sicherheitsmarge fuer reale Kosten (Fees/Slippage), die der Backtest nur
+        # approximiert.
+        oos_trades_list = best_oos.get('trades', [])
+        oos_gross_wins = sum(t['pnl'] for t in oos_trades_list if t['pnl'] > 0)
+        oos_gross_losses = abs(sum(t['pnl'] for t in oos_trades_list if t['pnl'] < 0))
+        if oos_gross_losses > 0:
+            oos_profit_factor = oos_gross_wins / oos_gross_losses
+        else:
+            oos_profit_factor = float('inf') if oos_gross_wins > 0 else 0.0
+        # Fuer Logging/JSON: inf ist kein gueltiges JSON, "keine Verlust-Trades" wird
+        # stattdessen als grosser endlicher Platzhalter dargestellt (Vergleichslogik
+        # oben nutzt weiterhin den echten oos_profit_factor-Wert inkl. inf).
+        oos_profit_factor_display = min(oos_profit_factor, 999.0)
+        oos_win_rate = best_oos.get('win_rate', 0.0)  # 0-100 (Prozent) -- nur noch informativ, keine Gate-Bedingung mehr
         oos_max_dd_decimal = best_oos.get('max_drawdown_pct', 100.0) / 100.0
         confirmed = bool(
             best_oos.get('trades_count', 0) >= MIN_OOS_TRADES
             and best_oos.get('total_pnl_pct', -1e9) > 0.0
-            and (oos_win_rate / 100.0) >= MIN_OOS_WIN_RATE  # MIN_OOS_WIN_RATE ist ein Anteil (0-1), oos_win_rate Prozent
+            and oos_profit_factor >= MIN_OOS_PROFIT_FACTOR
             and oos_max_dd_decimal <= MAX_DRAWDOWN_CONSTRAINT
             and (baseline_oos is None or best_oos.get('total_pnl_pct', -1e9) > baseline_oos.get('total_pnl_pct', -1e9))
         )
@@ -529,13 +550,15 @@ def main():
         if not confirmed:
             logger.info(f"⏭ Konfiguration NICHT gespeichert/aktualisiert: OOS-Bestaetigung nicht erfolgreich "
                         f"(OOS-Trades={best_oos.get('trades_count',0)}, OOS-PnL={best_oos.get('total_pnl_pct',0):+.2f}%, "
-                        f"OOS-WR={oos_win_rate:.1f}% [Mindest {MIN_OOS_WIN_RATE*100:.0f}%], "
+                        f"OOS-Profit-Faktor={oos_profit_factor_display:.2f} [Mindest {MIN_OOS_PROFIT_FACTOR:.2f}], "
+                        f"OOS-WR={oos_win_rate:.1f}% (nur informativ), "
                         f"OOS-DD={oos_max_dd_decimal*100:.1f}% [Max {MAX_DRAWDOWN_CONSTRAINT*100:.0f}%]"
                         + (f", Baseline-OOS-PnL={baseline_oos.get('total_pnl_pct',0):+.2f}%" if baseline_oos is not None else "") + ").")
             run_results.setdefault('skipped', []).append({
                 'symbol': symbol,
                 'timeframe': timeframe,
                 'new_oos_pnl_pct': round(best_oos.get('total_pnl_pct', 0), 2),
+                'new_oos_profit_factor': round(oos_profit_factor_display, 2),
                 'new_oos_win_rate': round(oos_win_rate, 2),
                 'new_oos_max_drawdown_pct': round(oos_max_dd_decimal * 100, 2),
                 'baseline_oos_pnl_pct': round(baseline_oos.get('total_pnl_pct', 0), 2) if baseline_oos is not None else None,
@@ -548,6 +571,7 @@ def main():
                     "pnl_pct": round(final_pnl, 2),  # IS-PnL, Rueckwaertskompatibilitaet mit bestehendem Feld
                     "oos_pnl_pct": round(best_oos.get('total_pnl_pct', 0), 2),
                     "oos_trades": best_oos.get('trades_count', 0),
+                    "oos_profit_factor": round(oos_profit_factor_display, 2),
                     "oos_win_rate": round(oos_win_rate, 2),
                     "oos_max_drawdown_pct": round(oos_max_dd_decimal * 100, 2),
                     "is_oos_split_date": str(split_ts.date()),
