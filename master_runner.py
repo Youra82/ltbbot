@@ -216,6 +216,24 @@ def main():
                 stderr=subprocess.STDOUT,
             )
 
+        # --- Parameter-Suche (Schritt 1, optimizer.py) im Hintergrund starten ---
+        # Getrennt von auto_optimizer_scheduler.py oben (das ist nur Schritt 2,
+        # die woechentliche Portfolio-AUSWAHL aus bestehenden Configs). Ohne
+        # dieses Skript wuerden die Envelope-Parameter selbst nie automatisch
+        # aktualisiert -- siehe [[research_ltbbot_live_vs_backtest_2026_09]],
+        # 2026-09-25: Median OOS/IS-PnL-Verhaeltnis lag bei 0.10, obwohl Schritt
+        # 2 laengst woechentlich lief. Prueft selbst taeglich, ob ein Paar
+        # faellig ist, optimiert dann hoechstens EINES (verteilt die Last).
+        param_search_script = os.path.join(SCRIPT_DIR, 'auto_parameter_optimizer_scheduler.py')
+        if os.path.exists(param_search_script):
+            logs_dir = os.path.join(SCRIPT_DIR, 'logs')
+            os.makedirs(logs_dir, exist_ok=True)
+            subprocess.Popen(
+                [python_executable, param_search_script],
+                stdout=open(os.path.join(logs_dir, 'auto_parameter_optimizer_trigger.log'), 'a'),
+                stderr=subprocess.STDOUT,
+            )
+
     except FileNotFoundError as e:
         logging.critical(f"Fehler: Eine wichtige Datei wurde nicht gefunden: {e}")
     except json.JSONDecodeError as e:

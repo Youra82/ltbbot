@@ -1,35 +1,37 @@
 {
     "_meta": {
-        "pnl_pct": 11167.63,
-        "oos_pnl_pct": 43.96,
-        "oos_trades": 90,
-        "is_oos_split_date": "2025-10-11",
+        "pnl_pct": 133.73,
+        "oos_pnl_pct": 41.61,
+        "oos_trades": 11,
+        "oos_win_rate": 63.64,
+        "oos_max_drawdown_pct": 2.2,
+        "is_oos_split_date": "2026-08-01",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
-        "optimized_at": "2026-09-04T21:00:26"
+        "optimized_at": "2026-09-25T10:29:05"
     },
     "market": {
         "symbol": "PEPE/USDT:USDT",
         "timeframe": "4h"
     },
     "strategy": {
-        "average_type": "WMA",
-        "average_period": 8,
+        "average_type": "EMA",
+        "average_period": 5,
         "envelopes": [
-            0.03582904276288813,
-            0.04573626704577003,
-            0.05355994074178967
+            0.024171939568364754,
+            0.07659419148924865,
+            0.11228028408042692
         ],
-        "trigger_price_delta_pct": 0.1181,
-        "disable_strong_trend_block": true,
-        "strong_trend_adx_threshold": 30.0
+        "trigger_price_delta_pct": 0.017,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 28.9
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.95,
-        "leverage": 4,
-        "sl_to_env1_ratio": 0.1054
+        "risk_per_entry_pct": 1.0,
+        "leverage": 10,
+        "sl_to_env1_ratio": 0.1001
     },
     "behavior": {
         "use_longs": true,

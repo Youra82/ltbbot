@@ -83,7 +83,8 @@
         "is_fraction": 0.7,
         "k_folds": 3,
         "min_oos_trades": 10,
-        "_is_oos_note": "Port von stbot 2026-08-21: Optuna sieht nur is_fraction der Historie, Rest ist Out-of-Sample-Bestaetigung (siehe run_pipeline.sh / optimizer.py). Behebt In-Sample-Overfitting (LIVE_TRADE_FORENSIK_2026-08.md).",
+        "min_oos_win_rate": 0.35,
+        "_is_oos_note": "Port von stbot 2026-08-21: Optuna sieht nur is_fraction der Historie, Rest ist Out-of-Sample-Bestaetigung (siehe run_pipeline.sh / optimizer.py). Behebt In-Sample-Overfitting (LIVE_TRADE_FORENSIK_2026-08.md). min_oos_win_rate 2026-09-25 ergaenzt (siehe research_ltbbot_live_vs_backtest_2026_09): OOS-PnL>0 allein war trivial erfuellbar, Median OOS/IS-Verhaeltnis lag bei 0.10 trotzdem.",
         "mode": "strict",
         "config_suffix": "_envelope",
         "auto_clear_cache_days": 30,
@@ -104,5 +105,11 @@
                 "unit": "days"
             }
         }
+    },
+    "parameter_search_settings": {
+        "_info": "Schritt 1 (Envelope-Parameter-Suche pro Symbol/Timeframe, optimizer.py) -- getrennt von optimization_settings oben, das nur Schritt 2 (woechentliche Portfolio-AUSWAHL aus bestehenden Configs, portfolio_optimizer.py) steuert. Ohne diesen Block liefe Schritt 1 nie automatisch und die Configs wuerden wieder einfrieren (siehe project_ltbbot_daily_live_vs_backtest_telegram, 2026-09-25).",
+        "enabled": true,
+        "recheck_after_days": 30,
+        "send_telegram_on_completion": true
     }
 }
