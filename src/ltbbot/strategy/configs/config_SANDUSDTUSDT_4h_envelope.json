@@ -1,13 +1,17 @@
 {
     "_meta": {
-        "pnl_pct": 568.85,
-        "oos_pnl_pct": 59.42,
-        "oos_trades": 50,
-        "is_oos_split_date": "2025-10-11",
+        "pnl_pct": 2.02,
+        "oos_pnl_pct": -4.33,
+        "oos_trades": 3,
+        "is_oos_split_date": "2026-08-03",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": true,
-        "optimized_at": "2026-09-04T20:22:39"
+        "confirmed": false,
+        "optimized_at": "2026-09-04T20:22:39",
+        "oos_profit_factor": 0.0,
+        "oos_win_rate": 0.0,
+        "oos_max_drawdown_pct": 4.33,
+        "rechecked_at": "2026-09-27T13:42:56"
     },
     "market": {
         "symbol": "SAND/USDT:USDT",

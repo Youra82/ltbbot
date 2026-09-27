@@ -1,13 +1,17 @@
 {
     "_meta": {
-        "pnl_pct": 4261.99,
-        "oos_pnl_pct": 55.93,
-        "oos_trades": 63,
-        "is_oos_split_date": "2026-01-21",
+        "pnl_pct": 3.24,
+        "oos_pnl_pct": -1.33,
+        "oos_trades": 3,
+        "is_oos_split_date": "2026-08-03",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": true,
-        "optimized_at": "2026-08-29T12:07:06"
+        "confirmed": false,
+        "optimized_at": "2026-08-29T12:07:06",
+        "oos_profit_factor": 0.54,
+        "oos_win_rate": 33.33,
+        "oos_max_drawdown_pct": 2.82,
+        "rechecked_at": "2026-09-27T13:16:26"
     },
     "market": {
         "symbol": "DOGE/USDT:USDT",

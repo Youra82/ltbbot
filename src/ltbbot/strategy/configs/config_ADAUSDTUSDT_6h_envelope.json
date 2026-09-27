@@ -1,29 +1,39 @@
 {
     "_meta": {
-        "pnl_pct": 140.13,
-        "note": "disable_strong_trend_block manuell auf true gesetzt (2026-08-21, siehe LIVE_TRADE_FORENSIK_2026-08.md) -- fairer Backtest 2023-09-01..2026-08-21 mit Gate AUS: 411.4% PnL / 300 Trades / WR 46.0% (vs. 315.6% / 193 / 46.6% mit Gate AN). Naechster Optuna-Re-Optimierungslauf ueberschreibt dies regulaer."
+        "pnl_pct": 27.52,
+        "oos_pnl_pct": 15.38,
+        "oos_trades": 11,
+        "oos_profit_factor": 3.11,
+        "oos_win_rate": 27.27,
+        "oos_max_drawdown_pct": 3.2,
+        "is_oos_split_date": "2026-08-03",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-09-27T09:34:37",
+        "rechecked_at": "2026-09-27T12:51:49"
     },
     "market": {
         "symbol": "ADA/USDT:USDT",
         "timeframe": "6h"
     },
     "strategy": {
-        "average_type": "WMA",
-        "average_period": 5,
+        "average_type": "DCM",
+        "average_period": 41,
         "envelopes": [
-            0.023494201634469688,
-            0.08516904278697136,
-            0.09045335078502881
+            0.008915429608648716,
+            0.021106356790803235,
+            0.05053119018470074
         ],
-        "trigger_price_delta_pct": 0.0456,
-        "disable_strong_trend_block": true,
-        "strong_trend_adx_threshold": 30.0
+        "trigger_price_delta_pct": 0.0182,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 20.44
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.97,
-        "leverage": 6,
-        "sl_to_env1_ratio": 0.1046
+        "risk_per_entry_pct": 0.62,
+        "leverage": 10,
+        "sl_to_env1_ratio": 0.2367
     },
     "behavior": {
         "use_longs": true,

@@ -516,7 +516,18 @@ def main():
                            f"Win Rate={backtest_result.get('win_rate', 0):.1f}%")
             except Exception as e:
                 logger.warning(f"Konnte Backtest nicht ausführen: {e}. Zeige Chart ohne Metriken...")
-            
+
+            # Marker aus den ECHTEN Backtest-Trades (2026-09-27): extract_trades_from_backtest()
+            # hat eine eigene, vereinfachte Signal-Logik (Entry zum Close bei Band-Beruehrung,
+            # Exit am Gegenband) -- passte weder zur Strategie noch zu den angezeigten Metriken.
+            if backtest_result and backtest_result.get('trades') is not None:
+                trades = [
+                    {f"entry_{t['side']}": {'time': t['entry_time'], 'price': t['entry_price']},
+                     f"exit_{t['side']}": {'time': t['exit_time'], 'price': t['exit_price']}}
+                    for t in backtest_result['trades']
+                ]
+                logger.info(f"Chart-Marker aus {len(trades)} Backtest-Trades.")
+
             logger.info("Erstelle Chart...")
             fig = create_interactive_chart(
                 symbol,

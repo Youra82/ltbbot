@@ -17,7 +17,8 @@ TRACKER_DIR = os.path.join(PROJECT_ROOT, 'artifacts', 'tracker')
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.telegram import send_message, send_photo
-from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals, calculate_position_margin, margin_fits
+from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
+                                            compute_band_sl_price, entry_blocked_by_sl)
 from ltbbot.utils.exchange import Exchange, drop_incomplete_last_candle # Import hinzugefügt, falls Type Hinting verwendet wird (optional)
 
 
@@ -1406,29 +1407,14 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     logger.warning(f"Risk amount <= 0 ({risk_amount_usd:.2f}) für Layer {i+1}. Skipping.")
                     continue
 
-                # 2. SL-Preis und Distanz berechnen
+                # 2. SL-Preis und Distanz berechnen (geteilte Funktion mit Backtest/Portfolio-Sim)
                 entry_price_for_calc = entry_limit_price
-                if _sl_mode == 'ratio':
-                    env_pct = _envelopes_cfg[i] if i < len(_envelopes_cfg) else _envelopes_cfg[0]
-                    sl_pct_dyn = env_pct * _sl_ratio
-                    if regime in ("TREND", "STRONG_TREND"):
-                        sl_pct_dyn *= 1.5
-                    sl_price = entry_price_for_calc * (1 - sl_pct_dyn)
-                elif _sl_mode == 'atr':
-                    if _current_atr > 0 and entry_price_for_calc > 0:
-                        sl_pct_dyn = max(_current_atr * _atr_sl_mult / entry_price_for_calc, _min_sl_pct)
-                    else:
-                        sl_pct_dyn = _min_sl_pct
-                    if regime in ("TREND", "STRONG_TREND"):
-                        sl_pct_dyn *= 1.5
-                    sl_price = entry_price_for_calc * (1 - sl_pct_dyn)
-                else:
-                    sl_price = entry_price_for_calc * (1 - stop_loss_pct_param)
-                if sl_price <= 0:
-                     logger.warning(f"Negativer oder Null SL-Preis ({sl_price:.4f}) berechnet für Entry {entry_price_for_calc:.4f}. Überspringe Layer {i+1}.")
-                     continue
-                # Preis bereits unter SL → Entry würde sofort gestoppt (immediate SL-Trigger)
-                if current_close is not None and current_close < sl_price:
+                sl_price = compute_band_sl_price('long', entry_price_for_calc, i, params, regime, _current_atr)
+                if sl_price is None:
+                    logger.warning(f"Kein gueltiger SL-Preis fuer Long Layer {i+1} (Entry {entry_price_for_calc:.4f}). Überspringe.")
+                    continue
+                # Preis bereits jenseits SL → Entry würde sofort gestoppt (immediate SL-Trigger)
+                if entry_blocked_by_sl('long', current_close, sl_price):
                     logger.warning(f"⚠️ Aktueller Preis {current_close:.4f} < SL {sl_price:.4f} für Long Layer {i+1} → überspringe (sofortiger SL vermieden).")
                     continue
                 sl_distance_price = abs(entry_price_for_calc - sl_price)
@@ -1562,27 +1548,14 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 risk_amount_usd = risk_base_capital * (risk_per_entry_pct / 100.0)
                 if risk_amount_usd <= 0: continue
 
-                # 2. SL-Preis und Distanz berechnen
+                # 2. SL-Preis und Distanz berechnen (geteilte Funktion mit Backtest/Portfolio-Sim)
                 entry_price_for_calc = entry_limit_price
-                if _sl_mode == 'ratio':
-                    env_pct = _envelopes_cfg[i] if i < len(_envelopes_cfg) else _envelopes_cfg[0]
-                    sl_pct_dyn = env_pct * _sl_ratio
-                    if regime in ("TREND", "STRONG_TREND"):
-                        sl_pct_dyn *= 1.5
-                    sl_price = entry_price_for_calc * (1 + sl_pct_dyn)
-                elif _sl_mode == 'atr':
-                    if _current_atr > 0 and entry_price_for_calc > 0:
-                        sl_pct_dyn = max(_current_atr * _atr_sl_mult / entry_price_for_calc, _min_sl_pct)
-                    else:
-                        sl_pct_dyn = _min_sl_pct
-                    if regime in ("TREND", "STRONG_TREND"):
-                        sl_pct_dyn *= 1.5
-                    sl_price = entry_price_for_calc * (1 + sl_pct_dyn)
-                else:
-                    sl_price = entry_price_for_calc * (1 + stop_loss_pct_param)
-                if sl_price <= 0: continue
-                # Preis bereits über SL → Entry würde sofort gestoppt (immediate SL-Trigger)
-                if current_close is not None and current_close > sl_price:
+                sl_price = compute_band_sl_price('short', entry_price_for_calc, i, params, regime, _current_atr)
+                if sl_price is None:
+                    logger.warning(f"Kein gueltiger SL-Preis fuer Short Layer {i+1} (Entry {entry_price_for_calc:.4f}). Überspringe.")
+                    continue
+                # Preis bereits jenseits SL → Entry würde sofort gestoppt (immediate SL-Trigger)
+                if entry_blocked_by_sl('short', current_close, sl_price):
                     logger.warning(f"⚠️ Aktueller Preis {current_close:.4f} > SL {sl_price:.4f} für Short Layer {i+1} → überspringe (sofortiger SL vermieden).")
                     continue
                 sl_distance_price = abs(entry_price_for_calc - sl_price)

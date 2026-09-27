@@ -77,15 +77,13 @@ fi
 # --- Startdatum ---
 echo ""
 echo -e "${BLUE}--- Empfehlung: Rückblick-Zeitraum je Timeframe (Standard bei 'a') ---${NC}"
-printf "+------------------+-----------+\n"
-printf "| Zeitfenster      | Lookback  |\n"
-printf "+------------------+-----------+\n"
-printf "| 5m, 15m          |  90 Tage  |\n"
-printf "| 30m, 1h          | 548 Tage  |\n"
-printf "| 2h               | 730 Tage  |\n"
-printf "| 4h, 6h           |1095 Tage  |\n"
-printf "| 1d               |1825 Tage  |\n"
-printf "+------------------+-----------+\n"
+# Automatik-Zeitraum = settings.json::optimization_settings.backtest_lookback_weeks
+# (2026-09-27 vereinheitlicht) -- derselbe Wert, den auto_parameter_optimizer_scheduler.py
+# und run_pipeline_automated.sh nutzen. Vorher hatte nur diese interaktive Pipeline
+# fest eingebaute 548-1095 Tage je Timeframe, dadurch waren manuell und automatisch
+# optimierte Configs nicht vergleichbar.
+LOOKBACK_WEEKS=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('backtest_lookback_weeks',26))" 2>/dev/null || echo "26")
+echo "  Automatik: letzte $LOOKBACK_WEEKS Wochen fuer alle Timeframes (settings.json: backtest_lookback_weeks)"
 echo "  (IS/OOS-Aufteilung dieser Historie erfolgt weiter unten separat per --is_fraction)"
 echo ""
 read -p "Startdatum (JJJJ-MM-TT) oder 'a' für Automatik [Standard: a]: " START_DATE_INPUT
@@ -118,6 +116,8 @@ echo "  IS/OOS-Split: Anteil der Historie, den Optuna beim Optimieren sieht (Res
 read -p "In-Sample-Anteil [Standard: $DEFAULT_IS_FRACTION]: " IS_FRACTION; IS_FRACTION=${IS_FRACTION:-$DEFAULT_IS_FRACTION}
 read -p "K-Fold-Teilfenster fuer Robustheits-Score [Standard: $DEFAULT_K_FOLDS]: " K_FOLDS; K_FOLDS=${K_FOLDS:-$DEFAULT_K_FOLDS}
 read -p "Mindest-OOS-Trades fuer Bestaetigung [Standard: $DEFAULT_MIN_OOS_TRADES]: " MIN_OOS_TRADES; MIN_OOS_TRADES=${MIN_OOS_TRADES:-$DEFAULT_MIN_OOS_TRADES}
+DEFAULT_MIN_OOS_PF=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('min_oos_profit_factor',1.3))" 2>/dev/null || echo "1.3")
+read -p "Mindest-OOS-Profit-Faktor fuer Bestaetigung [Standard: $DEFAULT_MIN_OOS_PF]: " MIN_OOS_PF; MIN_OOS_PF=${MIN_OOS_PF:-$DEFAULT_MIN_OOS_PF}
 
 # --- Automatischer Trial-Nachlauf (2026-08-27) ---
 # Bei vielen Symbol/Timeframe-Kombinationen reicht ein fester Trial-Wert nicht
@@ -173,19 +173,9 @@ OVERWRITE_ALL="n"
 for symbol in $SYMBOLS; do
     for timeframe in $TIMEFRAMES; do
 
-        # Lookback je Timeframe
-        lookback_days=730
-        case "$timeframe" in
-            5m|15m) lookback_days=90 ;;
-            30m|1h) lookback_days=548 ;;
-            2h)     lookback_days=730 ;;
-            4h|6h)  lookback_days=1095 ;;
-            1d)     lookback_days=1825 ;;
-        esac
-
         # Volle Historie -- optimizer.py macht den IS/OOS-Split selbst (--is_fraction)
         if [ "$START_DATE_INPUT" == "a" ]; then
-            CURRENT_START_DATE=$(date -d "$lookback_days days ago" +%F)
+            CURRENT_START_DATE=$(date -d "$LOOKBACK_WEEKS weeks ago" +%F)
         else
             CURRENT_START_DATE="$START_DATE_INPUT"
         fi
@@ -235,6 +225,7 @@ for symbol in $SYMBOLS; do
                 --is_fraction   "$IS_FRACTION" \
                 --k_folds       "$K_FOLDS" \
                 --min_oos_trades "$MIN_OOS_TRADES" \
+                --min_oos_profit_factor "$MIN_OOS_PF" \
                 --config_suffix "_envelope" \
                 $RECHECK_ARGS 2>&1 | tee "$tmp_log"
             local rc=${PIPESTATUS[0]}

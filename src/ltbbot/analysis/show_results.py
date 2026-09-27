@@ -717,32 +717,34 @@ if __name__ == "__main__":
             _settings_path = os.path.join(PROJECT_ROOT, 'settings.json')
             with open(_settings_path) as _sf:
                 _settings = json.load(_sf)
-            _oos_ref = _settings.get('optimization_settings', {}).get('oos_reference_date')
+            # OOS-Beginn je Timeframe = spaetestes IS/OOS-Split-Datum der Configs
+            # (_meta.is_oos_split_date, vom Optimizer geschrieben). 2026-09-27: vorher
+            # feste 548-1095-Tage-Lookbacks + statisches oos_reference_date -- passte
+            # nicht mehr zum 26-Wochen-Fenster des Optimizers.
+            _configs_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
+            _split_by_tf = {}
+            for _fn in os.listdir(_configs_dir):
+                if _fn.startswith('config_') and _fn.endswith('_envelope.json'):
+                    try:
+                        with open(os.path.join(_configs_dir, _fn)) as _cf:
+                            _c = json.load(_cf)
+                        _sd = _c.get('_meta', {}).get('is_oos_split_date')
+                        if _sd:
+                            _tf = _c['market']['timeframe']
+                            _split_by_tf[_tf] = max(_split_by_tf.get(_tf, _sd), _sd)
+                    except Exception:
+                        pass
+            _oos_ref = max(_split_by_tf.values()) if _split_by_tf else None
             if _oos_ref:
-                # Nur Timeframes der geladenen Configs anzeigen
-                _configs_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
-                _cfg_tfs = set()
-                for _fn in os.listdir(_configs_dir):
-                    if _fn.startswith('config_') and _fn.endswith('_envelope.json'):
-                        try:
-                            with open(os.path.join(_configs_dir, _fn)) as _cf:
-                                _cfg_tfs.add(json.load(_cf)['market']['timeframe'])
-                        except Exception:
-                            pass
-                _LOOKBACK_MAP = {'5m': 90, '15m': 90, '30m': 548, '1h': 548, '2h': 730, '4h': 1095, '6h': 1095, '1d': 1825}
-                _tfs_to_check = {_tf: _lb for _tf, _lb in _LOOKBACK_MAP.items()
-                                 if not _cfg_tfs or _tf in _cfg_tfs}
-                _ref_dt         = date.fromisoformat(str(_oos_ref))
                 _analysis_start = date.fromisoformat(start_date_input)
                 _analysis_end   = date.fromisoformat(end_date_input)
                 _total_days     = (_analysis_end - _analysis_start).days + 1
                 print()
-                print(f"  OOS-Referenz: {_oos_ref}  |  Analysezeitraum: {start_date_input} → {end_date_input} ({_total_days} Tage)")
+                print(f"  Spaetester IS/OOS-Split: {_oos_ref}  |  Analysezeitraum: {start_date_input} → {end_date_input} ({_total_days} Tage)")
                 print(f"  {'TF':>4s}  {'OOS ab':>12s}  {'Training':>10s}  {'OOS':>8s}  Status")
                 print(f"  {'─'*4}  {'─'*12}  {'─'*10}  {'─'*8}  {'─'*30}")
-                for _tf, _lb in _tfs_to_check.items():
-                    _oos_days_tf = _lb * 30 // 100
-                    _oos_start   = _ref_dt - timedelta(days=_oos_days_tf)
+                for _tf, _sd in sorted(_split_by_tf.items()):
+                    _oos_start   = date.fromisoformat(_sd)
                     _train_end   = _oos_start - timedelta(days=1)
                     # Tage im Training
                     if _analysis_start <= _train_end:

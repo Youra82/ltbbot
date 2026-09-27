@@ -14,7 +14,8 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange # Für load_data
-from ltbbot.strategy.envelope_logic import calculate_indicators_and_signals, calculate_position_margin, margin_fits
+from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
+                                            classify_regime, compute_band_sl_price, simulate_entry_fill)
 
 secrets_cache = None
 
@@ -306,21 +307,6 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
     _adx_pre   = _ta.trend.adx(df['high'], df['low'], df['close'], window=14)
     _sma20_pre = _ta.trend.sma_indicator(df['close'], window=20)
     _sma50_pre = _ta.trend.sma_indicator(df['close'], window=50)
-    _atr_pre   = _ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=10)
-    _hl2_pre   = (df['high'] + df['low']) / 2
-    _upper_pre = _hl2_pre + (3.0 * _atr_pre)
-    _lower_pre = _hl2_pre - (3.0 * _atr_pre)
-
-    # Regime-Gate-Overrides (Opt-in, Default = bisheriges Verhalten unveraendert).
-    # Live-Trade-Forensik + FAIRER Backtest-Test ueber alle 6 Configs (2026-08-21,
-    # siehe LIVE_TRADE_FORENSIK_2026-08.md) zeigten: der volle STRONG_TREND-Block
-    # (ADX>30 sperrt Trading komplett) kostet in 5/6 Configs deutlich Performance
-    # (Gate AUS: Summe-PnL +321% ggue. Baseline ueber alle 6 Configs). Deshalb als
-    # per-Symbol Optuna-Suchparameter verdrahtet (optimizer.py), NICHT hart entfernt --
-    # ein Config (BNB) profitierte im fairen Test von einem ENGEREN statt lockererem
-    # Gate, ein einzelner globaler Wert waere hier also falsch.
-    _disable_strong_trend_block = strategy_params.get('disable_strong_trend_block', False)
-    _strong_trend_adx_threshold = strategy_params.get('strong_trend_adx_threshold', 30.0)
 
     # sim_start_date: Warmup-Kerzen werden für Indikatoren genutzt, Trades erst ab hier
     sim_start_ts = pd.to_datetime(sim_start_date, utc=True) if sim_start_date else None
@@ -332,7 +318,35 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
     progress_interval = max(1, total_candles // 20)  # 20 Updates (5% Schritte)
     coarse_duration = df.index[1] - df.index[0] if len(df.index) >= 2 else None
 
-    for i in range(len(df)):
+    def _close_position(pos, exit_price, exit_reason, exit_ts):
+        """Realisiert eine Position (Gebuehren + Slippage) und gibt den PnL zurueck."""
+        pos_entry = pos['entry_price']; pos_amount = pos['amount_coins']
+        if pos['side'] == 'long':
+            pnl = (exit_price - pos_entry) * pos_amount
+        else:
+            pnl = (pos_entry - exit_price) * pos_amount
+        # Gebühren abziehen (Notional ohne Leverage-Faktor)
+        entry_notional_value = pos_entry * pos_amount
+        exit_notional_value = exit_price * pos_amount
+        pnl -= (entry_notional_value * fee_pct) + (exit_notional_value * fee_pct)
+        # Slippage auf Entry (Trigger-Limit) UND Exit (Market Order)
+        pnl -= abs(entry_notional_value * SLIPPAGE_PCT_ENTRY) + abs(exit_notional_value * SLIPPAGE_PCT_EXIT)
+        closed_trades.append({
+            'pnl': pnl, 'side': pos['side'], 'band': pos.get('band'),
+            'entry_time': pos.get('entry_time'), 'exit_time': exit_ts,
+            'entry_price': pos_entry, 'exit_price': exit_price,
+            'exit_reason': exit_reason,
+        })
+        return pnl
+
+    # KEIN LOOKAHEAD (2026-09-27): Waehrend Kerze i gelten -- wie live
+    # (drop_incomplete_last_candle) -- Baender, TP-MA, Regime und ATR der letzten
+    # ABGESCHLOSSENEN Kerze i-1. Vorher kamen sie aus Kerze i selbst (inkl. deren
+    # Close); der Optimizer hat das systematisch ausgenutzt (alle Configs am
+    # Suchraum-Rand, Backtest-WR 31.8% vs. ehrlich 19.4%, siehe
+    # bugfix_ltbbot_backtester_band_lookahead). Kerze i liefert nur noch den
+    # Preisverlauf (open/high/low), gegen den Orders ausgefuehrt werden.
+    for i in range(1, len(df)):
         # Progress Bar Update
         if show_progress and (i % progress_interval == 0 or i == total_candles - 1):
             progress_pct = (i + 1) / total_candles * 100
@@ -342,7 +356,11 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
             print(f"\r  Progress: [{bar}] {progress_pct:.1f}% ({i+1}/{total_candles})", end='', flush=True)
 
         current_candle = df.iloc[i]
+        signal_candle = df.iloc[i - 1]  # letzte abgeschlossene Kerze
         timestamp = current_candle.name # Zeitstempel der Kerze
+        candle_open = current_candle['open']
+        candle_high = current_candle['high']
+        candle_low = current_candle['low']
 
         # Warmup-Kerzen: Indikatoren berechnen, aber keine Trades
         if sim_start_ts and timestamp < sim_start_ts:
@@ -352,268 +370,171 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
         # --- Ausstiege prüfen (TP und SL) ---
         remaining_positions = []
         exit_pnl_current_candle = 0.0
+        # Same-Candle-Sperre wie live (arm_same_candle_reentry_guard): ein in dieser
+        # Kerze geschlossenes Band wird erst in der naechsten Kerze neu eroeffnet
+        closed_bands_this_candle = set()
+        # TP = MA der letzten abgeschlossenen Kerze (live von manage_existing_position()
+        # jeden Zyklus neu gesetzt)
+        tp_price_current = signal_candle['average']
+        tp_valid = pd.notna(tp_price_current) and tp_price_current > 0
 
         for pos in positions:
-            exited = False
-            exit_price = None
-            pnl = 0.0
             pos_side = pos['side']
-            pos_entry = pos['entry_price']
             pos_sl = pos['sl_price']
-            pos_amount = pos['amount_coins']
+            exit_price = None
+            exit_reason = None
 
-            # SL Prüfung
-            sl_hit = (pos_side == 'long' and current_candle['low'] <= pos_sl) or \
-                     (pos_side == 'short' and current_candle['high'] >= pos_sl)
+            if pos_side == 'long':
+                sl_hit = candle_low <= pos_sl
+                tp_hit = tp_valid and candle_high >= tp_price_current
+                sl_gap = candle_open <= pos_sl
+                tp_gap = tp_valid and candle_open >= tp_price_current
+            else:
+                sl_hit = candle_high >= pos_sl
+                tp_hit = tp_valid and candle_low <= tp_price_current
+                sl_gap = candle_open >= pos_sl
+                tp_gap = tp_valid and candle_open <= tp_price_current
 
-            # TP Prüfung: Dynamischer TP (aktueller MA jede Kerze, entspricht Live-Bot
-            # der TP jede Runde neu setzt).
-            tp_price_current = current_candle['average']
-            tp_hit = False
-            if not pd.isna(tp_price_current) and tp_price_current > 0:
-                if pos_side == 'long' and current_candle['high'] >= tp_price_current:
-                    if current_candle['open'] >= tp_price_current or current_candle['low'] <= tp_price_current:
-                        tp_hit = True
-                elif pos_side == 'short' and current_candle['low'] <= tp_price_current:
-                    if current_candle['open'] <= tp_price_current or current_candle['high'] >= tp_price_current:
-                        tp_hit = True
-
-            if sl_hit and tp_hit:
+            if sl_gap:
+                # Preis oeffnet schon jenseits des SL -> Stop-Market fuellt zum Open
+                exit_price, exit_reason = candle_open, 'SL'
+            elif tp_gap:
+                exit_price, exit_reason = candle_open, 'TP'
+            elif sl_hit and tp_hit:
                 # Beide Level in derselben Kerze moeglich -- Reihenfolge unklar
                 # ohne feinere Daten. Per fine_data (falls vorhanden) real
                 # aufloesen statt SL blind zu bevorzugen (oraclebot-Muster).
-                exit_price = None
+                resolved = None
                 if fine_data is not None and coarse_duration is not None:
                     fine_slice = _get_fine_slice(fine_data, timestamp, timestamp + coarse_duration)
-                    exit_price = _resolve_ambiguous_exit(fine_slice, pos_sl, tp_price_current, pos_side)
-                if exit_price is None:
-                    exit_price = pos_sl  # Fallback: alte SL-first-Konvention
-                exited = True
+                    resolved = _resolve_ambiguous_exit(fine_slice, pos_sl, tp_price_current, pos_side)
+                if resolved is None or resolved == pos_sl:
+                    exit_price, exit_reason = pos_sl, 'SL'  # Fallback: SL-first-Konvention
+                else:
+                    exit_price, exit_reason = tp_price_current, 'TP'
             elif sl_hit:
-                exit_price = pos_sl; exited = True
+                exit_price, exit_reason = pos_sl, 'SL'
             elif tp_hit:
-                exit_price = tp_price_current; exited = True
+                exit_price, exit_reason = tp_price_current, 'TP'
 
-            # Wenn Ausstieg, PnL berechnen und Position entfernen
-            if exited and exit_price is not None and exit_price > 0: # Stelle sicher, dass Exit-Preis gültig ist
-                if pos_side == 'long':
-                    pnl = (exit_price - pos_entry) * pos_amount
-                else: # short
-                    pnl = (pos_entry - exit_price) * pos_amount
-
-                # Gebühren abziehen (Notional ohne Leverage-Faktor)
-                entry_notional_value = pos_entry * pos_amount
-                exit_notional_value = exit_price * pos_amount
-                fees = (entry_notional_value * fee_pct) + (exit_notional_value * fee_pct)
-                pnl -= fees
-
-                # BUG3-FIX: Slippage auf Entry (Trigger-Limit) UND Exit (Market Order)
-                entry_slippage_cost = abs(entry_notional_value * SLIPPAGE_PCT_ENTRY)
-                exit_slippage_cost  = abs(exit_notional_value  * SLIPPAGE_PCT_EXIT)
-                pnl -= entry_slippage_cost + exit_slippage_cost
-
-                exit_pnl_current_candle += pnl
-                exit_reason = 'SL' if (sl_hit and (not tp_hit or exit_price == pos_sl)) else 'TP'
-                closed_trades.append({
-                    'pnl': pnl, 'side': pos_side, 'band': pos.get('band'),
-                    'entry_time': pos.get('entry_time'), 'exit_time': timestamp,
-                    'entry_price': pos_entry, 'exit_price': exit_price,
-                    'exit_reason': exit_reason,
-                })
+            if exit_price is not None and exit_price > 0:
+                exit_pnl_current_candle += _close_position(pos, exit_price, exit_reason, timestamp)
                 used_margin -= pos.get('margin', 0.0) # Margin wieder freigeben
+                closed_bands_this_candle.add((pos_side, pos.get('band')))
             else:
                 remaining_positions.append(pos) # Position bleibt offen
 
         positions = remaining_positions
         used_margin = max(0.0, used_margin) # Rundungsdrift abfangen
         capital += exit_pnl_current_candle # Realisiertes Kapital nach Ausstiegen aktualisieren
-        
-        # --- Equity Curve aktualisieren (nur bei Trade-Exit) ---
-        if exit_pnl_current_candle != 0.0:
-            equity_curve_data.append({'timestamp': timestamp, 'equity': capital})
 
         # --- Einstiege prüfen ---
-        # Live Bot: Nur einsteigen wenn KEINE offene Position vorhanden
-        if capital > 0 and len(positions) == 0:
+        # Wie Live Bot: bei offener Position nur weitere, noch nicht offene Baender
+        # auf DERSELBEN Seite (Bitget One-Way-Modus, restrict_side in place_entry_orders)
+        open_side = positions[0]['side'] if positions else None
+        open_bands = {(p['side'], p.get('band')) for p in positions}
+        if capital > 0:
 
-            # Marktregime aus vorab berechneten Arrays lesen (O(1) statt O(n²))
-            if i >= 49:
-                _adx_v = _adx_pre.iloc[i]
-                _cur_adx = float(_adx_v) if pd.notna(_adx_v) else 20.0
-                _cur_price = df['close'].iloc[i]
-                _cur_avg = current_candle.get('average', float('nan'))
-                _price_dist = (abs(_cur_price - _cur_avg) / _cur_avg * 100
-                               if (pd.notna(_cur_avg) and _cur_avg > 0) else 0.0)
-                _f = _sma20_pre.iloc[i]; _s = _sma50_pre.iloc[i]
-                _td = ("UPTREND" if (pd.notna(_f) and pd.notna(_s) and _s > 0 and _f > _s * 1.02)
-                       else "DOWNTREND" if (pd.notna(_f) and pd.notna(_s) and _s > 0 and _f < _s * 0.98)
-                       else "NEUTRAL")
-                _u = _upper_pre.iloc[i]; _l = _lower_pre.iloc[i]
-                _st = ("BULLISH" if (pd.notna(_u) and _cur_price > _u)
-                       else "BEARISH" if (pd.notna(_l) and _cur_price < _l)
-                       else "NEUTRAL")
-                if _cur_adx > _strong_trend_adx_threshold:
-                    if _disable_strong_trend_block:
-                        # Gate deaktiviert: wie TREND behandeln statt komplett zu sperren
-                        regime, trade_allowed, trend_direction = "TREND", True, _td
-                    else:
-                        regime, trade_allowed, trend_direction = "STRONG_TREND", False, _td
-                elif _cur_adx > 25:
-                    regime, trade_allowed, trend_direction = "TREND", True, _td
-                elif _cur_adx < 20 and _price_dist < 3:
-                    regime, trade_allowed, trend_direction = "RANGE", True, "NEUTRAL"
-                else:
-                    regime, trade_allowed, trend_direction = "UNCERTAIN", True, _td
+            # Marktregime der letzten abgeschlossenen Kerze (geteilte Funktion mit Live)
+            if i - 1 >= 49:
+                regime, trade_allowed, trend_direction = classify_regime(
+                    _adx_pre.iloc[i - 1], signal_candle['close'], signal_candle['average'],
+                    _sma20_pre.iloc[i - 1], _sma50_pre.iloc[i - 1], strategy_params)
             else:
                 regime, trade_allowed, trend_direction = "UNCERTAIN", True, "NEUTRAL"
 
             # STRONG_TREND: Kein Einstieg (wie Live Bot)
-            if not trade_allowed:
-                continue
+            if trade_allowed:
+                # Trend-Bias: Im Uptrend nur Longs, im Downtrend nur Shorts (wie Live Bot)
+                current_use_longs = use_longs and trend_direction != "DOWNTREND"
+                current_use_shorts = use_shorts and trend_direction != "UPTREND"
 
-            # Trend-Bias: Im Uptrend nur Longs, im Downtrend nur Shorts (wie Live Bot)
-            current_use_longs = use_longs
-            current_use_shorts = use_shorts
-            if trend_direction == "UPTREND":
-                current_use_shorts = False
-            elif trend_direction == "DOWNTREND":
-                current_use_longs = False
+                # Risiko basiert auf dem AKTUELLEN realisierten Kapital (Compounding,
+                # konsistent mit Live Bot -- User-Entscheidung 2026-08-26: "keine
+                # kuenstliche Bremse", Positionsgroesse soll mit dem Gesamtkapital
+                # mitwachsen/-schrumpfen statt an einem fixen Startwert zu kleben).
+                # Risikobasis = freies Kapital (live: fetch_balance_usdt() = Bitgets 'free')
+                risk_amount_usd = max(0.0, capital - used_margin) * (risk_per_entry_pct / 100.0)
+                atr_value = _atr_sl_pre.iloc[i - 1] if use_atr_sl else None
 
-            # SL-Multiplikator: Im TREND 1.5x breiter (wie Live Bot)
-            sl_multiplier = 1.5 if regime in ("TREND", "STRONG_TREND") else 1.0
-            effective_sl_pct = stop_loss_pct_param * sl_multiplier if _sl_mode == 'fixed' else None
-
-            # Risiko basiert auf dem AKTUELLEN realisierten Kapital (Compounding,
-            # konsistent mit Live Bot -- User-Entscheidung 2026-08-26: "keine
-            # kuenstliche Bremse", Positionsgroesse soll mit dem Gesamtkapital
-            # mitwachsen/-schrumpfen statt an einem fixen Startwert zu kleben).
-            risk_amount_usd = capital * (risk_per_entry_pct / 100.0)
-            if risk_amount_usd <= 0:
-                continue
-
-            # Wie Live Bot: Long- UND Short-Trigger unabhängig prüfen.
-            # Wenn beide in derselben Kerze getroffen werden, gewinnt der dessen
-            # Trigger-Preis näher am Kerzeneröffnungspreis liegt (= zuerst ausgelöst).
-            MIN_NOTIONAL_USDT = 5.0
-            candle_open = current_candle['open']
-            long_candidates = []   # Liste von (entry_price, sl_price, amount_coins, trigger_dist, k)
-            short_candidates = []
-
-            prev_candle = df.iloc[i - 1] if i > 0 else None
-
-            if current_use_longs:
-                for k in range(1, num_envelopes + 1):
-                    low_band_col = f'band_low_{k}'
-                    if low_band_col not in current_candle or pd.isna(current_candle[low_band_col]) or current_candle[low_band_col] <= 0:
+                # Wie Live Bot: Long- UND Short-Trigger unabhängig prüfen.
+                # Wenn beide in derselben Kerze getroffen werden, gewinnt der dessen
+                # Trigger-Preis näher am Kerzeneröffnungspreis liegt (= zuerst ausgelöst).
+                MIN_NOTIONAL_USDT = 5.0
+                candidates = {'long': [], 'short': []}
+                for side, allowed in (('long', current_use_longs), ('short', current_use_shorts)):
+                    if not allowed or risk_amount_usd <= 0:
                         continue
-                    entry_limit_price = current_candle[low_band_col]
-                    # Close-Confirmation: vorherige Kerze muss unterhalb des Bands geschlossen haben
-                    if prev_candle is None:
+                    if open_side is not None and side != open_side:
                         continue
-                    prev_band_val = prev_candle.get(low_band_col, float('nan'))
-                    if pd.isna(prev_candle['close']) or pd.isna(prev_band_val) or prev_candle['close'] > prev_band_val:
-                        continue
-                    entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct)
-                    if not pd.isna(current_candle['low']) and current_candle['low'] <= entry_trigger_price:
-                        # SL berechnen (Priorität: ratio → ATR → fixed)
-                        if _sl_mode == 'ratio':
-                            env_pct = _envelopes[k - 1] if k - 1 < len(_envelopes) else _envelopes[0]
-                            sl_pct_dyn = env_pct * _sl_ratio * sl_multiplier
-                            sl_price = entry_limit_price * (1 - sl_pct_dyn)
-                        elif use_atr_sl:
-                            atr_val = _atr_sl_pre.iloc[i]
-                            sl_pct_dyn = (max(float(atr_val) * _atr_sl_mult / entry_limit_price, _min_sl_pct)
-                                          if pd.notna(atr_val) and entry_limit_price > 0 else _min_sl_pct)
-                            sl_price = entry_limit_price * (1 - sl_pct_dyn * sl_multiplier)
-                        else:
-                            sl_price = entry_limit_price * (1 - effective_sl_pct)
-                        if sl_price <= 0: continue
-                        sl_dist = abs(entry_limit_price - sl_price)
-                        if sl_dist <= 0: continue
+                    for k in range(1, num_envelopes + 1):
+                        if (side, k) in open_bands or (side, k) in closed_bands_this_candle:
+                            continue
+                        band_col = f'band_low_{k}' if side == 'long' else f'band_high_{k}'
+                        band_price = signal_candle.get(band_col, float('nan'))
+                        if pd.isna(band_price) or band_price <= 0 or pd.isna(signal_candle['close']):
+                            continue
+                        # Close-Confirmation: letzte abgeschlossene Kerze muss jenseits des Bands geschlossen haben
+                        if side == 'long' and signal_candle['close'] > band_price:
+                            continue
+                        if side == 'short' and signal_candle['close'] < band_price:
+                            continue
+                        sl_price = compute_band_sl_price(side, band_price, k - 1, params, regime, atr_value)
+                        if sl_price is None:
+                            continue
+                        sl_dist = abs(band_price - sl_price)
+                        if sl_dist <= 0:
+                            continue
+                        trigger_price = band_price * (1 - trigger_delta_pct) if side == 'long' else band_price * (1 + trigger_delta_pct)
+                        fill_price, stopped = simulate_entry_fill(side, candle_open, candle_high, candle_low,
+                                                                  current_candle['close'], trigger_price, sl_price)
+                        if fill_price is None:
+                            continue
+                        # Groesse wie live: aus Band-Preis und SL-Abstand
                         amount_coins = risk_amount_usd / sl_dist
-                        if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
-                        trigger_dist = abs(candle_open - entry_trigger_price)
-                        long_candidates.append((entry_limit_price, sl_price, amount_coins, trigger_dist, k))
+                        if amount_coins * band_price < MIN_NOTIONAL_USDT:
+                            continue
+                        candidates[side].append((fill_price, sl_price, amount_coins,
+                                                 abs(candle_open - trigger_price), k, stopped))
                         if not multi_band_entries:
                             break
 
-            if current_use_shorts:
-                for k in range(1, num_envelopes + 1):
-                    high_band_col = f'band_high_{k}'
-                    if high_band_col not in current_candle or pd.isna(current_candle[high_band_col]) or current_candle[high_band_col] <= 0:
-                        continue
-                    entry_limit_price = current_candle[high_band_col]
-                    # Close-Confirmation: vorherige Kerze muss oberhalb des Bands geschlossen haben
-                    if prev_candle is None:
-                        continue
-                    prev_band_val = prev_candle.get(high_band_col, float('nan'))
-                    if pd.isna(prev_candle['close']) or pd.isna(prev_band_val) or prev_candle['close'] < prev_band_val:
-                        continue
-                    entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct)
-                    if not pd.isna(current_candle['high']) and current_candle['high'] >= entry_trigger_price:
-                        # SL berechnen (Priorität: ratio → ATR → fixed)
-                        if _sl_mode == 'ratio':
-                            env_pct = _envelopes[k - 1] if k - 1 < len(_envelopes) else _envelopes[0]
-                            sl_pct_dyn = env_pct * _sl_ratio * sl_multiplier
-                            sl_price = entry_limit_price * (1 + sl_pct_dyn)
-                        elif use_atr_sl:
-                            atr_val = _atr_sl_pre.iloc[i]
-                            sl_pct_dyn = (max(float(atr_val) * _atr_sl_mult / entry_limit_price, _min_sl_pct)
-                                          if pd.notna(atr_val) and entry_limit_price > 0 else _min_sl_pct)
-                            sl_price = entry_limit_price * (1 + sl_pct_dyn * sl_multiplier)
-                        else:
-                            sl_price = entry_limit_price * (1 + effective_sl_pct)
-                        if sl_price <= 0: continue
-                        sl_dist = abs(entry_limit_price - sl_price)
-                        if sl_dist <= 0: continue
-                        amount_coins = risk_amount_usd / sl_dist
-                        if amount_coins * entry_limit_price < MIN_NOTIONAL_USDT: continue
-                        trigger_dist = abs(candle_open - entry_trigger_price)
-                        short_candidates.append((entry_limit_price, sl_price, amount_coins, trigger_dist, k))
-                        if not multi_band_entries:
-                            break
+                # Wenn beide Seiten gleichzeitig getriggert: naeherer Trigger zum Open gewinnt
+                if candidates['long'] and candidates['short']:
+                    nearest_long = min(c[3] for c in candidates['long'])
+                    nearest_short = min(c[3] for c in candidates['short'])
+                    if nearest_long <= nearest_short:
+                        candidates['short'] = []
+                    else:
+                        candidates['long'] = []
 
-            # Wenn beide Seiten gleichzeitig getriggert: naeherer Trigger zum Open gewinnt
-            # (bei multi_band_entries wird das ueber den jeweils naechstgelegenen
-            # Kandidaten je Seite entschieden, die ganze Gegenseite entfaellt dann --
-            # unveraendertes Prinzip, nur auf Listen statt Einzelkandidaten erweitert)
-            if long_candidates and short_candidates:
-                nearest_long = min(c[3] for c in long_candidates)
-                nearest_short = min(c[3] for c in short_candidates)
-                if nearest_long <= nearest_short:
-                    short_candidates = []
-                else:
-                    long_candidates = []
+                # Reihenfolge Band 1->3 = engste (naeheste) Baender zuerst, wie sie live
+                # auch zuerst ausloesen wuerden. Jede Order muss sich gegen die noch FREIE
+                # Margin behaupten -- reicht sie nicht mehr, wird die Order uebersprungen
+                # (= live InsufficientFunds), NICHT auf Kredit geoeffnet.
+                entry_pnl_current_candle = 0.0
+                for side in ('long', 'short'):
+                    for entry_price, sl_price, amount_coins, _, band_k, stopped in candidates[side]:
+                        margin_required = calculate_position_margin(amount_coins, entry_price, leverage)
+                        if not margin_fits(used_margin, margin_required, capital):
+                            continue
+                        pos = {
+                            'entry_price': entry_price, 'amount_coins': amount_coins,
+                            'side': side, 'sl_price': sl_price, 'leverage': leverage,
+                            'band': band_k, 'entry_time': timestamp, 'margin': margin_required
+                        }
+                        if stopped:
+                            # SL noch in der Entry-Kerze erreicht (konservativ, siehe simulate_entry_fill)
+                            entry_pnl_current_candle += _close_position(pos, sl_price, 'SL', timestamp)
+                            continue
+                        used_margin += margin_required
+                        positions.append(pos)
+                capital += entry_pnl_current_candle
+                exit_pnl_current_candle += entry_pnl_current_candle
 
-            # Gewinner in Positions-Liste eintragen (bei multi_band_entries=False
-            # enthaelt jede Liste durch das break oben ohnehin hoechstens 1 Eintrag).
-            # Reihenfolge Band 1->3 = engste (naeheste) Baender zuerst, wie sie live
-            # auch zuerst ausloesen wuerden. Jede Order muss sich gegen die noch FREIE
-            # Margin behaupten -- reicht sie nicht mehr, wird die Order uebersprungen
-            # (= live InsufficientFunds), NICHT auf Kredit geoeffnet.
-            for entry_price, sl_price, amount_coins, _, band_k in long_candidates:
-                margin_required = calculate_position_margin(amount_coins, entry_price, leverage)
-                if not margin_fits(used_margin, margin_required, capital):
-                    continue
-                used_margin += margin_required
-                positions.append({
-                    'entry_price': entry_price, 'amount_coins': amount_coins,
-                    'side': 'long', 'sl_price': sl_price,
-                    'tp_price': current_candle['average'], 'leverage': leverage,
-                    'band': band_k, 'entry_time': timestamp, 'margin': margin_required
-                })
-            for entry_price, sl_price, amount_coins, _, band_k in short_candidates:
-                margin_required = calculate_position_margin(amount_coins, entry_price, leverage)
-                if not margin_fits(used_margin, margin_required, capital):
-                    continue
-                used_margin += margin_required
-                positions.append({
-                    'entry_price': entry_price, 'amount_coins': amount_coins,
-                    'side': 'short', 'sl_price': sl_price,
-                    'tp_price': current_candle['average'], 'leverage': leverage,
-                    'band': band_k, 'entry_time': timestamp, 'margin': margin_required
-                })
-
+        # --- Equity Curve aktualisieren (nur bei Trade-Exit) ---
+        if exit_pnl_current_candle != 0.0:
+            equity_curve_data.append({'timestamp': timestamp, 'equity': capital})
 
         # --- Abbruch bei Totalverlust (basierend auf Equity Curve Start) ---
     

@@ -53,6 +53,37 @@ MIN_OOS_PROFIT_FACTOR = 1.3  # Bestaetigung erfordert winrate-unabhaengigen OOS-
                               # Docstring bei confirmed= weiter unten
 K_FOLDS = 3              # IS-Teilfenster fuer den Robustheits-Score (siehe objective())
 
+def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal):
+    """OOS-Bestaetigungs-Kriterien (ohne Baseline-Vergleich) -- geteilt zwischen dem
+    besten Trial und der Neubewertung einer bestehenden Config (2026-09-27), sowie
+    von sync_confirmed_flags.py. Details zur Wahl der Kriterien siehe confirmed= in main().
+
+    Returns: dict(passed, profit_factor, profit_factor_display, win_rate, max_dd_decimal)
+    """
+    trades = oos_result.get('trades', [])
+    gross_wins = sum(t['pnl'] for t in trades if t['pnl'] > 0)
+    gross_losses = abs(sum(t['pnl'] for t in trades if t['pnl'] < 0))
+    if gross_losses > 0:
+        profit_factor = gross_wins / gross_losses
+    else:
+        profit_factor = float('inf') if gross_wins > 0 else 0.0
+    max_dd_decimal = oos_result.get('max_drawdown_pct', 100.0) / 100.0
+    passed = bool(
+        oos_result.get('trades_count', 0) >= min_trades
+        and oos_result.get('total_pnl_pct', -1e9) > 0.0
+        and profit_factor >= min_profit_factor
+        and max_dd_decimal <= max_drawdown_decimal
+    )
+    return {
+        'passed': passed,
+        'profit_factor': profit_factor,
+        # inf ist kein gueltiges JSON -- "keine Verlust-Trades" als grosser endlicher Platzhalter
+        'profit_factor_display': min(profit_factor, 999.0),
+        'win_rate': oos_result.get('win_rate', 0.0),
+        'max_dd_decimal': max_dd_decimal,
+    }
+
+
 def create_safe_filename(symbol, timeframe):
     """Erstellt einen sicheren Dateinamen aus Symbol und Zeitrahmen."""
     return f"{symbol.replace('/', '').replace(':', '')}_{timeframe}"
@@ -511,24 +542,12 @@ def main():
         # in total_pnl_pct. >1.0 = profitabel, MIN_OOS_PROFIT_FACTOR gibt eine
         # Sicherheitsmarge fuer reale Kosten (Fees/Slippage), die der Backtest nur
         # approximiert.
-        oos_trades_list = best_oos.get('trades', [])
-        oos_gross_wins = sum(t['pnl'] for t in oos_trades_list if t['pnl'] > 0)
-        oos_gross_losses = abs(sum(t['pnl'] for t in oos_trades_list if t['pnl'] < 0))
-        if oos_gross_losses > 0:
-            oos_profit_factor = oos_gross_wins / oos_gross_losses
-        else:
-            oos_profit_factor = float('inf') if oos_gross_wins > 0 else 0.0
-        # Fuer Logging/JSON: inf ist kein gueltiges JSON, "keine Verlust-Trades" wird
-        # stattdessen als grosser endlicher Platzhalter dargestellt (Vergleichslogik
-        # oben nutzt weiterhin den echten oos_profit_factor-Wert inkl. inf).
-        oos_profit_factor_display = min(oos_profit_factor, 999.0)
-        oos_win_rate = best_oos.get('win_rate', 0.0)  # 0-100 (Prozent) -- nur noch informativ, keine Gate-Bedingung mehr
-        oos_max_dd_decimal = best_oos.get('max_drawdown_pct', 100.0) / 100.0
+        best_gate = oos_gate(best_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
+        oos_profit_factor_display = best_gate['profit_factor_display']
+        oos_win_rate = best_gate['win_rate']  # 0-100 (Prozent) -- nur informativ, keine Gate-Bedingung
+        oos_max_dd_decimal = best_gate['max_dd_decimal']
         confirmed = bool(
-            best_oos.get('trades_count', 0) >= MIN_OOS_TRADES
-            and best_oos.get('total_pnl_pct', -1e9) > 0.0
-            and oos_profit_factor >= MIN_OOS_PROFIT_FACTOR
-            and oos_max_dd_decimal <= MAX_DRAWDOWN_CONSTRAINT
+            best_gate['passed']
             and (baseline_oos is None or best_oos.get('total_pnl_pct', -1e9) > baseline_oos.get('total_pnl_pct', -1e9))
         )
 
@@ -565,6 +584,36 @@ def main():
                 'oos_trades': best_oos.get('trades_count', 0),
                 'reason': 'oos_not_confirmed',
             })
+
+            # Bestehende Config neu bewerten und ihren _meta-Status aktualisieren
+            # (2026-09-27). Vorher blieb _meta.confirmed einer bestehenden Config fuer
+            # immer auf dem Wert ihres Erstellungs-Laufs stehen -- nach dem Backtester-
+            # Lookahead-Fix galten so 43/44 Configs weiter als "bestaetigt", obwohl sie
+            # die OOS-Pruefung mit dem korrigierten Backtester nicht mehr bestanden, und
+            # run_portfolio_optimizer.py waehlt nur unter bestaetigten Configs aus.
+            if baseline_oos is not None:
+                base_gate = oos_gate(baseline_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
+                try:
+                    existing_cfg.setdefault('_meta', {}).update({
+                        'pnl_pct': round(baseline_is.get('total_pnl_pct', 0), 2),
+                        'oos_pnl_pct': round(baseline_oos.get('total_pnl_pct', 0), 2),
+                        'oos_trades': baseline_oos.get('trades_count', 0),
+                        'oos_profit_factor': round(base_gate['profit_factor_display'], 2),
+                        'oos_win_rate': round(base_gate['win_rate'], 2),
+                        'oos_max_drawdown_pct': round(base_gate['max_dd_decimal'] * 100, 2),
+                        'is_oos_split_date': str(split_ts.date()),
+                        'is_fraction': IS_FRACTION,
+                        'confirmed': base_gate['passed'],
+                        'rechecked_at': _dt.now().isoformat(timespec='seconds'),
+                    })
+                    with open(config_output_path, 'w') as f:
+                        json.dump(existing_cfg, f, indent=4)
+                    logger.info(f"  Bestehende Config neu bewertet: confirmed={base_gate['passed']} "
+                                f"(OOS-Trades={baseline_oos.get('trades_count', 0)}, "
+                                f"OOS-PnL={baseline_oos.get('total_pnl_pct', 0):+.2f}%, "
+                                f"PF={base_gate['profit_factor_display']:.2f}) -- Parameter unveraendert.")
+                except Exception as e:
+                    logger.warning(f"Konnte _meta der bestehenden Config nicht aktualisieren: {e}")
         else:
             config_output = {
                 "_meta": {

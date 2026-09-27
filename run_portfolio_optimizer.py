@@ -49,13 +49,27 @@ BOT_NAME = 'ltbbot'
 
 
 def _scan_configs() -> list:
+    """Nur OOS-bestaetigte Configs (_meta.confirmed) sind waehlbar (2026-09-27).
+    Vorher waehlte der Portfolio-Optimizer aus ALLEN Configs im Ordner -- auch aus
+    solchen, deren Neu-Optimierung die OOS-Bestaetigung nicht bestanden hat, und er
+    selektiert nur auf dem Trainingsfenster (70%), sieht die OOS-Pruefung also nie."""
     if not os.path.isdir(CONFIGS_DIR):
         return []
-    return sorted([
-        os.path.join(CONFIGS_DIR, f)
-        for f in os.listdir(CONFIGS_DIR)
-        if f.endswith('_envelope.json')
-    ])
+    result = []
+    for f in sorted(os.listdir(CONFIGS_DIR)):
+        if not f.endswith('_envelope.json'):
+            continue
+        path = os.path.join(CONFIGS_DIR, f)
+        try:
+            with open(path) as fh:
+                confirmed = bool(json.load(fh).get('_meta', {}).get('confirmed'))
+        except Exception:
+            confirmed = False
+        if confirmed:
+            result.append(path)
+        else:
+            print(f"  {Y}Nicht OOS-bestaetigt, uebersprungen: {f}{NC}")
+    return result
 
 
 def _build_strategies_data(config_files: list, start_date: str, end_date: str) -> dict:

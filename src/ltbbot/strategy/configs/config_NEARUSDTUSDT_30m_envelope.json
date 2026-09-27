@@ -1,13 +1,17 @@
 {
     "_meta": {
-        "pnl_pct": 506.44,
-        "oos_pnl_pct": 163.3,
-        "oos_trades": 111,
-        "is_oos_split_date": "2026-02-11",
+        "pnl_pct": -23.44,
+        "oos_pnl_pct": 5.17,
+        "oos_trades": 18,
+        "is_oos_split_date": "2026-08-03",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": true,
-        "optimized_at": "2026-08-30T22:59:51"
+        "confirmed": false,
+        "optimized_at": "2026-08-30T22:59:51",
+        "oos_profit_factor": 1.27,
+        "oos_win_rate": 33.33,
+        "oos_max_drawdown_pct": 7.12,
+        "rechecked_at": "2026-09-27T13:39:56"
     },
     "market": {
         "symbol": "NEAR/USDT:USDT",

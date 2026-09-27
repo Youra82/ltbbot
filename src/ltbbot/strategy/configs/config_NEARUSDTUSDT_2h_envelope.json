@@ -1,13 +1,17 @@
 {
     "_meta": {
-        "pnl_pct": 32.25,
-        "oos_pnl_pct": 8.97,
-        "oos_trades": 20,
-        "is_oos_split_date": "2026-01-21",
+        "pnl_pct": -2.66,
+        "oos_pnl_pct": -8.57,
+        "oos_trades": 16,
+        "oos_profit_factor": 0.13,
+        "oos_win_rate": 6.25,
+        "oos_max_drawdown_pct": 9.73,
+        "is_oos_split_date": "2026-08-03",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": true,
-        "optimized_at": "2026-08-30T19:02:35"
+        "confirmed": false,
+        "optimized_at": "2026-09-25T15:52:09",
+        "rechecked_at": "2026-09-27T13:31:00"
     },
     "market": {
         "symbol": "NEAR/USDT:USDT",
@@ -17,19 +21,19 @@
         "average_type": "WMA",
         "average_period": 5,
         "envelopes": [
-            0.03518707454905005,
-            0.05098312788263532,
-            0.1399354488460374
+            0.019666523591307127,
+            0.028219733146673632,
+            0.03527967638460537
         ],
-        "trigger_price_delta_pct": 0.1134,
-        "disable_strong_trend_block": true,
-        "strong_trend_adx_threshold": 30.0
+        "trigger_price_delta_pct": 0.16,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 23.61
     },
     "risk": {
         "margin_mode": "isolated",
-        "risk_per_entry_pct": 0.4,
-        "leverage": 5,
-        "sl_to_env1_ratio": 0.1313
+        "risk_per_entry_pct": 0.5,
+        "leverage": 9,
+        "sl_to_env1_ratio": 0.1634
     },
     "behavior": {
         "use_longs": true,

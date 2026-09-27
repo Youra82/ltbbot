@@ -33,6 +33,127 @@ def margin_fits(used_margin: float, margin_required: float, available_capital: f
     return (used_margin + margin_required) <= available_capital
 
 
+def classify_regime(adx_value, close_price, average_price, sma20, sma50, strategy_params=None):
+    """Regime-Entscheidung aus den Indikatorwerten EINER abgeschlossenen Kerze.
+
+    Geteilte Funktion fuer Live (detect_market_regime) UND Backtest/Portfolio-
+    Simulator -- vorher dreimal inline kopiert, dabei driftete portfolio_simulator.py
+    ab (kannte die Regime-Gate-Overrides nicht).
+
+    Returns: (regime, trade_allowed, trend_direction)
+    """
+    strategy_params = strategy_params or {}
+    disable_strong_trend_block = strategy_params.get('disable_strong_trend_block', False)
+    strong_trend_adx_threshold = strategy_params.get('strong_trend_adx_threshold', 30.0)
+
+    adx_value = float(adx_value) if pd.notna(adx_value) else 20.0
+    if pd.notna(average_price) and average_price > 0 and pd.notna(close_price):
+        price_distance_pct = abs(close_price - average_price) / average_price * 100
+    else:
+        price_distance_pct = 0.0
+
+    if pd.notna(sma20) and pd.notna(sma50) and sma50 > 0 and sma20 > sma50 * 1.02:
+        trend_direction = "UPTREND"
+    elif pd.notna(sma20) and pd.notna(sma50) and sma50 > 0 and sma20 < sma50 * 0.98:
+        trend_direction = "DOWNTREND"
+    else:
+        trend_direction = "NEUTRAL"
+
+    if adx_value > strong_trend_adx_threshold:
+        if disable_strong_trend_block:
+            return "TREND", True, trend_direction
+        return "STRONG_TREND", False, trend_direction
+    if adx_value > 25:
+        return "TREND", True, trend_direction
+    if adx_value < 20 and price_distance_pct < 3:
+        return "RANGE", True, "NEUTRAL"
+    return "UNCERTAIN", True, trend_direction
+
+
+def compute_band_sl_price(side, band_price, band_index, params, regime, atr_value=None):
+    """Feste SL fuer ein Band (Prioritaet: sl_to_env1_ratio -> ATR-Multiplikator -> fixer %),
+    im TREND/STRONG_TREND 1.5x breiter. band_index ist 0-basiert.
+
+    Geteilte Funktion fuer Live (place_entry_orders) UND Backtest/Portfolio-Simulator.
+    Gibt None zurueck, wenn kein gueltiger SL berechnet werden kann.
+    """
+    risk_params = params['risk']
+    envelopes = params['strategy'].get('envelopes', [0.03, 0.05, 0.08])
+    sl_multiplier = 1.5 if regime in ("TREND", "STRONG_TREND") else 1.0
+
+    if 'sl_to_env1_ratio' in risk_params:
+        env_pct = envelopes[band_index] if band_index < len(envelopes) else envelopes[0]
+        sl_pct = env_pct * risk_params['sl_to_env1_ratio'] * sl_multiplier
+    elif 'stop_loss_atr_multiplier' in risk_params:
+        min_sl_pct = risk_params.get('min_stop_loss_pct', 0.5) / 100.0
+        if atr_value is not None and pd.notna(atr_value) and atr_value > 0 and band_price > 0:
+            sl_pct = max(float(atr_value) * risk_params['stop_loss_atr_multiplier'] / band_price, min_sl_pct)
+        else:
+            sl_pct = min_sl_pct
+        sl_pct *= sl_multiplier
+    else:
+        sl_pct = risk_params['stop_loss_pct'] / 100.0 * sl_multiplier
+
+    sl_price = band_price * (1 - sl_pct) if side == 'long' else band_price * (1 + sl_pct)
+    return sl_price if sl_price > 0 else None
+
+
+def entry_blocked_by_sl(side, current_price, sl_price):
+    """Live ueberspringt ein Band, wenn der aktuelle Preis schon jenseits dessen SL liegt
+    (Entry wuerde sofort gestoppt). Geteilt mit Backtest/Portfolio-Simulator."""
+    if current_price is None or sl_price is None:
+        return False
+    return current_price < sl_price if side == 'long' else current_price > sl_price
+
+
+def simulate_entry_fill(side, candle_open, candle_high, candle_low, candle_close, trigger_price, sl_price):
+    """Fill einer Live-Entry-Order (Bitget-Trigger-Limit) innerhalb EINER Coarse-Kerze,
+    deren Baender aus der vorherigen, abgeschlossenen Kerze stammen (wie live).
+
+    Live-Mechanik (siehe live_sim.py, an echten Fills 2026-08/09 geprueft):
+    - Liegt der Preis bei Platzierung (~Kerzen-Open) schon jenseits des SL, wird
+      das Band uebersprungen (entry_blocked_by_sl). Live gilt das nur fuer den
+      jeweiligen 15-Min-Zyklus (kommt der Preis zurueck, wird spaeter noch
+      platziert) -- auf Coarse-Kerzen nicht exakt abbildbar. Bewusst die
+      KONSERVATIVE Wahl: Abgleich gegen live_sim.py (1m, Sept. 2026, 5 Configs)
+      ergab Skip = 38 Trades/WR 18.4%/-5.35 USDT, Nicht-Skip = 89/24.7%/+5.48,
+      live_sim = 64/18.7%/-8.30. Skip unterschaetzt die Trade-Anzahl, trifft
+      aber Winrate und PnL -- fuer Optimizer/OOS-Gate sind Scheinfunde teurer.
+    - Die Ausloese-Richtung der Plan-Order ergibt sich aus Trigger vs. Preis bei
+      Platzierung. Liegt der Preis schon jenseits des Triggers (typisch nach
+      Close-Confirmation), feuert sie erst, wenn der Preis ZURUECK zum Trigger
+      laeuft. Fill ~ Triggerpreis (Limit am Band ist dann marketable).
+    - SL-Treffer in der Entry-Kerze:
+      * Order wartet auf Bewegung Richtung SL (Long: Preis faellt zum Trigger):
+        wird das SL-Niveau in der Kerze erreicht, lief der Preis zwingend erst
+        durch den Trigger -> Stop.
+      * Order wartet auf Ruecklauf (Long: Preis steigt zum Trigger): ein SL-Kontakt
+        VOR dem Fill loest keinen Stop aus (reduceOnly-SL ohne Position). Die
+        Reihenfolge ist auf Coarse-Kerzen unbekannt -- als Stop gewertet, wenn
+        die Kerze jenseits des SL schliesst (gleiche Regel wie live_sim.py je 1m-Bar).
+
+    Returns: (fill_price, stopped_in_entry_candle) oder (None, False) ohne Fill.
+    """
+    if entry_blocked_by_sl(side, candle_open, sl_price):
+        return None, False
+    if side == 'long':
+        if candle_open > trigger_price:
+            if candle_low > trigger_price:
+                return None, False
+            return trigger_price, bool(candle_low <= sl_price)
+        if candle_high < trigger_price:
+            return None, False
+        return trigger_price, bool(candle_close <= sl_price)
+    else:
+        if candle_open < trigger_price:
+            if candle_high < trigger_price:
+                return None, False
+            return trigger_price, bool(candle_high >= sl_price)
+        if candle_low > trigger_price:
+            return None, False
+        return trigger_price, bool(candle_close >= sl_price)
+
+
 def detect_market_regime(df, avg_period=14, silent=False, strategy_params=None):
     """
     Erkennt das aktuelle Marktregime (TREND vs RANGE) mit Supertrend-Filter.
@@ -98,45 +219,30 @@ def detect_market_regime(df, avg_period=14, silent=False, strategy_params=None):
             logger.debug(f"Supertrend-Berechnung fehlgeschlagen: {e}")
             supertrend_direction = "NEUTRAL"
 
-        # Trend-Richtung bestimmen (für asymmetrisches Trading)
+        # Trend-Richtung + Regime-Entscheidung: geteilte Funktion mit Backtest/Portfolio-Sim
         sma_fast = ta.trend.sma_indicator(df['close'], window=20)
         sma_slow = ta.trend.sma_indicator(df['close'], window=50)
+        fast_val = sma_fast.iloc[-1] if not sma_fast.empty else float('nan')
+        slow_val = sma_slow.iloc[-1] if not sma_slow.empty else float('nan')
+        close_val = df['close'].iloc[-1]
+        avg_val = df['average'].iloc[-1] if 'average' in df.columns and not df['average'].empty else float('nan')
 
-        if not sma_fast.empty and not sma_slow.empty:
-            fast_val = sma_fast.iloc[-1]
-            slow_val = sma_slow.iloc[-1]
+        regime, trade_allowed, trend_direction = classify_regime(
+            current_adx, close_val, avg_val, fast_val, slow_val, strategy_params)
 
-            if fast_val > slow_val * 1.02:  # 2% über = klarer Uptrend
-                trend_direction = "UPTREND"
-            elif fast_val < slow_val * 0.98:  # 2% unter = klarer Downtrend
-                trend_direction = "DOWNTREND"
-            else:
-                trend_direction = "NEUTRAL"
-        else:
-            trend_direction = "NEUTRAL"
-
-        # Regime-Entscheidung mit detailliertem Grund
-        if current_adx > strong_trend_adx_threshold:  # Sehr starker Trend
-            if disable_strong_trend_block:
-                if not silent:
-                    logger.info(f"TREND (Gate deaktiviert): ADX={current_adx:.2f} > {strong_trend_adx_threshold:.1f}. "
-                                f"Supertrend={supertrend_direction}. Trading in Trendrichtung erlaubt (Block deaktiviert).")
-                return "TREND", True, trend_direction, supertrend_direction
-            if not silent:
+        if not silent:
+            if regime == "STRONG_TREND":
                 logger.warning(f"STRONG_TREND: ADX={current_adx:.2f} > {strong_trend_adx_threshold:.1f}. Supertrend={supertrend_direction}. Trading gesperrt.")
-            return "STRONG_TREND", False, trend_direction, supertrend_direction
-        elif current_adx > 25:  # Starker Trend
-            if not silent:
+            elif regime == "TREND" and current_adx > strong_trend_adx_threshold:
+                logger.info(f"TREND (Gate deaktiviert): ADX={current_adx:.2f} > {strong_trend_adx_threshold:.1f}. "
+                            f"Supertrend={supertrend_direction}. Trading in Trendrichtung erlaubt (Block deaktiviert).")
+            elif regime == "TREND":
                 logger.info(f"TREND: ADX={current_adx:.2f} > 25.0. Supertrend={supertrend_direction}. Trading nur in Trendrichtung erlaubt.")
-            return "TREND", True, trend_direction, supertrend_direction
-        elif current_adx < 20 and price_distance_pct < 3:
-            if not silent:
+            elif regime == "RANGE":
                 logger.info(f"RANGE: ADX={current_adx:.2f} < 20.0, price_distance_pct={price_distance_pct:.2f} < 3.0. Supertrend={supertrend_direction}. Mean-Reversion erlaubt.")
-            return "RANGE", True, "NEUTRAL", supertrend_direction
-        else:
-            if not silent:
+            else:
                 logger.info(f"UNCERTAIN: ADX={current_adx:.2f}, price_distance_pct={price_distance_pct:.2f}. Supertrend={supertrend_direction}. Vorsichtiges Trading erlaubt.")
-            return "UNCERTAIN", True, trend_direction, supertrend_direction
+        return regime, trade_allowed, trend_direction, supertrend_direction
 
     except Exception as e:
         if not silent:
