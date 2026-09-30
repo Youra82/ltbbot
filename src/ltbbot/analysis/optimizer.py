@@ -28,7 +28,7 @@ RESULTS_FILE = os.path.join(PROJECT_ROOT, 'artifacts', 'results', 'last_optimize
 # Verwende den Backtester für Envelope
 from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP
 from ltbbot.analysis.evaluator import evaluate_dataset
-from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction
+from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction, band_structure_ok
 
 # Globale Variablen für die Objective-Funktion
 HISTORICAL_DATA = None
@@ -56,6 +56,8 @@ K_FOLDS = 3              # IS-Teilfenster fuer den Robustheits-Score (siehe obje
 MIN_SL_ATR_FRACTION = 0.06  # Stop-Abstand Band 1 >= dieser Anteil der typischen Kerze (median ATR%),
                             # siehe envelope_logic.sl_atr_fraction; Wert aus settings.json
 IS_ATR_PCT = None           # median ATR% des IS-Fensters des aktuellen Paars
+MIN_ENV1_ATR = 0.5          # Band 1 >= 0.5 typische Kerzen vom MA (settings: min_env1_atr_fraction)
+MIN_BAND_GAP_ATR = 0.25     # jede weitere Band-Luecke >= 0.25 Kerzen (settings: min_band_gap_atr_fraction)
 
 def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal):
     """OOS-Bestaetigungs-Kriterien (ohne Baseline-Vergleich) -- geteilt zwischen dem
@@ -99,10 +101,19 @@ def objective(trial):
     # --- Parameter vorschlagen ---
     avg_type = trial.suggest_categorical('average_type', ['SMA', 'EMA', 'WMA', 'DCM'])
     avg_period = trial.suggest_int('average_period', 5, 50)
-    env1 = trial.suggest_float('env1', 0.005, 0.05)
-    env2 = trial.suggest_float('env2', env1 + 0.005, 0.10)
-    env3 = trial.suggest_float('env3', env2 + 0.005, 0.15)
-    envelopes = sorted([env1, env2, env3])
+    # Baender in Einheiten der typischen Kerzenbewegung (IS median ATR%) statt in festen
+    # Prozent (2026-09-30, siehe envelope_logic.band_structure_ok): passt sich jedem Coin
+    # an -- BTC bekommt enge, hochvolatile Coins weite Baender. Gespeichert wird weiter
+    # in Prozent (Live-Code unveraendert).
+    env1_atr = trial.suggest_float('env1_atr', MIN_ENV1_ATR, 4.0)
+    gap2_atr = trial.suggest_float('gap2_atr', MIN_BAND_GAP_ATR, 3.0)
+    gap3_atr = trial.suggest_float('gap3_atr', MIN_BAND_GAP_ATR, 3.0)
+    env1 = env1_atr * IS_ATR_PCT
+    env2 = env1 + gap2_atr * IS_ATR_PCT
+    env3 = env2 + gap3_atr * IS_ATR_PCT
+    if env3 >= 0.5:
+        raise optuna.exceptions.TrialPruned()
+    envelopes = [env1, env2, env3]
     trigger_delta_pct = trial.suggest_float('trigger_price_delta_pct', 0.01, 0.2)
     leverage = trial.suggest_int('leverage', 1, 15)
     risk_per_entry_pct = trial.suggest_float('risk_per_entry_pct', 0.1, 1.0)
@@ -179,6 +190,7 @@ def objective(trial):
         raise optuna.exceptions.TrialPruned()
 
     trial.set_user_attr('params', params)
+    trial.set_user_attr('envelopes', envelopes)
     trial.set_user_attr('is_stats', result)
 
     # Robustheits-Score statt reiner Gesamt-IS-PnL: IS_DATA in K_FOLDS
@@ -205,7 +217,7 @@ def objective(trial):
 
 # --- Main Funktion ---
 def main():
-    global HISTORICAL_DATA, IS_DATA, OOS_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO, IS_FRACTION, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, K_FOLDS, MIN_SL_ATR_FRACTION, IS_ATR_PCT
+    global HISTORICAL_DATA, IS_DATA, OOS_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO, IS_FRACTION, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, K_FOLDS, MIN_SL_ATR_FRACTION, IS_ATR_PCT, MIN_ENV1_ATR, MIN_BAND_GAP_ATR
 
     parser = argparse.ArgumentParser(description="Parameter-Optimierung für ltbbot (Envelope-Strategie)")
     parser.add_argument('--symbols', required=True, type=str)
@@ -277,9 +289,17 @@ def main():
     else:
         try:
             with open(os.path.join(PROJECT_ROOT, 'settings.json')) as _sf:
-                MIN_SL_ATR_FRACTION = float(json.load(_sf).get('optimization_settings', {}).get('min_sl_atr_fraction', MIN_SL_ATR_FRACTION))
+                _os = json.load(_sf).get('optimization_settings', {})
+            MIN_SL_ATR_FRACTION = float(_os.get('min_sl_atr_fraction', MIN_SL_ATR_FRACTION))
         except Exception:
             pass
+    try:
+        with open(os.path.join(PROJECT_ROOT, 'settings.json')) as _sf:
+            _os = json.load(_sf).get('optimization_settings', {})
+        MIN_ENV1_ATR = float(_os.get('min_env1_atr_fraction', MIN_ENV1_ATR))
+        MIN_BAND_GAP_ATR = float(_os.get('min_band_gap_atr_fraction', MIN_BAND_GAP_ATR))
+    except Exception:
+        pass
 
     symbols, timeframes = args.symbols.split(), args.timeframes.split()
     TASKS = [{'symbol': f"{s.upper()}/USDT:USDT", 'timeframe': tf} for s in symbols for tf in timeframes]
@@ -452,7 +472,7 @@ def main():
         final_params_dict = {
             'strategy': {
                 'average_type': best_params_optuna['average_type'], 'average_period': best_params_optuna['average_period'],
-                'envelopes': sorted([best_params_optuna['env1'], best_params_optuna['env2'], best_params_optuna['env3']]),
+                'envelopes': best_trial.user_attrs['envelopes'],
                 'trigger_price_delta_pct': round(best_params_optuna['trigger_price_delta_pct'], 4),
                 'disable_strong_trend_block': best_params_optuna.get('disable_strong_trend_block', False),
                 'strong_trend_adx_threshold': round(best_params_optuna.get('strong_trend_adx_threshold', 30.0), 2),
@@ -619,6 +639,8 @@ def main():
                 base_gate = oos_gate(baseline_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
                 _base_frac = sl_atr_fraction(baseline_params, IS_ATR_PCT)
                 if _base_frac is not None and _base_frac < MIN_SL_ATR_FRACTION:
+                    base_gate['passed'] = False
+                if not band_structure_ok(baseline_params, IS_ATR_PCT, MIN_ENV1_ATR, MIN_BAND_GAP_ATR):
                     base_gate['passed'] = False
                 try:
                     existing_cfg.setdefault('_meta', {}).update({

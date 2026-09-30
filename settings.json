@@ -121,7 +121,10 @@
             }
         },
         "min_sl_atr_fraction": 0.06,
-        "_min_sl_atr_note": "Stop-Abstand Band 1 muss >= dieser Anteil der typischen Kerzenbewegung (median ATR/Close, IS-Fenster) sein. 2026-09-30: Optimizer fand Stops von 2-5% einer Kerze (US 4h: 0.13% SL bei 7.2% ATR), live durch Stop-Slippage nicht belastbar. Wirkt in optimizer.py (Trials verworfen) und sync_confirmed_flags.py. Anheben, sobald echte Stop-Slippage gemessen ist."
+        "_min_sl_atr_note": "Stop-Abstand Band 1 muss >= dieser Anteil der typischen Kerzenbewegung (median ATR/Close, IS-Fenster) sein. 2026-09-30: Optimizer fand Stops von 2-5% einer Kerze (US 4h: 0.13% SL bei 7.2% ATR), live durch Stop-Slippage nicht belastbar. Wirkt in optimizer.py (Trials verworfen) und sync_confirmed_flags.py. Anheben, sobald echte Stop-Slippage gemessen ist.",
+        "min_env1_atr_fraction": 0.5,
+        "min_band_gap_atr_fraction": 0.25,
+        "_band_atr_note": "Baender relativ zur typischen Kerzenbewegung (median ATR/Close): Band 1 >= min_env1_atr_fraction Kerzen vom MA, jede weitere Luecke >= min_band_gap_atr_fraction Kerzen. 2026-09-30: vorher feste Prozent (ab 0.5%) -> auf volatilen Coins lagen alle 3 Baender praktisch auf dem MA (US 4h). Optimizer sucht seitdem in ATR-Einheiten; sync_confirmed_flags.py prueft bestehende Configs."
     },
     "parameter_search_settings": {
         "_info": "Schritt 1 (Envelope-Parameter-Suche pro Symbol/Timeframe, optimizer.py) -- getrennt von optimization_settings oben, das nur Schritt 2 (woechentliche Portfolio-AUSWAHL aus bestehenden Configs, portfolio_optimizer.py) steuert. Ohne diesen Block liefe Schritt 1 nie automatisch und die Configs wuerden wieder einfrieren (siehe project_ltbbot_daily_live_vs_backtest_telegram, 2026-09-25).",

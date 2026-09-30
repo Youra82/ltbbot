@@ -142,6 +142,25 @@ def sl_atr_fraction(params, atr_pct):
     return sorted(envelopes)[0] * ratio / atr_pct
 
 
+def band_structure_ok(params, atr_pct, min_env1_atr, min_gap_atr):
+    """Bandabstaende relativ zur typischen Kerzenbewegung (median ATR%, Dezimal).
+
+    2026-09-30: Der Optimizer suchte Baender in festen Prozent (Band 1 ab 0.5%,
+    Abstand ab 0.5%). Auf volatilen Coins lagen dadurch alle drei Baender praktisch
+    auf dem MA und aufeinander (US 4h: 0.5/1.06/1.81% bei ~5-7% Kerzenbewegung) --
+    die drei Einstiege loesen dann fast gleichzeitig aus (= dreifaches Risiko an
+    einem Punkt statt gestaffelter Position), und Band 1 liegt im Rauschen.
+    Regel: Band 1 >= min_env1_atr * ATR vom MA, jede weitere Luecke >= min_gap_atr * ATR.
+    Geteilt von optimizer.py (Suchraum + Neubewertung) und sync_confirmed_flags.py.
+    """
+    env = sorted(params.get('strategy', {}).get('envelopes') or [])
+    if not env or not atr_pct or atr_pct != atr_pct:
+        return True
+    if env[0] < min_env1_atr * atr_pct:
+        return False
+    return all((b - a) >= min_gap_atr * atr_pct for a, b in zip(env, env[1:]))
+
+
 def entry_blocked_by_sl(side, current_price, sl_price):
     """Live ueberspringt ein Band, wenn der aktuelle Preis schon jenseits dessen SL liegt
     (Entry wuerde sofort gestoppt). Geteilt mit Backtest/Portfolio-Simulator."""

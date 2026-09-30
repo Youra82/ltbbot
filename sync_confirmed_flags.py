@@ -35,7 +35,7 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP  # noqa: E402
 from ltbbot.analysis.optimizer import oos_gate  # noqa: E402
-from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction  # noqa: E402
+from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction, band_structure_ok  # noqa: E402
 
 CONFIGS_DIR = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
 
@@ -45,8 +45,9 @@ def main():
     parser.add_argument('--dry-run', action='store_true', help='Nur anzeigen, nichts schreiben')
     parser.add_argument('--end-date', type=str, default=None, help='Fensterende (Standard: gestern)')
     parser.add_argument('--sl-check-only', action='store_true',
-                        help='Nur die Stop/ATR-Regel pruefen (schnell, ohne Backtests): Configs mit zu engem '
-                             'Stop werden auf confirmed=false gesetzt, alle anderen bleiben unveraendert.')
+                        help='Nur die Stop-/Band-Abstands-Regeln pruefen (schnell, ohne Backtests): Configs mit zu '
+                             'engem Stop oder zu engen Baendern werden auf confirmed=false gesetzt, '
+                             'alle anderen bleiben unveraendert.')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.WARNING)
@@ -59,12 +60,14 @@ def main():
     max_dd = float(opt.get('constraints', {}).get('max_drawdown_pct', 30)) / 100.0
     start_capital = float(opt.get('start_capital', 10))
     min_sl_atr = float(opt.get('min_sl_atr_fraction', 0.06))
+    min_env1_atr = float(opt.get('min_env1_atr_fraction', 0.5))
+    min_gap_atr = float(opt.get('min_band_gap_atr_fraction', 0.25))
 
     end_date = args.end_date or (date.today() - timedelta(days=1)).strftime('%Y-%m-%d')
     start_date = (date.fromisoformat(end_date) - timedelta(weeks=lookback_weeks)).strftime('%Y-%m-%d')
     print(f"Fenster {start_date} -> {end_date} | IS-Anteil {is_fraction} | "
           f"Kriterien: OOS-Trades>={min_trades}, PnL>0, PF>={min_pf}, MaxDD<={max_dd*100:.0f}%, "
-          f"Stop >= {min_sl_atr*100:.0f}% der typischen Kerze\n")
+          f"Stop >= {min_sl_atr*100:.0f}%, Band 1 >= {min_env1_atr*100:.0f}%, Band-Luecken >= {min_gap_atr*100:.0f}% der typischen Kerze\n")
 
     rows = []
     for path in sorted(glob.glob(os.path.join(CONFIGS_DIR, 'config_*_envelope.json'))):
@@ -81,8 +84,9 @@ def main():
             split_ts = data.index[split_idx]
             params = {'strategy': cfg['strategy'], 'risk': cfg['risk'],
                       'behavior': cfg.get('behavior', {'use_longs': True, 'use_shorts': True})}
-            sl_frac = sl_atr_fraction(params, median_atr_pct(data.iloc[:split_idx]))
-            sl_ok = sl_frac is None or sl_frac >= min_sl_atr
+            is_atr = median_atr_pct(data.iloc[:split_idx])
+            sl_frac = sl_atr_fraction(params, is_atr)
+            sl_ok = (sl_frac is None or sl_frac >= min_sl_atr) and band_structure_ok(params, is_atr, min_env1_atr, min_gap_atr)
             was = cfg.get('_meta', {}).get('confirmed')
             if args.sl_check_only:
                 now = bool(was) and sl_ok
@@ -91,7 +95,7 @@ def main():
                     cfg.setdefault('_meta', {}).update({
                         'confirmed': now, 'sl_atr_fraction': round(sl_frac, 4),
                         'rechecked_at': datetime.now().isoformat(timespec='seconds'),
-                        'unconfirmed_reason': 'stop_too_tight_vs_atr'})
+                        'unconfirmed_reason': 'stop_or_bands_too_tight_vs_atr'})
                     with open(path, 'w') as f:
                         json.dump(cfg, f, indent=4)
                 continue
