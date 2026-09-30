@@ -241,12 +241,11 @@ def run_portfolio_optimization(opt_settings: dict, reason: str):
     success    = False
 
     try:
-        capital = str(opt_settings.get('start_capital', 50))
         max_dd  = str(opt_settings.get('constraints', {}).get('max_drawdown_pct', 30))
         from datetime import timedelta
         start_date = (datetime.now() - timedelta(weeks=lookback_weeks)).strftime('%Y-%m-%d')
         cmd = [sys.executable, '-u', PORTFOLIO_SCRIPT,
-               '--capital', capital, '--max-dd', max_dd,
+               '--max-dd', max_dd,
                '--start-date', start_date, '--auto-write']
         _log(f"PORTFOLIO_OPTIMIZER_START cmd={' '.join(cmd)}")
         with open(TRIGGER_LOG, 'a', encoding='utf-8') as _lf:

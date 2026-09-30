@@ -48,6 +48,26 @@ LOOKBACK_MAP = {
 BOT_NAME = 'ltbbot'
 
 
+def _fetch_live_equity():
+    """Echter Kontostand (Equity inkl. gebundener Margin) des ltbbot-Bitget-Kontos,
+    None falls nicht abrufbar. 2026-09-30: vorher rechnete der Portfolio-Optimizer
+    (auch im woechentlichen Auto-Lauf) immer mit settings.json::start_capital statt
+    mit dem tatsaechlichen Kapital -- die Portfolio-Groesse passte sich nie an die
+    reale Kapitaldecke an (siehe feedback_ltbbot_no_extra_capital_fix_sizing_instead)."""
+    try:
+        from ltbbot.utils.exchange import Exchange
+        with open(os.path.join(PROJECT_ROOT, 'secret.json')) as f:
+            account = json.load(f)['ltbbot'][0]
+        ex = Exchange(account)
+        bal = ex.exchange.fetch_balance(params={'marginCoin': 'USDT', 'productType': 'USDT-FUTURES'})
+        total = (bal.get('total') or {}).get('USDT')
+        equity = float(total) if total else float(ex.fetch_balance_usdt() or 0)
+        return equity if equity > 0 else None
+    except Exception as e:
+        print(f"  {Y}Kontostand nicht abrufbar ({e}) -- nutze start_capital aus settings.json.{NC}")
+        return None
+
+
 def _scan_configs() -> list:
     """Nur OOS-bestaetigte Configs (_meta.confirmed) sind waehlbar (2026-09-27).
     Vorher waehlte der Portfolio-Optimizer aus ALLEN Configs im Ordner -- auch aus
@@ -564,7 +584,12 @@ def main() -> int:
     with open(SETTINGS_PATH) as f:
         settings = json.load(f)
     opt       = settings.get('optimization_settings', {})
-    capital   = args.capital or float(opt.get('start_capital', 50))
+    if args.capital:
+        capital = args.capital
+    else:
+        live_equity = _fetch_live_equity()
+        capital = live_equity if live_equity else float(opt.get('start_capital', 50))
+        print(f"  Kapital: {capital:.2f} USDT ({'echter Kontostand' if live_equity else 'start_capital aus settings.json'})")
     max_dd    = args.max_dd
 
     # Lookback (in Tagen) IMMER zuerst bestimmen -- backtest_lookback_weeks hat

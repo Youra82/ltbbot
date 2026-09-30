@@ -168,11 +168,10 @@ def run_optimization(opt_settings: dict, reason: str):
     success    = False
 
     try:
-        capital = str(opt_settings.get('start_capital', 50))
         max_dd  = str(opt_settings.get('constraints', {}).get('max_drawdown_pct', 30))
         cmd     = [sys.executable, PORTFOLIO_SCRIPT,
-                   '--capital', capital, '--max-dd', max_dd, '--auto-write']
-        _log(f"CMD capital={capital} max_dd={max_dd}")
+                   '--max-dd', max_dd, '--auto-write']
+        _log(f"CMD capital=echter Kontostand max_dd={max_dd}")
         result  = subprocess.run(cmd)
         success = (result.returncode == 0)
         _log(f"EXIT rc={result.returncode}")
