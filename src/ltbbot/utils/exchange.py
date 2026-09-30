@@ -29,6 +29,19 @@ class Exchange:
             'enableRateLimit': True,
         })
 
+        # Ab welchem Alter fetch_ohlcv vom "recent"- auf den "history-candles"-
+        # Endpoint wechselt (2026-09-30). Die in requirements.txt gepinnte ccxt 4.3.5
+        # nimmt hier 1h=83 / 30m=52 / 15m=52 Tage an, Bitgets recent-Endpoint liefert
+        # fuer so alte Zeitraeume aber inzwischen LEERE Antworten -> 26-Wochen-1h-
+        # Downloads brachen still am 14.07. ab (2588 statt 4392 Kerzen), 30m/15m
+        # ebenso. Werte aus ccxt 4.5.35 (dort korrekt). Beide Schluesselnamen, weil
+        # ccxt sie zwischen den Versionen umbenannt hat.
+        _recent_days = {'1m': 30, '3m': 30, '5m': 30, '15m': 30, '30m': 30, '1h': 60,
+                        '2h': 120, '4h': 240, '6h': 360, '12h': 720, '1d': 1440}
+        _ohlcv_opts = self.exchange.options.setdefault('fetchOHLCV', {})
+        _ohlcv_opts['maxDaysPerTimeframe'] = dict(_ohlcv_opts.get('maxDaysPerTimeframe', {}), **_recent_days)
+        _ohlcv_opts['maxRecentDaysPerTimeframe'] = dict(_ohlcv_opts.get('maxRecentDaysPerTimeframe', {}), **_recent_days)
+
         try:
             self.markets = self.exchange.load_markets()
             # Kalibriert den lokalen Uhr-Offset gegen Bitgets Serverzeit einmalig
@@ -150,6 +163,17 @@ class Exchange:
         if not all_ohlcv:
             logger.warning(f"Keine historischen OHLCV-Daten für {symbol} im Zeitraum gefunden.")
             return pd.DataFrame()
+
+        # Laut statt still: endet der Download deutlich vor dem angefragten Ende,
+        # ist die Historie unvollstaendig (2026-09-30: ccxt-4.3.5-Endpoint-Bug lieferte
+        # still nur 59% der 1h-Kerzen, alle 1h-Optimierungen liefen auf Teildaten).
+        _last_ts = all_ohlcv[-1][0]
+        _now_ms = self.exchange.milliseconds()
+        if _last_ts < min(end_ts, _now_ms) - 3 * timeframe_duration_in_ms:
+            logger.error(
+                f"UNVOLLSTAENDIGE HISTORIE {symbol} ({timeframe}): Daten enden "
+                f"{pd.to_datetime(_last_ts, unit='ms', utc=True)}, angefragt bis {end_date_str}. "
+                f"Ergebnisse auf diesen Daten sind nicht aussagekraeftig.")
 
         df = pd.DataFrame(all_ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms', utc=True)
