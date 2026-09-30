@@ -28,6 +28,7 @@ RESULTS_FILE = os.path.join(PROJECT_ROOT, 'artifacts', 'results', 'last_optimize
 # Verwende den Backtester für Envelope
 from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP
 from ltbbot.analysis.evaluator import evaluate_dataset
+from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction
 
 # Globale Variablen für die Objective-Funktion
 HISTORICAL_DATA = None
@@ -52,6 +53,9 @@ MIN_OOS_PROFIT_FACTOR = 1.3  # Bestaetigung erfordert winrate-unabhaengigen OOS-
                               # (Summe Gewinne / |Summe Verluste|) spuerbar ueber 1.0 -- siehe
                               # Docstring bei confirmed= weiter unten
 K_FOLDS = 3              # IS-Teilfenster fuer den Robustheits-Score (siehe objective())
+MIN_SL_ATR_FRACTION = 0.06  # Stop-Abstand Band 1 >= dieser Anteil der typischen Kerze (median ATR%),
+                            # siehe envelope_logic.sl_atr_fraction; Wert aus settings.json
+IS_ATR_PCT = None           # median ATR% des IS-Fensters des aktuellen Paars
 
 def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal):
     """OOS-Bestaetigungs-Kriterien (ohne Baseline-Vergleich) -- geteilt zwischen dem
@@ -131,6 +135,12 @@ def objective(trial):
         'behavior': {'use_longs': True, 'use_shorts': True}
     }
 
+    # Zu enge Stops im Verhaeltnis zur Kerzenbewegung verwerfen, bevor gebacktestet
+    # wird (siehe envelope_logic.sl_atr_fraction) -- nur auf IS-Daten gemessen.
+    _sl_frac = sl_atr_fraction(params, IS_ATR_PCT)
+    if _sl_frac is not None and _sl_frac < MIN_SL_ATR_FRACTION:
+        raise optuna.exceptions.TrialPruned()
+
     # --- Backtest ---
     if IS_DATA is None or START_CAPITAL <= 0:
         # Verwende logger statt print im Objective
@@ -195,7 +205,7 @@ def objective(trial):
 
 # --- Main Funktion ---
 def main():
-    global HISTORICAL_DATA, IS_DATA, OOS_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO, IS_FRACTION, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, K_FOLDS
+    global HISTORICAL_DATA, IS_DATA, OOS_DATA, CURRENT_SYMBOL, CURRENT_TIMEFRAME, CONFIG_SUFFIX, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, START_CAPITAL, OPTIM_MODE, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO, IS_FRACTION, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, K_FOLDS, MIN_SL_ATR_FRACTION, IS_ATR_PCT
 
     parser = argparse.ArgumentParser(description="Parameter-Optimierung für ltbbot (Envelope-Strategie)")
     parser.add_argument('--symbols', required=True, type=str)
@@ -226,6 +236,9 @@ def main():
                              'positives OOS-PnL bestaetigt wurden (siehe research_ltbbot_live_vs_backtest_2026_09, '
                              '2026-09-25 -- bewusst Profit-Faktor statt Winrate, User-Vorgabe: profitabel '
                              'unabhaengig von der Winrate)')
+    parser.add_argument('--min_sl_atr_fraction', type=float, default=None,
+                        help='Stop-Abstand Band 1 >= Anteil der typischen Kerzenbewegung (median ATR%%). '
+                             'Standard: settings.json::optimization_settings.min_sl_atr_fraction (0.06).')
     parser.add_argument('--k_folds', type=int, default=3,
                         help='Anzahl IS-Teilfenster fuer den Robustheits-Score (Minimum ueber alle Fenster), Standard 3')
     # Re-Optimierungs-Sperre (Port von dnabots alphabet_optimizer.py-Muster,
@@ -259,6 +272,14 @@ def main():
     MIN_OOS_TRADES = args.min_oos_trades
     MIN_OOS_PROFIT_FACTOR = args.min_oos_profit_factor
     K_FOLDS = args.k_folds
+    if args.min_sl_atr_fraction is not None:
+        MIN_SL_ATR_FRACTION = args.min_sl_atr_fraction
+    else:
+        try:
+            with open(os.path.join(PROJECT_ROOT, 'settings.json')) as _sf:
+                MIN_SL_ATR_FRACTION = float(json.load(_sf).get('optimization_settings', {}).get('min_sl_atr_fraction', MIN_SL_ATR_FRACTION))
+        except Exception:
+            pass
 
     symbols, timeframes = args.symbols.split(), args.timeframes.split()
     TASKS = [{'symbol': f"{s.upper()}/USDT:USDT", 'timeframe': tf} for s in symbols for tf in timeframes]
@@ -337,6 +358,9 @@ def main():
         split_ts  = HISTORICAL_DATA.index[split_idx]
         IS_DATA   = HISTORICAL_DATA.iloc[:split_idx]
         OOS_DATA  = HISTORICAL_DATA.iloc[split_idx:]
+        IS_ATR_PCT = median_atr_pct(IS_DATA)
+        logger.info(f"Typische Kerzenbewegung (median ATR, IS): {IS_ATR_PCT*100:.2f}% -> "
+                    f"Mindest-Stop Band 1: {MIN_SL_ATR_FRACTION*IS_ATR_PCT*100:.3f}%")
         logger.info(
             f"{symbol} ({timeframe}): {len(HISTORICAL_DATA)} Kerzen | "
             f"IS bis {split_ts.date()} ({split_idx} Kerzen) | "
@@ -593,6 +617,9 @@ def main():
             # run_portfolio_optimizer.py waehlt nur unter bestaetigten Configs aus.
             if baseline_oos is not None:
                 base_gate = oos_gate(baseline_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
+                _base_frac = sl_atr_fraction(baseline_params, IS_ATR_PCT)
+                if _base_frac is not None and _base_frac < MIN_SL_ATR_FRACTION:
+                    base_gate['passed'] = False
                 try:
                     existing_cfg.setdefault('_meta', {}).update({
                         'pnl_pct': round(baseline_is.get('total_pnl_pct', 0), 2),

@@ -14,7 +14,8 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 # Import necessary functions
 from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
-                                            classify_regime, compute_band_sl_price, simulate_entry_fill)
+                                            classify_regime, compute_band_sl_price, simulate_entry_fill,
+                                            stop_fill_price)
 from ltbbot.analysis.backtester import _resolve_ambiguous_exit, _get_fine_slice
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
@@ -91,6 +92,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
             'sma20':  _ta.trend.sma_indicator(df['close'], window=20),
             'sma50':  _ta.trend.sma_indicator(df['close'], window=50),
             'atr_sl': _atr_sl,
+            'atr_pct': _ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=14) / df['close'],
         }
 
     sorted_timestamps = sorted(list(all_timestamps))
@@ -177,8 +179,10 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
         total_exit_pnl_this_step = 0.0
         closed_bands_this_step = {strategy_id: set() for strategy_id in strategy_dfs.keys()}
 
-        def _close_layer(strategy_id, layer, exit_price, exit_reason):
+        def _close_layer(strategy_id, layer, exit_price, exit_reason, atr_pct=None):
             pos_side = layer['side']; pos_entry = layer['entry_price']; pos_amount = layer['amount_coins']
+            if exit_reason == 'SL':
+                exit_price = stop_fill_price(pos_side, exit_price, atr_pct)
             if pos_side == 'long':
                 pnl = (exit_price - pos_entry) * pos_amount
             else:
@@ -262,7 +266,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                     exit_price, exit_reason = tp_price_current, 'TP'
 
                 if exit_price is not None and exit_price > 0:
-                    total_exit_pnl_this_step += _close_layer(strategy_id, layer, exit_price, exit_reason)
+                    total_exit_pnl_this_step += _close_layer(strategy_id, layer, exit_price, exit_reason,
+                                                             strategy_pre_indicators[strategy_id]['atr_pct'].iloc[df_idx - 1])
                     used_margin -= layer.get('margin', 0.0) # Margin wieder freigeben
                     closed_bands_this_step[strategy_id].add((pos_side, layer.get('band')))
                 else:
@@ -394,7 +399,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         }
                         if stopped:
                             # SL noch in der Entry-Kerze erreicht (siehe simulate_entry_fill)
-                            equity += _close_layer(strategy_id, layer, sl, 'SL')
+                            equity += _close_layer(strategy_id, layer, sl, 'SL',
+                                                   pre['atr_pct'].iloc[df_idx - 1])
                             continue
                         used_margin += margin_required
                         open_portfolio_positions[strategy_id].append(layer)

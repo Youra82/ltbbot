@@ -15,7 +15,8 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange # Für load_data
 from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
-                                            classify_regime, compute_band_sl_price, simulate_entry_fill)
+                                            classify_regime, compute_band_sl_price, simulate_entry_fill,
+                                            stop_fill_price)
 
 secrets_cache = None
 
@@ -302,6 +303,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
     
     # ATR-Serie für SL-Berechnung (nur wenn ATR-SL aktiv)
     _atr_sl_pre = _ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=_atr_sl_period) if use_atr_sl else None
+    # Typische Kerzenbewegung (ATR14/Close) fuer die Stop-Slippage (stop_fill_price)
+    _atr_pct_pre = _ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=14) / df['close']
 
     # Regime-Indikatoren einmalig vorab berechnen (O(n) statt O(n²))
     _adx_pre   = _ta.trend.adx(df['high'], df['low'], df['close'], window=14)
@@ -318,9 +321,11 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
     progress_interval = max(1, total_candles // 20)  # 20 Updates (5% Schritte)
     coarse_duration = df.index[1] - df.index[0] if len(df.index) >= 2 else None
 
-    def _close_position(pos, exit_price, exit_reason, exit_ts):
+    def _close_position(pos, exit_price, exit_reason, exit_ts, atr_pct=None):
         """Realisiert eine Position (Gebuehren + Slippage) und gibt den PnL zurueck."""
         pos_entry = pos['entry_price']; pos_amount = pos['amount_coins']
+        if exit_reason == 'SL':
+            exit_price = stop_fill_price(pos['side'], exit_price, atr_pct)
         if pos['side'] == 'long':
             pnl = (exit_price - pos_entry) * pos_amount
         else:
@@ -418,7 +423,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 exit_price, exit_reason = tp_price_current, 'TP'
 
             if exit_price is not None and exit_price > 0:
-                exit_pnl_current_candle += _close_position(pos, exit_price, exit_reason, timestamp)
+                exit_pnl_current_candle += _close_position(pos, exit_price, exit_reason, timestamp,
+                                                           _atr_pct_pre.iloc[i - 1])
                 used_margin -= pos.get('margin', 0.0) # Margin wieder freigeben
                 closed_bands_this_candle.add((pos_side, pos.get('band')))
             else:
@@ -525,7 +531,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                         }
                         if stopped:
                             # SL noch in der Entry-Kerze erreicht (konservativ, siehe simulate_entry_fill)
-                            entry_pnl_current_candle += _close_position(pos, sl_price, 'SL', timestamp)
+                            entry_pnl_current_candle += _close_position(pos, sl_price, 'SL', timestamp,
+                                                                        _atr_pct_pre.iloc[i - 1])
                             continue
                         used_margin += margin_required
                         positions.append(pos)

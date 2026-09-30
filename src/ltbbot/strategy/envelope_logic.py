@@ -98,6 +98,50 @@ def compute_band_sl_price(side, band_price, band_index, params, regime, atr_valu
     return sl_price if sl_price > 0 else None
 
 
+# Zusaetzliche Stop-Slippage im Backtest als Anteil der typischen Kerzenbewegung
+# (ATR/Close der letzten abgeschlossenen Kerze). 2026-09-30: Backtester/Portfolio-Sim
+# fuellten jeden Stop exakt zum SL-Preis (+ fixe 0.05%). Bei engen Stops auf
+# volatilen Coins (US 4h: SL 0.13%, Kerze ~7%) rutscht eine Stop-Market-Order live
+# aber ein Vielfaches davon weiter -- der Optimizer bevorzugte deshalb systematisch
+# Rausch-Stops mit riesigem R:R, die live nicht halten. Mit volatilitaetsskalierter
+# Slippage (BTC ~0.07%, US ~0.36%) sind solche Configs im Backtest nicht mehr
+# attraktiv. Wert konservativ geschaetzt; kalibrieren, sobald echte SL-Fills gemessen.
+STOP_SLIPPAGE_ATR_FRACTION = 0.05
+
+
+def stop_fill_price(side, stop_price, atr_pct):
+    """Realistischer Fill einer ausgeloesten Stop-Market-Order (geteilt: backtester.py,
+    portfolio_simulator.py). atr_pct als Dezimal (0.03 = 3%)."""
+    if atr_pct is None or atr_pct != atr_pct or atr_pct <= 0:
+        return stop_price
+    extra = STOP_SLIPPAGE_ATR_FRACTION * atr_pct
+    return stop_price * (1 - extra) if side == 'long' else stop_price * (1 + extra)
+
+
+def median_atr_pct(df, period=14):
+    """Typische Kerzenbewegung: Median von ATR/Close ueber den Datensatz (Dezimal, 0.03 = 3%)."""
+    if df is None or len(df) <= period:
+        return float('nan')
+    atr = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=period)
+    return float((atr / df['close']).median())
+
+
+def sl_atr_fraction(params, atr_pct):
+    """Stop-Abstand von Band 1 als Anteil der typischen Kerzenbewegung (median ATR%).
+
+    2026-09-30: Optimizer fand Configs mit Stops von 2-5% einer normalen Kerze (z.B.
+    US 4h: SL 0.13% bei 7.2% ATR). Im Backtest wird jeder Stop exakt zum SL-Preis
+    gefuellt; live rutscht eine Stop-Market-Order in solchen Bewegungen leicht ein
+    Vielfaches des SL-Abstands weiter -> solche Configs sind live nicht belastbar.
+    Nur fuer den SL-Modus sl_to_env1_ratio (einziger Optimizer-Modus), sonst None.
+    """
+    ratio = params.get('risk', {}).get('sl_to_env1_ratio')
+    envelopes = params.get('strategy', {}).get('envelopes') or []
+    if ratio is None or not envelopes or not atr_pct or atr_pct != atr_pct:
+        return None
+    return sorted(envelopes)[0] * ratio / atr_pct
+
+
 def entry_blocked_by_sl(side, current_price, sl_price):
     """Live ueberspringt ein Band, wenn der aktuelle Preis schon jenseits dessen SL liegt
     (Entry wuerde sofort gestoppt). Geteilt mit Backtest/Portfolio-Simulator."""

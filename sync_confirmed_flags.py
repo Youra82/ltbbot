@@ -35,6 +35,7 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP  # noqa: E402
 from ltbbot.analysis.optimizer import oos_gate  # noqa: E402
+from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction  # noqa: E402
 
 CONFIGS_DIR = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
 
@@ -43,6 +44,9 @@ def main():
     parser = argparse.ArgumentParser(description='_meta.confirmed aller Configs neu bewerten')
     parser.add_argument('--dry-run', action='store_true', help='Nur anzeigen, nichts schreiben')
     parser.add_argument('--end-date', type=str, default=None, help='Fensterende (Standard: gestern)')
+    parser.add_argument('--sl-check-only', action='store_true',
+                        help='Nur die Stop/ATR-Regel pruefen (schnell, ohne Backtests): Configs mit zu engem '
+                             'Stop werden auf confirmed=false gesetzt, alle anderen bleiben unveraendert.')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.WARNING)
@@ -54,11 +58,13 @@ def main():
     min_pf = float(opt.get('min_oos_profit_factor', 1.3))
     max_dd = float(opt.get('constraints', {}).get('max_drawdown_pct', 30)) / 100.0
     start_capital = float(opt.get('start_capital', 10))
+    min_sl_atr = float(opt.get('min_sl_atr_fraction', 0.06))
 
     end_date = args.end_date or (date.today() - timedelta(days=1)).strftime('%Y-%m-%d')
     start_date = (date.fromisoformat(end_date) - timedelta(weeks=lookback_weeks)).strftime('%Y-%m-%d')
     print(f"Fenster {start_date} -> {end_date} | IS-Anteil {is_fraction} | "
-          f"Kriterien: OOS-Trades>={min_trades}, PnL>0, PF>={min_pf}, MaxDD<={max_dd*100:.0f}%\n")
+          f"Kriterien: OOS-Trades>={min_trades}, PnL>0, PF>={min_pf}, MaxDD<={max_dd*100:.0f}%, "
+          f"Stop >= {min_sl_atr*100:.0f}% der typischen Kerze\n")
 
     rows = []
     for path in sorted(glob.glob(os.path.join(CONFIGS_DIR, 'config_*_envelope.json'))):
@@ -73,20 +79,35 @@ def main():
                 continue
             split_idx = int(len(data) * is_fraction)
             split_ts = data.index[split_idx]
+            params = {'strategy': cfg['strategy'], 'risk': cfg['risk'],
+                      'behavior': cfg.get('behavior', {'use_longs': True, 'use_shorts': True})}
+            sl_frac = sl_atr_fraction(params, median_atr_pct(data.iloc[:split_idx]))
+            sl_ok = sl_frac is None or sl_frac >= min_sl_atr
+            was = cfg.get('_meta', {}).get('confirmed')
+            if args.sl_check_only:
+                now = bool(was) and sl_ok
+                rows.append((fname, was, now, None, None, None, sl_frac))
+                if not args.dry_run and now != bool(was):
+                    cfg.setdefault('_meta', {}).update({
+                        'confirmed': now, 'sl_atr_fraction': round(sl_frac, 4),
+                        'rechecked_at': datetime.now().isoformat(timespec='seconds'),
+                        'unconfirmed_reason': 'stop_too_tight_vs_atr'})
+                    with open(path, 'w') as f:
+                        json.dump(cfg, f, indent=4)
+                continue
             fine_tf = FINE_TF_MAP.get(timeframe)
             fine = load_data(symbol, fine_tf, start_date, end_date) if fine_tf else None
             if fine is not None and fine.empty:
                 fine = None
-            params = {'strategy': cfg['strategy'], 'risk': cfg['risk'],
-                      'behavior': cfg.get('behavior', {'use_longs': True, 'use_shorts': True})}
             res_is = run_envelope_backtest(data.iloc[:split_idx].copy(), params, start_capital,
                                            show_progress=False, fine_data=fine, multi_band_entries=True)
             res_oos = run_envelope_backtest(data.iloc[split_idx:].copy(), params, start_capital,
                                             show_progress=False, fine_data=fine, multi_band_entries=True)
             gate = oos_gate(res_oos, min_trades, min_pf, max_dd)
-            was = cfg.get('_meta', {}).get('confirmed')
+            if not sl_ok:
+                gate['passed'] = False
             rows.append((fname, was, gate['passed'], res_oos.get('trades_count', 0),
-                         res_oos.get('total_pnl_pct', 0), gate['profit_factor_display']))
+                         res_oos.get('total_pnl_pct', 0), gate['profit_factor_display'], sl_frac))
             if not args.dry_run:
                 cfg.setdefault('_meta', {}).update({
                     'pnl_pct': round(res_is.get('total_pnl_pct', 0), 2),
@@ -98,6 +119,7 @@ def main():
                     'is_oos_split_date': str(split_ts.date()),
                     'is_fraction': is_fraction,
                     'confirmed': gate['passed'],
+                    'sl_atr_fraction': round(sl_frac, 4) if sl_frac is not None else None,
                     'rechecked_at': datetime.now().isoformat(timespec='seconds'),
                 })
                 with open(path, 'w') as f:
@@ -105,9 +127,13 @@ def main():
         except Exception as e:
             print(f"  {fname}: Fehler ({e}) -- unveraendert")
 
-    print(f"{'Config':<42}{'vorher':>8}{'jetzt':>8}{'OOS-Tr':>8}{'OOS-PnL':>10}{'PF':>7}")
-    for fname, was, now, n, pnl, pf in rows:
-        print(f"{fname:<42}{str(was):>8}{str(now):>8}{n:>8}{pnl:>+9.1f}%{pf:>7.2f}")
+    print(f"{'Config':<42}{'vorher':>8}{'jetzt':>8}{'OOS-Tr':>8}{'OOS-PnL':>10}{'PF':>7}{'Stop/ATR':>10}")
+    for fname, was, now, n, pnl, pf, frac in rows:
+        frac_s = f"{frac*100:.0f}%" if frac is not None else '-'
+        n_s = f"{n:>8}" if n is not None else f"{'-':>8}"
+        pnl_s = f"{pnl:>+9.1f}%" if pnl is not None else f"{'-':>10}"
+        pf_s = f"{pf:>7.2f}" if pf is not None else f"{'-':>7}"
+        print(f"{fname:<42}{str(was):>8}{str(now):>8}{n_s}{pnl_s}{pf_s}{frac_s:>10}")
     n_conf = sum(1 for r in rows if r[2])
     print(f"\n{n_conf}/{len(rows)} Configs bestaetigt" + (" (dry-run, nichts geschrieben)" if args.dry_run else ""))
 
