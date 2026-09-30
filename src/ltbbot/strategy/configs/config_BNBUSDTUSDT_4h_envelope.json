@@ -3,7 +3,7 @@
         "pnl_pct": -2.97,
         "oos_pnl_pct": -1.61,
         "oos_trades": 1,
-        "is_oos_split_date": "2026-08-03",
+        "is_oos_split_date": "2026-08-06",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": false,
@@ -11,7 +11,7 @@
         "oos_profit_factor": 0.0,
         "oos_win_rate": 0.0,
         "oos_max_drawdown_pct": 1.61,
-        "rechecked_at": "2026-09-27T13:11:17"
+        "rechecked_at": "2026-09-30T12:06:24"
     },
     "market": {
         "symbol": "BNB/USDT:USDT",

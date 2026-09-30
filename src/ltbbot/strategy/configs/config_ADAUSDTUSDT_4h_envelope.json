@@ -3,7 +3,7 @@
         "pnl_pct": 7.07,
         "oos_pnl_pct": -6.61,
         "oos_trades": 13,
-        "is_oos_split_date": "2026-08-03",
+        "is_oos_split_date": "2026-08-06",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": false,
@@ -11,7 +11,7 @@
         "oos_profit_factor": 0.34,
         "oos_win_rate": 7.69,
         "oos_max_drawdown_pct": 8.42,
-        "rechecked_at": "2026-09-27T12:51:04"
+        "rechecked_at": "2026-09-30T11:46:46"
     },
     "market": {
         "symbol": "ADA/USDT:USDT",

@@ -3,7 +3,7 @@
         "pnl_pct": 7.13,
         "oos_pnl_pct": 0.0,
         "oos_trades": 0,
-        "is_oos_split_date": "2026-08-03",
+        "is_oos_split_date": "2026-08-06",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": false,
@@ -11,7 +11,7 @@
         "oos_profit_factor": 0.0,
         "oos_win_rate": 0,
         "oos_max_drawdown_pct": 0.0,
-        "rechecked_at": "2026-09-27T13:55:11"
+        "rechecked_at": "2026-09-30T12:58:28"
     },
     "market": {
         "symbol": "SOL/USDT:USDT",

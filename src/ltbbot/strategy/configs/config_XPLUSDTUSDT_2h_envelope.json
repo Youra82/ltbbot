@@ -1,0 +1,42 @@
+{
+    "_meta": {
+        "pnl_pct": 127.09,
+        "oos_pnl_pct": 17.96,
+        "oos_trades": 34,
+        "oos_profit_factor": 1.5,
+        "oos_win_rate": 26.47,
+        "oos_max_drawdown_pct": 8.72,
+        "is_oos_split_date": "2026-08-06",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-09-30T10:50:32",
+        "rechecked_at": "2026-09-30T13:05:07"
+    },
+    "market": {
+        "symbol": "XPL/USDT:USDT",
+        "timeframe": "2h"
+    },
+    "strategy": {
+        "average_type": "SMA",
+        "average_period": 23,
+        "envelopes": [
+            0.03362123374737268,
+            0.06494926758894383,
+            0.07186054475980382
+        ],
+        "trigger_price_delta_pct": 0.0599,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.87,
+        "leverage": 12,
+        "sl_to_env1_ratio": 0.1066
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

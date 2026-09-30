@@ -6,12 +6,12 @@
         "oos_profit_factor": 0.71,
         "oos_win_rate": 25.0,
         "oos_max_drawdown_pct": 3.61,
-        "is_oos_split_date": "2026-08-03",
+        "is_oos_split_date": "2026-08-06",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": false,
         "optimized_at": "2026-09-25T13:51:25",
-        "rechecked_at": "2026-09-27T13:17:17"
+        "rechecked_at": "2026-09-30T12:13:26"
     },
     "market": {
         "symbol": "DOGE/USDT:USDT",

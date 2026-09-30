@@ -1,17 +1,17 @@
 {
     "_meta": {
         "pnl_pct": 21.45,
-        "oos_pnl_pct": 49.86,
-        "oos_trades": 15,
-        "oos_profit_factor": 3.18,
-        "oos_win_rate": 46.67,
-        "oos_max_drawdown_pct": 7.0,
-        "is_oos_split_date": "2026-08-03",
+        "oos_pnl_pct": 41.03,
+        "oos_trades": 18,
+        "oos_profit_factor": 2.29,
+        "oos_win_rate": 38.89,
+        "oos_max_drawdown_pct": 12.48,
+        "is_oos_split_date": "2026-08-06",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
         "optimized_at": "2026-09-25T14:39:31",
-        "rechecked_at": "2026-09-27T12:53:47"
+        "rechecked_at": "2026-09-30T11:49:09"
     },
     "market": {
         "symbol": "ARB/USDT:USDT",

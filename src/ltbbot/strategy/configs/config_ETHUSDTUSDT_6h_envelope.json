@@ -1,17 +1,17 @@
 {
     "_meta": {
-        "pnl_pct": 14.06,
-        "oos_pnl_pct": 5.11,
-        "oos_trades": 14,
-        "oos_profit_factor": 1.41,
-        "oos_win_rate": 35.71,
+        "pnl_pct": 8.54,
+        "oos_pnl_pct": 3.8,
+        "oos_trades": 15,
+        "oos_profit_factor": 1.28,
+        "oos_win_rate": 33.33,
         "oos_max_drawdown_pct": 5.03,
-        "is_oos_split_date": "2026-08-03",
+        "is_oos_split_date": "2026-08-06",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": true,
+        "confirmed": false,
         "optimized_at": "2026-09-27T10:49:42",
-        "rechecked_at": "2026-09-27T13:23:17"
+        "rechecked_at": "2026-09-30T12:17:36"
     },
     "market": {
         "symbol": "ETH/USDT:USDT",

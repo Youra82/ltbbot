@@ -5,13 +5,13 @@
         "oos_trades": 2,
         "oos_win_rate": 50.0,
         "oos_max_drawdown_pct": 2.13,
-        "is_oos_split_date": "2026-08-03",
+        "is_oos_split_date": "2026-08-06",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": false,
         "optimized_at": "2026-09-25T10:29:05",
         "oos_profit_factor": 3.55,
-        "rechecked_at": "2026-09-27T13:42:14"
+        "rechecked_at": "2026-09-30T12:39:40"
     },
     "market": {
         "symbol": "PEPE/USDT:USDT",

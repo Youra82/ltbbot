@@ -1,17 +1,17 @@
 {
     "_meta": {
-        "pnl_pct": 73.78,
-        "oos_pnl_pct": 21.72,
-        "oos_trades": 15,
-        "oos_profit_factor": 2.33,
-        "oos_win_rate": 46.67,
-        "oos_max_drawdown_pct": 6.04,
-        "is_oos_split_date": "2026-08-03",
+        "pnl_pct": 68.0,
+        "oos_pnl_pct": 13.94,
+        "oos_trades": 9,
+        "oos_profit_factor": 2.41,
+        "oos_win_rate": 44.44,
+        "oos_max_drawdown_pct": 3.97,
+        "is_oos_split_date": "2026-08-06",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": true,
+        "confirmed": false,
         "optimized_at": "2026-09-27T09:11:56",
-        "rechecked_at": "2026-09-27T12:45:34"
+        "rechecked_at": "2026-09-30T11:41:51"
     },
     "market": {
         "symbol": "AAVE/USDT:USDT",

@@ -1,0 +1,42 @@
+{
+    "_meta": {
+        "pnl_pct": 193.47,
+        "oos_pnl_pct": 21.3,
+        "oos_trades": 42,
+        "oos_profit_factor": 1.67,
+        "oos_win_rate": 19.05,
+        "oos_max_drawdown_pct": 14.11,
+        "is_oos_split_date": "2026-08-06",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-09-27T22:37:45",
+        "rechecked_at": "2026-09-30T12:08:53"
+    },
+    "market": {
+        "symbol": "BR/USDT:USDT",
+        "timeframe": "2h"
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 25,
+        "envelopes": [
+            0.028938838530873777,
+            0.03592016194215834,
+            0.05225190688073998
+        ],
+        "trigger_price_delta_pct": 0.104,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 32.51
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.8,
+        "leverage": 2,
+        "sl_to_env1_ratio": 0.1586
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

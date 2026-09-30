@@ -4,18 +4,53 @@
         "_active_strategies_note": "Nur ein FALLBACK/Startwert fuer neue Clones -- der VPS-eigene Auto-Optimizer-Lauf ueberschreibt das lokal, update.sh schuetzt diesen lokalen Stand seit 2026-09-24 vor git reset --hard. Stand hier: letztes bekanntes echtes Portfolio vom User bestaetigt (2026-09-22, 12 Strategien, kein DOGE/AVAX mehr).",
         "active_strategies": [
             {
-                "symbol": "SOL/USDT:USDT",
+                "symbol": "PHA/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             },
             {
-                "symbol": "NEAR/USDT:USDT",
-                "timeframe": "30m",
+                "symbol": "US/USDT:USDT",
+                "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "PEPE/USDT:USDT",
+                "symbol": "BR/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "NIL/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "INJ/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "XPL/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "Q/USDT:USDT",
                 "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "MUBARAK/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "ONDO/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "6h",
                 "active": true
             },
             {
@@ -24,42 +59,22 @@
                 "active": true
             },
             {
-                "symbol": "ADA/USDT:USDT",
+                "symbol": "AAVE/USDT:USDT",
                 "timeframe": "2h",
                 "active": true
             },
             {
-                "symbol": "AAVE/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "PUMP/USDT:USDT",
+                "timeframe": "6h",
                 "active": true
             },
             {
-                "symbol": "ETH/USDT:USDT",
+                "symbol": "PEPE/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             },
             {
                 "symbol": "DOT/USDT:USDT",
-                "timeframe": "6h",
-                "active": true
-            },
-            {
-                "symbol": "LTC/USDT:USDT",
-                "timeframe": "6h",
-                "active": true
-            },
-            {
-                "symbol": "LINK/USDT:USDT",
-                "timeframe": "6h",
-                "active": true
-            },
-            {
-                "symbol": "XRP/USDT:USDT",
-                "timeframe": "30m",
-                "active": true
-            },
-            {
-                "symbol": "BTC/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             }

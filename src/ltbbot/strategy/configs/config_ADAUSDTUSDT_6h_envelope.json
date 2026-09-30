@@ -1,17 +1,17 @@
 {
     "_meta": {
-        "pnl_pct": 27.52,
-        "oos_pnl_pct": 15.38,
-        "oos_trades": 11,
-        "oos_profit_factor": 3.11,
-        "oos_win_rate": 27.27,
-        "oos_max_drawdown_pct": 3.2,
-        "is_oos_split_date": "2026-08-03",
+        "pnl_pct": 0.36,
+        "oos_pnl_pct": 17.61,
+        "oos_trades": 12,
+        "oos_profit_factor": 3.2,
+        "oos_win_rate": 33.33,
+        "oos_max_drawdown_pct": 3.39,
+        "is_oos_split_date": "2026-08-06",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
         "optimized_at": "2026-09-27T09:34:37",
-        "rechecked_at": "2026-09-27T12:51:49"
+        "rechecked_at": "2026-09-30T11:47:26"
     },
     "market": {
         "symbol": "ADA/USDT:USDT",

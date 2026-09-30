@@ -1,0 +1,42 @@
+{
+    "_meta": {
+        "pnl_pct": 39.52,
+        "oos_pnl_pct": 25.14,
+        "oos_trades": 13,
+        "oos_profit_factor": 4.26,
+        "oos_win_rate": 53.85,
+        "oos_max_drawdown_pct": 2.41,
+        "is_oos_split_date": "2026-08-06",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-09-28T12:35:59",
+        "rechecked_at": "2026-09-30T12:41:04"
+    },
+    "market": {
+        "symbol": "PHA/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 41,
+        "envelopes": [
+            0.030483835233651932,
+            0.04430493371020963,
+            0.08418732518665702
+        ],
+        "trigger_price_delta_pct": 0.129,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 38.87
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.97,
+        "leverage": 4,
+        "sl_to_env1_ratio": 0.1811
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

@@ -1,0 +1,42 @@
+{
+    "_meta": {
+        "pnl_pct": 211.49,
+        "oos_pnl_pct": 6.56,
+        "oos_trades": 35,
+        "oos_profit_factor": 1.16,
+        "oos_win_rate": 20.0,
+        "oos_max_drawdown_pct": 13.9,
+        "is_oos_split_date": "2026-08-06",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": false,
+        "optimized_at": "2026-09-28T14:07:57",
+        "rechecked_at": "2026-09-30T12:44:15"
+    },
+    "market": {
+        "symbol": "Q/USDT:USDT",
+        "timeframe": "2h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 33,
+        "envelopes": [
+            0.032905161919722696,
+            0.05355926037475095,
+            0.06218748652058338
+        ],
+        "trigger_price_delta_pct": 0.0306,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.98,
+        "leverage": 12,
+        "sl_to_env1_ratio": 0.112
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}
