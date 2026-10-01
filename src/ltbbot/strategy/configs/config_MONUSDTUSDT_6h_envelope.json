@@ -1,0 +1,41 @@
+{
+    "_meta": {
+        "pnl_pct": 148.61,
+        "oos_pnl_pct": 19.81,
+        "oos_trades": 13,
+        "oos_profit_factor": 2.4,
+        "oos_win_rate": 38.46,
+        "oos_max_drawdown_pct": 5.99,
+        "is_oos_split_date": "2026-08-07",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-01T11:41:36"
+    },
+    "market": {
+        "symbol": "MON/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 32,
+        "envelopes": [
+            0.027296133066677986,
+            0.04634548787074372,
+            0.06789432293983606
+        ],
+        "trigger_price_delta_pct": 0.1019,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.94,
+        "leverage": 5,
+        "sl_to_env1_ratio": 0.138
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

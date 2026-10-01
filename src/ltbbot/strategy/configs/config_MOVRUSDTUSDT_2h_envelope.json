@@ -1,0 +1,41 @@
+{
+    "_meta": {
+        "pnl_pct": 32.03,
+        "oos_pnl_pct": 8.76,
+        "oos_trades": 18,
+        "oos_profit_factor": 1.42,
+        "oos_win_rate": 27.78,
+        "oos_max_drawdown_pct": 9.66,
+        "is_oos_split_date": "2026-08-07",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-01T12:32:09"
+    },
+    "market": {
+        "symbol": "MOVR/USDT:USDT",
+        "timeframe": "2h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 48,
+        "envelopes": [
+            0.033501067033386116,
+            0.08119971986255464,
+            0.12969044816515726
+        ],
+        "trigger_price_delta_pct": 0.0645,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.92,
+        "leverage": 2,
+        "sl_to_env1_ratio": 0.1054
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

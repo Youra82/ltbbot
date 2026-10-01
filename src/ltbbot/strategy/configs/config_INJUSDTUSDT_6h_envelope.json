@@ -1,0 +1,41 @@
+{
+    "_meta": {
+        "pnl_pct": 27.65,
+        "oos_pnl_pct": 6.24,
+        "oos_trades": 12,
+        "oos_profit_factor": 1.67,
+        "oos_win_rate": 41.67,
+        "oos_max_drawdown_pct": 3.91,
+        "is_oos_split_date": "2026-08-07",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-01T11:09:46"
+    },
+    "market": {
+        "symbol": "INJ/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 34,
+        "envelopes": [
+            0.03112086361006035,
+            0.04806478783922239,
+            0.14114473777027053
+        ],
+        "trigger_price_delta_pct": 0.0213,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.93,
+        "leverage": 9,
+        "sl_to_env1_ratio": 0.2287
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

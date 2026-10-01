@@ -4,23 +4,53 @@
         "_active_strategies_note": "Nur ein FALLBACK/Startwert fuer neue Clones -- der VPS-eigene Auto-Optimizer-Lauf ueberschreibt das lokal, update.sh schuetzt diesen lokalen Stand seit 2026-09-24 vor git reset --hard. Stand hier: letztes bekanntes echtes Portfolio vom User bestaetigt (2026-09-22, 12 Strategien, kein DOGE/AVAX mehr).",
         "active_strategies": [
             {
-                "symbol": "PHA/USDT:USDT",
-                "timeframe": "6h",
+                "symbol": "AAVE/USDT:USDT",
+                "timeframe": "1h",
                 "active": true
             },
             {
-                "symbol": "US/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "AVAX/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "BGB/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "BGB/USDT:USDT",
+                "timeframe": "2h",
                 "active": true
             },
             {
                 "symbol": "BR/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "FIL/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "FIL/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             },
             {
-                "symbol": "NIL/USDT:USDT",
+                "symbol": "GRASS/USDT:USDT",
                 "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "GRASS/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "ICP/USDT:USDT",
+                "timeframe": "6h",
                 "active": true
             },
             {
@@ -29,52 +59,47 @@
                 "active": true
             },
             {
-                "symbol": "XPL/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "Q/USDT:USDT",
+                "symbol": "LDO/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "MUBARAK/USDT:USDT",
+                "symbol": "MON/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "ONDO/USDT:USDT",
+                "symbol": "MON/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             },
             {
-                "symbol": "ADA/USDT:USDT",
-                "timeframe": "6h",
-                "active": true
-            },
-            {
-                "symbol": "ARB/USDT:USDT",
-                "timeframe": "6h",
-                "active": true
-            },
-            {
-                "symbol": "AAVE/USDT:USDT",
+                "symbol": "MOVR/USDT:USDT",
                 "timeframe": "2h",
                 "active": true
             },
             {
-                "symbol": "PUMP/USDT:USDT",
-                "timeframe": "6h",
+                "symbol": "PENGU/USDT:USDT",
+                "timeframe": "1h",
                 "active": true
             },
             {
-                "symbol": "PEPE/USDT:USDT",
-                "timeframe": "6h",
+                "symbol": "TRUMP/USDT:USDT",
+                "timeframe": "1h",
                 "active": true
             },
             {
-                "symbol": "DOT/USDT:USDT",
+                "symbol": "USELESS/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "US/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "WLD/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             }

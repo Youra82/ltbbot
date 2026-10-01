@@ -1,0 +1,41 @@
+{
+    "_meta": {
+        "pnl_pct": 57.95,
+        "oos_pnl_pct": 5.58,
+        "oos_trades": 10,
+        "oos_profit_factor": 1.57,
+        "oos_win_rate": 30.0,
+        "oos_max_drawdown_pct": 4.08,
+        "is_oos_split_date": "2026-08-07",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-01T11:26:34"
+    },
+    "market": {
+        "symbol": "FIL/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "SMA",
+        "average_period": 35,
+        "envelopes": [
+            0.034279710233239745,
+            0.07972410988122533,
+            0.14149060436270416
+        ],
+        "trigger_price_delta_pct": 0.1257,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.95,
+        "leverage": 4,
+        "sl_to_env1_ratio": 0.1767
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

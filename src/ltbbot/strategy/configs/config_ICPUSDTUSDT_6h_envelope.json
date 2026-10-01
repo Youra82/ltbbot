@@ -1,0 +1,41 @@
+{
+    "_meta": {
+        "pnl_pct": 10.42,
+        "oos_pnl_pct": 9.19,
+        "oos_trades": 16,
+        "oos_profit_factor": 1.8,
+        "oos_win_rate": 31.25,
+        "oos_max_drawdown_pct": 4.79,
+        "is_oos_split_date": "2026-08-07",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-01T11:48:15"
+    },
+    "market": {
+        "symbol": "ICP/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 11,
+        "envelopes": [
+            0.024060387549108705,
+            0.034628423230393744,
+            0.08391391432027887
+        ],
+        "trigger_price_delta_pct": 0.0735,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 37.34
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.52,
+        "leverage": 4,
+        "sl_to_env1_ratio": 0.1241
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

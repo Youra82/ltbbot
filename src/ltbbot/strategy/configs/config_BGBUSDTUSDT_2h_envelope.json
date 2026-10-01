@@ -1,0 +1,41 @@
+{
+    "_meta": {
+        "pnl_pct": 6.58,
+        "oos_pnl_pct": 8.57,
+        "oos_trades": 19,
+        "oos_profit_factor": 1.56,
+        "oos_win_rate": 36.84,
+        "oos_max_drawdown_pct": 6.92,
+        "is_oos_split_date": "2026-08-07",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-01T11:53:52"
+    },
+    "market": {
+        "symbol": "BGB/USDT:USDT",
+        "timeframe": "2h"
+    },
+    "strategy": {
+        "average_type": "WMA",
+        "average_period": 20,
+        "envelopes": [
+            0.01734686156164125,
+            0.03343946089529004,
+            0.0384439410191218
+        ],
+        "trigger_price_delta_pct": 0.1099,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.73,
+        "leverage": 4,
+        "sl_to_env1_ratio": 0.1273
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

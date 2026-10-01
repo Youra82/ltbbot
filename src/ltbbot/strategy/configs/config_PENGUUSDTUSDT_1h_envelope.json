@@ -1,0 +1,41 @@
+{
+    "_meta": {
+        "pnl_pct": 19.5,
+        "oos_pnl_pct": 19.6,
+        "oos_trades": 28,
+        "oos_profit_factor": 2.05,
+        "oos_win_rate": 42.86,
+        "oos_max_drawdown_pct": 5.93,
+        "is_oos_split_date": "2026-08-07",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-01T13:59:32"
+    },
+    "market": {
+        "symbol": "PENGU/USDT:USDT",
+        "timeframe": "1h"
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 12,
+        "envelopes": [
+            0.029166326663020638,
+            0.04527921086120294,
+            0.07032704902822887
+        ],
+        "trigger_price_delta_pct": 0.1998,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 27.34
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.88,
+        "leverage": 15,
+        "sl_to_env1_ratio": 0.2302
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

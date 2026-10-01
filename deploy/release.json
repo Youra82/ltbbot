@@ -1,0 +1,6 @@
+{
+    "release_id": "2026-10-01-envelope-atr-20",
+    "_info": "update.sh uebernimmt EINMALIG Configs (src/ltbbot/strategy/configs/) und active_strategies aus dem Repo, sobald diese Kennung neu ist. Danach gilt wieder der VPS-Stand (woechentlicher Portfolio-Optimizer, taegliche Parameter-Suche). Fuer ein neues Repo-Release die Kennung aendern.",
+    "configs": 20,
+    "optimizer": "ATR-Baender (Band1 >= 0.5 Kerzen, Luecken >= 0.25), Stop >= 6% Kerze, Stop-Slippage 5% ATR, 26 Wochen 2026-04-02..2026-09-30, 500 Trials, OOS PF >= 1.3"
+}

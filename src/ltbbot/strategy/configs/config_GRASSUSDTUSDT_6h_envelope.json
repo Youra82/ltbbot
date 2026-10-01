@@ -1,0 +1,41 @@
+{
+    "_meta": {
+        "pnl_pct": 69.25,
+        "oos_pnl_pct": 8.68,
+        "oos_trades": 10,
+        "oos_profit_factor": 1.98,
+        "oos_win_rate": 40.0,
+        "oos_max_drawdown_pct": 7.78,
+        "is_oos_split_date": "2026-08-07",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-01T11:55:48"
+    },
+    "market": {
+        "symbol": "GRASS/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 7,
+        "envelopes": [
+            0.03723852792889896,
+            0.14368385540514247,
+            0.20709589945533713
+        ],
+        "trigger_price_delta_pct": 0.1133,
+        "disable_strong_trend_block": true,
+        "strong_trend_adx_threshold": 30.0
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.85,
+        "leverage": 5,
+        "sl_to_env1_ratio": 0.1862
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

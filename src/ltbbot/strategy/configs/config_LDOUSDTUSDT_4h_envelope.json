@@ -1,0 +1,41 @@
+{
+    "_meta": {
+        "pnl_pct": 62.91,
+        "oos_pnl_pct": 13.38,
+        "oos_trades": 14,
+        "oos_profit_factor": 1.81,
+        "oos_win_rate": 42.86,
+        "oos_max_drawdown_pct": 11.0,
+        "is_oos_split_date": "2026-08-07",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-01T12:25:57"
+    },
+    "market": {
+        "symbol": "LDO/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "EMA",
+        "average_period": 15,
+        "envelopes": [
+            0.01989719055561261,
+            0.04949251868577953,
+            0.13142137350592986
+        ],
+        "trigger_price_delta_pct": 0.0281,
+        "disable_strong_trend_block": false,
+        "strong_trend_adx_threshold": 29.82
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "risk_per_entry_pct": 0.93,
+        "leverage": 15,
+        "sl_to_env1_ratio": 0.179
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}
