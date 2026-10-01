@@ -54,11 +54,34 @@ echo "4. Stelle den Inhalt von 'secret.json' aus dem Backup wieder her..."
 cp secret.json.bak secret.json
 rm secret.json.bak
 
+# Einmalige Release-Uebernahme (2026-10-01): Normalerweise gewinnen die VPS-eigenen
+# Configs und active_strategies (woechentliche Automatik, siehe unten). Liegt im Repo
+# eine NEUE Release-Kennung (deploy/release.json), die dieser VPS noch nicht
+# uebernommen hat, gilt EINMALIG der Repo-Stand: Config-Verzeichnis wird komplett
+# durch das Repo ersetzt, active_strategies kommt aus dem Repo. Danach wird die
+# Kennung in .applied_release vermerkt (untracked, ueberlebt git reset) -- alle
+# spaeteren update.sh-Laeufe verhalten sich wieder wie gewohnt.
+APPLY_RELEASE=false
+RELEASE_ID=""
+if [ -f deploy/release.json ]; then
+    RELEASE_ID=$(python3 -c "import json; print(json.load(open('deploy/release.json')).get('release_id',''))" 2>/dev/null || true)
+    APPLIED_ID=$(cat .applied_release 2>/dev/null || true)
+    if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "$APPLIED_ID" ]; then
+        APPLY_RELEASE=true
+        echo "   🚀 Neues Release '$RELEASE_ID' gefunden -- Configs und aktives Portfolio werden EINMALIG aus dem Repo übernommen."
+    fi
+fi
+
 # Stelle die Config-Verzeichnis aus dem Backup wieder her (lokale, VPS-eigene
 # Optuna-Ergebnisse gewinnen ueber den git-Stand -- siehe Kommentar oben bei
 # der Sicherung). Neue, nur in git existierende Config-Dateien bleiben dabei
 # erhalten, da hier nur ueberschrieben, nie geloescht wird.
-if [ -d "src_ltbbot_strategy_configs.bak" ]; then
+if [ "$APPLY_RELEASE" = true ]; then
+    rm -rf src_ltbbot_strategy_configs.bak
+    # Nicht im Repo enthaltene (alte VPS-)Configs entfernen -- git reset loescht keine untracked Dateien
+    git clean -fq -- src/ltbbot/strategy/configs/
+    echo "   ✅ Config-Verzeichnis aus Release '$RELEASE_ID' übernommen ($(ls src/ltbbot/strategy/configs/config_*_envelope.json 2>/dev/null | wc -l) Configs)."
+elif [ -d "src_ltbbot_strategy_configs.bak" ]; then
     cp -r src_ltbbot_strategy_configs.bak/. src/ltbbot/strategy/configs/
     rm -rf src_ltbbot_strategy_configs.bak
     echo "   ✅ Config-Verzeichnis (VPS-eigene Optuna-Ergebnisse) wiederhergestellt."
@@ -85,7 +108,9 @@ s.setdefault('optimization_settings', {})['oos_reference_date'] = '$SAVED_OOS'
 json.dump(s, open('settings.json', 'w'), indent=4)
 " 2>/dev/null && echo "   ✅ oos_reference_date=$SAVED_OOS wiederhergestellt." || true
 fi
-if [ -n "$SAVED_STRATEGIES" ] && [ "$SAVED_STRATEGIES" != "[]" ] && [ "$SAVED_STRATEGIES" != "" ]; then
+if [ "$APPLY_RELEASE" = true ]; then
+    echo "   ✅ active_strategies aus Release '$RELEASE_ID' übernommen ($(python3 -c "import json; print(len(json.load(open('settings.json'))['live_trading_settings']['active_strategies']))" 2>/dev/null || echo '?') Strategien)."
+elif [ -n "$SAVED_STRATEGIES" ] && [ "$SAVED_STRATEGIES" != "[]" ] && [ "$SAVED_STRATEGIES" != "" ]; then
     SAVED_STRATEGIES="$SAVED_STRATEGIES" python3 -c "
 import json, os
 strategies = json.loads(os.environ['SAVED_STRATEGIES'])
@@ -102,6 +127,14 @@ s = json.load(open('settings.json'))
 s.setdefault('live_trading_settings', {})['use_auto_optimizer_results'] = val
 json.dump(s, open('settings.json', 'w'), indent=4)
 " 2>/dev/null && echo "   ✅ use_auto_optimizer_results=$SAVED_USE_AUTO_OPT wiederhergestellt." || true
+fi
+
+# Release als uebernommen vermerken, sobald Configs + Portfolio gesetzt sind (vor den
+# venv-Schritten, damit ein spaeterer Fehler das Release nicht erneut ausloest und
+# dabei Ergebnisse der woechentlichen Automatik ueberschreibt).
+if [ "$APPLY_RELEASE" = true ]; then
+    echo "$RELEASE_ID" > .applied_release
+    echo "   ✅ Release '$RELEASE_ID' als übernommen vermerkt (.applied_release)."
 fi
 
 # 5. Lösche den Python-Cache, um alte Code-Versionen zu entfernen
