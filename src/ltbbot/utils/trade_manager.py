@@ -26,7 +26,7 @@ from ltbbot.utils.exchange import Exchange, drop_incomplete_last_candle # Import
 
 def _generate_ltbbot_chart_png(df: pd.DataFrame, band_prices: dict, signal_side: str,
                                 entry_price: float, sl_price: float, tp_price: float,
-                                symbol: str, timeframe: str, n_candles: int = 60) -> str:
+                                symbol: str, timeframe: str, n_candles: int = 60, running_candle=None) -> str:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -49,6 +49,20 @@ def _generate_ltbbot_chart_png(df: pd.DataFrame, band_prices: dict, signal_side:
         ax.plot([i, i], [l, h], color=wick_color, linewidth=0.8)
         ax.add_patch(plt.Rectangle((i - 0.35, min(o, c)), 0.7, abs(c - o),
                                     color=body_color, zorder=2))
+
+    # Laufende Kerze nur zur Anzeige (halbtransparent) -- Baender/MA/Signal basieren
+    # bewusst nur auf abgeschlossenen Kerzen (kein Lookahead, identisch zum Backtest)
+    if running_candle is not None:
+        try:
+            o, h, l, c = (float(running_candle['open']), float(running_candle['high']),
+                          float(running_candle['low']), float(running_candle['close']))
+            col = '#26a69a' if c >= o else '#ef5350'
+            ax.plot([n, n], [l, h], color=col, linewidth=0.8, alpha=0.45)
+            ax.add_patch(plt.Rectangle((n - 0.35, min(o, c)), 0.7, max(abs(c - o), 1e-12),
+                                       facecolor=col, edgecolor=col, alpha=0.45, linestyle='--', zorder=2))
+            ax.text(n, h, 'läuft', color='#aaaaaa', fontsize=7, ha='center', va='bottom')
+        except Exception:
+            pass
 
     # Moving Average (envelope center = TP target)
     if 'average' in df_plot.columns:
@@ -115,7 +129,7 @@ def _generate_ltbbot_chart_png(df: pd.DataFrame, band_prices: dict, signal_side:
     ax.set_title(f'{sym_clean} / {timeframe} — {side_label} Setup (Envelope)',
                  color='white', fontsize=11, pad=8)
     ax.tick_params(colors='#aaaaaa')
-    ax.set_xlim(-1, n + 9)
+    ax.set_xlim(-1, n + 10)
     for spine in ax.spines.values():
         spine.set_edgecolor('#333333')
     ax.grid(axis='y', color='#2a2a2a', linewidth=0.5)
@@ -133,10 +147,11 @@ def _generate_ltbbot_chart_png(df: pd.DataFrame, band_prices: dict, signal_side:
 def _send_ltbbot_chart(df: pd.DataFrame, band_prices: dict, signal_side: str,
                         entry_price: float, sl_price: float, tp_price: float,
                         symbol: str, timeframe: str, telegram_config: dict,
-                        logger: logging.Logger):
+                        logger: logging.Logger, running_candle=None):
     try:
         path = _generate_ltbbot_chart_png(df, band_prices, signal_side, entry_price,
-                                           sl_price, tp_price, symbol, timeframe)
+                                           sl_price, tp_price, symbol, timeframe,
+                                           running_candle=running_candle)
         if not path or not os.path.exists(path):
             return
         sl_pct = abs(entry_price - sl_price) / entry_price * 100 if entry_price > 0 else 0
@@ -1225,7 +1240,8 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
 # --- Entry Order Platzierung ---
 
 def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, balance: float, tracker_file_path: str, telegram_config: dict, logger: logging.Logger, df: pd.DataFrame = None,
-                       restrict_side: str = None, committed_bands: dict = None, sl_fired_candle_ts: dict = None):
+                       restrict_side: str = None, committed_bands: dict = None, sl_fired_candle_ts: dict = None,
+                       running_candle=None):
     """Platziert die gestaffelten Entry- und (pro Band eigene, feste) SL-Orders
     basierend auf Risiko. Der TP wird NICHT hier gesetzt -- er ist fuer alle
     Baender identisch (aktuelle MA) und wird deshalb gebuendelt, sized auf die
@@ -1337,6 +1353,8 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
         logger.warning(f"Konnte Live-Ticker für Sofort-SL-Pruefung nicht abrufen ({e}), nutze Kerzen-Close als Fallback.")
     if current_close is None and df is not None and not df.empty:
         current_close = float(df['close'].iloc[-1])
+    # Kurs bei Beginn der laufenden Kerze (= Close der letzten abgeschlossenen)
+    candle_open_proxy = float(df['close'].iloc[-1]) if df is not None and not df.empty else None
 
     # *** RISIKOBASIS: echter, aktueller Kontostand (Compounding, konsistent mit Backtester) ***
     # User-Entscheidung 2026-08-26: Positionsgroesse soll vom TATSAECHLICHEN
@@ -1416,6 +1434,14 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # Preis bereits jenseits SL → Entry würde sofort gestoppt (immediate SL-Trigger)
                 if entry_blocked_by_sl('long', current_close, sl_price):
                     logger.warning(f"⚠️ Aktueller Preis {current_close:.4f} < SL {sl_price:.4f} für Long Layer {i+1} → überspringe (sofortiger SL vermieden).")
+                    continue
+                # Wie im Backtest (simulate_entry_fill): lag der Kurs schon bei Beginn der
+                # laufenden Kerze (= Close der letzten abgeschlossenen) jenseits des SL, bleibt
+                # das Band fuer die GANZE Kerze gesperrt. Vorher wurde es spaeter in derselben
+                # Kerze doch platziert, sobald der Kurs zurueckkam -- "Nur-live-Trades" nach
+                # einem Spike, die der Backtest nie geprueft hat (US 4h, 2026-10-01).
+                if candle_open_proxy is not None and entry_blocked_by_sl('long', candle_open_proxy, sl_price):
+                    logger.info(f"Long Layer {i+1}: Kerze begann schon jenseits SL ({candle_open_proxy:.6g} vs SL {sl_price:.6g}) → Band bis Kerzenschluss gesperrt (wie Backtest).")
                     continue
                 sl_distance_price = abs(entry_price_for_calc - sl_price)
                 if sl_distance_price <= 0:
@@ -1505,7 +1531,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     if df is not None:
                         _send_ltbbot_chart(df, band_prices, 'buy', entry_limit_price,
                                            sl_price, band_prices.get('average'), symbol, timeframe,
-                                           telegram_config, logger)
+                                           telegram_config, logger, running_candle=running_candle)
                 # Kein break mehr: alle qualifizierenden Baender pruefen (Multi-Band,
                 # 2026-09-01) -- Bitget nettet ohnehin zu einer Position pro Symbol.
 
@@ -1557,6 +1583,14 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # Preis bereits jenseits SL → Entry würde sofort gestoppt (immediate SL-Trigger)
                 if entry_blocked_by_sl('short', current_close, sl_price):
                     logger.warning(f"⚠️ Aktueller Preis {current_close:.4f} > SL {sl_price:.4f} für Short Layer {i+1} → überspringe (sofortiger SL vermieden).")
+                    continue
+                # Wie im Backtest (simulate_entry_fill): lag der Kurs schon bei Beginn der
+                # laufenden Kerze (= Close der letzten abgeschlossenen) jenseits des SL, bleibt
+                # das Band fuer die GANZE Kerze gesperrt. Vorher wurde es spaeter in derselben
+                # Kerze doch platziert, sobald der Kurs zurueckkam -- "Nur-live-Trades" nach
+                # einem Spike, die der Backtest nie geprueft hat (US 4h, 2026-10-01).
+                if candle_open_proxy is not None and entry_blocked_by_sl('short', candle_open_proxy, sl_price):
+                    logger.info(f"Short Layer {i+1}: Kerze begann schon jenseits SL ({candle_open_proxy:.6g} vs SL {sl_price:.6g}) → Band bis Kerzenschluss gesperrt (wie Backtest).")
                     continue
                 sl_distance_price = abs(entry_price_for_calc - sl_price)
                 if sl_distance_price <= 0: continue
@@ -1633,7 +1667,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     if df is not None:
                         _send_ltbbot_chart(df, band_prices, 'sell', entry_limit_price,
                                            sl_price, band_prices.get('average'), symbol, timeframe,
-                                           telegram_config, logger)
+                                           telegram_config, logger, running_candle=running_candle)
                 # Kein break mehr: alle qualifizierenden Baender pruefen (Multi-Band,
                 # 2026-09-01) -- Bitget nettet ohnehin zu einer Position pro Symbol.
 
@@ -1703,8 +1737,10 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # --- 1. Daten holen und Indikatoren berechnen ---
         # Brauchen genug Daten für den längsten Indikator (average_period) + etwas Puffer
         required_candles = params['strategy'].get('average_period', 20) + 50 # Puffer erhöht
-        data = exchange.fetch_recent_ohlcv(symbol, timeframe, limit=required_candles)
-        data = drop_incomplete_last_candle(data)
+        raw_data = exchange.fetch_recent_ohlcv(symbol, timeframe, limit=required_candles)
+        data = drop_incomplete_last_candle(raw_data)
+        # Laufende Kerze NUR fuer die Chart-Anzeige (nicht fuer Berechnungen)
+        running_candle = raw_data.iloc[-1] if raw_data is not None and len(raw_data) > len(data) else None
         if data.empty or len(data) < params['strategy'].get('average_period', 1):
             logger.warning(f"Nicht genügend Daten für {symbol} ({timeframe}) erhalten ({len(data)} Kerzen). Überspringe Zyklus.")
             return
@@ -1804,7 +1840,8 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
             current_balance = exchange.fetch_balance_usdt()
             place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger,
                                df=data_with_indicators, restrict_side=position['side'],
-                               committed_bands=committed_bands, sl_fired_candle_ts=sl_fired_candle_ts)
+                               committed_bands=committed_bands, sl_fired_candle_ts=sl_fired_candle_ts,
+                               running_candle=running_candle)
 
         else:
               logger.info(f"Keine offene Position für {symbol}.")
@@ -1825,7 +1862,8 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
                   logger.warning(f"Konnte Margin Mode/Leverage nicht setzen (evtl. schon korrekt?): {e}")
 
               place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger,
-                                 df=data_with_indicators, committed_bands=committed_bands, sl_fired_candle_ts=sl_fired_candle_ts)
+                                 df=data_with_indicators, committed_bands=committed_bands, sl_fired_candle_ts=sl_fired_candle_ts,
+                                 running_candle=running_candle)
 
 
     except ccxt.AuthenticationError as e:

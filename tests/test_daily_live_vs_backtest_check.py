@@ -13,9 +13,15 @@ import daily_live_vs_backtest_check as mod
 
 
 def test_config_path_for_resolves_real_filename_pattern():
-    path = mod._config_path_for('AAVE/USDT:USDT', '2h')
+    # Gegen eine tatsaechlich vorhandene Config pruefen (der Config-Satz wechselt
+    # mit jedem Release, ein fest verdrahtetes Paar wuerde veralten).
+    import glob, json
+    files = sorted(glob.glob(os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs', 'config_*_envelope.json')))
+    assert files, 'keine Config im Repo'
+    market = json.load(open(files[0]))['market']
+    path = mod._config_path_for(market['symbol'], market['timeframe'])
     assert path is not None
-    assert path.endswith('config_AAVEUSDTUSDT_2h_envelope.json')
+    assert os.path.basename(path) == os.path.basename(files[0])
     assert os.path.exists(path)
 
 
