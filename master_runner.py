@@ -84,6 +84,31 @@ def main():
             strategy_list = live_settings.get('active_strategies', [])
 
         # ==========================================================
+        # Hoechstens EINE Strategie pro Symbol (2026-10-02)
+        # ==========================================================
+        # Bitget fuehrt pro Symbol und Richtung nur EINE Position, und jede Strategie
+        # storniert in cancel_strategy_orders() alle Orders des Symbols, die nicht in
+        # IHREM Tracker stehen. Zwei aktive Strategien auf demselben Symbol (z.B.
+        # FIL 4h + FIL 6h) stornierten sich so gegenseitig die Stop-Loss-Orders --
+        # live 2026-10-02: offene Positionen ohne Stop, 6 Notfall-Zwangsschliessungen.
+        # Der Portfolio-Optimizer waehlt bereits nur ein Timeframe pro Symbol; diese
+        # Sperre faengt jede andere Quelle ab (manuelle Liste, Release, Fallback).
+        _seen_symbols = set()
+        _deduped = []
+        for _s in strategy_list:
+            if not isinstance(_s, dict) or not _s.get('active', False):
+                _deduped.append(_s)
+                continue
+            if _s.get('symbol') in _seen_symbols:
+                logging.warning(f"⚠️ {_s.get('symbol')} ({_s.get('timeframe')}) übersprungen: für dieses Symbol läuft "
+                                f"bereits eine andere Strategie (nur eine pro Symbol erlaubt, sonst stornieren "
+                                f"sich die Strategien gegenseitig die Stop-Loss-Orders).")
+                continue
+            _seen_symbols.add(_s.get('symbol'))
+            _deduped.append(_s)
+        strategy_list = _deduped
+
+        # ==========================================================
         # Housekeeper: verwaiste Positionen aufspueren und mitlaufen lassen
         # ==========================================================
         # Wird ein Symbol aus active_strategies entfernt (manuell oder durch den

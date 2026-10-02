@@ -726,6 +726,27 @@ def check_take_profit_trigger(exchange: Exchange, symbol: str, tracker_file_path
                     break
 
         if triggered_tp_found:
+            # Bevor IRGENDEINE Band-SL storniert wird: an der Boerse pruefen, ob die
+            # Position wirklich zu ist (2026-10-02, FIL 4h live: Bitget meldete einen
+            # TP als 'closed', die Position war aber noch offen -> alle SLs wurden
+            # storniert, danach setzte manage_existing_position() nur einen neuen TP
+            # -> offene Position OHNE Stop). Bitgets Plan-Order-Status ist bekannt
+            # unzuverlaessig (siehe sync_band_fills()/cancel_strategy_orders()) --
+            # die reale Position ist das robuste Signal.
+            try:
+                still_open_positions = [p for p in exchange.fetch_open_positions(symbol)
+                                        if float(p.get('contracts') or 0) > 0]
+            except Exception as _pe:
+                logger.warning(f"TP als ausgeloest gemeldet, Position aber nicht pruefbar ({_pe}) -- "
+                               f"Band-SLs bleiben sicherheitshalber stehen.")
+                return False
+            if still_open_positions:
+                logger.warning(f"⚠️ TP {closed_id} von Bitget als 'closed' gemeldet, Position für {symbol} ist aber "
+                               f"noch OFFEN -- Fehlmeldung, Band-SLs bleiben bestehen.")
+                tracker_info["take_profit_ids"] = [t for t in current_tp_ids if t != closed_id]
+                update_tracker_file(tracker_file_path, tracker_info)
+                return False
+
             # TP schließt IMMER die komplette genettete Position (sized auf die
             # aktuelle Gesamtgröße, siehe manage_existing_position()) -- alle
             # Bänder sind wieder frei. Etwaige noch offene per-Band SL-Orders
