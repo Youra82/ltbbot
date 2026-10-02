@@ -158,8 +158,11 @@ elif ! .venv/bin/python3 -c "import pip" 2>/dev/null; then
 elif ! .venv/bin/pip --version 2>/dev/null | grep -q pip; then
     echo "   pip defekt — venv wird neu erstellt..."
     VENV_OK=false
-elif ! .venv/bin/python3 -c "from pip._vendor.resolvelib.structs import RequirementInformation" 2>/dev/null; then
-    echo "   pip-Resolver defekt — venv wird neu erstellt..."
+elif ! .venv/bin/python3 -c "import ccxt, pandas, ta" 2>/dev/null; then
+    # Frueher wurde hier pip._vendor.resolvelib.structs.RequirementInformation geprueft --
+    # das gibt es in neueren pip-Versionen nicht mehr, die Pruefung schlug IMMER fehl und
+    # die venv wurde bei jedem Update neu gebaut (2026-10-02). Jetzt: laufen die Pakete?
+    echo "   Pakete fehlen/defekt — venv wird neu erstellt..."
     VENV_OK=false
 fi
 

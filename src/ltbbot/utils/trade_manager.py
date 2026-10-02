@@ -505,8 +505,24 @@ def cancel_strategy_orders(exchange: Exchange, symbol: str, logger: logging.Logg
         try:
             _tracker = read_tracker_file(tracker_file_path)
             _band_sl = _tracker.get("band_sl_orders") or {}
-            for _side_ids in _band_sl.values():
-                protected_order_ids.update(str(v) for v in (_side_ids or {}).values())
+            _committed = _tracker.get("committed_bands") or {"long": [], "short": []}
+            # Position je Seite: SLs nie gefuellter (nur pending) Baender werden mit ihrer
+            # Entry-Order storniert (2026-10-02, FIL 4h: Signal endete mit neuer Kerze,
+            # Entry wurde storniert, der SL blieb als verwaiste "Long schliessen"-Order
+            # stehen und haette spaeter eine NEUE Position zu einem alten Kurs teilweise
+            # schliessen koennen). Geschuetzt bleiben SLs gefuellter (committed) Baender --
+            # und, falls auf der Seite eine Position existiert, sicherheitshalber ALLE
+            # (ein Entry koennte gerade erst zwischen sync_band_fills() und hier gefuellt
+            # worden sein; dann darf sein SL keinesfalls weg).
+            try:
+                _pos_sides = {p.get('side') for p in exchange.fetch_open_positions(symbol)
+                              if float(p.get('contracts') or 0) > 0}
+            except Exception:
+                _pos_sides = {"long", "short"}  # unklar -> nichts unprotecten
+            for _side_key, _side_ids in _band_sl.items():
+                for _band_str, _sl_id in (_side_ids or {}).items():
+                    if _side_key in _pos_sides or int(_band_str) in _committed.get(_side_key, []):
+                        protected_order_ids.add(str(_sl_id))
             protected_order_ids.update(str(v) for v in (_tracker.get("take_profit_ids") or []))
         except Exception as e:
             logger.debug(f"Konnte Tracker fuer geschuetzte Order-IDs nicht lesen: {e}")
