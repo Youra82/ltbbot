@@ -603,6 +603,10 @@ def main():
         # Sicherheitsmarge fuer reale Kosten (Fees/Slippage), die der Backtest nur
         # approximiert.
         best_gate = oos_gate(best_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
+        if fine_tf and fine_data_precise is None:
+            # Ohne Fein-Daten greift die zu optimistische grobe Entry-Kerzen-Regel -> nie bestaetigen
+            logger.warning(f"Keine {fine_tf}-Feindaten fuer {symbol} ({timeframe}) -- Ergebnis NICHT bestaetigbar, Lauf spaeter wiederholen.")
+            best_gate['passed'] = False
         oos_profit_factor_display = best_gate['profit_factor_display']
         oos_win_rate = best_gate['win_rate']  # 0-100 (Prozent) -- nur informativ, keine Gate-Bedingung
         oos_max_dd_decimal = best_gate['max_dd_decimal']
@@ -653,6 +657,8 @@ def main():
             # run_portfolio_optimizer.py waehlt nur unter bestaetigten Configs aus.
             if baseline_oos is not None:
                 base_gate = oos_gate(baseline_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
+                if fine_tf and fine_data_precise is None:
+                    base_gate['passed'] = False
                 _base_frac = sl_atr_fraction(baseline_params, IS_ATR_PCT)
                 if _base_frac is not None and _base_frac < MIN_SL_ATR_FRACTION:
                     base_gate['passed'] = False

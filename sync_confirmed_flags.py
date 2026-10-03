@@ -28,6 +28,7 @@ import json
 import logging
 import os
 import sys
+import time
 from datetime import date, datetime, timedelta
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -43,6 +44,8 @@ CONFIGS_DIR = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
 def main():
     parser = argparse.ArgumentParser(description='_meta.confirmed aller Configs neu bewerten')
     parser.add_argument('--dry-run', action='store_true', help='Nur anzeigen, nichts schreiben')
+    parser.add_argument('--only', type=str, default=None,
+                        help='Nur diese Coins pruefen, kommagetrennt (z.B. BGB,FIL) -- fuer Wiederholungen nach Download-Fehlern')
     parser.add_argument('--end-date', type=str, default=None, help='Fensterende (Standard: gestern)')
     parser.add_argument('--sl-check-only', action='store_true',
                         help='Nur die Stop-/Band-Abstands-Regeln pruefen (schnell, ohne Backtests): Configs mit zu '
@@ -72,6 +75,8 @@ def main():
     rows = []
     for path in sorted(glob.glob(os.path.join(CONFIGS_DIR, 'config_*_envelope.json'))):
         fname = os.path.basename(path)
+        if args.only and not any(fname.startswith(f"config_{c.strip().upper()}USDT") for c in args.only.split(',')):
+            continue
         try:
             with open(path) as f:
                 cfg = json.load(f)
@@ -100,9 +105,27 @@ def main():
                         json.dump(cfg, f, indent=4)
                 continue
             fine_tf = FINE_TF_MAP.get(timeframe)
-            fine = load_data(symbol, fine_tf, start_date, end_date) if fine_tf else None
-            if fine is not None and fine.empty:
-                fine = None
+            fine = None
+            for _attempt in range(3):
+                fine = load_data(symbol, fine_tf, start_date, end_date) if fine_tf else None
+                if fine is not None and fine.empty:
+                    fine = None
+                if fine is not None or not fine_tf:
+                    break
+                time.sleep(10)
+            if fine_tf and fine is None:
+                # Ohne Fein-Daten wuerde die alte, zu optimistische Entry-Kerzen-Regel greifen
+                # (siehe simulate_entry_fill) -> lieber NICHT bestaetigen und neu pruefen lassen.
+                print(f"  {fname}: keine {fine_tf}-Feindaten (Download-Fehler) -- als NICHT bestaetigt markiert, "
+                      f"spaeter mit --only {symbol.split('/')[0]} wiederholen")
+                rows.append((fname, was, False, None, None, None, sl_frac))
+                if not args.dry_run:
+                    cfg.setdefault('_meta', {}).update({
+                        'confirmed': False, 'unconfirmed_reason': 'no_fine_data_recheck',
+                        'rechecked_at': datetime.now().isoformat(timespec='seconds')})
+                    with open(path, 'w') as f:
+                        json.dump(cfg, f, indent=4)
+                continue
             res_is = run_envelope_backtest(data.iloc[:split_idx].copy(), params, start_capital,
                                            show_progress=False, fine_data=fine, multi_band_entries=True)
             res_oos = run_envelope_backtest(data.iloc[split_idx:].copy(), params, start_capital,
@@ -126,6 +149,8 @@ def main():
                     'sl_atr_fraction': round(sl_frac, 4) if sl_frac is not None else None,
                     'rechecked_at': datetime.now().isoformat(timespec='seconds'),
                 })
+                if gate['passed']:
+                    cfg['_meta'].pop('unconfirmed_reason', None)
                 with open(path, 'w') as f:
                     json.dump(cfg, f, indent=4)
         except Exception as e:
