@@ -122,6 +122,12 @@ def _get_fine_slice(fine_data, start_ts, end_ts):
         return None
     if hasattr(fine_data, 'get_slice'):
         return fine_data.get_slice(start_ts, end_ts)
+    # binaere Suche statt Maske ueber den ganzen Fein-DataFrame (wird jetzt auch
+    # waehrend der Optuna-Suche fuer jede Entry-Kerze aufgerufen)
+    if fine_data.index.is_monotonic_increasing:
+        lo = fine_data.index.searchsorted(start_ts, side='left')
+        hi = fine_data.index.searchsorted(end_ts, side='left')
+        return fine_data.iloc[lo:hi]
     return fine_data.loc[(fine_data.index >= start_ts) & (fine_data.index < end_ts)]
 
 
@@ -468,6 +474,14 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 # Trigger-Preis näher am Kerzeneröffnungspreis liegt (= zuerst ausgelöst).
                 MIN_NOTIONAL_USDT = 5.0
                 candidates = {'long': [], 'short': []}
+                _fine_memo = {}
+
+                def _entry_fine_bars():
+                    # Fein-Kerzen dieser Entry-Kerze, nur bei Bedarf geladen (einmal je Kerze)
+                    if 'v' not in _fine_memo:
+                        _fine_memo['v'] = (_get_fine_slice(fine_data, timestamp, timestamp + coarse_duration)
+                                           if fine_data is not None and coarse_duration is not None else None)
+                    return _fine_memo['v']
                 for side, allowed in (('long', current_use_longs), ('short', current_use_shorts)):
                     if not allowed or risk_amount_usd <= 0:
                         continue
@@ -493,7 +507,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                             continue
                         trigger_price = band_price * (1 - trigger_delta_pct) if side == 'long' else band_price * (1 + trigger_delta_pct)
                         fill_price, stopped = simulate_entry_fill(side, candle_open, candle_high, candle_low,
-                                                                  current_candle['close'], trigger_price, sl_price)
+                                                                  current_candle['close'], trigger_price, sl_price,
+                                                                  fine_bars=_entry_fine_bars)
                         if fill_price is None:
                             continue
                         # Groesse wie live: aus Band-Preis und SL-Abstand

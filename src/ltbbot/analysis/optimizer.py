@@ -43,6 +43,10 @@ MAX_DRAWDOWN_CONSTRAINT = 0.30
 MIN_WIN_RATE_CONSTRAINT = 0.0
 MIN_PNL_CONSTRAINT = 0.0
 START_CAPITAL = 1000
+# Fein-Kerzen (Bulk-Cache) auch WAEHREND der Suche: die Entry-Kerze wird seit 2026-10-03
+# per Fein-Daten aufgeloest (simulate_entry_fill) -- ohne sie bevorzugt die Suche Baender,
+# deren Gewinne nur aus der groben Close-Regel stammen (OOS-Portfolio +460% grob vs -1.8% fein).
+SEARCH_FINE_DATA = None
 OPTIM_MODE = "strict"
 MIN_TRADES_FOR_VALID = 20       # wird pro Symbol proportional zur Trainingslänge berechnet
 MIN_TRADES_PER_YEAR_GLOBAL = 20  # User-Eingabe in Trades/Jahr
@@ -167,7 +171,7 @@ def objective(trial):
     # Minuten und Stunden. Die praezisen Zahlen (fuer Tabelle + Config) kommen aus
     # einer einmaligen Nachbewertung des besten Trials nach der Suche, siehe main().
     with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-        result = run_envelope_backtest(IS_DATA.copy(), params, START_CAPITAL, fine_data=None, multi_band_entries=True)
+        result = run_envelope_backtest(IS_DATA.copy(), params, START_CAPITAL, fine_data=SEARCH_FINE_DATA, multi_band_entries=True)
 
     # --- Ergebnisse ---
     pnl = result.get('total_pnl_pct', -1000.0)
@@ -207,7 +211,7 @@ def objective(trial):
     for k in range(K_FOLDS):
         fold_data = IS_DATA.iloc[k * fold_size: (k + 1) * fold_size if k < K_FOLDS - 1 else len(IS_DATA)]
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            fold_result = run_envelope_backtest(fold_data.copy(), params, START_CAPITAL, fine_data=None, multi_band_entries=True)
+            fold_result = run_envelope_backtest(fold_data.copy(), params, START_CAPITAL, fine_data=SEARCH_FINE_DATA, multi_band_entries=True)
         fold_pnls.append(fold_result.get('total_pnl_pct', -1000.0))
     trial.set_user_attr('fold_pnls', fold_pnls)
     robust_score = min(fold_pnls)
@@ -426,6 +430,18 @@ def main():
         for lg in _noisy_loggers:
             lg.setLevel(logging.ERROR)
 
+        # Fein-Daten EINMAL als Bulk-Cache laden und schon fuer die Suche nutzen (siehe SEARCH_FINE_DATA)
+        global SEARCH_FINE_DATA
+        SEARCH_FINE_DATA = None
+        if fine_tf:
+            try:
+                SEARCH_FINE_DATA = load_data(symbol, fine_tf, args.start_date, args.end_date)
+                if SEARCH_FINE_DATA is None or SEARCH_FINE_DATA.empty:
+                    SEARCH_FINE_DATA = None
+            except Exception as e:
+                logger.warning(f"Fein-Daten ({fine_tf}) fuer die Suche nicht ladbar: {e} -- Suche mit grober Naeherung.")
+                SEARCH_FINE_DATA = None
+
         try:
             study = optuna.create_study(study_name=study_name, direction="maximize")
 
@@ -494,8 +510,8 @@ def main():
         # bedeutet (stbot-Messung: >12 Min fuer ein 3-Jahres-Fenster, >80% reine Netzwerk-
         # Wartezeit). Ein einziger zusammenhaengender Bulk-Fetch nutzt Bitgets 200-Kerzen-
         # Pagination viel effizienter und landet in einem wiederverwendbaren Cache.
-        fine_data_precise = None
-        if fine_tf:
+        fine_data_precise = SEARCH_FINE_DATA
+        if fine_tf and fine_data_precise is None:
             try:
                 fine_data_precise = load_data(symbol, fine_tf, args.start_date, args.end_date)
                 if fine_data_precise is None or fine_data_precise.empty:

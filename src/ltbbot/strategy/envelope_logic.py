@@ -169,7 +169,8 @@ def entry_blocked_by_sl(side, current_price, sl_price):
     return current_price < sl_price if side == 'long' else current_price > sl_price
 
 
-def simulate_entry_fill(side, candle_open, candle_high, candle_low, candle_close, trigger_price, sl_price):
+def simulate_entry_fill(side, candle_open, candle_high, candle_low, candle_close, trigger_price, sl_price,
+                        fine_bars=None):
     """Fill einer Live-Entry-Order (Bitget-Trigger-Limit) innerhalb EINER Coarse-Kerze,
     deren Baender aus der vorherigen, abgeschlossenen Kerze stammen (wie live).
 
@@ -195,6 +196,13 @@ def simulate_entry_fill(side, candle_open, candle_high, candle_low, candle_close
         Reihenfolge ist auf Coarse-Kerzen unbekannt -- als Stop gewertet, wenn
         die Kerze jenseits des SL schliesst (gleiche Regel wie live_sim.py je 1m-Bar).
 
+    fine_bars: optionale Fein-Kerzen (DataFrame open/high/low/close) GENAU dieser
+      Coarse-Kerze -- oder ein Callable, das sie liefert (wird nur im Ruecklauf-Fall
+      aufgerufen). Damit wird die Reihenfolge Fill -> SL im Ruecklauf-Fall real
+      aufgeloest statt per Close-Regel (2026-10-03, AVAX 2h live: Fill 22:01, SL
+      22:16 in derselben Kerze; Kerze schloss ueber dem SL -> Backtest hielt den
+      Trade bis zum TP, +1.41 statt -0.20 USDT).
+
     Returns: (fill_price, stopped_in_entry_candle) oder (None, False) ohne Fill.
     """
     if entry_blocked_by_sl(side, candle_open, sl_price):
@@ -206,7 +214,8 @@ def simulate_entry_fill(side, candle_open, candle_high, candle_low, candle_close
             return trigger_price, bool(candle_low <= sl_price)
         if candle_high < trigger_price:
             return None, False
-        return trigger_price, bool(candle_close <= sl_price)
+        return trigger_price, _return_fill_stopped(side, fine_bars, trigger_price, sl_price,
+                                                   bool(candle_close <= sl_price))
     else:
         if candle_open < trigger_price:
             if candle_high < trigger_price:
@@ -214,7 +223,34 @@ def simulate_entry_fill(side, candle_open, candle_high, candle_low, candle_close
             return trigger_price, bool(candle_high >= sl_price)
         if candle_low > trigger_price:
             return None, False
-        return trigger_price, bool(candle_close >= sl_price)
+        return trigger_price, _return_fill_stopped(side, fine_bars, trigger_price, sl_price,
+                                                   bool(candle_close >= sl_price))
+
+
+def _return_fill_stopped(side, fine_bars, trigger_price, sl_price, coarse_stopped):
+    """Ruecklauf-Fall per Fein-Kerzen: erste Fein-Kerze, die den Trigger erreicht = Fill.
+    SL-Kontakte davor zaehlen nicht (live existiert der SL erst ab Fill, siehe
+    angehaengter Bitget-SL). In der Fill-Kerze selbst gilt die Close-Regel (Reihenfolge
+    dort unbekannt), danach jeder SL-Kontakt. Ohne brauchbare Fein-Daten: coarse_stopped."""
+    if callable(fine_bars):
+        try:
+            fine_bars = fine_bars()
+        except Exception:
+            fine_bars = None
+    if fine_bars is None or len(fine_bars) == 0:
+        return coarse_stopped
+    filled = False
+    for o, h, l, c in fine_bars[['open', 'high', 'low', 'close']].itertuples(index=False):
+        if not filled:
+            if (h < trigger_price) if side == 'long' else (l > trigger_price):
+                continue
+            filled = True
+            if (c <= sl_price) if side == 'long' else (c >= sl_price):
+                return True
+            continue
+        if (l <= sl_price) if side == 'long' else (h >= sl_price):
+            return True
+    return False if filled else coarse_stopped
 
 
 def detect_market_regime(df, avg_period=14, silent=False, strategy_params=None):

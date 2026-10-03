@@ -145,3 +145,14 @@ def test_bands_kept_while_position_open_or_unknown(tmp_path):
     ex.exchange.fetch_positions = lambda *a, **k: (_ for _ in ()).throw(RuntimeError('API down'))
     release_bands_without_position(ex, 'DOGE/USDT:USDT', path, log)
     assert read_tracker_file(path)['committed_bands']['long'] == [1, 2]
+
+
+def test_fill_and_close_between_cycles_arms_same_candle_guard(tmp_path):
+    from ltbbot.utils.trade_manager import sync_band_fills
+    path = _tracker(tmp_path, committed_bands={'long': [], 'short': []},
+                    pending_band_orders={'long': {'1': 'E1', '2': 'E2'}, 'short': {}})
+    ex = FakeExchange(normal_history={'E1': 'executed', 'E2': 'cancelled'}, positions=[])
+    sync_band_fills(ex, 'LDO/USDT:USDT', path, log, current_candle_ts='K1')
+    t = read_tracker_file(path)
+    assert t['sl_fired_candle_ts']['long'] == {'1': 'K1'}      # nur das ausgeloeste Band gesperrt
+    assert t['pending_band_orders']['long'] == {} and t['committed_bands']['long'] == []

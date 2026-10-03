@@ -1066,7 +1066,8 @@ def _emergency_close_naked_position(exchange: Exchange, symbol: str, pos_side: s
     send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), msg)
 
 
-def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, logger: logging.Logger):
+def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, logger: logging.Logger,
+                    current_candle_ts=None):
     """
     Multi-Band: gleicht die im Tracker gemerkten "pending" Band-Entry-Order-IDs
     mit der Boerse ab, BEVOR cancel_strategy_orders() sie storniert (das wuerde
@@ -1119,6 +1120,8 @@ def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, log
     committed = tracker_info.get("committed_bands") or {"long": [], "short": []}
     new_pending = {"long": {}, "short": {}}
     changed = False
+    sl_fired_candle_ts = tracker_info.get("sl_fired_candle_ts") or {"long": {}, "short": {}}
+    plan_status = None
 
     for side_key in ("long", "short"):
         for band_str, order_id in pending.get(side_key, {}).items():
@@ -1133,12 +1136,23 @@ def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, log
                 logger.info(f"✅ Band {band_num} ({side_key}) für {symbol} wurde GEFÜLLT (Order {order_id}, "
                             f"reale Position vorhanden) -- als committed markiert.")
             else:
-                logger.debug(f"Band {band_num} ({side_key}) Entry-Order {order_id} nicht mehr offen, "
-                             f"KEINE Position auf {side_key} vorhanden -- vermutlich storniert, Band wird wieder frei.")
+                # Fill UND Schliessen (SL/TP) zwischen zwei Zyklen: Entry weg, keine Position.
+                # Laut Plan-Historie ausgeloest -> Band bis Kerzenende sperren wie im Backtest
+                # (2026-10-03, LDO 4h: Fill 18:04, SL 18:07, Re-Entry 18:47 in derselben Kerze).
+                if plan_status is None:
+                    plan_status = exchange.fetch_plan_history_status(symbol, 'normal_plan')
+                if current_candle_ts is not None and plan_status.get(str(order_id)) == 'executed':
+                    sl_fired_candle_ts.setdefault(side_key, {})[band_str] = str(current_candle_ts)
+                    logger.info(f"🔒 Band {band_num} ({side_key}) für {symbol} wurde zwischen zwei Zyklen gefüllt "
+                                f"und wieder geschlossen -- kein Re-Entry bis zur naechsten Kerze.")
+                else:
+                    logger.debug(f"Band {band_num} ({side_key}) Entry-Order {order_id} nicht mehr offen, "
+                                 f"KEINE Position auf {side_key} vorhanden -- vermutlich storniert, Band wird wieder frei.")
 
     if changed:
         tracker_info["pending_band_orders"] = new_pending
         tracker_info["committed_bands"] = committed
+        tracker_info["sl_fired_candle_ts"] = sl_fired_candle_ts
         update_tracker_file(tracker_file_path, tracker_info)
 
 
@@ -1939,7 +1953,8 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
 
         # --- 2b. Multi-Band: pending Entry-Orders mit der Börse abgleichen (gefüllt
         # vs. storniert), BEVOR cancel_strategy_orders() sie gleich wegwirft ---
-        sync_band_fills(exchange, symbol, tracker_file_path, logger)
+        sync_band_fills(exchange, symbol, tracker_file_path, logger,
+                        current_candle_ts=data_with_indicators.index[-1])
         release_bands_without_position(exchange, symbol, tracker_file_path, logger)
         link_attached_band_sls(exchange, symbol, tracker_file_path, logger)
 

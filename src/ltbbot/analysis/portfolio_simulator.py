@@ -338,6 +338,15 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 MIN_NOTIONAL_USDT = 5.0
                 c_open = current_candle['open']
                 candidates = {'long': [], 'short': []}
+                _fine_memo = {}
+
+                def _entry_fine_bars(_sid=strategy_id, _ts=ts, _memo=_fine_memo):
+                    # Fein-Kerzen dieser Entry-Kerze, nur bei Bedarf geladen (einmal je Kerze)
+                    if 'v' not in _memo:
+                        _fd = strategy_fine_data.get(_sid)
+                        _cd = strategy_coarse_duration.get(_sid)
+                        _memo['v'] = _get_fine_slice(_fd, _ts, _ts + _cd) if _fd is not None and _cd is not None else None
+                    return _memo['v']
                 for side, allowed in (('long', current_use_longs), ('short', current_use_shorts)):
                     if not allowed:
                         continue
@@ -363,7 +372,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                             continue
                         trigger_price = band_price * (1 - trigger_delta_pct) if side == 'long' else band_price * (1 + trigger_delta_pct)
                         fill_price, stopped = simulate_entry_fill(side, c_open, current_candle['high'], current_candle['low'],
-                                                                  current_candle['close'], trigger_price, sl_price)
+                                                                  current_candle['close'], trigger_price, sl_price,
+                                                                  fine_bars=_entry_fine_bars)
                         if fill_price is None:
                             continue
                         amount_coins = risk_amount_usd / sl_dist
