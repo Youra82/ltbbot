@@ -1,28 +1,8 @@
 {
     "live_trading_settings": {
         "use_auto_optimizer_results": true,
-        "_active_strategies_note": "Nur ein FALLBACK/Startwert fuer neue Clones -- der VPS-eigene Auto-Optimizer-Lauf ueberschreibt das lokal, update.sh schuetzt diesen lokalen Stand seit 2026-09-24 vor git reset --hard. Stand hier: letztes bekanntes echtes Portfolio vom User bestaetigt (2026-09-22, 12 Strategien, kein DOGE/AVAX mehr).",
+        "_active_strategies_note": "Nur ein FALLBACK/Startwert fuer neue Clones -- der VPS-eigene Auto-Optimizer-Lauf ueberschreibt das lokal, update.sh schuetzt diesen lokalen Stand seit 2026-09-24 vor git reset --hard. Stand hier: Auto-Portfolio-Optimierung vom User bestaetigt (2026-10-03, 16 Strategien, 1 TF pro Symbol).",
         "active_strategies": [
-            {
-                "symbol": "AAVE/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "AVAX/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "BGB/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "BGB/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
             {
                 "symbol": "BR/USDT:USDT",
                 "timeframe": "1h",
@@ -30,31 +10,11 @@
             },
             {
                 "symbol": "FIL/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "FIL/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             },
             {
-                "symbol": "GRASS/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "GRASS/USDT:USDT",
-                "timeframe": "6h",
-                "active": true
-            },
-            {
-                "symbol": "ICP/USDT:USDT",
-                "timeframe": "6h",
-                "active": true
-            },
-            {
-                "symbol": "INJ/USDT:USDT",
+                "symbol": "MON/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             },
@@ -64,13 +24,23 @@
                 "active": true
             },
             {
-                "symbol": "MON/USDT:USDT",
+                "symbol": "AVAX/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "GRASS/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "US/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "MON/USDT:USDT",
-                "timeframe": "6h",
+                "symbol": "AAVE/USDT:USDT",
+                "timeframe": "1h",
                 "active": true
             },
             {
@@ -84,30 +54,40 @@
                 "active": true
             },
             {
+                "symbol": "WLD/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "INJ/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
                 "symbol": "TRUMP/USDT:USDT",
                 "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "BGB/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "ICP/USDT:USDT",
+                "timeframe": "6h",
                 "active": true
             },
             {
                 "symbol": "USELESS/USDT:USDT",
                 "timeframe": "1h",
                 "active": true
-            },
-            {
-                "symbol": "US/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "WLD/USDT:USDT",
-                "timeframe": "6h",
-                "active": true
             }
         ]
     },
     "optimization_settings": {
         "enabled": true,
-        "_info": "Optimizer nutzt alle vorhandenen Configs aus src/ltbbot/strategy/configs/ \u2014 kein Pool noetig.",
+        "_info": "Optimizer nutzt alle vorhandenen Configs aus src/ltbbot/strategy/configs/ — kein Pool noetig.",
         "oos_reference_date": "2026-08-26",
         "_oos_note": "End-Datum fuer 70/30-Split. OOS-Start automatisch je Timeframe.",
         "backtest_lookback_weeks": 26,

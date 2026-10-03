@@ -34,8 +34,12 @@ class FakeExchange:
     def fetch_open_positions(self, symbol):
         return [{'side': 'long', 'contracts': 5}] if self.position_open else []
 
+    def fetch_plan_history_status(self, symbol, plan_type="normal_plan", since_ms=None):
+        return {}
+
     def fetch_open_trigger_orders(self, symbol):
-        return []
+        # verwaiste separate Alt-SL ist an der Boerse noch offen
+        return [{'id': 'SL1'}] if not self.position_open else []
 
     def cancel_trigger_order(self, order_id, symbol):
         self.cancelled.append(order_id)

@@ -618,7 +618,10 @@ def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: 
         open_ids |= {str(o['id']) for o in exchange.fetch_position_tpsl_orders(symbol)}
         tpsl_status = {}
         if any(str(i) not in open_ids for i in all_sl_ids):
-            tpsl_status = exchange.fetch_position_tpsl_history(symbol)
+            # ccxt-closed-Liste ist unter ccxt 4.3.5 immer leer -> rohe Plan-Historie
+            # beider Kategorien (separate Alt-SLs: normal_plan, angehaengte: profit_loss)
+            tpsl_status = {**exchange.fetch_plan_history_status(symbol, 'normal_plan'),
+                           **exchange.fetch_position_tpsl_history(symbol)}
 
         closed_triggers = []
         params = {'stop': True} if 'bitget' in exchange.exchange.id else {}
@@ -654,7 +657,7 @@ def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: 
                 closed_order = closed_by_id.get(str(sl_id))
                 status = closed_order.get('status') if closed_order else None
                 if status is None and tpsl_status.get(str(sl_id)) == 'executed':
-                    status = 'closed'  # angehaengter SL (loss_plan) hat ausgeloest
+                    status = 'closed'  # SL hat laut Bitget-Plan-Historie ausgeloest
                 if status == 'closed':
                     logger.warning(f"🚨 STOP LOSS für Band {band_str} ({side_key}) von {symbol} ausgelöst! Order ID: {sl_id}")
                     any_triggered = True
@@ -728,6 +731,14 @@ def check_take_profit_trigger(exchange: Exchange, symbol: str, tracker_file_path
             logger.warning("Weder fetchClosedOrders noch fetchOrders wird unterstützt, um TP-Trigger zu prüfen.")
             return False
 
+        # ccxt 4.3.5 liefert oben fuer Bitget immer [] -> ausgeloeste TPs ueber die rohe
+        # Plan-Historie ergaenzen (planStatus 'executed' == ausgeloest)
+        plan_status = exchange.fetch_plan_history_status(symbol, 'normal_plan')
+        known = {str(o.get('id')) for o in closed_triggers}
+        for tp_id in current_tp_ids:
+            if str(tp_id) not in known and plan_status.get(str(tp_id)) == 'executed':
+                closed_triggers.append({'id': tp_id, 'status': 'closed'})
+
         if not closed_triggers:
             logger.debug(f"Keine kürzlich geschlossenen Trigger-Orders für {symbol} gefunden (TP-Prüfung).")
             open_triggers = exchange.fetch_open_trigger_orders(symbol)
@@ -776,8 +787,16 @@ def check_take_profit_trigger(exchange: Exchange, symbol: str, tracker_file_path
             # sind jetzt verwaist (keine Position mehr zum Reduzieren) und
             # werden explizit storniert statt sie stehen zu lassen.
             band_sl_orders = tracker_info.get("band_sl_orders") or {"long": {}, "short": {}}
+            # Angehaengte SLs (profit_loss) entfernt Bitget beim Schliessen selbst --
+            # nur noch offene, separate Alt-SLs (normal_plan) stornieren
+            try:
+                _open_normal = {str(o['id']) for o in exchange.fetch_open_trigger_orders(symbol)}
+            except Exception:
+                _open_normal = None
             for side_key in ("long", "short"):
                 for band_str, sl_id in band_sl_orders.get(side_key, {}).items():
+                    if _open_normal is not None and str(sl_id) not in _open_normal:
+                        continue
                     try:
                         exchange.cancel_trigger_order(sl_id, symbol)
                         logger.debug(f"Verwaiste Band-SL {sl_id} ({side_key} Band {band_str}) nach TP storniert.")
@@ -1120,6 +1139,44 @@ def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, log
     if changed:
         tracker_info["pending_band_orders"] = new_pending
         tracker_info["committed_bands"] = committed
+        update_tracker_file(tracker_file_path, tracker_info)
+
+
+def release_bands_without_position(exchange: Exchange, symbol: str, tracker_file_path: str, logger: logging.Logger):
+    """Sicherheitsnetz (2026-10-03): committed Baender einer Seite, auf der an der Boerse
+    KEINE Position mehr existiert, werden freigegeben -- egal ob TP, SL oder manuell
+    geschlossen. Vorher hing die Freigabe allein an der Erkennung des TP/SL-Order-Status;
+    unter ccxt 4.3.5 lieferte die dafuer genutzte closed-Liste immer [] -> Baender blieben
+    nach dem Schliessen dauerhaft 'committed' und wurden nie wieder eroeffnet.
+    Positionsabfrage bewusst STRIKT (Exception -> nichts tun), da fetch_open_positions()
+    Fehler als [] schluckt. Der Same-Candle-Re-Entry-Schutz greift danach ueber
+    arm_same_candle_reentry_guard() (Vorher/Nachher-Diff)."""
+    tracker_info = read_tracker_file(tracker_file_path)
+    committed = tracker_info.get("committed_bands") or {"long": [], "short": []}
+    if not committed.get("long") and not committed.get("short"):
+        return
+    try:
+        raw = exchange.exchange.fetch_positions([symbol], params={'productType': 'USDT-FUTURES', 'marginCoin': 'USDT'})
+        open_sides = {p.get('side') for p in raw if abs(float(p.get('contracts') or 0)) > 1e-9}
+    except Exception as e:
+        logger.warning(f"Positionsabfrage für Band-Freigabe fehlgeschlagen ({e}) -- nichts geändert.")
+        return
+    changed = False
+    for side_key in ("long", "short"):
+        if committed.get(side_key) and side_key not in open_sides:
+            logger.info(f"🔓 Keine {side_key}-Position mehr für {symbol} -- gebe Bänder {committed[side_key]} frei.")
+            committed[side_key] = []
+            for key in ("band_sl_orders", "band_sl_prices"):
+                d = tracker_info.get(key) or {"long": {}, "short": {}}
+                d[side_key] = {}
+                tracker_info[key] = d
+            changed = True
+    if changed:
+        tracker_info["committed_bands"] = committed
+        if not committed.get("long") and not committed.get("short"):
+            tracker_info["take_profit_ids"] = []
+            tracker_info.pop('last_notified_entry_price', None)
+            tracker_info.pop('last_notified_side', None)
         update_tracker_file(tracker_file_path, tracker_info)
 
 
@@ -1883,6 +1940,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # --- 2b. Multi-Band: pending Entry-Orders mit der Börse abgleichen (gefüllt
         # vs. storniert), BEVOR cancel_strategy_orders() sie gleich wegwirft ---
         sync_band_fills(exchange, symbol, tracker_file_path, logger)
+        release_bands_without_position(exchange, symbol, tracker_file_path, logger)
         link_attached_band_sls(exchange, symbol, tracker_file_path, logger)
 
         # --- 2c. Robuster Re-Entry-Schutz (siehe arm_same_candle_reentry_guard()

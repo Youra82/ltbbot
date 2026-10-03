@@ -23,17 +23,30 @@ def _loss_plan(oid, trig, side='long', size=60):
 
 
 class FakeExchange:
-    def __init__(self, tpsl=(), history=None, closed=()):
+    def __init__(self, tpsl=(), history=None, closed=(), normal_history=None, positions=()):
         self.tpsl = list(tpsl)
         self.history = history or {}
+        self.normal_history = normal_history or {}
+        self.positions = list(positions)
+        pos = self.positions
         self.exchange = type('X', (), {'id': 'bitget', 'has': {'fetchClosedOrders': True},
-                                       'fetchClosedOrders': lambda s, *a, **k: list(closed)})()
+                                       'fetchClosedOrders': lambda s, *a, **k: list(closed),
+                                       'fetch_positions': lambda s, *a, **k: pos})()
+
+    def fetch_open_positions(self, symbol):
+        return [p for p in self.positions if float(p['contracts']) > 0]
+
+    def cancel_trigger_order(self, oid, symbol):
+        pass
 
     def fetch_position_tpsl_orders(self, symbol):
         return self.tpsl
 
     def fetch_position_tpsl_history(self, symbol, since_ms=None):
         return self.history
+
+    def fetch_plan_history_status(self, symbol, plan_type='normal_plan', since_ms=None):
+        return self.normal_history if plan_type == 'normal_plan' else self.history
 
     def fetch_open_trigger_orders(self, symbol):
         return []
@@ -97,3 +110,38 @@ def test_place_trigger_limit_order_attaches_sl():
     ex.place_trigger_limit_order('DOGE/USDT:USDT', 'buy', 60, 0.0945, 0.0946, stop_loss_price=0.0930)
     assert sent['stopLossTriggerPrice'] == '0.09300' and sent['stopLossTriggerType'] == 'mark_price'
     assert sent['reduceOnly'] is False
+
+
+def test_tp_detected_via_plan_history_when_ccxt_closed_list_empty(tmp_path):
+    from ltbbot.utils.trade_manager import check_take_profit_trigger
+    path = _tracker(tmp_path, band_sl_orders={'long': {'1': 'B', '2': 'A'}, 'short': {}}, take_profit_ids=['TP'])
+    ex = FakeExchange(normal_history={'TP': 'executed'})
+    assert check_take_profit_trigger(ex, 'DOGE/USDT:USDT', path, log) is True
+    t = read_tracker_file(path)
+    assert t['committed_bands'] == {'long': [], 'short': []} and t['take_profit_ids'] == []
+
+
+def test_old_separate_sl_detected_via_plan_history(tmp_path):
+    path = _tracker(tmp_path, band_sl_orders={'long': {'1': 'OLD'}, 'short': {}})
+    ex = FakeExchange(normal_history={'OLD': 'executed'})
+    assert check_stop_loss_trigger(ex, 'DOGE/USDT:USDT', path, log, current_candle_ts='T') is True
+    assert read_tracker_file(path)['committed_bands']['long'] == [2]
+
+
+def test_bands_released_when_position_gone(tmp_path):
+    from ltbbot.utils.trade_manager import release_bands_without_position
+    path = _tracker(tmp_path, band_sl_orders={'long': {'1': 'B'}, 'short': {}}, take_profit_ids=['TP'])
+    release_bands_without_position(FakeExchange(positions=[]), 'DOGE/USDT:USDT', path, log)
+    t = read_tracker_file(path)
+    assert t['committed_bands']['long'] == [] and t['band_sl_orders']['long'] == {} and t['take_profit_ids'] == []
+
+
+def test_bands_kept_while_position_open_or_unknown(tmp_path):
+    from ltbbot.utils.trade_manager import release_bands_without_position
+    path = _tracker(tmp_path)
+    release_bands_without_position(FakeExchange(positions=[{'side': 'long', 'contracts': 60}]), 'DOGE/USDT:USDT', path, log)
+    assert read_tracker_file(path)['committed_bands']['long'] == [1, 2]
+    ex = FakeExchange()
+    ex.exchange.fetch_positions = lambda *a, **k: (_ for _ in ()).throw(RuntimeError('API down'))
+    release_bands_without_position(ex, 'DOGE/USDT:USDT', path, log)
+    assert read_tracker_file(path)['committed_bands']['long'] == [1, 2]

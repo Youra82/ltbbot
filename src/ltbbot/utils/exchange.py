@@ -323,20 +323,26 @@ class Exchange:
 
     def fetch_position_tpsl_history(self, symbol: str, since_ms: int = None):
         """{orderId: planStatus} der Position-TP/SL-Kategorie (u.a. an Entries
-        gehaengte Band-SLs, planType 'loss_plan'). ccxt fetch_closed_orders liefert
-        fuer diese Kategorie nichts -- daher der rohe Endpoint. planStatus z.B.
-        'executed' (ausgeloest) oder 'cancelled'."""
+        gehaengte Band-SLs, planType 'loss_plan'). planStatus z.B. 'executed'
+        (ausgeloest) oder 'cancelled'."""
+        return self.fetch_plan_history_status(symbol, 'profit_loss', since_ms)
+
+    def fetch_plan_history_status(self, symbol: str, plan_type: str = 'normal_plan', since_ms: int = None):
+        """{orderId: planStatus} der Plan-Order-Historie (roher Bitget-Endpoint).
+        ccxt 4.3.5 fetchClosedOrders(params={'stop': True}) liefert fuer Bitget-Perps
+        IMMER eine leere Liste (live geprueft 2026-10-03, DOGE/MOVR) -- TP-/SL-
+        Ausloesungen waren darueber nie erkennbar."""
         if not self.markets: return {}
         try:
             req = {'symbol': self.exchange.market(symbol)['id'], 'productType': 'USDT-FUTURES',
-                   'planType': 'profit_loss', 'limit': '100'}
+                   'planType': plan_type, 'limit': '100'}
             if since_ms:
                 req['startTime'] = str(int(since_ms))
             resp = self.exchange.privateMixGetV2MixOrderOrdersPlanHistory(req)
             rows = (resp.get('data') or {}).get('entrustedList') or []
             return {str(o.get('orderId')): o.get('planStatus') for o in rows}
         except Exception as e:
-            logger.error(f"Fehler beim Abrufen der Position-TP/SL-Historie für {symbol}: {e}")
+            logger.error(f"Fehler beim Abrufen der Plan-Historie ({plan_type}) für {symbol}: {e}")
             return {}
 
     def fetch_closed_trigger_orders(self, symbol: str, limit: int = 20):
