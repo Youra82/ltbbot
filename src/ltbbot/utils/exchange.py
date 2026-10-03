@@ -321,6 +321,24 @@ class Exchange:
             logger.error(f"Fehler beim Abrufen von Position-TP/SL-Orders für {symbol}: {e}")
             return []
 
+    def fetch_position_tpsl_history(self, symbol: str, since_ms: int = None):
+        """{orderId: planStatus} der Position-TP/SL-Kategorie (u.a. an Entries
+        gehaengte Band-SLs, planType 'loss_plan'). ccxt fetch_closed_orders liefert
+        fuer diese Kategorie nichts -- daher der rohe Endpoint. planStatus z.B.
+        'executed' (ausgeloest) oder 'cancelled'."""
+        if not self.markets: return {}
+        try:
+            req = {'symbol': self.exchange.market(symbol)['id'], 'productType': 'USDT-FUTURES',
+                   'planType': 'profit_loss', 'limit': '100'}
+            if since_ms:
+                req['startTime'] = str(int(since_ms))
+            resp = self.exchange.privateMixGetV2MixOrderOrdersPlanHistory(req)
+            rows = (resp.get('data') or {}).get('entrustedList') or []
+            return {str(o.get('orderId')): o.get('planStatus') for o in rows}
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen der Position-TP/SL-Historie für {symbol}: {e}")
+            return {}
+
     def fetch_closed_trigger_orders(self, symbol: str, limit: int = 20):
         if not self.markets: return []
         try:
@@ -626,8 +644,15 @@ class Exchange:
     # =========================================================================
     # HIER IST DIE KORREKTUR FÜR TRIGGER LIMIT ORDERS (ENTRY)
     # =========================================================================
-    def place_trigger_limit_order(self, symbol: str, side: str, amount: float, trigger_price: float, price: float, reduce: bool = False, params={}):
-        """Platziert eine Trigger-Limit Order."""
+    def place_trigger_limit_order(self, symbol: str, side: str, amount: float, trigger_price: float, price: float, reduce: bool = False, params={},
+                                  stop_loss_price: float = None):
+        """Platziert eine Trigger-Limit Order.
+
+        stop_loss_price: an die Entry-Order GEHAENGTER Stop-Loss (Bitget
+        stopLossTriggerPrice). Bitget legt ihn erst beim Fill als 'loss_plan'
+        (Kategorie profit_loss) ueber genau die gefuellte Menge an -- vorher
+        existiert er nicht und kann daher nicht ins Leere zuenden. Live
+        verifiziert 2026-10-03 (DOGE, ccxt 4.3.5, hedge_mode)."""
         if not self.markets: return None
         try:
             amount_str = self.amount_to_precision(symbol, amount)
@@ -642,7 +667,10 @@ class Exchange:
                 'reduceOnly': reduce,
                 **params
             }
-            
+            if stop_loss_price is not None:
+                order_params['stopLossTriggerPrice'] = self.price_to_precision(symbol, stop_loss_price)
+                order_params['stopLossTriggerType'] = 'mark_price'
+
             if 'productType' not in order_params:
                  order_params['productType'] = 'USDT-FUTURES'
 

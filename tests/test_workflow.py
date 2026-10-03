@@ -150,11 +150,12 @@ def test_place_entry_orders_on_bitget(test_setup):
         # alle Baender identisch (aktuelle MA) und wird stattdessen gebuendelt von
         # manage_existing_position() gesetzt, sobald eine Position existiert (hier
         # nicht der Fall, da wir nur place_entry_orders() isoliert aufrufen, ohne
-        # dass etwas gefuellt wurde). Erwartung also: 3 Bänder * 2 Order-Typen
-        # (Entry + SL) * 2 Richtungen = 12 Trigger Orders.
+        # dass etwas gefuellt wurde). Seit 2026-10-03 haengt die Band-SL an der
+        # Entry-Order (entsteht erst beim Fill) -- Erwartung also: 3 Bänder *
+        # 1 Entry * 2 Richtungen = 6 Trigger Orders.
 
         open_trigger_orders = exchange.fetch_open_trigger_orders(symbol)
-        expected_orders = len(params['strategy']['envelopes']) * 2 * 2 # Bänder * (Entry+SL) * (Long+Short)
+        expected_orders = len(params['strategy']['envelopes']) * 2 # Bänder * (Long+Short), SL haengt am Entry
 
         print(f"-> Erwartete Trigger Orders: {expected_orders}")
         print(f"-> Gefundene Trigger Orders: {len(open_trigger_orders)}")

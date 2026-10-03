@@ -614,6 +614,11 @@ def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: 
     try:
         open_triggers = exchange.fetch_open_trigger_orders(symbol)
         open_ids = {str(o['id']) for o in open_triggers}
+        # An Entries gehaengte Band-SLs (seit 2026-10-03) liegen in der Position-TP/SL-Kategorie
+        open_ids |= {str(o['id']) for o in exchange.fetch_position_tpsl_orders(symbol)}
+        tpsl_status = {}
+        if any(str(i) not in open_ids for i in all_sl_ids):
+            tpsl_status = exchange.fetch_position_tpsl_history(symbol)
 
         closed_triggers = []
         params = {'stop': True} if 'bitget' in exchange.exchange.id else {}
@@ -648,6 +653,8 @@ def check_stop_loss_trigger(exchange: Exchange, symbol: str, tracker_file_path: 
                     continue
                 closed_order = closed_by_id.get(str(sl_id))
                 status = closed_order.get('status') if closed_order else None
+                if status is None and tpsl_status.get(str(sl_id)) == 'executed':
+                    status = 'closed'  # angehaengter SL (loss_plan) hat ausgeloest
                 if status == 'closed':
                     logger.warning(f"🚨 STOP LOSS für Band {band_str} ({side_key}) von {symbol} ausgelöst! Order ID: {sl_id}")
                     any_triggered = True
@@ -1116,6 +1123,55 @@ def sync_band_fills(exchange: Exchange, symbol: str, tracker_file_path: str, log
         update_tracker_file(tracker_file_path, tracker_info)
 
 
+def link_attached_band_sls(exchange: Exchange, symbol: str, tracker_file_path: str, logger: logging.Logger):
+    """Band-SLs haengen seit 2026-10-03 an der Entry-Order (siehe place_entry_orders())
+    und entstehen bei Bitget erst beim Fill als 'loss_plan' (Kategorie profit_loss).
+    Fuer jedes committed Band ohne SL-ID wird die passende Order ueber Seite und
+    Trigger-Preis (= gemerkter band_sl_prices-Wert) gesucht und im Tracker hinterlegt,
+    damit check_stop_loss_trigger() ihr Ausloesen erkennt."""
+    tracker_info = read_tracker_file(tracker_file_path)
+    committed = tracker_info.get("committed_bands") or {"long": [], "short": []}
+    band_sl_orders = tracker_info.get("band_sl_orders") or {"long": {}, "short": {}}
+    band_sl_prices = tracker_info.get("band_sl_prices") or {"long": {}, "short": {}}
+    missing = [(s, str(b)) for s in ("long", "short") for b in committed.get(s, [])
+               if str(b) not in (band_sl_orders.get(s) or {}) and band_sl_prices.get(s, {}).get(str(b)) is not None]
+    if not missing:
+        return
+    try:
+        tpsl_orders = exchange.fetch_position_tpsl_orders(symbol)
+    except Exception as e:
+        logger.warning(f"Konnte Position-TP/SL-Orders für SL-Zuordnung nicht laden: {e}")
+        return
+    used = {str(v) for s in ("long", "short") for v in (band_sl_orders.get(s) or {}).values()}
+    changed = False
+    for side_key, band_str in missing:
+        sl_price = float(band_sl_prices[side_key][band_str])
+        best = None
+        for o in tpsl_orders:
+            info = o.get('info', {}) or {}
+            oid = str(o.get('id'))
+            if oid in used or info.get('planType') != 'loss_plan' or info.get('posSide') != side_key:
+                continue
+            trig = o.get('stopPrice') if o.get('stopPrice') is not None else info.get('triggerPrice')
+            try:
+                dev = abs(float(trig) - sl_price) / sl_price
+            except (TypeError, ValueError, ZeroDivisionError):
+                continue
+            if dev <= 0.002 and (best is None or dev < best[0]):
+                best = (dev, oid)
+        if best:
+            band_sl_orders.setdefault(side_key, {})[band_str] = best[1]
+            used.add(best[1])
+            changed = True
+            logger.info(f"🔗 Angehängter SL {best[1]} Band {band_str} ({side_key}) für {symbol} zugeordnet (SL {sl_price:.6g}).")
+        else:
+            logger.warning(f"Kein angehängter SL für committed Band {band_str} ({side_key}, SL {sl_price:.6g}) "
+                           f"bei {symbol} gefunden -- Deckung prüft check_naked_position().")
+    if changed:
+        tracker_info["band_sl_orders"] = band_sl_orders
+        update_tracker_file(tracker_file_path, tracker_info)
+
+
 def arm_same_candle_reentry_guard(tracker_file_path: str, committed_bands_before: dict,
                                    current_candle_ts, logger: logging.Logger, symbol: str) -> dict:
     """Setzt sl_fired_candle_ts fuer jedes Band, das seit `committed_bands_before`
@@ -1520,31 +1576,23 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 entry_trigger_price = entry_limit_price * (1 - trigger_delta_pct_cfg)
 
 
-                # Eigene, FESTE SL fuer GENAU dieses Band platzieren (reduceOnly,
-                # auf amount_coins dieses Bands begrenzt) -- bleibt unveraendert
-                # bestehen bis sie feuert oder die Position komplett schliesst,
-                # wird NICHT von manage_existing_position() angefasst (das
-                # verwaltet nur noch den gebuendelten TP). Matcht den Backtester,
-                # der pro Band ebenfalls eine feste, bei Entry berechnete SL nutzt
-                # (backtester.py: pos['sl_price']), statt einer bei jedem Zyklus
-                # neu berechneten SL fuer die gesamte genettete Position.
-                sl_order = exchange.place_trigger_market_order(
-                    symbol=symbol, side='sell', amount=amount_coins,
-                    trigger_price=sl_price, reduce=True
-                )
-                logger.debug(f"  SL für Long Entry {i+1} @ {sl_price:.4f} platziert.")
-                if sl_order and 'id' in sl_order:
-                    new_sl_ids['long'][i + 1] = sl_order['id']
-                new_sl_prices['long'][i + 1] = sl_price
-                time.sleep(0.1)
-
-                # Dann Entry Order (Trigger Limit)
+                # Eigene, FESTE SL fuer GENAU dieses Band -- direkt an die Entry-Order
+                # GEHAENGT (stopLossTriggerPrice): Bitget legt sie erst beim Fill ueber
+                # genau die gefuellte Menge an. Vorher wurde sie als separate reduceOnly-
+                # Trigger-Order VOR dem Fill gesetzt; fiel der Kurs danach unter den SL,
+                # zuendete sie ohne Position ins Leere ('fail_execute') und war weg,
+                # waehrend die Entry-Order aktiv blieb -> drohender Fill OHNE Stop
+                # (MOVR 2h, 2026-10-02/03, 3x). Die SL-ID wird nach dem Fill per
+                # link_attached_band_sls() im Tracker hinterlegt. Matcht den Backtester
+                # (backtester.py: pos['sl_price'] ab Fill).
                 entry_order = exchange.place_trigger_limit_order(
                     symbol=symbol, side=side, amount=amount_coins,
-                    trigger_price=entry_trigger_price, price=entry_limit_price
+                    trigger_price=entry_trigger_price, price=entry_limit_price,
+                    stop_loss_price=sl_price
                 )
                 if entry_order and 'id' in entry_order:
                     new_pending_entries['long'][i + 1] = entry_order['id']
+                    new_sl_prices['long'][i + 1] = sl_price
                 logger.info(f"✅ Long Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 time.sleep(0.1)
 
@@ -1664,25 +1712,16 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 entry_trigger_price = entry_limit_price * (1 + trigger_delta_pct_cfg)
 
 
-                # Eigene, FESTE SL fuer GENAU dieses Band (siehe Long-Block-Kommentar
-                # weiter oben -- matcht backtester.py's pos['sl_price']-Modell).
-                sl_order = exchange.place_trigger_market_order(
-                    symbol=symbol, side='buy', amount=amount_coins,
-                    trigger_price=sl_price, reduce=True
-                )
-                logger.debug(f"  SL für Short Entry {i+1} @ {sl_price:.4f} platziert.")
-                if sl_order and 'id' in sl_order:
-                    new_sl_ids['short'][i + 1] = sl_order['id']
-                new_sl_prices['short'][i + 1] = sl_price
-                time.sleep(0.1)
-
-                # Dann Entry Order (Trigger Limit)
+                # Eigene, FESTE SL fuer GENAU dieses Band, an die Entry gehaengt
+                # (siehe Long-Block-Kommentar weiter oben).
                 entry_order = exchange.place_trigger_limit_order(
                     symbol=symbol, side=side, amount=amount_coins,
-                    trigger_price=entry_trigger_price, price=entry_limit_price
+                    trigger_price=entry_trigger_price, price=entry_limit_price,
+                    stop_loss_price=sl_price
                 )
                 if entry_order and 'id' in entry_order:
                     new_pending_entries['short'][i + 1] = entry_order['id']
+                    new_sl_prices['short'][i + 1] = sl_price
                 logger.info(f"✅ Short Entry {i+1}/{num_envelopes} platziert: Amount={amount_coins:.4f}, Trigger@{entry_trigger_price:.4f}, Limit@{entry_limit_price:.4f}")
                 time.sleep(0.1)
 
@@ -1844,6 +1883,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # --- 2b. Multi-Band: pending Entry-Orders mit der Börse abgleichen (gefüllt
         # vs. storniert), BEVOR cancel_strategy_orders() sie gleich wegwirft ---
         sync_band_fills(exchange, symbol, tracker_file_path, logger)
+        link_attached_band_sls(exchange, symbol, tracker_file_path, logger)
 
         # --- 2c. Robuster Re-Entry-Schutz (siehe arm_same_candle_reentry_guard()
         # fuer die vollstaendige Begruendung): JEDES Band, das VOR diesem Zyklus
