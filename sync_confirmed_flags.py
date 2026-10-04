@@ -37,6 +37,7 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
 from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP  # noqa: E402
 from ltbbot.analysis.optimizer import oos_gate  # noqa: E402
 from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction, band_structure_ok  # noqa: E402
+from ltbbot.utils.lookback import lookback_start_date, lookback_days  # noqa: E402
 
 CONFIGS_DIR = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
 
@@ -56,10 +57,10 @@ def main():
     logging.basicConfig(level=logging.WARNING)
     with open(os.path.join(PROJECT_ROOT, 'settings.json')) as f:
         opt = json.load(f).get('optimization_settings', {})
-    lookback_weeks = int(opt.get('backtest_lookback_weeks', 26))
     is_fraction = float(opt.get('is_fraction', 0.7))
     min_trades = int(opt.get('min_oos_trades', 10))
     min_pf = float(opt.get('min_oos_profit_factor', 1.3))
+    min_pnl = float(opt.get('min_oos_pnl_pct', 0.0))
     max_dd = float(opt.get('constraints', {}).get('max_drawdown_pct', 30)) / 100.0
     start_capital = float(opt.get('start_capital', 10))
     min_sl_atr = float(opt.get('min_sl_atr_fraction', 0.06))
@@ -67,9 +68,9 @@ def main():
     min_gap_atr = float(opt.get('min_band_gap_atr_fraction', 0.25))
 
     end_date = args.end_date or (date.today() - timedelta(days=1)).strftime('%Y-%m-%d')
-    start_date = (date.fromisoformat(end_date) - timedelta(weeks=lookback_weeks)).strftime('%Y-%m-%d')
-    print(f"Fenster {start_date} -> {end_date} | IS-Anteil {is_fraction} | "
-          f"Kriterien: OOS-Trades>={min_trades}, PnL>0, PF>={min_pf}, MaxDD<={max_dd*100:.0f}%, "
+    _tfs = ' '.join(f"{tf}={lookback_days(tf, opt)}d" for tf in ('1h', '2h', '4h', '6h'))
+    print(f"Fenster bis {end_date} je Timeframe ({_tfs}) | IS-Anteil {is_fraction} | "
+          f"Kriterien: OOS-Trades>={min_trades}, PnL>={max(min_pnl, 0)}%, PF>={min_pf}, MaxDD<={max_dd*100:.0f}%, "
           f"Stop >= {min_sl_atr*100:.0f}%, Band 1 >= {min_env1_atr*100:.0f}%, Band-Luecken >= {min_gap_atr*100:.0f}% der typischen Kerze\n")
 
     rows = []
@@ -81,6 +82,7 @@ def main():
             with open(path) as f:
                 cfg = json.load(f)
             symbol, timeframe = cfg['market']['symbol'], cfg['market']['timeframe']
+            start_date = lookback_start_date(timeframe, end_date, opt)
             data = load_data(symbol, timeframe, start_date, end_date)
             if data is None or data.empty:
                 print(f"  {fname}: keine Daten -- unveraendert")
@@ -130,7 +132,7 @@ def main():
                                            show_progress=False, fine_data=fine, multi_band_entries=True)
             res_oos = run_envelope_backtest(data.iloc[split_idx:].copy(), params, start_capital,
                                             show_progress=False, fine_data=fine, multi_band_entries=True)
-            gate = oos_gate(res_oos, min_trades, min_pf, max_dd)
+            gate = oos_gate(res_oos, min_trades, min_pf, max_dd, min_pnl)
             if not sl_ok:
                 gate['passed'] = False
             rows.append((fname, was, gate['passed'], res_oos.get('trades_count', 0),

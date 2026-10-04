@@ -104,6 +104,27 @@ class Exchange:
         return df
 
 
+    def _first_available_ts(self, symbol, timeframe, lo_ts, hi_ts):
+        """Fruehester Zeitpunkt, ab dem Bitget Kerzen liefert (Binaersuche, ~12 Requests)."""
+        step = self.exchange.parse_timeframe(timeframe) * 1000
+        found = None
+        for _ in range(40):
+            if hi_ts - lo_ts <= step:
+                break
+            mid = (lo_ts + hi_ts) // 2
+            try:
+                probe = self.exchange.fetch_ohlcv(symbol, timeframe, mid, 1)
+            except Exception:
+                time.sleep(2)
+                continue
+            time.sleep(self.exchange.rateLimit / 1000)
+            if probe:
+                found = probe[0][0]
+                hi_ts = mid
+            else:
+                lo_ts = mid
+        return found
+
     def fetch_historical_ohlcv(self, symbol, timeframe, start_date_str, end_date_str):
         if not self.markets: return pd.DataFrame() 
         if not self.exchange.has['fetchOHLCV']:
@@ -127,6 +148,17 @@ class Exchange:
         while current_ts < end_ts and retries < max_retries:
             try:
                 ohlcv = self.exchange.fetch_ohlcv(symbol, timeframe, current_ts, fetch_limit)
+                if not ohlcv and not all_ohlcv:
+                    # Startdatum liegt vor dem Listing (junger Coin, z.B. PUMP/US bei 3 Jahren
+                    # Rueckblick, 2026-10-04): Bitget liefert dann leer -> erste vorhandene Kerze
+                    # per Binaersuche finden statt mit "keine Daten" abzubrechen.
+                    first_ts = self._first_available_ts(symbol, timeframe, current_ts, end_ts)
+                    if first_ts is None or first_ts <= current_ts:
+                        break
+                    logger.info(f"{symbol} ({timeframe}): Daten erst ab "
+                                f"{pd.to_datetime(first_ts, unit='ms', utc=True)} verfuegbar (Listing).")
+                    current_ts = first_ts
+                    continue
                 if not ohlcv: break
                 ohlcv = [candle for candle in ohlcv if candle[0] <= end_ts]
                 if not ohlcv: break

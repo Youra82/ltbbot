@@ -83,7 +83,8 @@ echo -e "${BLUE}--- Empfehlung: Rückblick-Zeitraum je Timeframe (Standard bei '
 # fest eingebaute 548-1095 Tage je Timeframe, dadurch waren manuell und automatisch
 # optimierte Configs nicht vergleichbar.
 LOOKBACK_WEEKS=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('backtest_lookback_weeks',26))" 2>/dev/null || echo "26")
-echo "  Automatik: letzte $LOOKBACK_WEEKS Wochen fuer alle Timeframes (settings.json: backtest_lookback_weeks)"
+echo "  Automatik: Rueckblick je Timeframe (settings.json: lookback_days_by_timeframe):"
+"$PYTHON" -c "import json,sys; sys.path.insert(0,'src'); from ltbbot.utils.lookback import lookback_days; o=json.load(open('settings.json')).get('optimization_settings',{}); print('   ', ' | '.join(f'{t}: {lookback_days(t,o)} Tage' for t in ('1h','2h','4h','6h')))"
 echo "  (IS/OOS-Aufteilung dieser Historie erfolgt weiter unten separat per --is_fraction)"
 echo ""
 read -p "Startdatum (JJJJ-MM-TT) oder 'a' für Automatik [Standard: a]: " START_DATE_INPUT
@@ -116,6 +117,8 @@ echo "  IS/OOS-Split: Anteil der Historie, den Optuna beim Optimieren sieht (Res
 read -p "In-Sample-Anteil [Standard: $DEFAULT_IS_FRACTION]: " IS_FRACTION; IS_FRACTION=${IS_FRACTION:-$DEFAULT_IS_FRACTION}
 read -p "K-Fold-Teilfenster fuer Robustheits-Score [Standard: $DEFAULT_K_FOLDS]: " K_FOLDS; K_FOLDS=${K_FOLDS:-$DEFAULT_K_FOLDS}
 read -p "Mindest-OOS-Trades fuer Bestaetigung [Standard: $DEFAULT_MIN_OOS_TRADES]: " MIN_OOS_TRADES; MIN_OOS_TRADES=${MIN_OOS_TRADES:-$DEFAULT_MIN_OOS_TRADES}
+DEFAULT_MIN_OOS_PNL=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('min_oos_pnl_pct',0))" 2>/dev/null || echo "0")
+read -p "Mindest-OOS-PnL in % fuer Bestaetigung [Standard: $DEFAULT_MIN_OOS_PNL]: " MIN_OOS_PNL; MIN_OOS_PNL=${MIN_OOS_PNL:-$DEFAULT_MIN_OOS_PNL}
 DEFAULT_MIN_OOS_PF=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('min_oos_profit_factor',1.3))" 2>/dev/null || echo "1.3")
 read -p "Mindest-OOS-Profit-Faktor fuer Bestaetigung [Standard: $DEFAULT_MIN_OOS_PF]: " MIN_OOS_PF; MIN_OOS_PF=${MIN_OOS_PF:-$DEFAULT_MIN_OOS_PF}
 
@@ -175,7 +178,7 @@ for symbol in $SYMBOLS; do
 
         # Volle Historie -- optimizer.py macht den IS/OOS-Split selbst (--is_fraction)
         if [ "$START_DATE_INPUT" == "a" ]; then
-            CURRENT_START_DATE=$(date -d "$LOOKBACK_WEEKS weeks ago" +%F)
+            CURRENT_START_DATE=$("$PYTHON" -c "import json,sys; sys.path.insert(0,'src'); from ltbbot.utils.lookback import lookback_start_date; print(lookback_start_date('$timeframe', '$TODAY', json.load(open('settings.json')).get('optimization_settings',{})))")
         else
             CURRENT_START_DATE="$START_DATE_INPUT"
         fi
@@ -226,6 +229,7 @@ for symbol in $SYMBOLS; do
                 --k_folds       "$K_FOLDS" \
                 --min_oos_trades "$MIN_OOS_TRADES" \
                 --min_oos_profit_factor "$MIN_OOS_PF" \
+                --min_oos_pnl   "$MIN_OOS_PNL" \
                 --config_suffix "_envelope" \
                 $RECHECK_ARGS 2>&1 | tee "$tmp_log"
             local rc=${PIPESTATUS[0]}

@@ -53,6 +53,7 @@ MIN_TRADES_PER_YEAR_GLOBAL = 20  # User-Eingabe in Trades/Jahr
 SL_MAX_RATIO = 0.333             # Garantiert R:R ≥ 2:1 (sl_ratio = SL/env1, max 1/3)
 IS_FRACTION = 0.70      # analog stbot/dnabot: 70% In-Sample, 30% Out-of-Sample
 MIN_OOS_TRADES = 10     # Bestaetigung erfordert genug OOS-Trades fuer eine belastbare Aussage
+MIN_OOS_PNL = 0.0  # Mindest-OOS-PnL in % (settings: min_oos_pnl_pct)
 MIN_OOS_PROFIT_FACTOR = 1.3  # Bestaetigung erfordert winrate-unabhaengigen OOS-Profit-Faktor
                               # (Summe Gewinne / |Summe Verluste|) spuerbar ueber 1.0 -- siehe
                               # Docstring bei confirmed= weiter unten
@@ -63,7 +64,7 @@ IS_ATR_PCT = None           # median ATR% des IS-Fensters des aktuellen Paars
 MIN_ENV1_ATR = 0.5          # Band 1 >= 0.5 typische Kerzen vom MA (settings: min_env1_atr_fraction)
 MIN_BAND_GAP_ATR = 0.25     # jede weitere Band-Luecke >= 0.25 Kerzen (settings: min_band_gap_atr_fraction)
 
-def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal):
+def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal, min_pnl_pct=0.0):
     """OOS-Bestaetigungs-Kriterien (ohne Baseline-Vergleich) -- geteilt zwischen dem
     besten Trial und der Neubewertung einer bestehenden Config (2026-09-27), sowie
     von sync_confirmed_flags.py. Details zur Wahl der Kriterien siehe confirmed= in main().
@@ -81,6 +82,7 @@ def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal):
     passed = bool(
         oos_result.get('trades_count', 0) >= min_trades
         and oos_result.get('total_pnl_pct', -1e9) > 0.0
+        and oos_result.get('total_pnl_pct', -1e9) >= min_pnl_pct
         and profit_factor >= min_profit_factor
         and max_dd_decimal <= max_drawdown_decimal
     )
@@ -246,6 +248,8 @@ def main():
                         help='Anteil In-Sample (Rest ist Out-of-Sample-Validierung), Standard 0.70')
     parser.add_argument('--min_oos_trades', type=int, default=10,
                         help='Mindestanzahl OOS-Trades fuer eine belastbare Bestaetigung, Standard 10')
+    parser.add_argument('--min_oos_pnl', type=float, default=None,
+                        help='Mindest-OOS-PnL in %% fuer Bestaetigung (Standard: settings.json min_oos_pnl_pct, sonst 0)')
     parser.add_argument('--min_oos_profit_factor', type=float, default=1.3,
                         help='Mindest-OOS-Profit-Faktor (Summe Gewinne / |Summe Verluste|, winrate-unabhaengig) '
                              'fuer eine Bestaetigung, Standard 1.3 -- verhindert Configs, die nur durch hauchduenn '
@@ -287,6 +291,15 @@ def main():
     IS_FRACTION = args.is_fraction
     MIN_OOS_TRADES = args.min_oos_trades
     MIN_OOS_PROFIT_FACTOR = args.min_oos_profit_factor
+    global MIN_OOS_PNL
+    if args.min_oos_pnl is not None:
+        MIN_OOS_PNL = args.min_oos_pnl
+    else:
+        try:
+            with open(os.path.join(PROJECT_ROOT, 'settings.json')) as _f:
+                MIN_OOS_PNL = float(json.load(_f).get('optimization_settings', {}).get('min_oos_pnl_pct', 0.0))
+        except Exception:
+            MIN_OOS_PNL = 0.0
     K_FOLDS = args.k_folds
     if args.min_sl_atr_fraction is not None:
         MIN_SL_ATR_FRACTION = args.min_sl_atr_fraction
@@ -602,7 +615,7 @@ def main():
         # in total_pnl_pct. >1.0 = profitabel, MIN_OOS_PROFIT_FACTOR gibt eine
         # Sicherheitsmarge fuer reale Kosten (Fees/Slippage), die der Backtest nur
         # approximiert.
-        best_gate = oos_gate(best_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
+        best_gate = oos_gate(best_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT, MIN_OOS_PNL)
         if fine_tf and fine_data_precise is None:
             # Ohne Fein-Daten greift die zu optimistische grobe Entry-Kerzen-Regel -> nie bestaetigen
             logger.warning(f"Keine {fine_tf}-Feindaten fuer {symbol} ({timeframe}) -- Ergebnis NICHT bestaetigbar, Lauf spaeter wiederholen.")
@@ -656,7 +669,7 @@ def main():
             # die OOS-Pruefung mit dem korrigierten Backtester nicht mehr bestanden, und
             # run_portfolio_optimizer.py waehlt nur unter bestaetigten Configs aus.
             if baseline_oos is not None:
-                base_gate = oos_gate(baseline_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
+                base_gate = oos_gate(baseline_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT, MIN_OOS_PNL)
                 if fine_tf and fine_data_precise is None:
                     base_gate['passed'] = False
                 _base_frac = sl_atr_fraction(baseline_params, IS_ATR_PCT)
