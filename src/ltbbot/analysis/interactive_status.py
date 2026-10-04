@@ -360,6 +360,14 @@ def extract_trades_from_backtest(df, config):
     Exit: Signalwechsel oder Pullback
     """
     try:
+        if (config.get('strategy') or {}).get('mode') == 'breakout':
+            # Durchbruch-Modus: Durchschnitt + Ausbruchsband zeichnen, Marker kommen aus dem Backtest
+            from ltbbot.strategy.breakout_logic import compute_breakout_indicators
+            d = compute_breakout_indicators(df.copy(), config)
+            k = float(config['strategy'].get('band_atr', 3.0))
+            d['band_high_1'] = d['average'] + k * d['atr']
+            d['band_low_1'] = d['average'] - k * d['atr']
+            return [], d
         # Berechne Indikatoren und Signale
         df_with_indicators, band_prices = calculate_indicators_and_signals(df.copy(), config)
         

@@ -11,6 +11,9 @@ OPTIMIZER="src/ltbbot/analysis/optimizer.py"
 TODAY=$(date +%F)
 
 source "$VENV_PATH"
+SUFFIX=$("$PYTHON" -c "import json; print(json.load(open('settings.json')).get('optimization_settings',{}).get('config_suffix','_envelope'))" 2>/dev/null || echo "_envelope")
+MODE=$("$PYTHON" -c "import json; print(json.load(open('settings.json')).get('optimization_settings',{}).get('strategy_mode','envelope'))" 2>/dev/null || echo "envelope")
+echo "  Strategie-Modus: $MODE | Config-Endung: $SUFFIX"
 echo -e "${GREEN}✔ Virtuelle Umgebung wurde erfolgreich aktiviert.${NC}"
 
 echo ""
@@ -24,7 +27,7 @@ echo -e "${YELLOW}Möchtest du alle alten, generierten Configs vor dem Start lö
 read -p "Dies wird für einen kompletten Neustart empfohlen. (j/n) [Standard: n]: " CLEANUP_CHOICE
 CLEANUP_CHOICE=${CLEANUP_CHOICE:-n}
 if [[ "$CLEANUP_CHOICE" == "j" || "$CLEANUP_CHOICE" == "J" ]]; then
-    rm -f src/ltbbot/strategy/configs/config_*_envelope.json
+    rm -f src/ltbbot/strategy/configs/config_*${SUFFIX}.json
     rm -f artifacts/results/last_optimizer_run.json
     rm -f artifacts/results/portfolio_optimization_results.json
     rm -f artifacts/db/optuna_studies_ltbbot.db
@@ -192,7 +195,7 @@ for symbol in $SYMBOLS; do
 
         # Config-Existenz prüfen (skip/overwrite/all) — Wildcard wie titanbot
         SYM_CLEAN=$(echo "${symbol}" | tr '[:lower:]' '[:upper:]' | tr -d '/: -')
-        FOUND_CFG=$(ls src/ltbbot/strategy/configs/config_*${SYM_CLEAN}*_${timeframe}*_envelope.json 2>/dev/null | head -1)
+        FOUND_CFG=$(ls src/ltbbot/strategy/configs/config_*${SYM_CLEAN}*_${timeframe}*${SUFFIX}.json 2>/dev/null | head -1)
         if [ -n "$FOUND_CFG" ] && [ "$OVERWRITE_ALL" != "j" ]; then
             echo ""
             echo -e "${YELLOW}⚠  Config existiert bereits: $symbol ($timeframe)${NC}"
@@ -230,7 +233,8 @@ for symbol in $SYMBOLS; do
                 --min_oos_trades "$MIN_OOS_TRADES" \
                 --min_oos_profit_factor "$MIN_OOS_PF" \
                 --min_oos_pnl   "$MIN_OOS_PNL" \
-                --config_suffix "_envelope" \
+                --config_suffix "$SUFFIX" \
+                --strategy_mode "$MODE" \
                 $RECHECK_ARGS 2>&1 | tee "$tmp_log"
             local rc=${PIPESTATUS[0]}
             NO_VALID_TRIALS=0
@@ -276,7 +280,8 @@ if [[ "$UPDATE_SETTINGS_CHOICE" == "j" || "$UPDATE_SETTINGS_CHOICE" == "J" ]]; t
 import json, os, glob
 ROOT = os.path.abspath('.')
 settings = json.load(open(os.path.join(ROOT, 'settings.json')))
-configs  = glob.glob(os.path.join(ROOT, 'src', 'ltbbot', 'strategy', 'configs', 'config_*_envelope.json'))
+suffix   = settings.get('optimization_settings', {}).get('config_suffix', '_envelope')
+configs  = glob.glob(os.path.join(ROOT, 'src', 'ltbbot', 'strategy', 'configs', f'config_*{suffix}.json'))
 if not configs:
     print("⚠  Keine Config-Dateien gefunden.")
     exit(0)

@@ -214,11 +214,13 @@ def _send_telegram_doc(fpath, caption=''):
     try:
         import requests
         with open(fpath, 'rb') as fh:
-            requests.post(f'https://api.telegram.org/bot{token}/sendDocument',
-                          data={'chat_id': chat, 'caption': caption},
-                          files={'document': fh}, timeout=30)
-    except Exception:
-        pass
+            r = requests.post(f'https://api.telegram.org/bot{token}/sendDocument',
+                              data={'chat_id': chat, 'caption': caption},
+                              files={'document': fh}, timeout=180)   # 30 s reichten fuer 5-MB-Charts nicht
+            if not r.ok:
+                print(f'  Telegram-Versand fehlgeschlagen ({os.path.basename(fpath)}): {r.status_code} {r.text[:200]}')
+    except Exception as e:
+        print(f'  Telegram-Versand fehlgeschlagen ({os.path.basename(fpath)}): {e}')
 
 
 def generate_trades_excel(final, strategies_data, capital, start_date, end_date):

@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "pnl_pct": 226.61,
+        "oos_pnl_pct": 86.54,
+        "oos_trades": 13,
+        "oos_profit_factor": 3.25,
+        "oos_win_rate": 53.85,
+        "oos_max_drawdown_pct": 8.57,
+        "is_oos_split_date": "2026-02-27",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-04T21:46:49"
+    },
+    "market": {
+        "symbol": "1000000MOG/USDT:USDT",
+        "timeframe": "2h"
+    },
+    "strategy": {
+        "mode": "breakout",
+        "average_type": "EMA",
+        "average_period": 34,
+        "atr_period": 14,
+        "band_atr": 3.461,
+        "max_hold_candles": 43,
+        "use_btc_filter": true,
+        "btc_sma_days": 200
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "sl_atr": 1.001,
+        "tp_r": 3.555,
+        "risk_per_entry_pct": 3.93,
+        "leverage": 4
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

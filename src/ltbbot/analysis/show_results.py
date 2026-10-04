@@ -18,6 +18,7 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 # --- ltbbot Imports ---
 from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP, LazyFineData
+from ltbbot.utils.config_suffix import get_config_suffix
 from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
 from ltbbot.analysis.portfolio_optimizer import run_portfolio_optimizer
 from ltbbot.analysis.evaluator import evaluate_dataset
@@ -276,7 +277,7 @@ def run_single_analysis(start_date, end_date, start_capital):
     try:
         config_files = sorted([
             f for f in os.listdir(configs_dir)
-            if f.startswith('config_') and f.endswith('_envelope.json')
+            if f.startswith('config_') and f.endswith(f'{get_config_suffix()}.json')
         ])
     except FileNotFoundError:
            logger.error(f"Konfigurationsverzeichnis nicht gefunden: {configs_dir}")
@@ -406,10 +407,10 @@ def run_portfolio_mode(is_auto: bool, start_date, end_date, start_capital, auto_
     try:
         config_files = sorted([
             f for f in os.listdir(configs_dir)
-            if f.startswith('config_') and f.endswith('_envelope.json')
+            if f.startswith('config_') and f.endswith(f'{get_config_suffix()}.json')
         ])
         if not config_files:
-            logger.warning("Keine optimierten Strategien (config_*_envelope.json) gefunden.")
+            logger.warning(f"Keine optimierten Strategien (config_*{get_config_suffix()}.json) gefunden.")
             return
 
         for filename in config_files:
@@ -724,7 +725,7 @@ if __name__ == "__main__":
             _configs_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
             _split_by_tf = {}
             for _fn in os.listdir(_configs_dir):
-                if _fn.startswith('config_') and _fn.endswith('_envelope.json'):
+                if _fn.startswith('config_') and _fn.endswith(f'{get_config_suffix()}.json'):
                     try:
                         with open(os.path.join(_configs_dir, _fn)) as _cf:
                             _c = json.load(_cf)
