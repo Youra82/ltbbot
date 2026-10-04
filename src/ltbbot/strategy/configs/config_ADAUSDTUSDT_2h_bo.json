@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "pnl_pct": 56.1,
+        "oos_pnl_pct": 27.04,
+        "oos_trades": 12,
+        "oos_profit_factor": 1.75,
+        "oos_win_rate": 33.33,
+        "oos_max_drawdown_pct": 20.61,
+        "is_oos_split_date": "2026-02-27",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-04T22:43:41"
+    },
+    "market": {
+        "symbol": "ADA/USDT:USDT",
+        "timeframe": "2h"
+    },
+    "strategy": {
+        "mode": "breakout",
+        "average_type": "SMA",
+        "average_period": 50,
+        "atr_period": 14,
+        "band_atr": 3.305,
+        "max_hold_candles": 40,
+        "use_btc_filter": true,
+        "btc_sma_days": 200
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "sl_atr": 1.092,
+        "tp_r": 4.325,
+        "risk_per_entry_pct": 3.46,
+        "leverage": 10
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}
