@@ -9,8 +9,9 @@
         "is_oos_split_date": "2025-11-09",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": true,
-        "optimized_at": "2026-10-04T19:20:04"
+        "confirmed": false,
+        "optimized_at": "2026-10-04T19:20:04",
+        "unconfirmed_reason": "is_pnl_not_positive"
     },
     "market": {
         "symbol": "ENS/USDT:USDT",

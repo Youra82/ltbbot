@@ -136,7 +136,8 @@ def _load_active_strategies() -> list:
 
 def _config_path_for(symbol: str, timeframe: str) -> str | None:
     base = symbol.replace('/', '').replace(':', '').upper()
-    candidate = os.path.join(CONFIGS_DIR, f"config_{base}_{timeframe}_envelope.json")
+    from ltbbot.utils.config_suffix import get_config_suffix
+    candidate = os.path.join(CONFIGS_DIR, f"config_{base}_{timeframe}{get_config_suffix()}.json")
     return candidate if os.path.exists(candidate) else None
 
 

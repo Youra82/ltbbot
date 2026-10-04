@@ -61,7 +61,8 @@ def load_config(symbol, timeframe):
     configs_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
     # Dateiname basierend auf Symbol und Zeitrahmen (mit Suffix)
     safe_filename_base = f"{symbol.replace('/', '').replace(':', '')}_{timeframe}"
-    config_filename = f"config_{safe_filename_base}_envelope.json" # Fester Suffix für Envelope
+    from ltbbot.utils.config_suffix import get_config_suffix
+    config_filename = f"config_{safe_filename_base}{get_config_suffix()}.json"  # Suffix aus settings (_envelope / _bo)
     config_path = os.path.join(configs_dir, config_filename)
 
     if not os.path.exists(config_path):

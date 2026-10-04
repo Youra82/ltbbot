@@ -122,7 +122,8 @@ def _scan_configs() -> list[dict]:
     """Liest alle vorhandenen Envelope-Configs und gibt Metadaten zurück."""
     configs_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
     result = []
-    for path in sorted(glob.glob(os.path.join(configs_dir, 'config_*_envelope.json'))):
+    from ltbbot.utils.config_suffix import get_config_suffix
+    for path in sorted(glob.glob(os.path.join(configs_dir, f'config_*{get_config_suffix()}.json'))):
         try:
             with open(path) as f:
                 cfg = json.load(f)
@@ -225,7 +226,7 @@ def run_portfolio_optimization(opt_settings: dict, reason: str):
         )
         return
 
-    lookback_weeks = int(opt_settings.get('backtest_lookback_weeks', 8))
+    lookback_weeks = int(opt_settings.get('portfolio_lookback_weeks') or opt_settings.get('backtest_lookback_weeks', 8))
     start_time     = datetime.now()
 
     _log(f"START reason={reason} configs={len(configs)} lookback_weeks={lookback_weeks}")

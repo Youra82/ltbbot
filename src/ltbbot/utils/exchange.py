@@ -613,6 +613,39 @@ class Exchange:
 
     # --- Order Platzierungs Methoden ---
 
+    def place_market_entry_with_sltp(self, symbol: str, side: str, amount: float, sl_price: float, tp_price: float):
+        """Market-Einstieg mit an die Order gehaengtem SL und TP (Bitget presetStopLossPrice /
+        presetStopSurplusPrice). Bitget legt beide beim Fill als Position-TP/SL an -- keine
+        Phase ohne Stop (Breakout-Modus, 2026-10-04)."""
+        if not self.markets: return None
+        amount_str = self.amount_to_precision(symbol, amount)
+        params = {'productType': 'USDT-FUTURES',
+                  'presetStopLossPrice': self.price_to_precision(symbol, sl_price),
+                  'presetStopSurplusPrice': self.price_to_precision(symbol, tp_price)}
+        logger.info(f"Market-Entry {side.upper()} {amount_str} {symbol} mit SL {params['presetStopLossPrice']} / TP {params['presetStopSurplusPrice']}")
+        return self.exchange.create_order(symbol, 'market', side, float(amount_str), params=params)
+
+    def cancel_position_tpsl_orders(self, symbol: str):
+        """Storniert alle Position-TP/SL-Orders (Kategorie profit_loss) des Symbols -- ccxt
+        cancel_order crasht dafuer (list index), daher der rohe Endpoint."""
+        if not self.markets: return 0
+        market_id = self.exchange.market(symbol)['id']
+        n = 0
+        try:
+            r = self.exchange.privateMixGetV2MixOrderOrdersPlanPending(
+                {'symbol': market_id, 'productType': 'USDT-FUTURES', 'planType': 'profit_loss'})
+            for o in (r.get('data') or {}).get('entrustedList') or []:
+                try:
+                    self.exchange.privateMixPostV2MixOrderCancelPlanOrder(
+                        {'symbol': market_id, 'productType': 'USDT-FUTURES', 'marginCoin': 'USDT',
+                         'planType': 'profit_loss', 'orderIdList': [{'orderId': o['orderId']}]})
+                    n += 1
+                except Exception as e:
+                    logger.warning(f"TP/SL {o.get('orderId')} nicht stornierbar: {e}")
+        except Exception as e:
+            logger.warning(f"Position-TP/SL fuer {symbol} nicht abrufbar: {e}")
+        return n
+
     def place_market_order(self, symbol: str, side: str, amount: float, reduce: bool = False, params={}):
         if not self.markets: return None
         try:

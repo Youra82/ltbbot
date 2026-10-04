@@ -38,6 +38,7 @@ from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF
 from ltbbot.analysis.optimizer import oos_gate  # noqa: E402
 from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction, band_structure_ok  # noqa: E402
 from ltbbot.utils.lookback import lookback_start_date, lookback_days  # noqa: E402
+from ltbbot.utils.config_suffix import get_config_suffix  # noqa: E402
 
 CONFIGS_DIR = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
 
@@ -74,7 +75,7 @@ def main():
           f"Stop >= {min_sl_atr*100:.0f}%, Band 1 >= {min_env1_atr*100:.0f}%, Band-Luecken >= {min_gap_atr*100:.0f}% der typischen Kerze\n")
 
     rows = []
-    for path in sorted(glob.glob(os.path.join(CONFIGS_DIR, 'config_*_envelope.json'))):
+    for path in sorted(glob.glob(os.path.join(CONFIGS_DIR, f'config_*{get_config_suffix()}.json'))):
         fname = os.path.basename(path)
         if args.only and not any(fname.startswith(f"config_{c.strip().upper()}USDT") for c in args.only.split(',')):
             continue

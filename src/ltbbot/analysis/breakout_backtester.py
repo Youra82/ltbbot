@@ -138,7 +138,13 @@ def run_breakout_portfolio_simulation(start_capital, strategies_data, start_date
     wie live. Reicht die freie Margin nicht, wird der Trade ausgelassen."""
     import numpy as np
     from ltbbot.strategy.breakout_logic import MIN_NOTIONAL_USDT
-    s_ts, e_ts = pd.Timestamp(start_date, tz='UTC'), pd.Timestamp(end_date, tz='UTC') + pd.Timedelta(days=1)
+    def _ts(x, default):
+        if x is None or (isinstance(x, str) and not x):
+            return default
+        t = pd.Timestamp(x)
+        return t.tz_localize('UTC') if t.tzinfo is None else t.tz_convert('UTC')
+    s_ts = _ts(start_date, pd.Timestamp('1970-01-01', tz='UTC'))
+    e_ts = _ts(end_date, pd.Timestamp('2100-01-01', tz='UTC')) + pd.Timedelta(days=1)
     events = []
     for sid, info in strategies_data.items():
         p = info['params']

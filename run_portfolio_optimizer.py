@@ -22,6 +22,8 @@ from tqdm import tqdm
 
 PROJECT_ROOT  = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
+from ltbbot.utils.config_suffix import get_config_suffix  # noqa: E402
+_CFG_SUFFIX = get_config_suffix()
 
 CONFIGS_DIR   = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
 SETTINGS_PATH = os.path.join(PROJECT_ROOT, 'settings.json')
@@ -77,7 +79,7 @@ def _scan_configs() -> list:
         return []
     result = []
     for f in sorted(os.listdir(CONFIGS_DIR)):
-        if not f.endswith('_envelope.json'):
+        if not f.endswith(f'{_CFG_SUFFIX}.json'):
             continue
         path = os.path.join(CONFIGS_DIR, f)
         try:
@@ -600,10 +602,12 @@ def main() -> int:
     # Timeframe-Maximum aus LOOKBACK_MAP), wodurch bei kurzem backtest_lookback_weeks
     # (z.B. 1 Woche) end_date (Trainingsende, OOS-Reserve-abhaengig) weiter in der
     # Vergangenheit lag als start_date -- ein rueckwaerts laufendes, leeres Fenster.
-    lookback_weeks = opt.get('backtest_lookback_weeks')
+    # portfolio_lookback_weeks (2026-10-04) hat Vorrang: der Breakout-Modus braucht Marktphasen mit
+    # BTC > SMA200 im Auswahlfenster; 26 Wochen enthielten zuletzt keine -> 0 Trades fuer alle Configs.
+    lookback_weeks = opt.get('portfolio_lookback_weeks') or opt.get('backtest_lookback_weeks')
     if lookback_weeks:
         lookback = int(lookback_weeks) * 7
-        print(f"  Lookback: {lookback_weeks} Wochen (aus backtest_lookback_weeks)")
+        print(f"  Lookback: {lookback_weeks} Wochen (portfolio_lookback_weeks / backtest_lookback_weeks)")
     else:
         active_tfs = [
             s.get('timeframe', '1h')
@@ -642,7 +646,7 @@ def main() -> int:
 
     config_files = _scan_configs()
     if not config_files:
-        print(f"{R}  Keine *_envelope.json Configs in {CONFIGS_DIR}{NC}")
+        print(f"{R}  Keine *{_CFG_SUFFIX}.json Configs in {CONFIGS_DIR}{NC}")
         print(f"  -> Zuerst run_pipeline.sh ausfuehren!\n")
         return 1
 

@@ -16,7 +16,9 @@ def test_config_path_for_resolves_real_filename_pattern():
     # Gegen eine tatsaechlich vorhandene Config pruefen (der Config-Satz wechselt
     # mit jedem Release, ein fest verdrahtetes Paar wuerde veralten).
     import glob, json
-    files = sorted(glob.glob(os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs', 'config_*_envelope.json')))
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
+    from ltbbot.utils.config_suffix import get_config_suffix
+    files = sorted(glob.glob(os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs', f'config_*{get_config_suffix()}.json')))
     assert files, 'keine Config im Repo'
     market = json.load(open(files[0]))['market']
     path = mod._config_path_for(market['symbol'], market['timeframe'])
