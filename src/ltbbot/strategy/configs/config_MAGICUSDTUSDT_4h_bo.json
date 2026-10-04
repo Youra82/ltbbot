@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "pnl_pct": 10.53,
+        "oos_pnl_pct": 20.29,
+        "oos_trades": 12,
+        "oos_profit_factor": 2.78,
+        "oos_win_rate": 58.33,
+        "oos_max_drawdown_pct": 4.04,
+        "is_oos_split_date": "2025-11-09",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-04T21:16:16"
+    },
+    "market": {
+        "symbol": "MAGIC/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "mode": "breakout",
+        "average_type": "SMA",
+        "average_period": 49,
+        "atr_period": 14,
+        "band_atr": 1.898,
+        "max_hold_candles": 61,
+        "use_btc_filter": true,
+        "btc_sma_days": 200
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "sl_atr": 2.199,
+        "tp_r": 2.189,
+        "risk_per_entry_pct": 1.95,
+        "leverage": 5
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

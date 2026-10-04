@@ -92,8 +92,11 @@ def main():
             params = {'strategy': cfg['strategy'], 'risk': cfg['risk'],
                       'behavior': cfg.get('behavior', {'use_longs': True, 'use_shorts': True})}
             is_atr = median_atr_pct(data.iloc[:split_idx])
-            sl_frac = sl_atr_fraction(params, is_atr)
-            sl_ok = (sl_frac is None or sl_frac >= min_sl_atr) and band_structure_ok(params, is_atr, min_env1_atr, min_gap_atr)
+            sl_frac = sl_atr_fraction(params, is_atr) if params['strategy'].get('mode') != 'breakout' else None
+            if params['strategy'].get('mode') == 'breakout':
+                sl_frac, sl_ok = None, True   # Envelope-Abstandsregeln gelten nicht fuer Durchbruch-Configs
+            else:
+                sl_ok = (sl_frac is None or sl_frac >= min_sl_atr) and band_structure_ok(params, is_atr, min_env1_atr, min_gap_atr)
             was = cfg.get('_meta', {}).get('confirmed')
             if args.sl_check_only:
                 now = bool(was) and sl_ok

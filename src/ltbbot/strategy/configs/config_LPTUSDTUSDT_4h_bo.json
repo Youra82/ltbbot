@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "pnl_pct": 28.9,
+        "oos_pnl_pct": 14.73,
+        "oos_trades": 13,
+        "oos_profit_factor": 1.94,
+        "oos_win_rate": 38.46,
+        "oos_max_drawdown_pct": 5.19,
+        "is_oos_split_date": "2025-11-09",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-04T21:15:37"
+    },
+    "market": {
+        "symbol": "LPT/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "mode": "breakout",
+        "average_type": "SMA",
+        "average_period": 40,
+        "atr_period": 14,
+        "band_atr": 1.998,
+        "max_hold_candles": 33,
+        "use_btc_filter": true,
+        "btc_sma_days": 200
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "sl_atr": 1.38,
+        "tp_r": 3.555,
+        "risk_per_entry_pct": 1.65,
+        "leverage": 4
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

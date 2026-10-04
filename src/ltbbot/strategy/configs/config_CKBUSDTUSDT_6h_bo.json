@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "pnl_pct": 23.05,
+        "oos_pnl_pct": 20.72,
+        "oos_trades": 13,
+        "oos_profit_factor": 2.95,
+        "oos_win_rate": 53.85,
+        "oos_max_drawdown_pct": 3.03,
+        "is_oos_split_date": "2025-11-09",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-04T19:03:48"
+    },
+    "market": {
+        "symbol": "CKB/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "mode": "breakout",
+        "average_type": "EMA",
+        "average_period": 40,
+        "atr_period": 14,
+        "band_atr": 1.743,
+        "max_hold_candles": 110,
+        "use_btc_filter": true,
+        "btc_sma_days": 200
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "sl_atr": 1.169,
+        "tp_r": 2.935,
+        "risk_per_entry_pct": 1.42,
+        "leverage": 2
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

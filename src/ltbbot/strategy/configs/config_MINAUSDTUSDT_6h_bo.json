@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "pnl_pct": 1.54,
+        "oos_pnl_pct": 11.09,
+        "oos_trades": 10,
+        "oos_profit_factor": 5.88,
+        "oos_win_rate": 80.0,
+        "oos_max_drawdown_pct": 1.04,
+        "is_oos_split_date": "2025-11-09",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-04T20:19:51"
+    },
+    "market": {
+        "symbol": "MINA/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "mode": "breakout",
+        "average_type": "SMA",
+        "average_period": 50,
+        "atr_period": 14,
+        "band_atr": 1.65,
+        "max_hold_candles": 54,
+        "use_btc_filter": true,
+        "btc_sma_days": 200
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "sl_atr": 1.114,
+        "tp_r": 1.714,
+        "risk_per_entry_pct": 0.96,
+        "leverage": 10
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

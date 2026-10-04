@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "pnl_pct": -8.38,
+        "oos_pnl_pct": 13.12,
+        "oos_trades": 14,
+        "oos_profit_factor": 1.84,
+        "oos_win_rate": 50.0,
+        "oos_max_drawdown_pct": 8.41,
+        "is_oos_split_date": "2026-04-02",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-04T20:31:35"
+    },
+    "market": {
+        "symbol": "FARTCOIN/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "mode": "breakout",
+        "average_type": "SMA",
+        "average_period": 11,
+        "atr_period": 14,
+        "band_atr": 1.515,
+        "max_hold_candles": 113,
+        "use_btc_filter": true,
+        "btc_sma_days": 200
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "sl_atr": 1.019,
+        "tp_r": 2.058,
+        "risk_per_entry_pct": 1.96,
+        "leverage": 3
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "pnl_pct": 146.06,
+        "oos_pnl_pct": 23.01,
+        "oos_trades": 11,
+        "oos_profit_factor": 1.58,
+        "oos_win_rate": 27.27,
+        "oos_max_drawdown_pct": 21.06,
+        "is_oos_split_date": "2025-11-09",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-04T21:03:38"
+    },
+    "market": {
+        "symbol": "BLUR/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "mode": "breakout",
+        "average_type": "EMA",
+        "average_period": 21,
+        "atr_period": 14,
+        "band_atr": 1.848,
+        "max_hold_candles": 67,
+        "use_btc_filter": true,
+        "btc_sma_days": 200
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "sl_atr": 1.254,
+        "tp_r": 5.363,
+        "risk_per_entry_pct": 3.6,
+        "leverage": 2
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

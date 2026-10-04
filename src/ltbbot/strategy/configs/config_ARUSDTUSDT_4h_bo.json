@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "pnl_pct": 75.83,
+        "oos_pnl_pct": 12.82,
+        "oos_trades": 20,
+        "oos_profit_factor": 1.84,
+        "oos_win_rate": 55.0,
+        "oos_max_drawdown_pct": 6.31,
+        "is_oos_split_date": "2025-11-09",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-04T21:00:19"
+    },
+    "market": {
+        "symbol": "AR/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "mode": "breakout",
+        "average_type": "EMA",
+        "average_period": 25,
+        "atr_period": 14,
+        "band_atr": 1.563,
+        "max_hold_candles": 48,
+        "use_btc_filter": true,
+        "btc_sma_days": 200
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "sl_atr": 1.476,
+        "tp_r": 1.611,
+        "risk_per_entry_pct": 1.53,
+        "leverage": 6
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

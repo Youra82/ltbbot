@@ -131,6 +131,26 @@ def _get_fine_slice(fine_data, start_ts, end_ts):
     return fine_data.loc[(fine_data.index >= start_ts) & (fine_data.index < end_ts)]
 
 
+def _read_cache_meta(cache_file):
+    try:
+        with open(cache_file + '.meta') as f:
+            return pd.to_datetime(f.read().strip(), utc=True)
+    except Exception:
+        return None
+
+
+def _write_cache_meta(cache_file, start_date_str):
+    """Merkt den fruehesten je angefragten Start (fuer junge Coins, s. load_data)."""
+    try:
+        old = _read_cache_meta(cache_file)
+        new = pd.to_datetime(start_date_str, utc=True)
+        if old is None or new < old:
+            with open(cache_file + '.meta', 'w') as f:
+                f.write(new.strftime('%Y-%m-%d'))
+    except Exception:
+        pass
+
+
 def load_data(symbol, timeframe, start_date_str, end_date_str):
     """Lädt historische OHLCV-Daten, entweder aus dem Cache oder von der Börse."""
     cache_dir = os.path.join(PROJECT_ROOT, 'data', 'cache')
@@ -154,10 +174,19 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
             req_start = pd.to_datetime(start_date_str, utc=True)
             req_end = pd.to_datetime(end_date_str + 'T23:59:59Z', utc=True)
 
-            if cache_start <= req_start and cache_end >= req_end:
+            # Junge Coins: liegt das Listing nach req_start, beginnt der Cache zwangslaeufig
+            # spaeter. Ein frueherer Download, der schon ab <= req_start angefragt hatte,
+            # deckt den Zeitraum trotzdem vollstaendig ab (Meta-Datei, 2026-10-04).
+            _meta_start = _read_cache_meta(cache_file)
+            _start_ok = cache_start <= req_start or (_meta_start is not None and _meta_start <= req_start)
+            # Letzte Kerze eines Tages beginnt vor 23:59:59 -- Kerzenlaenge als Toleranz,
+            # sonst galt der Cache bei Tages-Enddaten NIE als vollstaendig (jeder Aufruf lud neu).
+            _tf_len = pd.Timedelta(timeframe.replace('m', 'min')) if timeframe[-1] in 'mhd' else pd.Timedelta(0)
+            if _start_ok and cache_end + _tf_len > req_end:
                 return data.loc[req_start:req_end].copy()
             else:
                 logger.info(f"Cache für {symbol} ({timeframe}) deckt Zeitraum NICHT ab. Download notwendig.")
+                _cached_old = data
                 data = pd.DataFrame()
         except Exception as e:
             logger.error(f"Fehler beim Lesen oder Verarbeiten der Cache-Datei {cache_file}: {e}")
@@ -184,7 +213,14 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
                     full_data.index = full_data.index.tz_localize('UTC')
                 else:
                     full_data.index = full_data.index.tz_convert('UTC')
+                # Mit vorhandenem Cache zusammenfuehren statt ihn zu ueberschreiben (2026-10-04:
+                # ein kuerzerer Abruf hatte die BTC-1d-Historie auf 192 Tage gekuerzt).
+                _old = locals().get('_cached_old')
+                if _old is not None and not _old.empty:
+                    full_data = pd.concat([_old, full_data])
+                    full_data = full_data[~full_data.index.duplicated(keep='last')].sort_index()
                 full_data.to_csv(cache_file)
+                _write_cache_meta(cache_file, start_date_str)
                 req_start = pd.to_datetime(start_date_str, utc=True)
                 req_end = pd.to_datetime(end_date_str + 'T23:59:59Z', utc=True)
                 # Sicherstellen, dass nur der angeforderte Bereich zurückgegeben wird
@@ -226,6 +262,11 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
     Band 2/3) -- nur noch fuer explizite historische Vergleiche mit dem
     urspruenglichen (Band-1-only) 12-Konfigurationen-Sweep gedacht.
     """
+    # Band-Durchbruch-Modus (2026-10-04): eigene Simulation, gleiches Rueckgabeformat
+    if (params.get('strategy') or {}).get('mode') == 'breakout':
+        from ltbbot.analysis.breakout_backtester import run_breakout_backtest
+        return run_breakout_backtest(data, params, start_capital, fine_data=fine_data, sim_start_date=sim_start_date)
+
     if data.empty:
         logger.warning("Leeres DataFrame an Backtester übergeben.")
         # Rückgabeformat beibehalten

@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "pnl_pct": 29.85,
+        "oos_pnl_pct": 60.24,
+        "oos_trades": 13,
+        "oos_profit_factor": 4.01,
+        "oos_win_rate": 53.85,
+        "oos_max_drawdown_pct": 6.47,
+        "is_oos_split_date": "2025-11-09",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-04T20:54:48"
+    },
+    "market": {
+        "symbol": "QNT/USDT:USDT",
+        "timeframe": "6h"
+    },
+    "strategy": {
+        "mode": "breakout",
+        "average_type": "EMA",
+        "average_period": 50,
+        "atr_period": 14,
+        "band_atr": 2.858,
+        "max_hold_candles": 101,
+        "use_btc_filter": true,
+        "btc_sma_days": 200
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "sl_atr": 1.001,
+        "tp_r": 4.384,
+        "risk_per_entry_pct": 2.09,
+        "leverage": 3
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}
