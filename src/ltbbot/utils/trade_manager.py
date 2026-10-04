@@ -1876,12 +1876,6 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
     """Der Haupt-Handelszyklus für eine einzelne Envelope-Strategie."""
     symbol = params['market']['symbol']
     timeframe = params['market']['timeframe']
-    if (params.get('strategy') or {}).get('mode') == 'breakout':
-        # Band-Durchbruch-Modus (2026-10-04): eigener Live-Zyklus, gleiche Logik wie der Backtest
-        from ltbbot.utils.breakout_trader import full_breakout_cycle
-        return full_breakout_cycle(exchange, params, telegram_config, logger,
-                                   get_tracker_file_path(symbol, timeframe), read_tracker_file,
-                                   update_tracker_file, check_naked_position)
     tracker_file_path = get_tracker_file_path(symbol, timeframe)
     account_name = exchange.account.get('name', 'Standard-Account')
     logger.info(f"===== Starte Handelszyklus für {symbol} ({timeframe}) auf '{account_name}' =====")

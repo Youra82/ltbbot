@@ -47,15 +47,12 @@ START_CAPITAL = 1000
 # per Fein-Daten aufgeloest (simulate_entry_fill) -- ohne sie bevorzugt die Suche Baender,
 # deren Gewinne nur aus der groben Close-Regel stammen (OOS-Portfolio +460% grob vs -1.8% fein).
 SEARCH_FINE_DATA = None
-# 'envelope' (alte Umkehr-Logik) oder 'breakout' (Band-Durchbruch, 2026-10-04, siehe strategy/breakout_logic.py)
-STRATEGY_MODE = 'envelope'
 OPTIM_MODE = "strict"
 MIN_TRADES_FOR_VALID = 20       # wird pro Symbol proportional zur Trainingslänge berechnet
 MIN_TRADES_PER_YEAR_GLOBAL = 20  # User-Eingabe in Trades/Jahr
 SL_MAX_RATIO = 0.333             # Garantiert R:R ≥ 2:1 (sl_ratio = SL/env1, max 1/3)
 IS_FRACTION = 0.70      # analog stbot/dnabot: 70% In-Sample, 30% Out-of-Sample
 MIN_OOS_TRADES = 10     # Bestaetigung erfordert genug OOS-Trades fuer eine belastbare Aussage
-MIN_OOS_PNL = 0.0  # Mindest-OOS-PnL in % (settings: min_oos_pnl_pct)
 MIN_OOS_PROFIT_FACTOR = 1.3  # Bestaetigung erfordert winrate-unabhaengigen OOS-Profit-Faktor
                               # (Summe Gewinne / |Summe Verluste|) spuerbar ueber 1.0 -- siehe
                               # Docstring bei confirmed= weiter unten
@@ -66,7 +63,7 @@ IS_ATR_PCT = None           # median ATR% des IS-Fensters des aktuellen Paars
 MIN_ENV1_ATR = 0.5          # Band 1 >= 0.5 typische Kerzen vom MA (settings: min_env1_atr_fraction)
 MIN_BAND_GAP_ATR = 0.25     # jede weitere Band-Luecke >= 0.25 Kerzen (settings: min_band_gap_atr_fraction)
 
-def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal, min_pnl_pct=0.0):
+def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal):
     """OOS-Bestaetigungs-Kriterien (ohne Baseline-Vergleich) -- geteilt zwischen dem
     besten Trial und der Neubewertung einer bestehenden Config (2026-09-27), sowie
     von sync_confirmed_flags.py. Details zur Wahl der Kriterien siehe confirmed= in main().
@@ -84,7 +81,6 @@ def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal, mi
     passed = bool(
         oos_result.get('trades_count', 0) >= min_trades
         and oos_result.get('total_pnl_pct', -1e9) > 0.0
-        and oos_result.get('total_pnl_pct', -1e9) >= min_pnl_pct
         and profit_factor >= min_profit_factor
         and max_dd_decimal <= max_drawdown_decimal
     )
@@ -102,60 +98,9 @@ def create_safe_filename(symbol, timeframe):
     """Erstellt einen sicheren Dateinamen aus Symbol und Zeitrahmen."""
     return f"{symbol.replace('/', '').replace(':', '')}_{timeframe}"
 
-def _robust_score(params, trial):
-    """K-Fold-Robustheit: schlechtestes IS-Teilfenster als Zielwert (wie Envelope)."""
-    fold_size = len(IS_DATA) // K_FOLDS
-    fold_pnls = []
-    for k in range(K_FOLDS):
-        fold_data = IS_DATA.iloc[k * fold_size: (k + 1) * fold_size if k < K_FOLDS - 1 else len(IS_DATA)]
-        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            r = run_envelope_backtest(fold_data.copy(), params, START_CAPITAL, fine_data=SEARCH_FINE_DATA, multi_band_entries=True)
-        fold_pnls.append(r.get('total_pnl_pct', -1000.0))
-    trial.set_user_attr('fold_pnls', fold_pnls)
-    return min(fold_pnls)
-
-
-def _objective_breakout(trial):
-    """Band-Durchbruch (2026-10-04): Long-Ausbruch ueber Durchschnitt + band_atr*ATR, SL/TP in ATR,
-    Zeitstopp, BTC>SMA200-Filter fest an (praeregistriert bestaetigt), Shorts fest aus
-    (in allen Regimen negativ, siehe docs/research/PREREG_breakout_long_2026-10-04.md)."""
-    params = {
-        'strategy': {
-            'mode': 'breakout',
-            'average_type': trial.suggest_categorical('average_type', ['SMA', 'EMA']),
-            'average_period': trial.suggest_int('average_period', 10, 50),
-            'atr_period': 14,
-            'band_atr': round(trial.suggest_float('band_atr', 1.5, 4.5), 3),
-            'max_hold_candles': trial.suggest_int('max_hold_candles', 20, 120),
-            'use_btc_filter': True,
-            'btc_sma_days': 200,
-        },
-        'risk': {
-            'margin_mode': 'isolated',
-            'sl_atr': round(trial.suggest_float('sl_atr', 1.0, 4.0), 3),
-            'tp_r': round(trial.suggest_float('tp_r', 1.5, 6.0), 3),
-            'risk_per_entry_pct': round(trial.suggest_float('risk_per_entry_pct', 0.5, 4.0), 2),
-            'leverage': trial.suggest_int('leverage', 2, 10),
-        },
-        'behavior': {'use_longs': True, 'use_shorts': False},
-    }
-    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-        result = run_envelope_backtest(IS_DATA.copy(), params, START_CAPITAL, fine_data=SEARCH_FINE_DATA, multi_band_entries=True)
-    if (result.get('max_drawdown_pct', 100.0) / 100.0 > MAX_DRAWDOWN_CONSTRAINT
-            or result.get('trades_count', 0) < MIN_TRADES_FOR_VALID):
-        raise optuna.exceptions.TrialPruned()
-    trial.set_user_attr('params', params)
-    trial.set_user_attr('envelopes', None)
-    trial.set_user_attr('is_stats', {k: result.get(k) for k in ('total_pnl_pct', 'max_drawdown_pct', 'trades_count', 'win_rate')})
-    return _robust_score(params, trial)
-
-
 def objective(trial):
     """Optuna Objective-Funktion zur Optimierung der Envelope-Parameter."""
     global IS_DATA, START_CAPITAL, CURRENT_TIMEFRAME, OPTIM_MODE, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO, K_FOLDS
-
-    if STRATEGY_MODE == 'breakout':
-        return _objective_breakout(trial)
 
     # --- Parameter vorschlagen ---
     avg_type = trial.suggest_categorical('average_type', ['SMA', 'EMA', 'WMA', 'DCM'])
@@ -301,10 +246,6 @@ def main():
                         help='Anteil In-Sample (Rest ist Out-of-Sample-Validierung), Standard 0.70')
     parser.add_argument('--min_oos_trades', type=int, default=10,
                         help='Mindestanzahl OOS-Trades fuer eine belastbare Bestaetigung, Standard 10')
-    parser.add_argument('--strategy_mode', type=str, default=None, choices=['envelope', 'breakout'],
-                        help='Standard: settings.json optimization_settings.strategy_mode, sonst envelope')
-    parser.add_argument('--min_oos_pnl', type=float, default=None,
-                        help='Mindest-OOS-PnL in %% fuer Bestaetigung (Standard: settings.json min_oos_pnl_pct, sonst 0)')
     parser.add_argument('--min_oos_profit_factor', type=float, default=1.3,
                         help='Mindest-OOS-Profit-Faktor (Summe Gewinne / |Summe Verluste|, winrate-unabhaengig) '
                              'fuer eine Bestaetigung, Standard 1.3 -- verhindert Configs, die nur durch hauchduenn '
@@ -346,23 +287,6 @@ def main():
     IS_FRACTION = args.is_fraction
     MIN_OOS_TRADES = args.min_oos_trades
     MIN_OOS_PROFIT_FACTOR = args.min_oos_profit_factor
-    global MIN_OOS_PNL, STRATEGY_MODE
-    if args.strategy_mode:
-        STRATEGY_MODE = args.strategy_mode
-    else:
-        try:
-            with open(os.path.join(PROJECT_ROOT, 'settings.json')) as _f:
-                STRATEGY_MODE = json.load(_f).get('optimization_settings', {}).get('strategy_mode', 'envelope')
-        except Exception:
-            STRATEGY_MODE = 'envelope'
-    if args.min_oos_pnl is not None:
-        MIN_OOS_PNL = args.min_oos_pnl
-    else:
-        try:
-            with open(os.path.join(PROJECT_ROOT, 'settings.json')) as _f:
-                MIN_OOS_PNL = float(json.load(_f).get('optimization_settings', {}).get('min_oos_pnl_pct', 0.0))
-        except Exception:
-            MIN_OOS_PNL = 0.0
     K_FOLDS = args.k_folds
     if args.min_sl_atr_fraction is not None:
         MIN_SL_ATR_FRACTION = args.min_sl_atr_fraction
@@ -561,24 +485,21 @@ def main():
         best_score = best_trial.value  # K-Fold-Robustheits-Score (Minimum ueber IS-Teilfenster), NICHT roh-PnL
 
         # Finale Parameter aus dem besten Trial
-        if STRATEGY_MODE == 'breakout':
-            final_params_dict = best_trial.user_attrs['params']
-        else:
-          final_params_dict = {
-              'strategy': {
-                  'average_type': best_params_optuna['average_type'], 'average_period': best_params_optuna['average_period'],
-                  'envelopes': best_trial.user_attrs['envelopes'],
-                  'trigger_price_delta_pct': round(best_params_optuna['trigger_price_delta_pct'], 4),
-                  'disable_strong_trend_block': best_params_optuna.get('disable_strong_trend_block', False),
-                  'strong_trend_adx_threshold': round(best_params_optuna.get('strong_trend_adx_threshold', 30.0), 2),
-              },
-              'risk': {
-                  'margin_mode': 'isolated', 'risk_per_entry_pct': round(best_params_optuna['risk_per_entry_pct'], 2),
-                  'leverage': best_params_optuna['leverage'],
-                  'sl_to_env1_ratio': round(best_params_optuna['sl_to_env1_ratio'], 4),
-              },
-              'behavior': {'use_longs': True, 'use_shorts': True}
-          }
+        final_params_dict = {
+            'strategy': {
+                'average_type': best_params_optuna['average_type'], 'average_period': best_params_optuna['average_period'],
+                'envelopes': best_trial.user_attrs['envelopes'],
+                'trigger_price_delta_pct': round(best_params_optuna['trigger_price_delta_pct'], 4),
+                'disable_strong_trend_block': best_params_optuna.get('disable_strong_trend_block', False),
+                'strong_trend_adx_threshold': round(best_params_optuna.get('strong_trend_adx_threshold', 30.0), 2),
+            },
+            'risk': {
+                'margin_mode': 'isolated', 'risk_per_entry_pct': round(best_params_optuna['risk_per_entry_pct'], 2),
+                'leverage': best_params_optuna['leverage'],
+                'sl_to_env1_ratio': round(best_params_optuna['sl_to_env1_ratio'], 4),
+            },
+            'behavior': {'use_longs': True, 'use_shorts': True}
+        }
 
         # Praezise Nachbewertung NUR des besten Trials mit echter Intrabar-Aufloesung --
         # waehrend der Suche liefen alle Trials bewusst mit fine_data=None (siehe objective()).
@@ -681,12 +602,7 @@ def main():
         # in total_pnl_pct. >1.0 = profitabel, MIN_OOS_PROFIT_FACTOR gibt eine
         # Sicherheitsmarge fuer reale Kosten (Fees/Slippage), die der Backtest nur
         # approximiert.
-        best_gate = oos_gate(best_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT, MIN_OOS_PNL)
-        if fine_tf and fine_data_precise is None and STRATEGY_MODE != 'breakout':
-            # Ohne Fein-Daten greift die zu optimistische grobe Entry-Kerzen-Regel -> nie bestaetigen
-            # (Breakout: Entry zum Open, ohne Fein-Daten gilt bei SL+TP in einer Kerze konservativ SL zuerst)
-            logger.warning(f"Keine {fine_tf}-Feindaten fuer {symbol} ({timeframe}) -- Ergebnis NICHT bestaetigbar, Lauf spaeter wiederholen.")
-            best_gate['passed'] = False
+        best_gate = oos_gate(best_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
         oos_profit_factor_display = best_gate['profit_factor_display']
         oos_win_rate = best_gate['win_rate']  # 0-100 (Prozent) -- nur informativ, keine Gate-Bedingung
         oos_max_dd_decimal = best_gate['max_dd_decimal']
@@ -736,15 +652,12 @@ def main():
             # die OOS-Pruefung mit dem korrigierten Backtester nicht mehr bestanden, und
             # run_portfolio_optimizer.py waehlt nur unter bestaetigten Configs aus.
             if baseline_oos is not None:
-                base_gate = oos_gate(baseline_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT, MIN_OOS_PNL)
-                if fine_tf and fine_data_precise is None and STRATEGY_MODE != 'breakout':
+                base_gate = oos_gate(baseline_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
+                _base_frac = sl_atr_fraction(baseline_params, IS_ATR_PCT)
+                if _base_frac is not None and _base_frac < MIN_SL_ATR_FRACTION:
                     base_gate['passed'] = False
-                if baseline_params['strategy'].get('mode') != 'breakout':
-                    _base_frac = sl_atr_fraction(baseline_params, IS_ATR_PCT)
-                    if _base_frac is not None and _base_frac < MIN_SL_ATR_FRACTION:
-                        base_gate['passed'] = False
-                    if not band_structure_ok(baseline_params, IS_ATR_PCT, MIN_ENV1_ATR, MIN_BAND_GAP_ATR):
-                        base_gate['passed'] = False
+                if not band_structure_ok(baseline_params, IS_ATR_PCT, MIN_ENV1_ATR, MIN_BAND_GAP_ATR):
+                    base_gate['passed'] = False
                 try:
                     existing_cfg.setdefault('_meta', {}).update({
                         'pnl_pct': round(baseline_is.get('total_pnl_pct', 0), 2),

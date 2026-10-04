@@ -61,7 +61,7 @@ if [ "$ENABLED_LC" != "true" ]; then
 fi
 
 # --- Alle vorhandenen Configs zählen ---
-N_CONFIGS=$(ls src/ltbbot/strategy/configs/config_*.json 2>/dev/null | wc -l)
+N_CONFIGS=$(ls src/ltbbot/strategy/configs/config_*_envelope.json 2>/dev/null | wc -l)
 if [ "$N_CONFIGS" -eq 0 ]; then
     echo "⚠  Keine Configs in src/ltbbot/strategy/configs/ gefunden."
     echo "   Bitte zuerst run_pipeline.sh ausführen um Configs zu generieren."

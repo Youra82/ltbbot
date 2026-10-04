@@ -169,9 +169,9 @@ def run_parameter_search(opt_settings: dict, search_settings: dict):
         _send_telegram(f"\U0001f9ea ltbbot Parameter-Suche gestartet: {base_symbol} ({timeframe})\n"
                         f"(zuletzt optimiert: {optimized_at.date() if optimized_at != datetime.min else 'nie'})")
 
-    from ltbbot.utils.lookback import lookback_start_date
+    lookback_weeks = int(opt_settings.get('backtest_lookback_weeks', 26))
     end_date = start_time.strftime('%Y-%m-%d')
-    search_start_date = lookback_start_date(timeframe, end_date, opt_settings)
+    search_start_date = (start_time - timedelta(weeks=lookback_weeks)).strftime('%Y-%m-%d')
 
     cmd = [
         sys.executable, '-u', OPTIMIZER_SCRIPT,
@@ -191,7 +191,6 @@ def run_parameter_search(opt_settings: dict, search_settings: dict):
         '--k_folds', str(opt_settings.get('k_folds', 3)),
         '--min_oos_trades', str(opt_settings.get('min_oos_trades', 10)),
         '--min_oos_profit_factor', str(opt_settings.get('min_oos_profit_factor', 1.3)),
-        '--min_oos_pnl', str(opt_settings.get('min_oos_pnl_pct', 0.0)),
         '--config_suffix', config_suffix,
         '--recheck-confirmed',
     ]

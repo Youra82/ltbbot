@@ -11,9 +11,6 @@ OPTIMIZER="src/ltbbot/analysis/optimizer.py"
 TODAY=$(date +%F)
 
 source "$VENV_PATH"
-SUFFIX=$("$PYTHON" -c "import json; print(json.load(open('settings.json')).get('optimization_settings',{}).get('config_suffix','_envelope'))" 2>/dev/null || echo "_envelope")
-MODE=$("$PYTHON" -c "import json; print(json.load(open('settings.json')).get('optimization_settings',{}).get('strategy_mode','envelope'))" 2>/dev/null || echo "envelope")
-echo "  Strategie-Modus: $MODE | Config-Endung: $SUFFIX"
 echo -e "${GREEN}✔ Virtuelle Umgebung wurde erfolgreich aktiviert.${NC}"
 
 echo ""
@@ -27,7 +24,7 @@ echo -e "${YELLOW}Möchtest du alle alten, generierten Configs vor dem Start lö
 read -p "Dies wird für einen kompletten Neustart empfohlen. (j/n) [Standard: n]: " CLEANUP_CHOICE
 CLEANUP_CHOICE=${CLEANUP_CHOICE:-n}
 if [[ "$CLEANUP_CHOICE" == "j" || "$CLEANUP_CHOICE" == "J" ]]; then
-    rm -f src/ltbbot/strategy/configs/config_*${SUFFIX}.json
+    rm -f src/ltbbot/strategy/configs/config_*_envelope.json
     rm -f artifacts/results/last_optimizer_run.json
     rm -f artifacts/results/portfolio_optimization_results.json
     rm -f artifacts/db/optuna_studies_ltbbot.db
@@ -86,8 +83,7 @@ echo -e "${BLUE}--- Empfehlung: Rückblick-Zeitraum je Timeframe (Standard bei '
 # fest eingebaute 548-1095 Tage je Timeframe, dadurch waren manuell und automatisch
 # optimierte Configs nicht vergleichbar.
 LOOKBACK_WEEKS=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('backtest_lookback_weeks',26))" 2>/dev/null || echo "26")
-echo "  Automatik: Rueckblick je Timeframe (settings.json: lookback_days_by_timeframe):"
-"$PYTHON" -c "import json,sys; sys.path.insert(0,'src'); from ltbbot.utils.lookback import lookback_days; o=json.load(open('settings.json')).get('optimization_settings',{}); print('   ', ' | '.join(f'{t}: {lookback_days(t,o)} Tage' for t in ('1h','2h','4h','6h')))"
+echo "  Automatik: letzte $LOOKBACK_WEEKS Wochen fuer alle Timeframes (settings.json: backtest_lookback_weeks)"
 echo "  (IS/OOS-Aufteilung dieser Historie erfolgt weiter unten separat per --is_fraction)"
 echo ""
 read -p "Startdatum (JJJJ-MM-TT) oder 'a' für Automatik [Standard: a]: " START_DATE_INPUT
@@ -120,8 +116,6 @@ echo "  IS/OOS-Split: Anteil der Historie, den Optuna beim Optimieren sieht (Res
 read -p "In-Sample-Anteil [Standard: $DEFAULT_IS_FRACTION]: " IS_FRACTION; IS_FRACTION=${IS_FRACTION:-$DEFAULT_IS_FRACTION}
 read -p "K-Fold-Teilfenster fuer Robustheits-Score [Standard: $DEFAULT_K_FOLDS]: " K_FOLDS; K_FOLDS=${K_FOLDS:-$DEFAULT_K_FOLDS}
 read -p "Mindest-OOS-Trades fuer Bestaetigung [Standard: $DEFAULT_MIN_OOS_TRADES]: " MIN_OOS_TRADES; MIN_OOS_TRADES=${MIN_OOS_TRADES:-$DEFAULT_MIN_OOS_TRADES}
-DEFAULT_MIN_OOS_PNL=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('min_oos_pnl_pct',0))" 2>/dev/null || echo "0")
-read -p "Mindest-OOS-PnL in % fuer Bestaetigung [Standard: $DEFAULT_MIN_OOS_PNL]: " MIN_OOS_PNL; MIN_OOS_PNL=${MIN_OOS_PNL:-$DEFAULT_MIN_OOS_PNL}
 DEFAULT_MIN_OOS_PF=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('min_oos_profit_factor',1.3))" 2>/dev/null || echo "1.3")
 read -p "Mindest-OOS-Profit-Faktor fuer Bestaetigung [Standard: $DEFAULT_MIN_OOS_PF]: " MIN_OOS_PF; MIN_OOS_PF=${MIN_OOS_PF:-$DEFAULT_MIN_OOS_PF}
 
@@ -181,7 +175,7 @@ for symbol in $SYMBOLS; do
 
         # Volle Historie -- optimizer.py macht den IS/OOS-Split selbst (--is_fraction)
         if [ "$START_DATE_INPUT" == "a" ]; then
-            CURRENT_START_DATE=$("$PYTHON" -c "import json,sys; sys.path.insert(0,'src'); from ltbbot.utils.lookback import lookback_start_date; print(lookback_start_date('$timeframe', '$TODAY', json.load(open('settings.json')).get('optimization_settings',{})))")
+            CURRENT_START_DATE=$(date -d "$LOOKBACK_WEEKS weeks ago" +%F)
         else
             CURRENT_START_DATE="$START_DATE_INPUT"
         fi
@@ -195,7 +189,7 @@ for symbol in $SYMBOLS; do
 
         # Config-Existenz prüfen (skip/overwrite/all) — Wildcard wie titanbot
         SYM_CLEAN=$(echo "${symbol}" | tr '[:lower:]' '[:upper:]' | tr -d '/: -')
-        FOUND_CFG=$(ls src/ltbbot/strategy/configs/config_*${SYM_CLEAN}*_${timeframe}*${SUFFIX}.json 2>/dev/null | head -1)
+        FOUND_CFG=$(ls src/ltbbot/strategy/configs/config_*${SYM_CLEAN}*_${timeframe}*_envelope.json 2>/dev/null | head -1)
         if [ -n "$FOUND_CFG" ] && [ "$OVERWRITE_ALL" != "j" ]; then
             echo ""
             echo -e "${YELLOW}⚠  Config existiert bereits: $symbol ($timeframe)${NC}"
@@ -232,9 +226,7 @@ for symbol in $SYMBOLS; do
                 --k_folds       "$K_FOLDS" \
                 --min_oos_trades "$MIN_OOS_TRADES" \
                 --min_oos_profit_factor "$MIN_OOS_PF" \
-                --min_oos_pnl   "$MIN_OOS_PNL" \
-                --config_suffix "$SUFFIX" \
-                --strategy_mode "$MODE" \
+                --config_suffix "_envelope" \
                 $RECHECK_ARGS 2>&1 | tee "$tmp_log"
             local rc=${PIPESTATUS[0]}
             NO_VALID_TRIALS=0
@@ -280,8 +272,7 @@ if [[ "$UPDATE_SETTINGS_CHOICE" == "j" || "$UPDATE_SETTINGS_CHOICE" == "J" ]]; t
 import json, os, glob
 ROOT = os.path.abspath('.')
 settings = json.load(open(os.path.join(ROOT, 'settings.json')))
-suffix   = settings.get('optimization_settings', {}).get('config_suffix', '_envelope')
-configs  = glob.glob(os.path.join(ROOT, 'src', 'ltbbot', 'strategy', 'configs', f'config_*{suffix}.json'))
+configs  = glob.glob(os.path.join(ROOT, 'src', 'ltbbot', 'strategy', 'configs', 'config_*_envelope.json'))
 if not configs:
     print("⚠  Keine Config-Dateien gefunden.")
     exit(0)

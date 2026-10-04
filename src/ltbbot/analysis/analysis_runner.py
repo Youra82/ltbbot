@@ -90,8 +90,7 @@ def _active_strategies(settings):
 def _load_config(symbol, timeframe):
     configs_dir = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
     safe = f"{symbol.replace('/', '').replace(':', '')}_{timeframe}"
-    from ltbbot.utils.config_suffix import get_config_suffix
-    for name in [f'config_{safe}{get_config_suffix()}.json', f'config_{safe}_envelope.json', f'config_{safe}.json']:
+    for name in [f'config_{safe}_envelope.json', f'config_{safe}.json']:
         path = os.path.join(configs_dir, name)
         if os.path.exists(path):
             with open(path) as f:
@@ -390,18 +389,10 @@ def analyse_param_walkforward(capital, send_telegram, token, chat):
         end=pd.Timestamp(end_date), freq='W-MON', tz='UTC'
     )
 
-    if cfg_base.get('strategy', {}).get('mode') == 'breakout':
-        # Durchbruch-Modus: Stop in ATR (sl_atr) statt Prozent -- sonst aendert sich am Backtest nichts
-        base_sl_atr = float(cfg_base.get('risk', {}).get('sl_atr', 3.0))
-        param_sets = {
-            f"SL={v:.2f} ATR": {**cfg_base, 'risk': {**cfg_base.get('risk', {}), 'sl_atr': v}}
-            for v in [round(base_sl_atr * m, 3) for m in [0.5, 0.75, 1.0, 1.5, 2.0]]
-        }
-    else:
-        param_sets = {
-            f"SL={sl:.1f}%": {**cfg_base, 'risk': {**cfg_base.get('risk', {}), 'stop_loss_pct': sl}}
-            for sl in [round(base_sl * m, 2) for m in [0.5, 0.75, 1.0, 1.5, 2.0]]
-        }
+    param_sets = {
+        f"SL={sl:.1f}%": {**cfg_base, 'risk': {**cfg_base.get('risk', {}), 'stop_loss_pct': sl}}
+        for sl in [round(base_sl * m, 2) for m in [0.5, 0.75, 1.0, 1.5, 2.0]]
+    }
 
     from tqdm import tqdm
     results = {}
@@ -777,13 +768,11 @@ def analyse_kelly(capital, lookback_days, send_telegram, token, chat):
         rr    = avg_w / avg_l if avg_l > 0 else 1
         kelly = (wr * rr - (1 - wr)) / rr if rr > 0 else 0
         half_kelly = max(0, kelly / 2) * 100
-        _rp = info['params'].get('risk', {})
-        # Vergleichswert = aktuelles Risiko je Trade (risk_per_entry_pct), nicht der SL-Abstand
-        current_risk = _rp.get('risk_per_entry_pct', _rp.get('stop_loss_pct', 3.0))
+        current_risk = info['params'].get('risk', {}).get('stop_loss_pct', 3.0)
         lines.append(
             f"{info['symbol'].split('/')[0]}/{info['timeframe']}\n"
             f"  WR: {wr*100:.1f}% | RR: {rr:.2f}:1 | Kelly: {kelly*100:.1f}% | "
-            f"Half-Kelly: {half_kelly:.1f}% | Aktuell Risiko/Trade: {current_risk:.1f}%"
+            f"Half-Kelly: {half_kelly:.1f}% | Aktuell SL: {current_risk:.1f}%"
         )
 
     _send(token, chat, '\n'.join(lines), send_telegram)
@@ -819,15 +808,7 @@ def analyse_regime(capital, lookback_days, send_telegram, token, chat):
     regimes = []
     for key, info in sd.items():
         pair_trades = trades[trades['strategy_id'] == key] if 'strategy_id' in trades.columns else trades
-        if info['params'].get('strategy', {}).get('mode') == 'breakout':
-            from ltbbot.strategy.breakout_logic import compute_breakout_indicators
-            df_ind = compute_breakout_indicators(info['data'], info['params'])
-            k = float(info['params']['strategy'].get('band_atr', 3.0))
-            dist = (df_ind['close'] - df_ind['average']) / (k * df_ind['atr'])
-            df_ind['regime'] = pd.cut(dist, [-1e9, 1.0, 1.5, 2.0, 1e9],
-                                      labels=['Ausbruch knapp', 'Ausbruch mittel', 'Ausbruch stark', 'Ausbruch extrem']).astype(str)
-        else:
-            df_ind, _ = calculate_indicators_and_signals(info['data'], info['params'])
+        df_ind, _ = calculate_indicators_and_signals(info['data'], info['params'])
         for _, t in pair_trades.iterrows():
             entry_t = pd.to_datetime(t['entry_time'])
             idx = df_ind.index.get_indexer([entry_t], method='nearest')[0]

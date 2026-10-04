@@ -22,8 +22,6 @@ from tqdm import tqdm
 
 PROJECT_ROOT  = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
-from ltbbot.utils.config_suffix import get_config_suffix  # noqa: E402
-_CFG_SUFFIX = get_config_suffix()
 
 CONFIGS_DIR   = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'configs')
 SETTINGS_PATH = os.path.join(PROJECT_ROOT, 'settings.json')
@@ -79,7 +77,7 @@ def _scan_configs() -> list:
         return []
     result = []
     for f in sorted(os.listdir(CONFIGS_DIR)):
-        if not f.endswith(f'{_CFG_SUFFIX}.json'):
+        if not f.endswith('_envelope.json'):
             continue
         path = os.path.join(CONFIGS_DIR, f)
         try:
@@ -214,13 +212,11 @@ def _send_telegram_doc(fpath, caption=''):
     try:
         import requests
         with open(fpath, 'rb') as fh:
-            r = requests.post(f'https://api.telegram.org/bot{token}/sendDocument',
-                              data={'chat_id': chat, 'caption': caption},
-                              files={'document': fh}, timeout=180)   # 30 s reichten fuer 5-MB-Charts nicht
-            if not r.ok:
-                print(f'  Telegram-Versand fehlgeschlagen ({os.path.basename(fpath)}): {r.status_code} {r.text[:200]}')
-    except Exception as e:
-        print(f'  Telegram-Versand fehlgeschlagen ({os.path.basename(fpath)}): {e}')
+            requests.post(f'https://api.telegram.org/bot{token}/sendDocument',
+                          data={'chat_id': chat, 'caption': caption},
+                          files={'document': fh}, timeout=30)
+    except Exception:
+        pass
 
 
 def generate_trades_excel(final, strategies_data, capital, start_date, end_date):
@@ -604,12 +600,10 @@ def main() -> int:
     # Timeframe-Maximum aus LOOKBACK_MAP), wodurch bei kurzem backtest_lookback_weeks
     # (z.B. 1 Woche) end_date (Trainingsende, OOS-Reserve-abhaengig) weiter in der
     # Vergangenheit lag als start_date -- ein rueckwaerts laufendes, leeres Fenster.
-    # portfolio_lookback_weeks (2026-10-04) hat Vorrang: der Breakout-Modus braucht Marktphasen mit
-    # BTC > SMA200 im Auswahlfenster; 26 Wochen enthielten zuletzt keine -> 0 Trades fuer alle Configs.
-    lookback_weeks = opt.get('portfolio_lookback_weeks') or opt.get('backtest_lookback_weeks')
+    lookback_weeks = opt.get('backtest_lookback_weeks')
     if lookback_weeks:
         lookback = int(lookback_weeks) * 7
-        print(f"  Lookback: {lookback_weeks} Wochen (portfolio_lookback_weeks / backtest_lookback_weeks)")
+        print(f"  Lookback: {lookback_weeks} Wochen (aus backtest_lookback_weeks)")
     else:
         active_tfs = [
             s.get('timeframe', '1h')
@@ -648,7 +642,7 @@ def main() -> int:
 
     config_files = _scan_configs()
     if not config_files:
-        print(f"{R}  Keine *{_CFG_SUFFIX}.json Configs in {CONFIGS_DIR}{NC}")
+        print(f"{R}  Keine *_envelope.json Configs in {CONFIGS_DIR}{NC}")
         print(f"  -> Zuerst run_pipeline.sh ausfuehren!\n")
         return 1
 

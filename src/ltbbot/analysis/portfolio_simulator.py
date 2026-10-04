@@ -46,15 +46,6 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
         logger.error("Keine Strategie-Daten für die Simulation übergeben.")
         return None
 
-    # Band-Durchbruch-Modus (2026-10-04): eigene Event-Simulation mit gemeinsamem Kapital
-    _modes = {(info.get('params') or {}).get('strategy', {}).get('mode') for info in strategies_data.values()}
-    if _modes == {'breakout'}:
-        from ltbbot.analysis.breakout_backtester import run_breakout_portfolio_simulation
-        return run_breakout_portfolio_simulation(start_capital, strategies_data, start_date, end_date)
-    if 'breakout' in _modes:
-        logger.error("Portfolio mischt Envelope- und Breakout-Configs -- nicht unterstuetzt.")
-        return None
-
     # --- Daten vorbereiten ---
     all_timestamps = set()
     strategy_dfs = {}
