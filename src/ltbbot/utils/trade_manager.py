@@ -18,7 +18,10 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.telegram import send_message, send_photo
 from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
-                                            compute_band_sl_price, entry_blocked_by_sl)
+                                            compute_band_sl_price, entry_blocked_by_sl, is_touch_mode,
+                                            btc_filter_enabled, btc_trend_series, btc_trend_up_at, btc_side_allowed,
+                                            reentry_blocks_until_cross, reentry_block_cleared,
+                                            fraction_band_amount, uses_fraction_sizing)
 from ltbbot.utils.exchange import Exchange, drop_incomplete_last_candle # Import hinzugefügt, falls Type Hinting verwendet wird (optional)
 
 
@@ -1291,6 +1294,72 @@ def arm_same_candle_reentry_guard(tracker_file_path: str, committed_bands_before
     return sl_fired_candle_ts
 
 
+# --- RobotTraders-Modus: BTC-Trend + Sperre nach SL ---
+
+def fetch_btc_trend_up(exchange: Exchange, logger: logging.Logger):
+    """BTC-Tagestrend wie im Backtest (envelope_logic.btc_trend_series/btc_trend_up_at):
+    letzte ABGESCHLOSSENE BTC-Tageskerze, Close > SMA200. None bei Fehler (-> kein Long)."""
+    try:
+        raw = exchange.fetch_recent_ohlcv('BTC/USDT:USDT', '1d', limit=260)
+        daily = drop_incomplete_last_candle(raw)
+        return btc_trend_up_at(btc_trend_series(daily), pd.Timestamp.now(tz='UTC'))
+    except Exception as e:
+        logger.warning(f"BTC-Trend nicht abrufbar ({e}) -- BTC-Filter sperrt vorsichtshalber.")
+        return None
+
+
+def update_sl_reentry_block(tracker_file_path: str, committed_before: dict, sl_prices_before: dict,
+                            last_closed_ts, current_price, logger: logging.Logger, symbol: str):
+    """Sperre nach SL (reentry_after_sl='cross_average', wie backtester.py sl_block):
+    ein seit dem Snapshot geschlossenes Band gilt als SL-Ausstieg, wenn der aktuelle Kurs
+    noch nahe/jenseits seines SL liegt (TP liegt an der Mitte, weit entfernt) -- bewusst
+    ueber den Kurs statt ueber Bitgets Order-Status (unter ccxt 4.3.5 unzuverlaessig).
+    Gespeichert wird der Zeitstempel der letzten abgeschlossenen Kerze bei Erkennung."""
+    tracker_info = read_tracker_file(tracker_file_path)
+    after = tracker_info.get("committed_bands") or {"long": [], "short": []}
+    block = tracker_info.get("sl_reentry_block") or {}
+    changed = False
+    for side_key in ("long", "short"):
+        closed = set(committed_before.get(side_key, [])) - set(after.get(side_key, []))
+        for band in closed:
+            sl = (sl_prices_before.get(side_key) or {}).get(str(band))
+            if sl is None or current_price is None:
+                continue
+            sl = float(sl)
+            hit = current_price <= sl * 1.05 if side_key == 'long' else current_price >= sl * 0.95
+            if hit and block.get(side_key) is None:
+                block[side_key] = str(last_closed_ts)
+                changed = True
+                logger.warning(f"🔒 {symbol}: SL-Ausstieg {side_key} (Band {band}) -- neue {side_key}-Einstiege gesperrt, "
+                               f"bis eine Kerze wieder jenseits der Mitte schliesst.")
+    if changed:
+        tracker_info["sl_reentry_block"] = block
+        update_tracker_file(tracker_file_path, tracker_info)
+
+
+def blocked_sides_after_sl(tracker_file_path: str, df: pd.DataFrame, logger: logging.Logger, symbol: str) -> set:
+    """Hebt die Sperre auf, sobald eine NACH der SL-Erkennung abgeschlossene Kerze jenseits
+    der Mitte schliesst (geteilte Regel reentry_block_cleared). Gibt die gesperrten Seiten zurueck."""
+    tracker_info = read_tracker_file(tracker_file_path)
+    block = tracker_info.get("sl_reentry_block") or {}
+    if not block or df is None or df.empty:
+        return {k for k, v in block.items() if v is not None}
+    last = df.iloc[-1]
+    last_ts = df.index[-1]
+    changed = False
+    for side_key, ts_str in list(block.items()):
+        if ts_str is None:
+            continue
+        if last_ts > pd.Timestamp(ts_str) and reentry_block_cleared(side_key, last['close'], last.get('average')):
+            block[side_key] = None
+            changed = True
+            logger.info(f"🔓 {symbol}: Close {last['close']:.6g} wieder jenseits der Mitte -- {side_key}-Sperre aufgehoben.")
+    if changed:
+        tracker_info["sl_reentry_block"] = block
+        update_tracker_file(tracker_file_path, tracker_info)
+    return {k for k, v in block.items() if v is not None}
+
+
 # --- Positions-Management ---
 
 def manage_existing_position(exchange: Exchange, position: dict, band_prices: dict, params: dict, tracker_file_path: str, logger: logging.Logger):
@@ -1405,7 +1474,7 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
 
 def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, balance: float, tracker_file_path: str, telegram_config: dict, logger: logging.Logger, df: pd.DataFrame = None,
                        restrict_side: str = None, committed_bands: dict = None, sl_fired_candle_ts: dict = None,
-                       running_candle=None):
+                       running_candle=None, blocked_sides: set = None):
     """Platziert die gestaffelten Entry- und (pro Band eigene, feste) SL-Orders
     basierend auf Risiko. Der TP wird NICHT hier gesetzt -- er ist fuer alle
     Baender identisch (aktuelle MA) und wird deshalb gebuendelt, sized auf die
@@ -1442,8 +1511,20 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     strategy_params = params['strategy']
     behavior_params = params['behavior'].copy()  # Copy um zu modifizieren
     account_name = exchange.account.get('name', 'Standard-Account')
+    touch_mode = is_touch_mode(params)
+    fraction_sizing = uses_fraction_sizing(params)
+    # Mengen-Schrittweite des Kontrakts (aufrunden statt abrunden, siehe fraction_band_amount)
+    try:
+        _amount_step = float(exchange.markets[symbol]['precision']['amount'])
+    except Exception:
+        _amount_step = params.get('market', {}).get('amount_step')
+    # RobotTraders-Modus: gesperrte Seiten (BTC-Trend / Sperre nach SL), vom Aufrufer bestimmt
+    for _side in (blocked_sides or set()):
+        behavior_params['use_longs' if _side == 'long' else 'use_shorts'] = False
+        logger.info(f"{_side}-Einstiege fuer {symbol} gesperrt (BTC-Trend oder Sperre nach SL).")
 
-    logger.info(f"Platziere neue Entry-Orders für {symbol} (Risikobasierte Größe). Aktueller Saldo: {balance:.2f} USDT")
+    logger.info(f"Platziere neue Entry-Orders für {symbol} "
+                f"({'Kapitalanteil' if uses_fraction_sizing(params) else 'Risikobasierte Größe'}). Aktueller Saldo: {balance:.2f} USDT")
     
     # Marktregime prüfen
     regime = band_prices.get('regime', 'UNCERTAIN')
@@ -1575,7 +1656,8 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
 
             try:
                 # Close-Confirmation: letzte abgeschlossene Kerze muss unterhalb des Bands geschlossen haben
-                if df is not None and not df.empty:
+                # (nicht im RobotTraders-Modus 'touch': dort liegt die Order direkt am Band)
+                if not touch_mode and df is not None and not df.empty:
                     last_close = float(df['close'].iloc[-1])
                     low_band_col = f'band_low_{i+1}'
                     last_band_low = float(df[low_band_col].iloc[-1]) if low_band_col in df.columns else entry_limit_price
@@ -1612,8 +1694,14 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                     logger.warning(f"SL distance <= 0 für entry {entry_price_for_calc:.4f}. Skipping Layer {i+1}.")
                     continue
 
-                # 3. Positionsgröße (amount_coins) berechnen
-                amount_coins = risk_amount_usd / sl_distance_price
+                # 3. Positionsgröße (amount_coins) berechnen (geteilte Funktion mit Backtest im Kapitalanteil-Modus)
+                if fraction_sizing:
+                    amount_coins = fraction_band_amount(balance, params, entry_price_for_calc, num_envelopes,
+                                                        amount_step=_amount_step)
+                    if amount_coins is None:
+                        continue
+                else:
+                    amount_coins = risk_amount_usd / sl_distance_price
 
                 # 4. Mindestmenge prüfen
                 if amount_coins < min_amount_tradable:
@@ -1670,7 +1758,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # Telegram (kein TP-Preis mehr hier -- der gebuendelte TP wird
                 # von manage_existing_position() gesetzt, sobald die Position
                 # existiert, und deckt dann alle offenen Baender gemeinsam ab)
-                if sl_price and sl_price > 0:
+                if sl_price and sl_price > 0 and not touch_mode:
                     sl_pct_msg = abs(entry_limit_price - sl_price) / entry_limit_price * 100 if entry_limit_price > 0 else 0
                     regime_msg = band_prices.get('regime', '')
                     trend_msg  = band_prices.get('trend_direction', '')
@@ -1718,7 +1806,8 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
 
             try:
                 # Close-Confirmation: letzte abgeschlossene Kerze muss oberhalb des Bands geschlossen haben
-                if df is not None and not df.empty:
+                # (nicht im RobotTraders-Modus 'touch': dort liegt die Order direkt am Band)
+                if not touch_mode and df is not None and not df.empty:
                     last_close = float(df['close'].iloc[-1])
                     high_band_col = f'band_high_{i+1}'
                     last_band_high = float(df[high_band_col].iloc[-1]) if high_band_col in df.columns else entry_limit_price
@@ -1751,8 +1840,14 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 sl_distance_price = abs(entry_price_for_calc - sl_price)
                 if sl_distance_price <= 0: continue
 
-                # 3. Positionsgröße (amount_coins) berechnen
-                amount_coins = risk_amount_usd / sl_distance_price
+                # 3. Positionsgröße (amount_coins) berechnen (geteilte Funktion mit Backtest im Kapitalanteil-Modus)
+                if fraction_sizing:
+                    amount_coins = fraction_band_amount(balance, params, entry_price_for_calc, num_envelopes,
+                                                        amount_step=_amount_step)
+                    if amount_coins is None:
+                        continue
+                else:
+                    amount_coins = risk_amount_usd / sl_distance_price
 
                 # 4. Mindestmenge prüfen
                 if amount_coins < min_amount_tradable:
@@ -1797,7 +1892,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 time.sleep(0.1)
 
                 # Telegram (kein TP-Preis mehr hier -- siehe Long-Block-Kommentar)
-                if sl_price and sl_price > 0:
+                if sl_price and sl_price > 0 and not touch_mode:
                     sl_pct_msg = abs(sl_price - entry_limit_price) / entry_limit_price * 100 if entry_limit_price > 0 else 0
                     regime_msg = band_prices.get('regime', '')
                     trend_msg  = band_prices.get('trend_direction', '')
@@ -1945,7 +2040,9 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # --- 2. Prüfen, ob TP/SL ausgelöst wurden SEIT dem letzten Lauf ---
         # committed_bands VOR den Checks merken (Snapshot) -- Grundlage fuer den
         # robusten Re-Entry-Schutz direkt im Anschluss (siehe Kommentar dort).
-        committed_bands_before = read_tracker_file(tracker_file_path).get("committed_bands") or {"long": [], "short": []}
+        _tracker_before = read_tracker_file(tracker_file_path)
+        committed_bands_before = _tracker_before.get("committed_bands") or {"long": [], "short": []}
+        sl_prices_before = json.loads(json.dumps(_tracker_before.get("band_sl_prices") or {"long": {}, "short": {}}))
 
         check_take_profit_trigger(exchange, symbol, tracker_file_path, logger)
         check_stop_loss_trigger(exchange, symbol, tracker_file_path, logger,
@@ -1965,6 +2062,23 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         # Bitget-Order-Status zuverlaessig erkennen konnte.
         arm_same_candle_reentry_guard(tracker_file_path, committed_bands_before,
                                        data_with_indicators.index[-1], logger, symbol)
+
+        # --- 2d. RobotTraders-Modus: Sperre nach SL + BTC-Trendfilter (wie backtester.py) ---
+        blocked_sides = set()
+        if reentry_blocks_until_cross(params):
+            try:
+                _px = float(exchange.fetch_ticker(symbol).get('last'))
+            except Exception:
+                _px = float(raw_data['close'].iloc[-1])
+            update_sl_reentry_block(tracker_file_path, committed_bands_before, sl_prices_before,
+                                    data_with_indicators.index[-1], _px, logger, symbol)
+            blocked_sides |= blocked_sides_after_sl(tracker_file_path, data_with_indicators, logger, symbol)
+        if btc_filter_enabled(params):
+            _btc_up = fetch_btc_trend_up(exchange, logger)
+            for _side in ('long', 'short'):
+                if not btc_side_allowed(params, _side, _btc_up):
+                    blocked_sides.add(_side)
+            logger.info(f"BTC-Trend (Tages-Close > SMA200): {_btc_up} -> gesperrt: {sorted(blocked_sides) or '-'}")
 
         # --- 3. Alle alten Orders der Strategie stornieren (wichtig!) ---
         cancel_strategy_orders(exchange, symbol, logger, tracker_file_path=tracker_file_path)
@@ -1991,7 +2105,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
             place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger,
                                df=data_with_indicators, restrict_side=position['side'],
                                committed_bands=committed_bands, sl_fired_candle_ts=sl_fired_candle_ts,
-                               running_candle=running_candle)
+                               running_candle=running_candle, blocked_sides=blocked_sides)
 
         else:
               logger.info(f"Keine offene Position für {symbol}.")
@@ -2013,7 +2127,7 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
 
               place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger,
                                  df=data_with_indicators, committed_bands=committed_bands, sl_fired_candle_ts=sl_fired_candle_ts,
-                                 running_candle=running_candle)
+                                 running_candle=running_candle, blocked_sides=blocked_sides)
 
 
     except ccxt.AuthenticationError as e:

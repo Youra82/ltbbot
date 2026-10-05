@@ -1,7 +1,7 @@
 {
-    "release_id": "2026-10-04-rollback-envelope-9a404ef",
+    "release_id": "2026-10-05-robottraders-rt",
     "_info": "update.sh uebernimmt EINMALIG Configs (src/ltbbot/strategy/configs/) und active_strategies aus dem Repo, sobald diese Kennung neu ist. Danach gilt wieder der VPS-Stand (woechentlicher Portfolio-Optimizer, taegliche Parameter-Suche). Fuer ein neues Repo-Release die Kennung aendern.",
-    "configs": 20,
-    "optimizer": "ATR-Baender (Band1 >= 0.5 Kerzen, Luecken >= 0.25), Stop >= 6% Kerze, Stop-Slippage 5% ATR, 26 Wochen 2026-04-02..2026-09-30, 500 Trials, OOS PF >= 1.3",
-    "_rollback": "Rueckkehr zum Repo-Stand 9a404ef (2026-10-03) -- Envelope-Strategie, 20 Configs, active_strategies aus settings.json (16). Durchbruch-Stand gesichert im Branch breakout-2026-10-04."
+    "configs": 45,
+    "optimizer": "RT-Modus (RobotTraders-Original): Orders am Band, Not-SL, nur Long bei BTC>SMA200, Sperre nach SL bis Close ueber Mitte, Hebel 1, 30 % Kapitalanteil je Position (mind. 5 USDT/Band). 45 Kandidaten 4h, 156 Wochen bis 2026-10-04, 80 Trials, IS/OOS 70/30, OOS-Gate PF>=1.3 mit >=5 Trades, sonst RT-Standardparameter (bestaetigt wenn IS>0 und OOS>=0).",
+    "_vorher": "Release 2026-10-04-rollback-envelope-9a404ef (klassische Envelope-Logik, 20 Configs) -- alte Configs in der Git-Historie."
 }

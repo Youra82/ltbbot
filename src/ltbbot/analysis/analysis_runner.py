@@ -578,16 +578,25 @@ def analyse_monte_carlo(capital, lookback_days, n_sims, send_telegram, token, ch
         sid: float(d.get('params', {}).get('risk', {}).get('risk_per_entry_pct', 0.5))
         for sid, d in sd.items()
     }
+    # Kapitalanteil-Modus (RobotTraders): Notional je Band = Kapital * position_size_pct/Baender * Hebel
+    # -> entspricht einem Risiko von (Notional-Anteil * SL-Abstand) je Band
+    notional_frac_by_strategy = {}
+    for sid, d in sd.items():
+        _r = d.get('params', {}).get('risk', {}) or {}
+        if _r.get('sizing') == 'fraction':
+            _n = max(1, len(d.get('params', {}).get('strategy', {}).get('envelopes', []) or [1]))
+            notional_frac_by_strategy[sid] = _r.get('position_size_pct', 30.0) / 100.0 / _n * (_r.get('leverage', 1) or 1)
     events = []
     for row in trades.itertuples(index=False):
         entry_price = float(row.entry_price)
         sl_price    = float(row.sl_price)
         sl_pct      = abs(entry_price - sl_price) / entry_price * 100.0 if entry_price else 0.01
+        _nf = notional_frac_by_strategy.get(row.strategy_id)
         events.append((
             str(row.reason).upper() == 'WIN',
             max(sl_pct, 0.01),
             float(row.pnl_pct),
-            risk_pct_by_strategy.get(row.strategy_id, 0.5),
+            (_nf * max(sl_pct, 0.01)) if _nf is not None else risk_pct_by_strategy.get(row.strategy_id, 0.5),
         ))
 
     rng  = np.random.default_rng(42)
@@ -604,7 +613,9 @@ def analyse_monte_carlo(capital, lookback_days, n_sims, send_telegram, token, ch
         for i in order:
             is_win, sl_pct, pnl_pct, risk_pct = events[i]
             risk_amount = equity * (risk_pct / 100.0)
-            pnl = risk_amount * (pnl_pct / sl_pct) if is_win else -risk_amount
+            # tatsaechliches Trade-Ergebnis relativ zum SL-Abstand -- auch fuer Verluste (vorher
+            # zaehlte jeder Nicht-Gewinn als voller SL, falsch bei TP-Ausstiegen knapp im Minus)
+            pnl = risk_amount * (pnl_pct / sl_pct)
             equity += pnl
             if equity > peak:
                 peak = equity
@@ -618,6 +629,11 @@ def analyse_monte_carlo(capital, lookback_days, n_sims, send_telegram, token, ch
             ruin_count += 1
 
     fe  = np.array(final_equities)
+
+    def _safe_bins(x, n=60):
+        # Wenige/identische Werte (z.B. alle Drawdowns 0) -> 60 Balken nicht bildbar (ValueError)
+        span = float(np.nanmax(x) - np.nanmin(x)) if len(x) else 0.0
+        return n if span > 1e-9 * max(1.0, float(np.nanmax(np.abs(x)))) * n else 1
     mdd = np.array(max_dds)
     p5, p50, p95 = np.percentile(fe, [5, 50, 95])
     ruin_pct = ruin_count / n_sims * 100
@@ -629,7 +645,7 @@ def analyse_monte_carlo(capital, lookback_days, n_sims, send_telegram, token, ch
     _style_ax(ax1)
     _style_ax(ax2)
 
-    ax1.hist(fe, bins=60, color=C1, alpha=0.8, edgecolor='none')
+    ax1.hist(fe, bins=_safe_bins(fe), color=C1, alpha=0.8, edgecolor='none')
     ax1.axvline(p5,  color=C3, linewidth=1.5, linestyle='--', label=f'5.  Pzl: {p5:.1f}')
     ax1.axvline(p50, color=C4, linewidth=1.5, linestyle='--', label=f'50. Pzl: {p50:.1f}')
     ax1.axvline(p95, color=C2, linewidth=1.5, linestyle='--', label=f'95. Pzl: {p95:.1f}')
@@ -639,7 +655,7 @@ def analyse_monte_carlo(capital, lookback_days, n_sims, send_telegram, token, ch
     ax1.legend(fontsize=8, facecolor='#161b22', labelcolor='#c9d1d9')
 
     mdd5, mdd50, mdd95 = np.percentile(mdd, [5, 50, 95])
-    ax2.hist(mdd, bins=60, color=C3, alpha=0.8, edgecolor='none')
+    ax2.hist(mdd, bins=_safe_bins(mdd), color=C3, alpha=0.8, edgecolor='none')
     ax2.axvline(mdd50, color=C4, linewidth=1.5, linestyle='--', label=f'Median: {mdd50:.1f}%')
     ax2.axvline(mdd95, color=C3, linewidth=1.5, linestyle='--', label=f'95. Pzl: {mdd95:.1f}%')
     ax2.set_title('Max. Drawdown Verteilung', fontsize=11)
@@ -653,7 +669,7 @@ def analyse_monte_carlo(capital, lookback_days, n_sims, send_telegram, token, ch
 
     msg = (
         f"ltbbot Monte Carlo ({n_sims:,} Sim.)\n"
-        f"Trades: {len(pnls)} | Startkapital: {capital:.0f} USDT\n\n"
+        f"Trades: {len(events)} | Startkapital: {capital:.0f} USDT\n\n"
         f"Final-Equity:\n"
         f"  5. Pzl:  {p5:.2f} USDT ({(p5-capital)/capital*100:+.1f}%)\n"
         f"  Median:  {p50:.2f} USDT ({(p50-capital)/capital*100:+.1f}%)\n"

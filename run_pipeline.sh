@@ -17,6 +17,13 @@ echo ""
 echo -e "${BLUE}=======================================================${NC}"
 echo "      ltbbot Envelope Optimierungs-Pipeline"
 echo -e "${BLUE}=======================================================${NC}"
+STRATEGY_MODE=$("$PYTHON" -c "import json; print(json.load(open('settings.json')).get('optimization_settings',{}).get('strategy_mode','classic'))" 2>/dev/null || echo "classic")
+if [ "$STRATEGY_MODE" == "rt" ]; then
+    echo -e "${GREEN}  Strategie-Modus: rt (RobotTraders-Original: Orders am Band, Not-SL, BTC-Filter, nur Long)${NC}"
+    echo "  Gesucht werden Mitte/Baender/SL; Hebel, Positionsanteil und Seiten kommen aus settings.json::rt_settings."
+else
+    echo "  Strategie-Modus: classic"
+fi
 
 # --- Aufräumen ---
 echo ""

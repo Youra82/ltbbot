@@ -16,7 +16,9 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 from ltbbot.utils.exchange import Exchange # Für load_data
 from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
                                             classify_regime, compute_band_sl_price, simulate_entry_fill,
-                                            stop_fill_price)
+                                            stop_fill_price, is_touch_mode, btc_filter_enabled, btc_trend_series,
+                                            btc_trend_up_at, btc_side_allowed, reentry_blocks_until_cross,
+                                            reentry_block_cleared, fraction_band_amount, uses_fraction_sizing)
 
 secrets_cache = None
 
@@ -131,6 +133,26 @@ def _get_fine_slice(fine_data, start_ts, end_ts):
     return fine_data.loc[(fine_data.index >= start_ts) & (fine_data.index < end_ts)]
 
 
+def _read_cache_meta(cache_file):
+    try:
+        with open(cache_file + '.meta') as f:
+            return pd.to_datetime(f.read().strip(), utc=True)
+    except Exception:
+        return None
+
+
+def _write_cache_meta(cache_file, start_date_str):
+    """Merkt den fruehesten je angefragten Start (fuer junge Coins, s. load_data)."""
+    try:
+        old = _read_cache_meta(cache_file)
+        new = pd.to_datetime(start_date_str, utc=True)
+        if old is None or new < old:
+            with open(cache_file + '.meta', 'w') as f:
+                f.write(new.strftime('%Y-%m-%d'))
+    except Exception:
+        pass
+
+
 def load_data(symbol, timeframe, start_date_str, end_date_str):
     """Lädt historische OHLCV-Daten, entweder aus dem Cache oder von der Börse."""
     cache_dir = os.path.join(PROJECT_ROOT, 'data', 'cache')
@@ -154,10 +176,19 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
             req_start = pd.to_datetime(start_date_str, utc=True)
             req_end = pd.to_datetime(end_date_str + 'T23:59:59Z', utc=True)
 
-            if cache_start <= req_start and cache_end >= req_end:
+            # Junge Coins: liegt das Listing nach req_start, beginnt der Cache zwangslaeufig
+            # spaeter. Ein frueherer Download, der schon ab <= req_start angefragt hatte,
+            # deckt den Zeitraum trotzdem vollstaendig ab (Meta-Datei, 2026-10-04).
+            _meta_start = _read_cache_meta(cache_file)
+            _start_ok = cache_start <= req_start or (_meta_start is not None and _meta_start <= req_start)
+            # Letzte Kerze eines Tages beginnt vor 23:59:59 -- Kerzenlaenge als Toleranz,
+            # sonst galt der Cache bei Tages-Enddaten NIE als vollstaendig (jeder Aufruf lud neu).
+            _tf_len = pd.Timedelta(timeframe.replace('m', 'min')) if timeframe[-1] in 'mhd' else pd.Timedelta(0)
+            if _start_ok and cache_end + _tf_len > req_end:
                 return data.loc[req_start:req_end].copy()
             else:
                 logger.info(f"Cache für {symbol} ({timeframe}) deckt Zeitraum NICHT ab. Download notwendig.")
+                _cached_old = data
                 data = pd.DataFrame()
         except Exception as e:
             logger.error(f"Fehler beim Lesen oder Verarbeiten der Cache-Datei {cache_file}: {e}")
@@ -184,7 +215,14 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
                     full_data.index = full_data.index.tz_localize('UTC')
                 else:
                     full_data.index = full_data.index.tz_convert('UTC')
+                # Mit vorhandenem Cache zusammenfuehren statt ihn zu ueberschreiben (2026-10-04:
+                # ein kuerzerer Abruf hatte die BTC-1d-Historie auf 192 Tage gekuerzt).
+                _old = locals().get('_cached_old')
+                if _old is not None and not _old.empty:
+                    full_data = pd.concat([_old, full_data])
+                    full_data = full_data[~full_data.index.duplicated(keep='last')].sort_index()
                 full_data.to_csv(cache_file)
+                _write_cache_meta(cache_file, start_date_str)
                 req_start = pd.to_datetime(start_date_str, utc=True)
                 req_end = pd.to_datetime(end_date_str + 'T23:59:59Z', utc=True)
                 # Sicherstellen, dass nur der angeforderte Bereich zurückgegeben wird
@@ -205,8 +243,31 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
     logger.error(f"Konnte Daten für {symbol} ({timeframe}) weder aus Cache laden noch herunterladen.")
     return pd.DataFrame()
 
+_BTC_TREND_CACHE = {}
+
+
+def load_btc_trend(start_ts, end_ts):
+    """BTC-Tagestrend (Close > SMA200) fuer den BTC-Filter (RobotTraders-Modus), gecacht.
+    Laedt 260 Tage Vorlauf fuer die SMA200."""
+    # fester frueher Start: ein Download je Prozess und End-Datum statt einer je Teilfenster
+    start = min(pd.Timestamp(start_ts).tz_localize(None) if pd.Timestamp(start_ts).tzinfo else pd.Timestamp(start_ts),
+                pd.Timestamp('2022-06-01')) - pd.Timedelta(days=260)
+    start = start.strftime('%Y-%m-%d')
+    end = pd.Timestamp(end_ts).strftime('%Y-%m-%d')
+    key = (start, end)
+    if key not in _BTC_TREND_CACHE:
+        try:
+            d = load_data('BTC/USDT:USDT', '1d', start, end)
+        except Exception as e:
+            logger.warning(f"BTC-Tageskerzen fuer den Trendfilter nicht ladbar: {e}")
+            d = pd.DataFrame()
+        _BTC_TREND_CACHE[key] = btc_trend_series(d)
+    return _BTC_TREND_CACHE[key]
+
+
 # --- NEUER BACKTESTER FÜR ENVELOPE (MIT KORREKTUREN) ---
-def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, sim_start_date=None, fine_data=None, multi_band_entries=True):
+def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, sim_start_date=None, fine_data=None, multi_band_entries=True,
+                          mark_data=None, mark_fine_data=None, btc_trend=None):
     """
     Führt einen Backtest für die Envelope-Strategie durch.
     KORRIGIERT: Verwendet Startkapital für Positionsgrößen, simuliert Slippage und Max Position Size.
@@ -327,6 +388,25 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
     progress_interval = max(1, total_candles // 20)  # 20 Updates (5% Schritte)
     coarse_duration = df.index[1] - df.index[0] if len(df.index) >= 2 else None
 
+    # Mark-Preis (2026-10-04): live loesen Entry-Trigger, Band-SL und TP auf den MARK-Preis aus
+    # (ccxt/Bitget-Standard triggerType mark_price). Baender/Indikatoren kommen weiter aus den
+    # Last-Preis-Kerzen (wie live fetch_ohlcv). Mit mark_data/mark_fine_data werden alle
+    # Order-Entscheidungen der Kerze (Open/High/Low/Close + Fein-Aufloesung) auf Mark-Kerzen
+    # geprueft -- ohne sie wie bisher auf Last-Preis-Kerzen.
+    _mk = None
+    if mark_data is not None and not mark_data.empty:
+        _mk = mark_data.reindex(df.index)[['open', 'high', 'low', 'close']]
+    order_fine = mark_fine_data if mark_fine_data is not None else fine_data
+
+    # RobotTraders-Modus (Schalter in params, siehe envelope_logic): Orders direkt am Band,
+    # BTC-Trendfilter, Sperre nach SL bis Close jenseits der Mitte, Kapitalanteil-Groesse.
+    touch_mode = is_touch_mode(params)
+    fraction_sizing = uses_fraction_sizing(params)
+    block_until_cross = reentry_blocks_until_cross(params)
+    if btc_filter_enabled(params) and btc_trend is None:
+        btc_trend = load_btc_trend(df.index[0], df.index[-1])
+    sl_block = {'long': None, 'short': None}  # Kerzen-Index des SL, solange gesperrt
+
     def _close_position(pos, exit_price, exit_reason, exit_ts, atr_pct=None):
         """Realisiert eine Position (Gebuehren + Slippage) und gibt den PnL zurueck."""
         pos_entry = pos['entry_price']; pos_amount = pos['amount_coins']
@@ -372,6 +452,11 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
         candle_open = current_candle['open']
         candle_high = current_candle['high']
         candle_low = current_candle['low']
+        candle_close = current_candle['close']
+        if _mk is not None:
+            _m = _mk.iloc[i]
+            if not _m.isna().any():
+                candle_open, candle_high, candle_low, candle_close = _m['open'], _m['high'], _m['low'], _m['close']
 
         # Warmup-Kerzen: Indikatoren berechnen, aber keine Trades
         if sim_start_ts and timestamp < sim_start_ts:
@@ -416,8 +501,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 # ohne feinere Daten. Per fine_data (falls vorhanden) real
                 # aufloesen statt SL blind zu bevorzugen (oraclebot-Muster).
                 resolved = None
-                if fine_data is not None and coarse_duration is not None:
-                    fine_slice = _get_fine_slice(fine_data, timestamp, timestamp + coarse_duration)
+                if order_fine is not None and coarse_duration is not None:
+                    fine_slice = _get_fine_slice(order_fine, timestamp, timestamp + coarse_duration)
                     resolved = _resolve_ambiguous_exit(fine_slice, pos_sl, tp_price_current, pos_side)
                 if resolved is None or resolved == pos_sl:
                     exit_price, exit_reason = pos_sl, 'SL'  # Fallback: SL-first-Konvention
@@ -433,6 +518,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                                                            _atr_pct_pre.iloc[i - 1])
                 used_margin -= pos.get('margin', 0.0) # Margin wieder freigeben
                 closed_bands_this_candle.add((pos_side, pos.get('band')))
+                if exit_reason == 'SL' and block_until_cross:
+                    sl_block[pos_side] = i
             else:
                 remaining_positions.append(pos) # Position bleibt offen
 
@@ -460,6 +547,18 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 # Trend-Bias: Im Uptrend nur Longs, im Downtrend nur Shorts (wie Live Bot)
                 current_use_longs = use_longs and trend_direction != "DOWNTREND"
                 current_use_shorts = use_shorts and trend_direction != "UPTREND"
+                # BTC-Trendfilter + Sperre nach SL (RobotTraders-Modus, geteilte Funktionen mit Live)
+                _btc_up = btc_trend_up_at(btc_trend, timestamp) if btc_filter_enabled(params) else None
+                current_use_longs = current_use_longs and btc_side_allowed(params, 'long', _btc_up)
+                current_use_shorts = current_use_shorts and btc_side_allowed(params, 'short', _btc_up)
+                for _s in ('long', 'short'):
+                    if sl_block[_s] is not None and i - 1 >= sl_block[_s] and reentry_block_cleared(
+                            _s, signal_candle['close'], signal_candle['average']):
+                        sl_block[_s] = None
+                if sl_block['long'] is not None:
+                    current_use_longs = False
+                if sl_block['short'] is not None:
+                    current_use_shorts = False
 
                 # Risiko basiert auf dem AKTUELLEN realisierten Kapital (Compounding,
                 # konsistent mit Live Bot -- User-Entscheidung 2026-08-26: "keine
@@ -479,8 +578,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 def _entry_fine_bars():
                     # Fein-Kerzen dieser Entry-Kerze, nur bei Bedarf geladen (einmal je Kerze)
                     if 'v' not in _fine_memo:
-                        _fine_memo['v'] = (_get_fine_slice(fine_data, timestamp, timestamp + coarse_duration)
-                                           if fine_data is not None and coarse_duration is not None else None)
+                        _fine_memo['v'] = (_get_fine_slice(order_fine, timestamp, timestamp + coarse_duration)
+                                           if order_fine is not None and coarse_duration is not None else None)
                     return _fine_memo['v']
                 for side, allowed in (('long', current_use_longs), ('short', current_use_shorts)):
                     if not allowed or risk_amount_usd <= 0:
@@ -495,9 +594,10 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                         if pd.isna(band_price) or band_price <= 0 or pd.isna(signal_candle['close']):
                             continue
                         # Close-Confirmation: letzte abgeschlossene Kerze muss jenseits des Bands geschlossen haben
-                        if side == 'long' and signal_candle['close'] > band_price:
+                        # (nicht im RobotTraders-Modus: dort liegt die Order direkt am Band)
+                        if not touch_mode and side == 'long' and signal_candle['close'] > band_price:
                             continue
-                        if side == 'short' and signal_candle['close'] < band_price:
+                        if not touch_mode and side == 'short' and signal_candle['close'] < band_price:
                             continue
                         sl_price = compute_band_sl_price(side, band_price, k - 1, params, regime, atr_value)
                         if sl_price is None:
@@ -507,12 +607,18 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                             continue
                         trigger_price = band_price * (1 - trigger_delta_pct) if side == 'long' else band_price * (1 + trigger_delta_pct)
                         fill_price, stopped = simulate_entry_fill(side, candle_open, candle_high, candle_low,
-                                                                  current_candle['close'], trigger_price, sl_price,
+                                                                  candle_close, trigger_price, sl_price,
                                                                   fine_bars=_entry_fine_bars)
                         if fill_price is None:
                             continue
-                        # Groesse wie live: aus Band-Preis und SL-Abstand
-                        amount_coins = risk_amount_usd / sl_dist
+                        # Groesse wie live: aus Band-Preis und SL-Abstand (bzw. Kapitalanteil)
+                        if fraction_sizing:
+                            amount_coins = fraction_band_amount(max(0.0, capital - used_margin), params,
+                                                                band_price, num_envelopes)
+                            if amount_coins is None:
+                                continue
+                        else:
+                            amount_coins = risk_amount_usd / sl_dist
                         if amount_coins * band_price < MIN_NOTIONAL_USDT:
                             continue
                         candidates[side].append((fill_price, sl_price, amount_coins,
@@ -534,6 +640,7 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 # Margin behaupten -- reicht sie nicht mehr, wird die Order uebersprungen
                 # (= live InsufficientFunds), NICHT auf Kredit geoeffnet.
                 entry_pnl_current_candle = 0.0
+                stopped_margin = 0.0
                 for side in ('long', 'short'):
                     for entry_price, sl_price, amount_coins, _, band_k, stopped in candidates[side]:
                         margin_required = calculate_position_margin(amount_coins, entry_price, leverage)
@@ -545,12 +652,21 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                             'band': band_k, 'entry_time': timestamp, 'margin': margin_required
                         }
                         if stopped:
+                            # Marge eines in DIESER Kerze gefuellten UND gestoppten Bands bleibt bis Kerzenende belegt
+                        # (2026-10-05): die Fills kommen auf dem Weg nach unten VOR den Stops -- live lehnt
+                        # Bitget weitere Trigger mangels Marge ab. Vorher gab der Stop die Marge sofort frei,
+                        # im Crash 10.10.2025 oeffnete die Simulation so 30 USDT Notional bei 18 USDT Konto.
+                            used_margin += margin_required
+                            stopped_margin += margin_required
                             # SL noch in der Entry-Kerze erreicht (konservativ, siehe simulate_entry_fill)
                             entry_pnl_current_candle += _close_position(pos, sl_price, 'SL', timestamp,
                                                                         _atr_pct_pre.iloc[i - 1])
+                            if block_until_cross:
+                                sl_block[side] = i
                             continue
                         used_margin += margin_required
                         positions.append(pos)
+                used_margin = max(0.0, used_margin - stopped_margin)
                 capital += entry_pnl_current_candle
                 exit_pnl_current_candle += entry_pnl_current_candle
 
@@ -641,3 +757,50 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
         "trades": closed_trades  # Vollstaendige Trade-Liste (Band/Zeiten/Preise) fuer Introspektion
     }
     return results
+
+
+def load_mark_data(symbol, timeframe, start_date_str, end_date_str):
+    """Mark-Preis-Kerzen (Bitget), gecacht unter data/cache/<symbol>_<tf>_mark.csv.
+    Live loesen Entry-Trigger, Band-SL und TP auf den Mark-Preis aus (2026-10-04)."""
+    cache_dir = os.path.join(PROJECT_ROOT, 'data', 'cache')
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_file = os.path.join(cache_dir, f"{symbol.replace('/', '-').replace(':', '-')}_{timeframe}_mark.csv")
+    req_start = pd.to_datetime(start_date_str, utc=True)
+    req_end = pd.to_datetime(end_date_str + 'T23:59:59Z', utc=True)
+    tf_len = pd.Timedelta(timeframe.replace('m', 'min')) if timeframe.endswith('m') else pd.Timedelta(timeframe)
+    if os.path.exists(cache_file):
+        try:
+            c = pd.read_csv(cache_file, index_col='timestamp', parse_dates=True)
+            c.index = c.index.tz_localize('UTC') if c.index.tz is None else c.index.tz_convert('UTC')
+            if c.index.min() <= req_start + tf_len and c.index.max() + tf_len > req_end:
+                return c.loc[req_start:req_end].copy()
+        except Exception:
+            pass
+    try:
+        with open(os.path.join(PROJECT_ROOT, 'secret.json')) as f:
+            ex = Exchange(json.load(f)['ltbbot'][0]).exchange
+        since, end_ms, rows = int(req_start.timestamp() * 1000), int(req_end.timestamp() * 1000), []
+        while since < end_ms:
+            try:
+                page = ex.fetch_mark_ohlcv(symbol, timeframe, since, 200)
+            except Exception as e:
+                logger.warning(f"Mark-Kerzen {symbol} {timeframe}: {e}")
+                import time as _t; _t.sleep(3); continue
+            if not page:
+                since += int(tf_len.total_seconds() * 1000) * 200
+                continue
+            rows += page
+            nxt = page[-1][0] + 1
+            if nxt <= since:
+                break
+            since = nxt
+        if not rows:
+            return pd.DataFrame()
+        d = pd.DataFrame(rows, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        d['timestamp'] = pd.to_datetime(d['timestamp'], unit='ms', utc=True)
+        d = d.drop_duplicates('timestamp').set_index('timestamp').sort_index()
+        d.to_csv(cache_file)
+        return d.loc[req_start:req_end].copy()
+    except Exception as e:
+        logger.error(f"Mark-Kerzen fuer {symbol} ({timeframe}) nicht ladbar: {e}")
+        return pd.DataFrame()

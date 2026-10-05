@@ -1,0 +1,46 @@
+{
+    "_meta": {
+        "pnl_pct": 5.33,
+        "oos_pnl_pct": 0.34,
+        "oos_trades": 5,
+        "oos_profit_factor": 3.0,
+        "oos_win_rate": 60.0,
+        "oos_max_drawdown_pct": 0.15,
+        "is_oos_split_date": "2025-11-11",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-05T14:02:40"
+    },
+    "market": {
+        "symbol": "LTC/USDT:USDT",
+        "timeframe": "4h",
+        "amount_step": 0.1
+    },
+    "strategy": {
+        "average_type": "SMA",
+        "average_period": 10,
+        "envelopes": [
+            0.03712,
+            0.0558,
+            0.13194
+        ],
+        "trigger_price_delta_pct": 0.1,
+        "entry_mode": "touch",
+        "regime_filter": false,
+        "btc_trend_filter": true,
+        "reentry_after_sl": "cross_average"
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "leverage": 1,
+        "stop_loss_pct": 10.41,
+        "sizing": "fraction",
+        "position_size_pct": 30.0,
+        "min_notional_bump": true
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

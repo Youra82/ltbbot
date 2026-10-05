@@ -26,7 +26,7 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 RESULTS_FILE = os.path.join(PROJECT_ROOT, 'artifacts', 'results', 'last_optimizer_run.json')
 
 # Verwende den Backtester für Envelope
-from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP
+from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP, LazyFineData
 from ltbbot.analysis.evaluator import evaluate_dataset
 from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction, band_structure_ok
 
@@ -63,6 +63,40 @@ IS_ATR_PCT = None           # median ATR% des IS-Fensters des aktuellen Paars
 MIN_ENV1_ATR = 0.5          # Band 1 >= 0.5 typische Kerzen vom MA (settings: min_env1_atr_fraction)
 MIN_BAND_GAP_ATR = 0.25     # jede weitere Band-Luecke >= 0.25 Kerzen (settings: min_band_gap_atr_fraction)
 
+# RobotTraders-Modus (2026-10-05, settings.json::optimization_settings.strategy_mode = "rt"):
+# Orders direkt am Band, keine Regime-Sperren, weiter Not-SL, BTC-Trendfilter, Sperre nach SL,
+# Kapitalanteil-Groesse. Gesucht werden nur die Signal-Parameter (Mitte, Baender, SL) --
+# Groesse/Hebel/Seiten kommen fest aus settings.json::rt_settings, damit die Einzel-Suche
+# nicht die Portfolio-Entscheidung (Kapital, Hebel) vorwegnimmt. Die RobotTraders-
+# Originalwerte (DCM 5, 7/11/15 %, SL 25 %) laufen immer als erster Trial mit.
+STRATEGY_MODE = "classic"
+RT_SETTINGS = {'leverage': 1, 'position_size_pct': 30.0, 'btc_trend_filter': True,
+               'use_longs': True, 'use_shorts': False, 'min_search_capital': 1000.0}
+RT_DEFAULT_TRIAL = {'average_type': 'DCM', 'average_period': 5, 'env1': 0.07, 'gap2': 0.04,
+                    'gap3': 0.04, 'stop_loss_pct': 25.0}
+
+
+def build_rt_params(average_type, average_period, envelopes, stop_loss_pct, rt=None):
+    """Config-Bloecke (strategy/risk/behavior) fuer den RobotTraders-Modus."""
+    rt = rt or RT_SETTINGS
+    return {
+        'strategy': {
+            'average_type': average_type, 'average_period': int(average_period),
+            'envelopes': [round(e, 5) for e in envelopes],
+            'trigger_price_delta_pct': 0.1,
+            'entry_mode': 'touch', 'regime_filter': False,
+            'btc_trend_filter': bool(rt.get('btc_trend_filter', True)),
+            'reentry_after_sl': 'cross_average',
+        },
+        'risk': {
+            'margin_mode': 'isolated', 'leverage': int(rt.get('leverage', 1)),
+            'stop_loss_pct': round(float(stop_loss_pct), 2),
+            'sizing': 'fraction', 'position_size_pct': float(rt.get('position_size_pct', 30.0)),
+            'min_notional_bump': True,
+        },
+        'behavior': {'use_longs': bool(rt.get('use_longs', True)), 'use_shorts': bool(rt.get('use_shorts', False))},
+    }
+
 def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal):
     """OOS-Bestaetigungs-Kriterien (ohne Baseline-Vergleich) -- geteilt zwischen dem
     besten Trial und der Neubewertung einer bestehenden Config (2026-09-27), sowie
@@ -94,13 +128,48 @@ def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal):
     }
 
 
+_MARKETS_CACHE = {}
+
+
+def _market_extras(symbol):
+    """Mengen-Schrittweite des Kontrakts fuer die Config (RT-Modus: fraction_band_amount rundet
+    Live UND im Backtest darauf auf). Leer, wenn die Boerse nicht erreichbar ist."""
+    if STRATEGY_MODE != 'rt':
+        return {}
+    try:
+        if 'm' not in _MARKETS_CACHE:
+            from ltbbot.utils.exchange import Exchange
+            with open(os.path.join(PROJECT_ROOT, 'secret.json')) as f:
+                _MARKETS_CACHE['m'] = Exchange(json.load(f)['ltbbot'][0]).markets
+        return {'amount_step': float(_MARKETS_CACHE['m'][symbol]['precision']['amount'])}
+    except Exception as e:
+        logger.warning(f"Mengen-Schrittweite fuer {symbol} nicht ermittelbar: {e}")
+        return {}
+
+
 def create_safe_filename(symbol, timeframe):
     """Erstellt einen sicheren Dateinamen aus Symbol und Zeitrahmen."""
     return f"{symbol.replace('/', '').replace(':', '')}_{timeframe}"
 
+def _suggest_rt_params(trial):
+    """Suchraum RobotTraders-Modus: Baender in Prozent (wie das Original), Not-SL 10-40 %."""
+    avg_type = trial.suggest_categorical('average_type', ['DCM', 'SMA', 'EMA'])
+    avg_period = trial.suggest_int('average_period', 3, 30)
+    env1 = trial.suggest_float('env1', 0.03, 0.15)
+    gap2 = trial.suggest_float('gap2', 0.01, 0.08)
+    gap3 = trial.suggest_float('gap3', 0.01, 0.08)
+    sl_pct = trial.suggest_float('stop_loss_pct', 10.0, 40.0)
+    envelopes = [env1, env1 + gap2, env1 + gap2 + gap3]
+    return build_rt_params(avg_type, avg_period, envelopes, sl_pct), envelopes
+
+
 def objective(trial):
     """Optuna Objective-Funktion zur Optimierung der Envelope-Parameter."""
     global IS_DATA, START_CAPITAL, CURRENT_TIMEFRAME, OPTIM_MODE, MAX_DRAWDOWN_CONSTRAINT, MIN_WIN_RATE_CONSTRAINT, MIN_PNL_CONSTRAINT, MIN_TRADES_FOR_VALID, MIN_TRADES_PER_YEAR_GLOBAL, SL_MAX_RATIO, K_FOLDS
+
+    if STRATEGY_MODE == 'rt':
+        params, envelopes = _suggest_rt_params(trial)
+        return _evaluate_trial(trial, params, envelopes)
 
     # --- Parameter vorschlagen ---
     avg_type = trial.suggest_categorical('average_type', ['SMA', 'EMA', 'WMA', 'DCM'])
@@ -155,7 +224,11 @@ def objective(trial):
     _sl_frac = sl_atr_fraction(params, IS_ATR_PCT)
     if _sl_frac is not None and _sl_frac < MIN_SL_ATR_FRACTION:
         raise optuna.exceptions.TrialPruned()
+    return _evaluate_trial(trial, params, envelopes)
 
+
+def _evaluate_trial(trial, params, envelopes):
+    """IS-Backtest + Pruning + K-Fold-Robustheits-Score (beide Strategie-Modi)."""
     # --- Backtest ---
     if IS_DATA is None or START_CAPITAL <= 0:
         # Verwende logger statt print im Objective
@@ -237,6 +310,9 @@ def main():
     parser.add_argument('--min_pnl', required=True, type=float)
     parser.add_argument('--mode', required=True, type=str, choices=['strict', 'best_profit'])
     parser.add_argument('--config_suffix', type=str, default="_envelope")
+    parser.add_argument('--strategy_mode', type=str, default=None, choices=['classic', 'rt'],
+                        help="'rt' = RobotTraders-Original (Orders am Band, weiter SL, BTC-Filter). "
+                             "Standard: settings.json::optimization_settings.strategy_mode (sonst classic).")
     parser.add_argument('--min_trades_per_year', type=int, default=20,
                         help='Mindest-Trades pro Jahr (proportional auf Trainingslänge skaliert)')
     # IS/OOS-Split + K-Fold-Robustheit (Port von stbot/analysis/optimizer.py, 2026-08-21) --
@@ -274,6 +350,15 @@ def main():
                              'falls active_strategies mal leer ist.')
     args = parser.parse_args()
     results_file = args.results_file or RESULTS_FILE
+    global STRATEGY_MODE, RT_SETTINGS
+    try:
+        with open(os.path.join(PROJECT_ROOT, 'settings.json')) as _sf:
+            _settings_all = json.load(_sf)
+    except Exception:
+        _settings_all = {}
+    STRATEGY_MODE = args.strategy_mode or _settings_all.get('optimization_settings', {}).get('strategy_mode', 'classic')
+    RT_SETTINGS = {**RT_SETTINGS, **_settings_all.get('rt_settings', {})}
+    logger.info(f"Strategie-Modus: {STRATEGY_MODE}" + (f" (rt_settings: {RT_SETTINGS})" if STRATEGY_MODE == 'rt' else ''))
 
     # Globale Variablen setzen
     CONFIG_SUFFIX = args.config_suffix
@@ -281,6 +366,12 @@ def main():
     MIN_WIN_RATE_CONSTRAINT = args.min_win_rate
     MIN_PNL_CONSTRAINT = args.min_pnl
     START_CAPITAL = args.start_capital
+    if STRATEGY_MODE == 'rt' and START_CAPITAL < RT_SETTINGS.get('min_search_capital', 1000.0):
+        # Einzel-Suche ueber Signal-Qualitaet: bei Kleinstkapital wuerde die 5-USDT-Mindestorder jede
+        # Position aufblaehen und die Suche verzerren -- das echte Kapital bewertet der Portfolio-Optimizer.
+        logger.info(f"RT-Modus: Such-Kapital {START_CAPITAL} -> {RT_SETTINGS['min_search_capital']} USDT "
+                    f"(Mindestorder-Effekte prueft erst der Portfolio-Optimizer mit dem echten Kontostand).")
+        START_CAPITAL = float(RT_SETTINGS['min_search_capital'])
     OPTIM_MODE = args.mode
     N_TRIALS = args.trials
     MIN_TRADES_PER_YEAR_GLOBAL = args.min_trades_per_year
@@ -433,7 +524,12 @@ def main():
         # Fein-Daten EINMAL als Bulk-Cache laden und schon fuer die Suche nutzen (siehe SEARCH_FINE_DATA)
         global SEARCH_FINE_DATA
         SEARCH_FINE_DATA = None
-        if fine_tf:
+        if STRATEGY_MODE == 'rt':
+            # RT-Modus: Fein-Kerzen zaehlen nur in seltenen Faellen (Kerze oeffnet jenseits des Bands,
+            # SL+TP in einer Kerze bei ~25 %-SL) -> Suche grob, nur die Nachbewertung des besten
+            # Trials laedt betroffene Tage nach (LazyFineData, unten) statt 3 Jahre Bulk-Download
+            SEARCH_FINE_DATA = None
+        elif fine_tf:
             try:
                 SEARCH_FINE_DATA = load_data(symbol, fine_tf, args.start_date, args.end_date)
                 if SEARCH_FINE_DATA is None or SEARCH_FINE_DATA.empty:
@@ -444,6 +540,8 @@ def main():
 
         try:
             study = optuna.create_study(study_name=study_name, direction="maximize")
+            if STRATEGY_MODE == 'rt':
+                study.enqueue_trial(dict(RT_DEFAULT_TRIAL))  # RobotTraders-Original immer mitpruefen
 
             n_jobs = args.jobs
             logger.info(f"Starte Optuna-Optimierung mit {N_TRIALS} Trials und {n_jobs} Job(s)...")
@@ -485,7 +583,10 @@ def main():
         best_score = best_trial.value  # K-Fold-Robustheits-Score (Minimum ueber IS-Teilfenster), NICHT roh-PnL
 
         # Finale Parameter aus dem besten Trial
-        final_params_dict = {
+        if STRATEGY_MODE == 'rt':
+            final_params_dict = best_trial.user_attrs['params']
+        else:
+          final_params_dict = {
             'strategy': {
                 'average_type': best_params_optuna['average_type'], 'average_period': best_params_optuna['average_period'],
                 'envelopes': best_trial.user_attrs['envelopes'],
@@ -499,7 +600,7 @@ def main():
                 'sl_to_env1_ratio': round(best_params_optuna['sl_to_env1_ratio'], 4),
             },
             'behavior': {'use_longs': True, 'use_shorts': True}
-        }
+          }
 
         # Praezise Nachbewertung NUR des besten Trials mit echter Intrabar-Aufloesung --
         # waehrend der Suche liefen alle Trials bewusst mit fine_data=None (siehe objective()).
@@ -511,7 +612,9 @@ def main():
         # Wartezeit). Ein einziger zusammenhaengender Bulk-Fetch nutzt Bitgets 200-Kerzen-
         # Pagination viel effizienter und landet in einem wiederverwendbaren Cache.
         fine_data_precise = SEARCH_FINE_DATA
-        if fine_tf and fine_data_precise is None:
+        if fine_tf and STRATEGY_MODE == 'rt':
+            fine_data_precise = LazyFineData(symbol, fine_tf)
+        elif fine_tf and fine_data_precise is None:
             try:
                 fine_data_precise = load_data(symbol, fine_tf, args.start_date, args.end_date)
                 if fine_data_precise is None or fine_data_precise.empty:
@@ -611,6 +714,65 @@ def main():
             and (baseline_oos is None or best_oos.get('total_pnl_pct', -1e9) > baseline_oos.get('total_pnl_pct', -1e9))
         )
 
+        # RT-Modus: Rueckfall auf die RobotTraders-Standardparameter (2026-10-05). Mit BTC-Filter
+        # liefert ein einzelner Coin im OOS-Fenster oft nur 2-5 Trades -- das Gate pro Coin kann die
+        # optimierte Variante dann nicht bestaetigen. Die Standardparameter sind ueber das ganze
+        # Universum OOS geprueft (846 Perps inkl. delisteter: +0.86 %/Trade, t=6.5) und werden
+        # geschrieben, statt den Coin leer zu lassen -- bestaetigt, wenn sie auf diesem Coin IS
+        # positiv (DD im Limit) und OOS nicht negativ sind. Eine bestaetigte bestehende Config bleibt.
+        if STRATEGY_MODE == 'rt' and not confirmed:
+            _base_ok = False
+            if baseline_oos is not None:
+                _base_ok = (oos_gate(baseline_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)['passed']
+                            and baseline_is.get('total_pnl_pct', -1) > 0)
+            if not _base_ok:
+                d = RT_DEFAULT_TRIAL
+                default_params = build_rt_params(d['average_type'], d['average_period'],
+                                                 [d['env1'], d['env1'] + d['gap2'], d['env1'] + d['gap2'] + d['gap3']],
+                                                 d['stop_loss_pct'])
+                d_is = run_envelope_backtest(IS_DATA.copy(), default_params, START_CAPITAL, fine_data=fine_data_precise, multi_band_entries=True)
+                d_oos = run_envelope_backtest(OOS_DATA.copy(), default_params, START_CAPITAL, fine_data=fine_data_precise, multi_band_entries=True)
+                d_gate = oos_gate(d_oos, MIN_OOS_TRADES, MIN_OOS_PROFIT_FACTOR, MAX_DRAWDOWN_CONSTRAINT)
+                # IS muss in jedem Fall positiv sein (DD im Limit); OOS: Gate bestanden ODER nicht negativ
+                d_is_ok = d_is.get('total_pnl_pct', -1) > 0 and d_is.get('max_drawdown_pct', 100) <= args.max_drawdown
+                d_confirmed = bool(d_is_ok and (d_gate['passed'] or d_oos.get('total_pnl_pct', -1) >= 0))
+                d_by = None if not d_confirmed else ('oos_gate' if d_gate['passed'] else 'rt_default_universe_oos')
+                config_output = {
+                    "_meta": {
+                        "pnl_pct": round(d_is.get('total_pnl_pct', 0), 2),
+                        "oos_pnl_pct": round(d_oos.get('total_pnl_pct', 0), 2),
+                        "oos_trades": d_oos.get('trades_count', 0),
+                        "oos_profit_factor": round(d_gate['profit_factor_display'], 2),
+                        "oos_win_rate": round(d_gate['win_rate'], 2),
+                        "oos_max_drawdown_pct": round(d_gate['max_dd_decimal'] * 100, 2),
+                        "is_oos_split_date": str(split_ts.date()),
+                        "is_fraction": IS_FRACTION,
+                        "k_folds": K_FOLDS,
+                        "confirmed": d_confirmed,
+                        "confirmed_by": d_by,
+                        "rt_default": True,
+                        "optimized_at": _dt.now().isoformat(timespec='seconds'),
+                    },
+                    "market": {"symbol": symbol, "timeframe": timeframe, **_market_extras(symbol)},
+                    "strategy": default_params['strategy'],
+                    "risk": default_params['risk'],
+                    "behavior": default_params['behavior'],
+                }
+                with open(config_output_path, 'w') as f:
+                    json.dump(config_output, f, indent=4)
+                logger.info(f"  RT-Standardparameter gespeichert (optimierte Variante OOS nicht bestaetigbar: "
+                            f"{best_oos.get('trades_count', 0)} OOS-Trades): IS {d_is.get('total_pnl_pct', 0):+.2f}% / "
+                            f"OOS {d_oos.get('total_pnl_pct', 0):+.2f}% ({d_oos.get('trades_count', 0)} Trades) -> "
+                            f"confirmed={d_confirmed} ({d_by})")
+                run_results['saved' if d_confirmed else 'skipped'].append({
+                    'symbol': symbol, 'timeframe': timeframe,
+                    'pnl_pct': round(d_is.get('total_pnl_pct', 0), 2),
+                    'oos_pnl_pct': round(d_oos.get('total_pnl_pct', 0), 2),
+                    'confirmed': d_confirmed, 'config_file': config_filename,
+                    'reason': 'rt_default_params',
+                })
+                continue
+
         mark = '[BESTAETIGT]' if confirmed else '[nicht bestaetigt]'
         logger.info(f"\n  --- {symbol} ({timeframe}) --- {mark}")
         if baseline_is is not None:
@@ -656,7 +818,10 @@ def main():
                 _base_frac = sl_atr_fraction(baseline_params, IS_ATR_PCT)
                 if _base_frac is not None and _base_frac < MIN_SL_ATR_FRACTION:
                     base_gate['passed'] = False
-                if not band_structure_ok(baseline_params, IS_ATR_PCT, MIN_ENV1_ATR, MIN_BAND_GAP_ATR):
+                if STRATEGY_MODE == 'rt' and baseline_is.get('total_pnl_pct', -1) <= 0:
+                    base_gate['passed'] = False  # RT: IS muss positiv sein (nicht nur das OOS-Gate)
+                if baseline_params['strategy'].get('entry_mode') != 'touch' and \
+                        not band_structure_ok(baseline_params, IS_ATR_PCT, MIN_ENV1_ATR, MIN_BAND_GAP_ATR):
                     base_gate['passed'] = False
                 try:
                     existing_cfg.setdefault('_meta', {}).update({
@@ -694,7 +859,7 @@ def main():
                     "confirmed": confirmed,
                     "optimized_at": _dt.now().isoformat(timespec='seconds'),
                 },
-                "market": {"symbol": symbol, "timeframe": timeframe},
+                "market": {"symbol": symbol, "timeframe": timeframe, **_market_extras(symbol)},
                 "strategy": final_params_dict['strategy'],
                 "risk": final_params_dict['risk'],
                 "behavior": final_params_dict['behavior']

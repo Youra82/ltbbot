@@ -1,0 +1,47 @@
+{
+    "_meta": {
+        "pnl_pct": 93.73,
+        "oos_pnl_pct": -1.08,
+        "oos_trades": 11,
+        "oos_profit_factor": 0.65,
+        "oos_win_rate": 63.64,
+        "oos_max_drawdown_pct": 2.35,
+        "is_oos_split_date": "2025-11-11",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": false,
+        "confirmed_by": null,
+        "rt_default": true,
+        "optimized_at": "2026-10-05T14:07:33"
+    },
+    "market": {
+        "symbol": "PEOPLE/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 5,
+        "envelopes": [
+            0.07,
+            0.11,
+            0.15
+        ],
+        "trigger_price_delta_pct": 0.1,
+        "entry_mode": "touch",
+        "regime_filter": false,
+        "btc_trend_filter": true,
+        "reentry_after_sl": "cross_average"
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "leverage": 1,
+        "stop_loss_pct": 25.0,
+        "sizing": "fraction",
+        "position_size_pct": 30.0,
+        "min_notional_bump": true
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

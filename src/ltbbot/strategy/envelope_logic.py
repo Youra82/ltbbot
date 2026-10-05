@@ -33,6 +33,113 @@ def margin_fits(used_margin: float, margin_required: float, available_capital: f
     return (used_margin + margin_required) <= available_capital
 
 
+# ---------------------------------------------------------------------------
+# RobotTraders-Original-Modus (2026-10-05)
+# ---------------------------------------------------------------------------
+# Ursprung des ltbbot (github.com/RobotTraders, Envelope): Orders liegen direkt an
+# den Baendern (kein Close-Bestaetigungs-Rueckweg), keine ADX-/Trend-Sperren, weiter
+# Not-SL, TP an der wandernden Mitte, nach einem SL bleibt die Seite gesperrt bis
+# ein Close wieder jenseits der Mitte liegt. Ehrlich getestet (Scratchpad rt_check.py,
+# 846 Binance-Perps inkl. delisteter, OOS ab 2025-11-08): nur Long + BTC>SMA200
+# +0.86 %/Trade, t=6.5. Alles per Config-Schalter -- ohne die Schalter bleibt die
+# bisherige Logik unveraendert. Jede Funktion hier wird von Live (trade_manager.py),
+# backtester.py UND portfolio_simulator.py geteilt.
+
+MIN_NOTIONAL_USDT = 5.0  # Bitget-Mindest-Ordergroesse (Notional)
+
+
+def is_touch_mode(params):
+    """Orders direkt am Band (RobotTraders) statt Close-Bestaetigung + Ruecklauf-Trigger."""
+    return params.get('strategy', {}).get('entry_mode') == 'touch'
+
+
+def regime_filter_enabled(params):
+    return params.get('strategy', {}).get('regime_filter', True)
+
+
+def btc_filter_enabled(params):
+    return bool(params.get('strategy', {}).get('btc_trend_filter', False))
+
+
+def reentry_blocks_until_cross(params):
+    return params.get('strategy', {}).get('reentry_after_sl') == 'cross_average'
+
+
+def btc_trend_series(btc_daily, sma_period=200):
+    """BTC-Trend aus Tageskerzen: True wenn Tages-Close > SMA200.
+
+    Index = Zeitpunkt, AB dem der Wert bekannt ist (Tages-Open + 1 Tag = Kerzenschluss).
+    Abfrage fuer eine Kerze mit Open ts per asof(ts) -- live identisch: letzte
+    ABGESCHLOSSENE BTC-Tageskerze (drop_incomplete_last_candle)."""
+    if btc_daily is None or len(btc_daily) == 0:
+        return pd.Series(dtype=bool)
+    close = btc_daily['close'].astype(float)
+    up = close > close.rolling(sma_period).mean()
+    up = up[close.rolling(sma_period).mean().notna()]
+    up.index = up.index + pd.Timedelta(days=1)
+    return up
+
+
+def btc_trend_up_at(btc_trend, ts):
+    """BTC-Trend zum Zeitpunkt ts (None, wenn unbekannt)."""
+    if btc_trend is None or len(btc_trend) == 0:
+        return None
+    pos = btc_trend.index.searchsorted(ts, side='right') - 1
+    if pos < 0:
+        return None
+    return bool(btc_trend.iloc[pos])
+
+
+def btc_side_allowed(params, side, btc_up):
+    """Long nur bei BTC-Aufwaertstrend, Short nur bei Abwaertstrend (wenn Filter aktiv).
+    Unbekannter Trend (zu wenig BTC-Historie) -> kein Einstieg."""
+    if not btc_filter_enabled(params):
+        return True
+    if btc_up is None:
+        return False
+    return btc_up if side == 'long' else (not btc_up)
+
+
+def reentry_block_cleared(side, close_price, average_price):
+    """Sperre nach SL aufheben: Close wieder jenseits der Mitte (Long: darueber)."""
+    if close_price is None or average_price is None or pd.isna(close_price) or pd.isna(average_price):
+        return False
+    return close_price > average_price if side == 'long' else close_price < average_price
+
+
+def fraction_band_amount(free_capital, params, band_price, num_bands, amount_step=None):
+    """Positionsgroesse im Kapitalanteil-Modus (risk.sizing == 'fraction').
+
+    Marge je Band = freies Kapital * position_size_pct / Anzahl Baender, Notional =
+    Marge * Hebel. Liegt das unter Bitgets Mindest-Notional (5 USDT), wird auf 5 USDT
+    angehoben (min_notional_bump, Standard an) -- sonst koennte ein kleines Konto
+    gar nicht handeln. Ob die Marge dann noch frei ist, prueft margin_fits() beim
+    Aufrufer (live wie Backtest). Returns amount_coins oder None.
+
+    amount_step: Mengen-Schrittweite des Kontrakts (Bitget, z.B. LINK 1 Coin). Die Menge wird
+    darauf AUFGERUNDET -- abgerundet laege sie unter dem Mindest-Notional bzw. bei 0 (LINK:
+    5 USDT = 0.36 Coins -> 0). Live: Markt-Praezision, Backtest: params['market']['amount_step']."""
+    risk = params.get('risk', {})
+    if band_price is None or band_price <= 0 or num_bands <= 0 or free_capital <= 0:
+        return None
+    lev = risk.get('leverage', 1) or 1
+    margin = free_capital * risk.get('position_size_pct', 30.0) / 100.0 / num_bands
+    notional = margin * lev
+    if notional < MIN_NOTIONAL_USDT:
+        if not risk.get('min_notional_bump', True):
+            return None
+        notional = MIN_NOTIONAL_USDT * 1.01  # knapp drueber (Rundung auf Kontraktgroesse)
+    amount = notional / band_price
+    step = amount_step if amount_step is not None else params.get('market', {}).get('amount_step')
+    if step:
+        amount = round(np.ceil(amount / step - 1e-9) * step, 10)
+    return amount
+
+
+def uses_fraction_sizing(params):
+    return params.get('risk', {}).get('sizing') == 'fraction'
+
+
 def classify_regime(adx_value, close_price, average_price, sma20, sma50, strategy_params=None):
     """Regime-Entscheidung aus den Indikatorwerten EINER abgeschlossenen Kerze.
 
@@ -43,6 +150,9 @@ def classify_regime(adx_value, close_price, average_price, sma20, sma50, strateg
     Returns: (regime, trade_allowed, trend_direction)
     """
     strategy_params = strategy_params or {}
+    if not strategy_params.get('regime_filter', True):
+        # RobotTraders-Modus: keine ADX-/Trend-Sperren, kein 1.5x-SL im Trend
+        return "UNCERTAIN", True, "NEUTRAL"
     disable_strong_trend_block = strategy_params.get('disable_strong_trend_block', False)
     strong_trend_adx_threshold = strategy_params.get('strong_trend_adx_threshold', 30.0)
 
@@ -153,6 +263,8 @@ def band_structure_ok(params, atr_pct, min_env1_atr, min_gap_atr):
     Regel: Band 1 >= min_env1_atr * ATR vom MA, jede weitere Luecke >= min_gap_atr * ATR.
     Geteilt von optimizer.py (Suchraum + Neubewertung) und sync_confirmed_flags.py.
     """
+    if params.get('strategy', {}).get('entry_mode') == 'touch':
+        return True  # RobotTraders-Modus: Baender bewusst in festen Prozent (7/11/15 %), weit ausserhalb der ATR
     env = sorted(params.get('strategy', {}).get('envelopes') or [])
     if not env or not atr_pct or atr_pct != atr_pct:
         return True

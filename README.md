@@ -19,7 +19,67 @@
 
 LTBBot ist ein spezialisierter Trading-Bot, der die Envelope-Strategie (Moving Average Envelopes) verwendet, um profitable Trading-Gelegenheiten durch Mean-Reversion zu identifizieren. Das System nutzt automatische Parameter-Optimierung und kann mehrere Handelspaare gleichzeitig verwalten.
 
-### 🧭 Trading-Logik (Kurzfassung)
+### 🤖 Aktiver Modus: RobotTraders-Original (seit 2026-10-05)
+
+`settings.json::optimization_settings.strategy_mode = "rt"` — Rückkehr zum Ursprung des ltbbot
+([RobotTraders Envelope](https://github.com/RobotTraders)), ehrlich nachgetestet:
+
+![ltbbot RT-Modus: Mitte, drei Kauf-Bänder und die sechs Bausteine](docs/rt_strategy_overview.png)
+
+#### 🧩 So entsteht ein Trade
+
+![Entstehung eines Trades: Bänder, Kauf-Trigger, Fill im Docht, wandernder TP, Ausstieg an der Mitte](docs/rt_trade_lifecycle.png)
+
+*Echter Backtest-Trade (NEAR/USDT 4h, 22.08.2026, Out-of-Sample) mit der ausgelieferten Config:*
+
+1. **Kerze schließt** → Mitte (Donchian 5) und die drei Bänder (−7 / −11 / −15 %) werden aus den *abgeschlossenen* Kerzen neu berechnet — kein Blick in die laufende Kerze.
+2. **BTC-Filter prüfen**: Tages-Close von BTC > SMA200? Nur dann liegen Kauf-Trigger an allen drei Bändern; an jede Entry-Order ist ihr eigener Not-SL (−25 %) direkt angehängt (Bitget legt ihn beim Fill an).
+3. **Docht taucht ins Band** → Band 1, 2 und 3 werden nacheinander gefüllt (tiefer = günstiger).
+4. **TP wandert**: jeden 15-Min-Zyklus wird ein gebündelter TP an die aktuelle Mitte gelegt.
+5. **Ausstieg an der Mitte** → alle Bänder schließen gemeinsam: Band 1 **+7.9 %**, Band 2 **+12.7 %**, Band 3 **+18.0 %**.
+
+Geht der Kurs stattdessen bis zum Not-SL, sperrt der Bot neue Long-Einstiege auf dem Coin, bis eine Kerze wieder **über** der Mitte schließt (RobotTraders-`ReentryGuard`).
+
+#### 📈 Ergebnisse (Out-of-Sample, 11.11.2025 – 04.10.2026)
+
+![Pipeline-Ergebnis je Coin im Out-of-Sample](docs/rt_oos_per_coin.png)
+
+![Out-of-Sample-Equity des nur mit IS-Daten gewählten Portfolios](docs/rt_oos_equity.png)
+
+| Prüfung (Startkapital 20.63 USDT, Hebel 1) | Ergebnis | Max. DD | Trades | Ø je Trade |
+|---|---|---|---|---|
+| Portfolio nur mit IS-Daten gewählt (29 Strategien), OOS simuliert | **+45.0 %** | **5.1 %** | 80 | **+2.10 %** |
+| Letzte 365 Tage inkl. Crash 10.10.2025 (19 Strategien) | +23.9 % | 31.4 % | 113 | +0.73 % |
+
+> ⚠️ **Wichtig:** Der BTC-Filter legt den Bot in Bärenphasen komplett still. Im OOS-Fenster gab es von
+> 11/2025 bis Ende 08/2026 **keinen einzigen Trade** (BTC unter SMA200) — die +45 % entstanden in den
+> ~6 Wochen danach. Das schützt das Kapital, bedeutet aber monatelange Pausen. Größtes Risiko sind
+> marktweite Crash-Tage im Aufwärtstrend (10.10.2025: −31 % an einem Tag bei 20 USDT Kapital, weil die
+> 5-USDT-Mindestorder dann ~25 % des Kontos je Band bindet).
+
+#### 🔁 Pipeline im RT-Modus
+
+![Pipeline: Kandidaten, Optuna-Suche, OOS-Gate, Rückfall auf RT-Standard, Portfolio-Optimizer, Live](docs/rt_pipeline.png)
+
+| Baustein | RT-Modus | Config-Schalter |
+|---|---|---|
+| Einstieg | Trigger-Limit-Orders **direkt an den Bändern** (keine Close-Bestätigung) | `strategy.entry_mode: "touch"` |
+| Mitte / Bänder | z. B. Donchian-Mitte 5, Bänder 7 / 11 / 15 % (Optimizer sucht Mitte, Bänder, SL) | `average_type`, `average_period`, `envelopes` |
+| Regime | keine ADX-/Trend-Sperren | `strategy.regime_filter: false` |
+| Richtung | nur Long, nur wenn BTC-Tages-Close > SMA200 | `strategy.btc_trend_filter: true`, `behavior.use_shorts: false` |
+| Stop-Loss | weiter Not-SL je Band (~25 %), nativ an der Entry-Order | `risk.stop_loss_pct` |
+| Take-Profit | wandernde Mitte (jeden Zyklus neu) | – |
+| Nach SL | Seite gesperrt, bis eine Kerze wieder über der Mitte schließt | `strategy.reentry_after_sl: "cross_average"` |
+| Größe | Kapitalanteil je Position (`position_size_pct`, auf die Bänder verteilt), Hebel 1; unter 5 USDT Notional wird auf die Bitget-Mindestorder angehoben und auf die Kontraktgröße (`market.amount_step`) aufgerundet | `risk.sizing: "fraction"` |
+
+Prüfung (Scratchpad-Forschung 2026-10-05, 846 Binance-Perps inkl. delisteter, 4h, OOS ab 2025-11-08):
+nur Long + BTC-Filter **+0.86 %/Trade (t = 6.5), 76 % der Coins positiv**; Survivorship-Effekt vernachlässigbar.
+Schwächen: im IS auf dem breiten Universum nur +0.05 %/Trade, Gewinn je Trade ohne Hebel unter 1 %,
+Positionen sind an Crash-Tagen stark korreliert. Alle Schalter sind optional — ohne sie läuft die
+klassische Logik unverändert (`strategy_mode: "classic"`). Live, Backtest und Portfolio-Simulator
+nutzen dieselben Funktionen aus `envelope_logic.py`; Tests: `tests/test_rt_mode.py`.
+
+### 🧭 Trading-Logik (Kurzfassung, klassischer Modus)
 - **Mean-Reversion via Envelopes**: Geht Long bei Rücklauf an die untere Hülle (Reversion zum Mittelwert), reduziert/flacht an der oberen Hülle
 - **Mittellinie als Bias-Filter**: Moving Average dient als Trend-Filter (Long nur wenn MA steigt)
 - **Volumen-Check**: Trades nur bei Mindestvolumen-Ratio zur Vermeidung illiquider Moves

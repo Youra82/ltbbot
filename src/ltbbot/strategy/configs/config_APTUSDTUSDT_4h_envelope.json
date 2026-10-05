@@ -1,0 +1,47 @@
+{
+    "_meta": {
+        "pnl_pct": 6.53,
+        "oos_pnl_pct": 1.22,
+        "oos_trades": 5,
+        "oos_profit_factor": 21.56,
+        "oos_win_rate": 80.0,
+        "oos_max_drawdown_pct": 0.06,
+        "is_oos_split_date": "2025-11-11",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "confirmed_by": "oos_gate",
+        "rt_default": true,
+        "optimized_at": "2026-10-05T14:05:51"
+    },
+    "market": {
+        "symbol": "APT/USDT:USDT",
+        "timeframe": "4h"
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 5,
+        "envelopes": [
+            0.07,
+            0.11,
+            0.15
+        ],
+        "trigger_price_delta_pct": 0.1,
+        "entry_mode": "touch",
+        "regime_filter": false,
+        "btc_trend_filter": true,
+        "reentry_after_sl": "cross_average"
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "leverage": 1,
+        "stop_loss_pct": 25.0,
+        "sizing": "fraction",
+        "position_size_pct": 30.0,
+        "min_notional_bump": true
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

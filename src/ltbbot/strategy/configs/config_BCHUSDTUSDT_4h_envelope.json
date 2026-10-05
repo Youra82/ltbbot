@@ -1,0 +1,46 @@
+{
+    "_meta": {
+        "pnl_pct": 14.41,
+        "oos_pnl_pct": 1.77,
+        "oos_trades": 17,
+        "oos_profit_factor": 2.22,
+        "oos_win_rate": 58.82,
+        "oos_max_drawdown_pct": 0.81,
+        "is_oos_split_date": "2025-11-11",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": true,
+        "optimized_at": "2026-10-05T14:03:04"
+    },
+    "market": {
+        "symbol": "BCH/USDT:USDT",
+        "timeframe": "4h",
+        "amount_step": 0.01
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 3,
+        "envelopes": [
+            0.04587,
+            0.06439,
+            0.07795
+        ],
+        "trigger_price_delta_pct": 0.1,
+        "entry_mode": "touch",
+        "regime_filter": false,
+        "btc_trend_filter": true,
+        "reentry_after_sl": "cross_average"
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "leverage": 1,
+        "stop_loss_pct": 28.79,
+        "sizing": "fraction",
+        "position_size_pct": 30.0,
+        "min_notional_bump": true
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": false
+    }
+}

@@ -15,8 +15,10 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 # Import necessary functions
 from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
                                             classify_regime, compute_band_sl_price, simulate_entry_fill,
-                                            stop_fill_price)
-from ltbbot.analysis.backtester import _resolve_ambiguous_exit, _get_fine_slice
+                                            stop_fill_price, is_touch_mode, btc_filter_enabled,
+                                            btc_trend_up_at, btc_side_allowed, reentry_blocks_until_cross,
+                                            reentry_block_cleared, fraction_band_amount, uses_fraction_sizing)
+from ltbbot.analysis.backtester import _resolve_ambiguous_exit, _get_fine_slice, load_btc_trend
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
 SLIPPAGE_PCT_EXIT  = 0.0005  # 0.05% Slippage auf Exit (Market Order TP/SL)
@@ -99,6 +101,13 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     sim_start_ts = pd.to_datetime(start_date + " 00:00:00+00:00", utc=True)
     sim_end_ts   = pd.to_datetime(end_date   + " 23:59:59+00:00", utc=True)
     simulation_timestamps = [ts for ts in sorted_timestamps if sim_start_ts <= ts <= sim_end_ts]
+
+    # RobotTraders-Modus (identisch zu backtester.py): BTC-Trend einmal laden, Sperre
+    # nach SL je Strategie und Seite (Index der SL-Kerze in der Strategie-Zeitreihe)
+    btc_trend = None
+    if any(btc_filter_enabled(si['params']) for si in strategies_data.values()) and sorted_timestamps:
+        btc_trend = load_btc_trend(sorted_timestamps[0], sorted_timestamps[-1])
+    sl_block = {sid: {'long': None, 'short': None} for sid in strategy_dfs.keys()}
 
     if not simulation_timestamps:
         logger.error("Keine gültigen Zeitstempel im Simulationszeitraum gefunden.")
@@ -270,6 +279,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                                                              strategy_pre_indicators[strategy_id]['atr_pct'].iloc[df_idx - 1])
                     used_margin -= layer.get('margin', 0.0) # Margin wieder freigeben
                     closed_bands_this_step[strategy_id].add((pos_side, layer.get('band')))
+                    if exit_reason == 'SL' and reentry_blocks_until_cross(strategies_data[strategy_id]['params']):
+                        sl_block[strategy_id][pos_side] = df_idx
                 else:
                     remaining_layers.append(layer)
 
@@ -281,6 +292,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
         # --- Einstiege prüfen ---
         # Wie Live Bot: bei offener Position nur weitere, noch nicht offene Baender
         # auf DERSELBEN Seite (Bitget One-Way-Modus, identisch zu backtester.py)
+        stopped_margin = 0.0
         if equity > 0:
             for strategy_id, strat_df in strategy_dfs.items():
                 if ts not in strat_df.index:
@@ -321,6 +333,21 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 # Trend-Bias (wie Live Bot)
                 current_use_longs  = use_longs and trend_direction != "DOWNTREND"
                 current_use_shorts = use_shorts and trend_direction != "UPTREND"
+                # BTC-Trendfilter + Sperre nach SL (RobotTraders-Modus, identisch zu backtester.py)
+                _btc_up = btc_trend_up_at(btc_trend, ts) if btc_filter_enabled(params) else None
+                current_use_longs  = current_use_longs and btc_side_allowed(params, 'long', _btc_up)
+                current_use_shorts = current_use_shorts and btc_side_allowed(params, 'short', _btc_up)
+                _blk = sl_block[strategy_id]
+                for _s in ('long', 'short'):
+                    if _blk[_s] is not None and df_idx - 1 >= _blk[_s] and reentry_block_cleared(
+                            _s, signal_candle['close'], signal_candle['average']):
+                        _blk[_s] = None
+                if _blk['long'] is not None:
+                    current_use_longs = False
+                if _blk['short'] is not None:
+                    current_use_shorts = False
+                touch_mode = is_touch_mode(params)
+                fraction_sizing = uses_fraction_sizing(params)
 
                 # Risiko basiert auf dem AKTUELL FREIEN Portfolio-Kapital, nicht auf
                 # dem vollen `equity` (2026-09-04 korrigiert): Live nutzt fuer
@@ -360,9 +387,10 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         if pd.isna(band_price) or band_price <= 0 or pd.isna(signal_candle['close']):
                             continue
                         # Close-Confirmation: letzte abgeschlossene Kerze muss jenseits des Bands geschlossen haben
-                        if side == 'long' and signal_candle['close'] > band_price:
+                        # (nicht im RobotTraders-Modus: dort liegt die Order direkt am Band)
+                        if not touch_mode and side == 'long' and signal_candle['close'] > band_price:
                             continue
-                        if side == 'short' and signal_candle['close'] < band_price:
+                        if not touch_mode and side == 'short' and signal_candle['close'] < band_price:
                             continue
                         sl_price = compute_band_sl_price(side, band_price, k - 1, params, regime, atr_value)
                         if sl_price is None:
@@ -376,7 +404,12 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                                                                   fine_bars=_entry_fine_bars)
                         if fill_price is None:
                             continue
-                        amount_coins = risk_amount_usd / sl_dist
+                        if fraction_sizing:
+                            amount_coins = fraction_band_amount(available_capital, params, band_price, num_envelopes)
+                            if amount_coins is None:
+                                continue
+                        else:
+                            amount_coins = risk_amount_usd / sl_dist
                         if amount_coins * band_price < MIN_NOTIONAL_USDT:
                             continue
                         candidates[side].append((fill_price, sl_price, amount_coins,
@@ -408,12 +441,22 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                             'margin': margin_required, 'band': band_k,
                         }
                         if stopped:
+                            # Marge eines in DIESER Kerze gefuellten UND gestoppten Bands bleibt bis Kerzenende belegt
+                            # (2026-10-05): die Fills kommen auf dem Weg nach unten VOR den Stops -- live lehnt
+                            # Bitget weitere Trigger mangels Marge ab. Vorher gab der Stop die Marge sofort frei,
+                            # im Crash 10.10.2025 oeffnete die Simulation so 30 USDT Notional bei 18 USDT Konto.
+                            used_margin += margin_required
+                            stopped_margin += margin_required
                             # SL noch in der Entry-Kerze erreicht (siehe simulate_entry_fill)
                             equity += _close_layer(strategy_id, layer, sl, 'SL',
                                                    pre['atr_pct'].iloc[df_idx - 1])
+                            if reentry_blocks_until_cross(params):
+                                sl_block[strategy_id][side] = df_idx
                             continue
                         used_margin += margin_required
                         open_portfolio_positions[strategy_id].append(layer)
+
+        used_margin = max(0.0, used_margin - stopped_margin)
 
     # --- Endauswertung ---
     logger.info("3/4: Bereite Analyse-Ergebnisse vor...")

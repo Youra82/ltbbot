@@ -548,7 +548,18 @@ def compute_min_capital(portfolio_files: list, strategies_data: dict, safety_mar
         timeframe = sd.get('timeframe', '?')
         risk_pct = risk.get('risk_per_entry_pct', 0.5)
         envelopes = strat.get('envelopes', [])
-        if 'sl_to_env1_ratio' in risk and envelopes and risk_pct > 0:
+        if risk.get('sizing') == 'fraction' and envelopes:
+            # Kapitalanteil-Modus: Marge je Band = Kapital * position_size_pct / Baender; darunter
+            # hebt der Bot auf die 5-USDT-Mindestorder an (min_notional_bump) -- dann ist die
+            # Position groesser als geplant. Mindestkapital = ab hier keine Anhebung mehr noetig.
+            lev = risk.get('leverage', 1) or 1
+            pos_pct = risk.get('position_size_pct', 30.0)
+            cap_needed = MIN_NOTIONAL_USDT * len(envelopes) * 100.0 / (pos_pct * lev)
+            details.append({'symbol': symbol, 'timeframe': timeframe, 'worst_band': None,
+                            'min_capital': round(cap_needed, 2),
+                            'note': 'Kapitalanteil-Modus: darunter Anhebung auf 5 USDT/Band (groessere Positionen)'})
+            min_capital_exact = max(min_capital_exact, cap_needed)
+        elif 'sl_to_env1_ratio' in risk and envelopes and risk_pct > 0:
             sl_ratio = risk['sl_to_env1_ratio']
             worst_band, worst_cap = None, 0.0
             for k, env_pct in enumerate(envelopes, 1):

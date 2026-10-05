@@ -92,7 +92,7 @@ fi
 # Umgebungsvariablen statt direkter Shell-Interpolation in den Python-Code --
 # das JSON kann Anfuehrungszeichen enthalten, die eine '$VAR'-Einbettung
 # zerbrechen wuerden.
-if [ -n "$SAVED_LB" ] && [ "$SAVED_LB" != "" ]; then
+if [ "$APPLY_RELEASE" != true ] && [ -n "$SAVED_LB" ] && [ "$SAVED_LB" != "" ]; then
     python3 -c "
 import json
 s = json.load(open('settings.json'))
@@ -100,7 +100,7 @@ s.setdefault('optimization_settings', {})['backtest_lookback_weeks'] = int('$SAV
 json.dump(s, open('settings.json', 'w'), indent=4)
 " 2>/dev/null && echo "   ✅ backtest_lookback_weeks=$SAVED_LB wiederhergestellt." || true
 fi
-if [ -n "$SAVED_OOS" ] && [ "$SAVED_OOS" != "None" ]; then
+if [ "$APPLY_RELEASE" != true ] && [ -n "$SAVED_OOS" ] && [ "$SAVED_OOS" != "None" ]; then
     python3 -c "
 import json
 s = json.load(open('settings.json'))
