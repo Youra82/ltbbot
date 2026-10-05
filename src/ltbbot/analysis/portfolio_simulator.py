@@ -17,7 +17,8 @@ from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, ca
                                             classify_regime, compute_band_sl_price, simulate_entry_fill,
                                             stop_fill_price, is_touch_mode, btc_filter_enabled,
                                             btc_trend_up_at, btc_side_allowed, reentry_blocks_until_cross,
-                                            reentry_block_cleared, fraction_band_amount, uses_fraction_sizing)
+                                            reentry_block_cleared, fraction_band_amount, uses_fraction_sizing,
+                                            average_col, btc_below50_at, short_regime_exit)
 from ltbbot.analysis.backtester import _resolve_ambiguous_exit, _get_fine_slice, load_btc_trend
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
@@ -232,13 +233,14 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
             current_candle = strat_df.iloc[df_idx]
             signal_candle = strat_df.iloc[df_idx - 1]
             c_open, c_high, c_low = current_candle['open'], current_candle['high'], current_candle['low']
-            tp_price_current = signal_candle['average']
-            tp_valid = pd.notna(tp_price_current) and tp_price_current > 0
             remaining_layers = []
 
             for layer in open_layers:
                 pos_side = layer['side']
                 pos_sl   = layer['sl_price']
+                # TP = Mitte der jeweiligen Seite (eigene Short-Mitte, falls konfiguriert)
+                tp_price_current = signal_candle[average_col(pos_side)]
+                tp_valid = pd.notna(tp_price_current) and tp_price_current > 0
                 exit_price = None; exit_reason = None
                 if pos_side == 'long':
                     sl_hit = c_low <= pos_sl
@@ -251,7 +253,11 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                     sl_gap = c_open >= pos_sl
                     tp_gap = tp_valid and c_open <= tp_price_current
 
-                if sl_gap:
+                _p = strategies_data[strategy_id]['params']
+                if pos_side == 'short' and short_regime_exit(_p) and btc_trend_up_at(btc_trend, ts):
+                    # Regime-Ausstieg (identisch zu backtester.py)
+                    exit_price, exit_reason = c_open, 'REGIME'
+                elif sl_gap:
                     exit_price, exit_reason = c_open, 'SL'
                 elif tp_gap:
                     exit_price, exit_reason = c_open, 'TP'
@@ -335,12 +341,13 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 current_use_shorts = use_shorts and trend_direction != "UPTREND"
                 # BTC-Trendfilter + Sperre nach SL (RobotTraders-Modus, identisch zu backtester.py)
                 _btc_up = btc_trend_up_at(btc_trend, ts) if btc_filter_enabled(params) else None
-                current_use_longs  = current_use_longs and btc_side_allowed(params, 'long', _btc_up)
-                current_use_shorts = current_use_shorts and btc_side_allowed(params, 'short', _btc_up)
+                _btc_b50 = btc_below50_at(btc_trend, ts) if btc_filter_enabled(params) else None
+                current_use_longs  = current_use_longs and btc_side_allowed(params, 'long', _btc_up, _btc_b50)
+                current_use_shorts = current_use_shorts and btc_side_allowed(params, 'short', _btc_up, _btc_b50)
                 _blk = sl_block[strategy_id]
                 for _s in ('long', 'short'):
                     if _blk[_s] is not None and df_idx - 1 >= _blk[_s] and reentry_block_cleared(
-                            _s, signal_candle['close'], signal_candle['average']):
+                            _s, signal_candle['close'], signal_candle[average_col(_s)]):
                         _blk[_s] = None
                 if _blk['long'] is not None:
                     current_use_longs = False
@@ -405,7 +412,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                         if fill_price is None:
                             continue
                         if fraction_sizing:
-                            amount_coins = fraction_band_amount(available_capital, params, band_price, num_envelopes)
+                            amount_coins = fraction_band_amount(available_capital, params, band_price, num_envelopes,
+                                                                side=side)
                             if amount_coins is None:
                                 continue
                         else:

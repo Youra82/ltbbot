@@ -79,7 +79,8 @@ RT_DEFAULT_TRIAL = {'average_type': 'DCM', 'average_period': 5, 'env1': 0.07, 'g
 def build_rt_params(average_type, average_period, envelopes, stop_loss_pct, rt=None):
     """Config-Bloecke (strategy/risk/behavior) fuer den RobotTraders-Modus."""
     rt = rt or RT_SETTINGS
-    return {
+    short = rt.get('short') if rt.get('use_shorts') else None
+    out = {
         'strategy': {
             'average_type': average_type, 'average_period': int(average_period),
             'envelopes': [round(e, 5) for e in envelopes],
@@ -96,6 +97,18 @@ def build_rt_params(average_type, average_period, envelopes, stop_loss_pct, rt=N
         },
         'behavior': {'use_longs': bool(rt.get('use_longs', True)), 'use_shorts': bool(rt.get('use_shorts', False))},
     }
+    if short:
+        # Short-Seite mit festen, gepoolt gepruefte Parametern (envelope_logic.short_params) --
+        # pro Coin nicht optimiert, zu wenige Short-Trades je Coin
+        out['strategy']['short'] = {'average_type': short.get('average_type', 'EMA'),
+                                    'average_period': int(short.get('average_period', 20)),
+                                    'envelopes': list(short.get('envelopes', [0.10, 0.14, 0.18])),
+                                    'btc_filter': short.get('btc_filter', 'sma200_sma50'),
+                                    'regime_exit': bool(short.get('regime_exit', True))}
+        out['risk']['short_stop_loss_pct'] = float(short.get('stop_loss_pct', 30.0))
+        if short.get('position_size_pct') is not None:
+            out['risk']['short_position_size_pct'] = float(short['position_size_pct'])
+    return out
 
 def oos_gate(oos_result, min_trades, min_profit_factor, max_drawdown_decimal):
     """OOS-Bestaetigungs-Kriterien (ohne Baseline-Vergleich) -- geteilt zwischen dem

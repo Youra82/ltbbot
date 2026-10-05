@@ -10,7 +10,8 @@
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
-        "optimized_at": "2026-10-05T13:57:55"
+        "optimized_at": "2026-10-05T13:57:55",
+        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite."
     },
     "market": {
         "symbol": "PEPE/USDT:USDT",
@@ -29,7 +30,18 @@
         "entry_mode": "touch",
         "regime_filter": false,
         "btc_trend_filter": true,
-        "reentry_after_sl": "cross_average"
+        "reentry_after_sl": "cross_average",
+        "short": {
+            "average_type": "EMA",
+            "average_period": 20,
+            "envelopes": [
+                0.1,
+                0.14,
+                0.18
+            ],
+            "btc_filter": "sma200_sma50",
+            "regime_exit": true
+        }
     },
     "risk": {
         "margin_mode": "isolated",
@@ -37,10 +49,12 @@
         "stop_loss_pct": 15.02,
         "sizing": "fraction",
         "position_size_pct": 30.0,
-        "min_notional_bump": true
+        "min_notional_bump": true,
+        "short_stop_loss_pct": 30.0,
+        "short_position_size_pct": 15.0
     },
     "behavior": {
         "use_longs": true,
-        "use_shorts": false
+        "use_shorts": true
     }
 }

@@ -21,7 +21,8 @@ from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, ca
                                             compute_band_sl_price, entry_blocked_by_sl, is_touch_mode,
                                             btc_filter_enabled, btc_trend_series, btc_trend_up_at, btc_side_allowed,
                                             reentry_blocks_until_cross, reentry_block_cleared,
-                                            fraction_band_amount, uses_fraction_sizing)
+                                            fraction_band_amount, uses_fraction_sizing, average_col,
+                                            btc_below50_at, short_regime_exit)
 from ltbbot.utils.exchange import Exchange, drop_incomplete_last_candle # Import hinzugefügt, falls Type Hinting verwendet wird (optional)
 
 
@@ -1298,14 +1299,44 @@ def arm_same_candle_reentry_guard(tracker_file_path: str, committed_bands_before
 
 def fetch_btc_trend_up(exchange: Exchange, logger: logging.Logger):
     """BTC-Tagestrend wie im Backtest (envelope_logic.btc_trend_series/btc_trend_up_at):
-    letzte ABGESCHLOSSENE BTC-Tageskerze, Close > SMA200. None bei Fehler (-> kein Long)."""
+    letzte ABGESCHLOSSENE BTC-Tageskerze. Returns (Close > SMA200, Close < SMA50) -- (None, None)
+    bei Fehler (-> BTC-Filter sperrt beide Seiten)."""
     try:
         raw = exchange.fetch_recent_ohlcv('BTC/USDT:USDT', '1d', limit=260)
         daily = drop_incomplete_last_candle(raw)
-        return btc_trend_up_at(btc_trend_series(daily), pd.Timestamp.now(tz='UTC'))
+        trend = btc_trend_series(daily, with_sma50=True)
+        now = pd.Timestamp.now(tz='UTC')
+        return btc_trend_up_at(trend, now), btc_below50_at(trend, now)
     except Exception as e:
         logger.warning(f"BTC-Trend nicht abrufbar ({e}) -- BTC-Filter sperrt vorsichtshalber.")
-        return None
+        return None, None
+
+
+def _close_short_on_regime(exchange: Exchange, symbol: str, tracker_file_path: str,
+                           telegram_config: dict, logger: logging.Logger):
+    """Regime-Ausstieg: alle Orders stornieren, Short per reduceOnly-Market schliessen, Tracker
+    zuruecksetzen (gleicher Ablauf wie _emergency_force_close, aber regulaerer Ausstieg)."""
+    try:
+        exchange.cancel_all_orders_for_symbol(symbol)
+    except Exception as e:
+        logger.error(f"Regime-Ausstieg {symbol}: Stornieren fehlgeschlagen: {e}")
+    try:
+        pl = exchange.fetch_open_positions(symbol)
+        if pl and float(pl[0].get('contracts', 0)) > 0:
+            exchange.place_market_order(symbol, 'buy', float(pl[0]['contracts']), reduce=True)
+    except Exception as e:
+        logger.error(f"Regime-Ausstieg {symbol}: Schliessen fehlgeschlagen: {e}", exc_info=True)
+        return
+    tracker_info = read_tracker_file(tracker_file_path)
+    tracker_info.update({"committed_bands": {"long": [], "short": []},
+                         "pending_band_orders": {"long": {}, "short": {}},
+                         "band_sl_orders": {"long": {}, "short": {}},
+                         "band_sl_prices": {"long": {}, "short": {}}, "take_profit_ids": []})
+    tracker_info.pop('last_notified_entry_price', None)
+    tracker_info.pop('last_notified_side', None)
+    update_tracker_file(tracker_file_path, tracker_info)
+    send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'),
+                 f"🔄 REGIME-AUSSTIEG {symbol}\nBTC schliesst wieder ueber SMA200 -- Short-Position geschlossen.")
 
 
 def update_sl_reentry_block(tracker_file_path: str, committed_before: dict, sl_prices_before: dict,
@@ -1350,7 +1381,8 @@ def blocked_sides_after_sl(tracker_file_path: str, df: pd.DataFrame, logger: log
     for side_key, ts_str in list(block.items()):
         if ts_str is None:
             continue
-        if last_ts > pd.Timestamp(ts_str) and reentry_block_cleared(side_key, last['close'], last.get('average')):
+        if last_ts > pd.Timestamp(ts_str) and reentry_block_cleared(
+                side_key, last['close'], last.get(average_col(side_key), last.get('average'))):
             block[side_key] = None
             changed = True
             logger.info(f"🔓 {symbol}: Close {last['close']:.6g} wieder jenseits der Mitte -- {side_key}-Sperre aufgehoben.")
@@ -1404,7 +1436,8 @@ def manage_existing_position(exchange: Exchange, position: dict, band_prices: di
 
     new_tp_ids = []
     try:
-        tp_price = band_prices.get('average')
+        # TP = Mitte der Positionsseite (eigene Short-Mitte, falls konfiguriert -- wie backtester.py)
+        tp_price = band_prices.get(average_col(pos_side), band_prices.get('average'))
         if tp_price is None or pd.isna(tp_price) or tp_price <= 0:
             logger.error("Ungültiger Average-Preis für TP. Überspringe TP-Platzierung.")
         else:
@@ -1697,7 +1730,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # 3. Positionsgröße (amount_coins) berechnen (geteilte Funktion mit Backtest im Kapitalanteil-Modus)
                 if fraction_sizing:
                     amount_coins = fraction_band_amount(balance, params, entry_price_for_calc, num_envelopes,
-                                                        amount_step=_amount_step)
+                                                        amount_step=_amount_step, side='long')
                     if amount_coins is None:
                         continue
                 else:
@@ -1843,7 +1876,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # 3. Positionsgröße (amount_coins) berechnen (geteilte Funktion mit Backtest im Kapitalanteil-Modus)
                 if fraction_sizing:
                     amount_coins = fraction_band_amount(balance, params, entry_price_for_calc, num_envelopes,
-                                                        amount_step=_amount_step)
+                                                        amount_step=_amount_step, side='short')
                     if amount_coins is None:
                         continue
                 else:
@@ -2074,11 +2107,18 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
                                     data_with_indicators.index[-1], _px, logger, symbol)
             blocked_sides |= blocked_sides_after_sl(tracker_file_path, data_with_indicators, logger, symbol)
         if btc_filter_enabled(params):
-            _btc_up = fetch_btc_trend_up(exchange, logger)
+            _btc_up, _btc_b50 = fetch_btc_trend_up(exchange, logger)
             for _side in ('long', 'short'):
-                if not btc_side_allowed(params, _side, _btc_up):
+                if not btc_side_allowed(params, _side, _btc_up, _btc_b50):
                     blocked_sides.add(_side)
-            logger.info(f"BTC-Trend (Tages-Close > SMA200): {_btc_up} -> gesperrt: {sorted(blocked_sides) or '-'}")
+            logger.info(f"BTC-Trend (Tages-Close > SMA200): {_btc_up}, < SMA50: {_btc_b50} -> gesperrt: {sorted(blocked_sides) or '-'}")
+            # Regime-Ausstieg (wie backtester.py): offene Shorts schliessen, sobald BTC ueber SMA200
+            if short_regime_exit(params) and _btc_up:
+                _pl = exchange.fetch_open_positions(symbol)
+                if _pl and _pl[0].get('side') == 'short':
+                    logger.warning(f"🔄 Regime-Ausstieg {symbol}: BTC wieder ueber SMA200 -- Short wird geschlossen.")
+                    _close_short_on_regime(exchange, symbol, tracker_file_path, telegram_config, logger)
+                    return
 
         # --- 3. Alle alten Orders der Strategie stornieren (wichtig!) ---
         cancel_strategy_orders(exchange, symbol, logger, tracker_file_path=tracker_file_path)

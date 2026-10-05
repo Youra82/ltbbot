@@ -57,6 +57,30 @@ Geht der Kurs stattdessen bis zum Not-SL, sperrt der Bot neue Long-Einstiege auf
 > marktweite Crash-Tage im Aufwärtstrend (10.10.2025: −31 % an einem Tag bei 20 USDT Kapital, weil die
 > 5-USDT-Mindestorder dann ~25 % des Kontos je Band bindet).
 
+#### 🔻 Short-Seite (A + B + C, seit 2026-10-05)
+
+Im BTC-Abwärtstrend handelt der Bot spiegelbildlich **Short** — mit eigenen Parametern, denn die
+gespiegelten Long-Werte verloren: Mitte **EMA 20**, Short-Bänder **+10 / +14 / +18 %**, Not-SL **30 %**,
+TP an der Short-Mitte. Drei Schutzhebel:
+
+| Hebel | Regel | Config |
+|---|---|---|
+| **A** Regime-Ausstieg | offene Shorts werden geschlossen, sobald BTC wieder über der SMA200 schließt | `strategy.short.regime_exit: true` |
+| **B** strenger Bärenfilter | neue Shorts nur bei BTC-Tages-Close **< SMA200 und < SMA50** (keine Shorts in Erholungsrallyes) | `strategy.short.btc_filter: "sma200_sma50"` |
+| **C** kleinere Shorts | 15 % statt 30 % Kapitalanteil je Short-Position (wirkt ab ~50 USDT Konto) | `risk.short_position_size_pct: 15` |
+
+Portfolio-Simulation (29 Strategien, je 20.63 USDT Start, echter Simulator):
+
+| Mix | 2020 – 2023 (Binance) | 10/2023 – 11/2025 | OOS 11/2025 – 10/2026 |
+|---|---|---|---|
+| nur Long | +913 % / DD 71.3 % | +1028 % / DD 27.5 % | +45 % / DD 5.1 % |
+| **Long + Short A+B+C (aktiv)** | **+1184 % / DD 75.7 %** | **+863 % / DD 27.5 %** | **+97 % / DD 32.6 %** |
+| Long + Short ohne BTC-Filter | −80 % / DD 81 % | −80 % / DD 83 % | −23 % / DD 71 % |
+
+> Shorts verlieren in kurzen Einbrüchen während eines Bullenmarkts (2024/25), gewinnen in echten
+> Bärenmärkten (2022, 2025/26). Der BTC-Filter ist der Kern: ohne ihn ruiniert die Kombination das Konto.
+> Auch **nur Long** hatte 2020–2023 (Mai-2021-Crash, Bärenmarkt 2022) über 70 % Drawdown.
+
 #### 🔁 Pipeline im RT-Modus
 
 ![Pipeline: Kandidaten, Optuna-Suche, OOS-Gate, Rückfall auf RT-Standard, Portfolio-Optimizer, Live](docs/rt_pipeline.png)

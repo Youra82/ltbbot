@@ -65,17 +65,23 @@ def reentry_blocks_until_cross(params):
     return params.get('strategy', {}).get('reentry_after_sl') == 'cross_average'
 
 
-def btc_trend_series(btc_daily, sma_period=200):
+def btc_trend_series(btc_daily, sma_period=200, with_sma50=False):
     """BTC-Trend aus Tageskerzen: True wenn Tages-Close > SMA200.
 
     Index = Zeitpunkt, AB dem der Wert bekannt ist (Tages-Open + 1 Tag = Kerzenschluss).
     Abfrage fuer eine Kerze mit Open ts per asof(ts) -- live identisch: letzte
     ABGESCHLOSSENE BTC-Tageskerze (drop_incomplete_last_candle)."""
     if btc_daily is None or len(btc_daily) == 0:
-        return pd.Series(dtype=bool)
+        return pd.DataFrame(columns=['up', 'below50']) if with_sma50 else pd.Series(dtype=bool)
     close = btc_daily['close'].astype(float)
-    up = close > close.rolling(sma_period).mean()
-    up = up[close.rolling(sma_period).mean().notna()]
+    sma = close.rolling(sma_period).mean()
+    up = (close > sma)[sma.notna()]
+    if with_sma50:
+        # zusaetzlich BTC-Close < SMA50 (strenger Baerenfilter fuer Shorts, siehe btc_side_allowed)
+        below50 = (close < close.rolling(50).mean())[sma.notna()]
+        out = pd.DataFrame({'up': up, 'below50': below50})
+        out.index = out.index + pd.Timedelta(days=1)
+        return out
     up.index = up.index + pd.Timedelta(days=1)
     return up
 
@@ -87,17 +93,41 @@ def btc_trend_up_at(btc_trend, ts):
     pos = btc_trend.index.searchsorted(ts, side='right') - 1
     if pos < 0:
         return None
+    if isinstance(btc_trend, pd.DataFrame):
+        return bool(btc_trend['up'].iloc[pos])
     return bool(btc_trend.iloc[pos])
 
 
-def btc_side_allowed(params, side, btc_up):
+def btc_below50_at(btc_trend, ts):
+    """BTC-Tagesclose < SMA50 zum Zeitpunkt ts (None ohne SMA50-Daten)."""
+    if not isinstance(btc_trend, pd.DataFrame) or len(btc_trend) == 0:
+        return None
+    pos = btc_trend.index.searchsorted(ts, side='right') - 1
+    return None if pos < 0 else bool(btc_trend['below50'].iloc[pos])
+
+
+def btc_side_allowed(params, side, btc_up, btc_below50=None):
     """Long nur bei BTC-Aufwaertstrend, Short nur bei Abwaertstrend (wenn Filter aktiv).
-    Unbekannter Trend (zu wenig BTC-Historie) -> kein Einstieg."""
+    Unbekannter Trend (zu wenig BTC-Historie) -> kein Einstieg.
+    Short mit strategy.short.btc_filter = 'sma200_sma50': zusaetzlich BTC-Close < SMA50
+    (keine neuen Shorts in Erholungsrallyes innerhalb des Baerenmarkts)."""
     if not btc_filter_enabled(params):
         return True
     if btc_up is None:
         return False
-    return btc_up if side == 'long' else (not btc_up)
+    if side == 'long':
+        return btc_up
+    if btc_up:
+        return False
+    sp = short_params(params) or {}
+    if sp.get('btc_filter') == 'sma200_sma50':
+        return btc_below50 is True
+    return True
+
+
+def short_regime_exit(params):
+    """Offene Shorts schliessen, sobald BTC wieder ueber der SMA200 schliesst (strategy.short.regime_exit)."""
+    return bool((short_params(params) or {}).get('regime_exit')) and btc_filter_enabled(params)
 
 
 def reentry_block_cleared(side, close_price, average_price):
@@ -107,7 +137,7 @@ def reentry_block_cleared(side, close_price, average_price):
     return close_price > average_price if side == 'long' else close_price < average_price
 
 
-def fraction_band_amount(free_capital, params, band_price, num_bands, amount_step=None):
+def fraction_band_amount(free_capital, params, band_price, num_bands, amount_step=None, side='long'):
     """Positionsgroesse im Kapitalanteil-Modus (risk.sizing == 'fraction').
 
     Marge je Band = freies Kapital * position_size_pct / Anzahl Baender, Notional =
@@ -123,7 +153,10 @@ def fraction_band_amount(free_capital, params, band_price, num_bands, amount_ste
     if band_price is None or band_price <= 0 or num_bands <= 0 or free_capital <= 0:
         return None
     lev = risk.get('leverage', 1) or 1
-    margin = free_capital * risk.get('position_size_pct', 30.0) / 100.0 / num_bands
+    pct = risk.get('position_size_pct', 30.0)
+    if side == 'short' and risk.get('short_position_size_pct') is not None:
+        pct = risk['short_position_size_pct']  # eigene (kleinere) Short-Groesse
+    margin = free_capital * pct / 100.0 / num_bands
     notional = margin * lev
     if notional < MIN_NOTIONAL_USDT:
         if not risk.get('min_notional_bump', True):
@@ -138,6 +171,35 @@ def fraction_band_amount(free_capital, params, band_price, num_bands, amount_ste
 
 def uses_fraction_sizing(params):
     return params.get('risk', {}).get('sizing') == 'fraction'
+
+
+# Short-Seite mit eigenen Parametern (2026-10-05): die gespiegelten Long-Werte (DCM 5, 7 %) verloren,
+# EMA 20 + Baender ab 10 % + SL 30 % + Short nur bei BTC < SMA200 bestand praeregistriert auf dem
+# ungesehenen Zeitraum 2020-06..2023-09 (Binance 846 Perps inkl. delisteter: +0.49 %/Trade, t=3.8)
+# und im OOS 11/2025-10/2026 (+0.42 %, t=3.1; Bitget +1.09 %). Schwach in kurzen Einbruechen im
+# Bullenmarkt (10/2023-11/2025: -0.39 %). Konfig: strategy.short = {average_type, average_period,
+# envelopes}, risk.short_stop_loss_pct. Ohne strategy.short gelten die Long-Werte fuer beide Seiten.
+
+def short_params(params):
+    """Eigener Short-Block (oder None -> Short nutzt Mitte/Baender der Long-Seite)."""
+    return params.get('strategy', {}).get('short') or None
+
+
+def average_col(side):
+    """Spalte der Mitte (= TP und Sperr-Referenz) fuer eine Seite."""
+    return 'average_short' if side == 'short' else 'average'
+
+
+def _compute_average(df, avg_type, avg_period):
+    if avg_type == 'DCM':
+        return ta.volatility.DonchianChannel(df['high'], df['low'], df['close'], window=avg_period).donchian_channel_mband()
+    if avg_type == 'SMA':
+        return ta.trend.sma_indicator(df['close'], window=avg_period)
+    if avg_type == 'EMA':
+        return ta.trend.ema_indicator(df['close'], window=avg_period)
+    if avg_type == 'WMA':
+        return ta.trend.wma_indicator(df['close'], window=avg_period)
+    raise ValueError(f"Ungültiger average_type: {avg_type}")
 
 
 def classify_regime(adx_value, close_price, average_price, sma20, sma50, strategy_params=None):
@@ -191,7 +253,9 @@ def compute_band_sl_price(side, band_price, band_index, params, regime, atr_valu
     envelopes = params['strategy'].get('envelopes', [0.03, 0.05, 0.08])
     sl_multiplier = 1.5 if regime in ("TREND", "STRONG_TREND") else 1.0
 
-    if 'sl_to_env1_ratio' in risk_params:
+    if side == 'short' and risk_params.get('short_stop_loss_pct') is not None:
+        sl_pct = risk_params['short_stop_loss_pct'] / 100.0 * sl_multiplier
+    elif 'sl_to_env1_ratio' in risk_params:
         env_pct = envelopes[band_index] if band_index < len(envelopes) else envelopes[0]
         sl_pct = env_pct * risk_params['sl_to_env1_ratio'] * sl_multiplier
     elif 'stop_loss_atr_multiplier' in risk_params:
@@ -475,18 +539,16 @@ def calculate_indicators_and_signals(df, params):
 
     df_copy = df.copy()
 
-    # --- Berechne den zentralen Durchschnitt ---
-    if avg_type == 'DCM':
-        ta_obj = ta.volatility.DonchianChannel(df_copy['high'], df_copy['low'], df_copy['close'], window=avg_period)
-        df_copy['average'] = ta_obj.donchian_channel_mband()
-    elif avg_type == 'SMA':
-        df_copy['average'] = ta.trend.sma_indicator(df_copy['close'], window=avg_period)
-    elif avg_type == 'EMA':
-        df_copy['average'] = ta.trend.ema_indicator(df_copy['close'], window=avg_period)
-    elif avg_type == 'WMA':
-        df_copy['average'] = ta.trend.wma_indicator(df_copy['close'], window=avg_period)
+    # --- Berechne den zentralen Durchschnitt (Long) und ggf. eigene Short-Mitte ---
+    df_copy['average'] = _compute_average(df_copy, avg_type, avg_period)
+    sp = short_params(params)
+    if sp:
+        df_copy['average_short'] = _compute_average(df_copy, sp.get('average_type', avg_type),
+                                                    sp.get('average_period', avg_period))
+        short_envelopes = sp.get('envelopes', envelopes)
     else:
-        raise ValueError(f"Ungültiger average_type: {avg_type}")
+        df_copy['average_short'] = df_copy['average']
+        short_envelopes = envelopes
 
     # --- Berechne ATR für SL-Berechnung ---
     atr_period = params.get('risk', {}).get('stop_loss_atr_period', 14)
@@ -497,21 +559,19 @@ def calculate_indicators_and_signals(df, params):
     # --- Berechne die Envelopes ---
     band_prices = {'average': None, 'long': [], 'short': []}
     for i, e_pct in enumerate(envelopes):
-        band_num = i + 1
-        high_col = f'band_high_{band_num}'
-        low_col = f'band_low_{band_num}'
-        df_copy[high_col] = df_copy['average'] / (1 - e_pct)
+        low_col = f'band_low_{i + 1}'
         df_copy[low_col] = df_copy['average'] * (1 - e_pct)
-
-        # Speichere die letzten Bandpreise für die Orderplatzierung
         if not df_copy.empty:
-             last_low_price = df_copy[low_col].iloc[-1]
-             last_high_price = df_copy[high_col].iloc[-1]
-             band_prices['long'].append(last_low_price)
-             band_prices['short'].append(last_high_price)
+            band_prices['long'].append(df_copy[low_col].iloc[-1])
+    for i, e_pct in enumerate(short_envelopes):
+        high_col = f'band_high_{i + 1}'
+        df_copy[high_col] = df_copy['average_short'] / (1 - e_pct)
+        if not df_copy.empty:
+            band_prices['short'].append(df_copy[high_col].iloc[-1])
 
     if not df_copy.empty:
         band_prices['average'] = df_copy['average'].iloc[-1]
+        band_prices['average_short'] = df_copy['average_short'].iloc[-1]
         band_prices['atr'] = float(df_copy['atr'].iloc[-1]) if pd.notna(df_copy['atr'].iloc[-1]) else None
 
     # Optional: Hier könnte man noch explizite Signal-Spalten hinzufügen,

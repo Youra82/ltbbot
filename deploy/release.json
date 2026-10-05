@@ -1,7 +1,8 @@
 {
-    "release_id": "2026-10-05-robottraders-rt",
+    "release_id": "2026-10-05-robottraders-rt-short-abc",
     "_info": "update.sh uebernimmt EINMALIG Configs (src/ltbbot/strategy/configs/) und active_strategies aus dem Repo, sobald diese Kennung neu ist. Danach gilt wieder der VPS-Stand (woechentlicher Portfolio-Optimizer, taegliche Parameter-Suche). Fuer ein neues Repo-Release die Kennung aendern.",
     "configs": 45,
     "optimizer": "RT-Modus (RobotTraders-Original): Orders am Band, Not-SL, nur Long bei BTC>SMA200, Sperre nach SL bis Close ueber Mitte, Hebel 1, 30 % Kapitalanteil je Position (mind. 5 USDT/Band). 45 Kandidaten 4h, 156 Wochen bis 2026-10-04, 80 Trials, IS/OOS 70/30, OOS-Gate PF>=1.3 mit >=5 Trades, sonst RT-Standardparameter (bestaetigt wenn IS>0 und OOS>=0).",
-    "_vorher": "Release 2026-10-04-rollback-envelope-9a404ef (klassische Envelope-Logik, 20 Configs) -- alte Configs in der Git-Historie."
+    "_vorher": "Release 2026-10-04-rollback-envelope-9a404ef (klassische Envelope-Logik, 20 Configs) -- alte Configs in der Git-Historie.",
+    "short": "Short-Seite A+B+C: EMA20, Baender 10/14/18 %, SL 30 %, nur BTC<SMA200 und <SMA50, Regime-Ausstieg bei BTC>SMA200, Short-Groesse 15 %. OOS 11/2025-10/2026 (29 Strat., 20.63 USDT): +97 %, MaxDD 32.6 %."
 }

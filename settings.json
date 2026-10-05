@@ -394,7 +394,22 @@
         "position_size_pct": 30.0,
         "btc_trend_filter": true,
         "use_longs": true,
-        "use_shorts": false,
-        "min_search_capital": 1000.0
+        "use_shorts": true,
+        "min_search_capital": 1000.0,
+        "short": {
+            "average_type": "EMA",
+            "average_period": 20,
+            "envelopes": [
+                0.1,
+                0.14,
+                0.18
+            ],
+            "stop_loss_pct": 30.0,
+            "btc_filter": "sma200_sma50",
+            "regime_exit": true,
+            "position_size_pct": 15.0
+        },
+        "_short_note": "2026-10-05: Short nur bei BTC-Tagesclose < SMA200, eigene Mitte/Baender/SL. Praeregistriert auf ungesehenem Zeitraum 2020-06..2023-09 bestanden (Binance 846 Perps inkl. delisteter: +0.49 %/Trade, t=3.8), OOS 11/2025-10/2026 +0.42 % (t=3.1), aber 10/2023-11/2025 (kurze Einbrueche im Bullenmarkt) -0.39 %. Gespiegelte Long-Werte (DCM 5, 7 %) verloren. PORTFOLIO-TEST 2026-10-05: mit Shorts OOS 11/2025-10/2026 +6.1 %/DD 35.8 % (1000 USDT), -24 %/DD 70.7 % (20.63 USDT); nur Long +45 %/DD 5.1 %. Duenner Vorteil (+0.26 %/Band-Trade brutto auf den 29 Coins) gegen 30-%-SL, gehaeufte SL in Baermarkt-Rallyes (04-05/2026) und beim Trendwechsel 08/2026 -> use_shorts AUS.",
+        "_short_abc_note": "2026-10-05 User-Wahl A+B+C: (A) Regime-Ausstieg -- offene Shorts schliessen, sobald BTC ueber SMA200; (B) Short nur bei BTC-Tagesclose < SMA200 UND < SMA50; (C) Short-Positionen 15 % statt 30 % (wirkt ab ~50 USDT Konto, darunter greift die 5-USDT-Mindestorder). Portfolio 29 Strat., 20.63 USDT: P1 2020-23 +1184 %/DD 75.7 %, P2 2023-25 +863 %/DD 27.5 %, P3 OOS 2025-26 +97 %/DD 32.6 % (nur Long: +913/71.3, +1028/27.5, +45/5.1)."
     }
 }

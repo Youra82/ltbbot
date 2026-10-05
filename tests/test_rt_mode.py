@@ -221,3 +221,92 @@ def test_filled_and_stopped_bands_keep_margin_within_candle():
     rows = [FLAT] * 40 + [[100, 100.2, 60.0, 65.0]] + [[65, 66, 64, 64.9]] * 3
     res = run_envelope_backtest(candles(rows), rt_params(), 12.0, show_progress=False, btc_trend=BTC_UP)
     assert res['trades_count'] == 2 and all(t['exit_reason'] == 'SL' for t in res['trades'])
+
+
+# ---------------- Short-Seite mit eigenen Parametern ----------------
+
+def rt_params_short(**kw):
+    p = rt_params(**kw)
+    p['strategy']['short'] = {'average_type': 'EMA', 'average_period': 20, 'envelopes': [0.10, 0.14, 0.18]}
+    p['risk']['short_stop_loss_pct'] = 30.0
+    p['behavior']['use_shorts'] = True
+    return p
+
+
+def _spike_series():
+    rows = [FLAT] * 60
+    rows.append([100, 111.0, 99.8, 104.0])    # Spitze ueber Short-Band 1 (EMA20 ~100 -> 111.1 /1.1? -> Band 1 = 100/0.9 = 111.1)
+    rows.append([104, 104.5, 99.0, 100.0])    # Ruecklauf zur Short-Mitte -> TP
+    rows += [FLAT] * 5
+    rows[60][1] = 111.5
+    return candles(rows)
+
+
+def test_short_uses_own_bands_and_only_in_btc_downtrend():
+    p = rt_params_short()
+    up = run_envelope_backtest(_spike_series(), p, 1000, show_progress=False, btc_trend=BTC_UP)
+    assert up['trades_count'] == 0                                     # BTC > SMA200: kein Short
+    down = run_envelope_backtest(_spike_series(), p, 1000, show_progress=False, btc_trend=BTC_DOWN)
+    assert down['trades_count'] == 1
+    t = down['trades'][0]
+    assert t['side'] == 'short' and t['band'] == 1 and t['exit_reason'] == 'TP' and t['pnl'] > 0
+    assert t['entry_price'] == pytest.approx(100 / 0.9 * 1.001, rel=1e-3)  # Short-Band 1: EMA-Mitte / (1-10 %)
+
+
+def test_short_sl_uses_short_stop_pct_and_bands_from_short_mid():
+    df = candles([FLAT] * 60)
+    p = rt_params_short()
+    df_ind, bp = calculate_indicators_and_signals(df, p)
+    assert bp['short'][0] == pytest.approx(bp['average_short'] / 0.9)
+    assert bp['long'][0] == pytest.approx(bp['average'] * 0.93)
+    from ltbbot.strategy.envelope_logic import compute_band_sl_price
+    assert compute_band_sl_price('short', 110.0, 0, p, 'UNCERTAIN') == pytest.approx(110.0 * 1.30)
+    assert compute_band_sl_price('long', 93.0, 0, p, 'UNCERTAIN') == pytest.approx(93.0 * 0.75)
+
+
+def test_live_places_short_orders_only_when_btc_down(tmp_path, no_telegram):
+    df = candles([FLAT] * 60)
+    p = rt_params_short()
+    df_ind, bp = calculate_indicators_and_signals(df, p)
+    ex = FakeExchange(price=100.0)
+    tm.place_entry_orders(ex, bp, p, 20.0, str(tmp_path / 't.json'), {}, log, df=df_ind, blocked_sides={'long'})
+    assert [o['side'] for o in ex.orders] == ['sell', 'sell', 'sell']
+    assert ex.orders[0]['price'] == pytest.approx(bp['average_short'] / 0.9)
+    assert ex.orders[0]['sl'] == pytest.approx(ex.orders[0]['price'] * 1.30)
+
+
+# ---------------- Short-Hebel A (Regime-Ausstieg), B (SMA50), C (Groesse) ----------------
+
+def _btc_frame(up, below50):
+    return pd.DataFrame({'up': [up], 'below50': [below50]}, index=[pd.Timestamp('2020-01-01', tz='UTC')])
+
+
+def test_short_sma50_filter_B():
+    p = rt_params_short()
+    p['strategy']['short']['btc_filter'] = 'sma200_sma50'
+    assert not btc_side_allowed(p, 'short', False, False)   # BTC unter SMA200, aber ueber SMA50 (Rallye)
+    assert btc_side_allowed(p, 'short', False, True)
+    res = run_envelope_backtest(_spike_series(), p, 1000, show_progress=False, btc_trend=_btc_frame(False, False))
+    assert res['trades_count'] == 0
+    res = run_envelope_backtest(_spike_series(), p, 1000, show_progress=False, btc_trend=_btc_frame(False, True))
+    assert res['trades_count'] == 1
+
+
+def test_short_regime_exit_A():
+    p = rt_params_short()
+    p['strategy']['short']['regime_exit'] = True
+    rows = [FLAT] * 60 + [[100, 111.5, 99.8, 104.0]] + [[104, 105, 103.5, 104.5]] * 6
+    df = candles(rows)
+    flip = df.index[63]                                       # BTC dreht ab Kerze 63 nach oben
+    trend = pd.DataFrame({'up': [False, True], 'below50': [True, False]}, index=[pd.Timestamp('2020-01-01', tz='UTC'), flip])
+    res = run_envelope_backtest(df, p, 1000, show_progress=False, btc_trend=trend)
+    assert res['trades_count'] == 1
+    t = res['trades'][0]
+    assert t['side'] == 'short' and t['exit_reason'] == 'REGIME' and t['exit_time'] == flip
+
+
+def test_short_position_size_C():
+    p = rt_params_short()
+    p['risk']['short_position_size_pct'] = 15.0
+    assert fraction_band_amount(1000.0, p, 10.0, 3, side='short') * 10.0 == pytest.approx(50.0)
+    assert fraction_band_amount(1000.0, p, 10.0, 3, side='long') * 10.0 == pytest.approx(100.0)

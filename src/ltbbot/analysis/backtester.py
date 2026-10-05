@@ -18,7 +18,8 @@ from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, ca
                                             classify_regime, compute_band_sl_price, simulate_entry_fill,
                                             stop_fill_price, is_touch_mode, btc_filter_enabled, btc_trend_series,
                                             btc_trend_up_at, btc_side_allowed, reentry_blocks_until_cross,
-                                            reentry_block_cleared, fraction_band_amount, uses_fraction_sizing)
+                                            reentry_block_cleared, fraction_band_amount, uses_fraction_sizing,
+                                            average_col, btc_below50_at, short_regime_exit)
 
 secrets_cache = None
 
@@ -261,7 +262,7 @@ def load_btc_trend(start_ts, end_ts):
         except Exception as e:
             logger.warning(f"BTC-Tageskerzen fuer den Trendfilter nicht ladbar: {e}")
             d = pd.DataFrame()
-        _BTC_TREND_CACHE[key] = btc_trend_series(d)
+        _BTC_TREND_CACHE[key] = btc_trend_series(d, with_sma50=True)
     return _BTC_TREND_CACHE[key]
 
 
@@ -471,12 +472,12 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
         closed_bands_this_candle = set()
         # TP = MA der letzten abgeschlossenen Kerze (live von manage_existing_position()
         # jeden Zyklus neu gesetzt)
-        tp_price_current = signal_candle['average']
-        tp_valid = pd.notna(tp_price_current) and tp_price_current > 0
-
         for pos in positions:
             pos_side = pos['side']
             pos_sl = pos['sl_price']
+            # TP = Mitte der jeweiligen Seite (eigene Short-Mitte, falls konfiguriert)
+            tp_price_current = signal_candle[average_col(pos_side)]
+            tp_valid = pd.notna(tp_price_current) and tp_price_current > 0
             exit_price = None
             exit_reason = None
 
@@ -491,7 +492,10 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 sl_gap = candle_open >= pos_sl
                 tp_gap = tp_valid and candle_open <= tp_price_current
 
-            if sl_gap:
+            if pos_side == 'short' and short_regime_exit(params) and btc_trend_up_at(btc_trend, timestamp):
+                # Regime-Ausstieg: BTC wieder ueber SMA200 -> offene Shorts zum Kerzen-Open schliessen
+                exit_price, exit_reason = candle_open, 'REGIME'
+            elif sl_gap:
                 # Preis oeffnet schon jenseits des SL -> Stop-Market fuellt zum Open
                 exit_price, exit_reason = candle_open, 'SL'
             elif tp_gap:
@@ -549,11 +553,12 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 current_use_shorts = use_shorts and trend_direction != "UPTREND"
                 # BTC-Trendfilter + Sperre nach SL (RobotTraders-Modus, geteilte Funktionen mit Live)
                 _btc_up = btc_trend_up_at(btc_trend, timestamp) if btc_filter_enabled(params) else None
-                current_use_longs = current_use_longs and btc_side_allowed(params, 'long', _btc_up)
-                current_use_shorts = current_use_shorts and btc_side_allowed(params, 'short', _btc_up)
+                _btc_b50 = btc_below50_at(btc_trend, timestamp) if btc_filter_enabled(params) else None
+                current_use_longs = current_use_longs and btc_side_allowed(params, 'long', _btc_up, _btc_b50)
+                current_use_shorts = current_use_shorts and btc_side_allowed(params, 'short', _btc_up, _btc_b50)
                 for _s in ('long', 'short'):
                     if sl_block[_s] is not None and i - 1 >= sl_block[_s] and reentry_block_cleared(
-                            _s, signal_candle['close'], signal_candle['average']):
+                            _s, signal_candle['close'], signal_candle[average_col(_s)]):
                         sl_block[_s] = None
                 if sl_block['long'] is not None:
                     current_use_longs = False
@@ -590,6 +595,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                         if (side, k) in open_bands or (side, k) in closed_bands_this_candle:
                             continue
                         band_col = f'band_low_{k}' if side == 'long' else f'band_high_{k}'
+                        if band_col not in signal_candle.index:
+                            continue
                         band_price = signal_candle.get(band_col, float('nan'))
                         if pd.isna(band_price) or band_price <= 0 or pd.isna(signal_candle['close']):
                             continue
@@ -614,7 +621,7 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                         # Groesse wie live: aus Band-Preis und SL-Abstand (bzw. Kapitalanteil)
                         if fraction_sizing:
                             amount_coins = fraction_band_amount(max(0.0, capital - used_margin), params,
-                                                                band_price, num_envelopes)
+                                                                band_price, num_envelopes, side=side)
                             if amount_coins is None:
                                 continue
                         else:
