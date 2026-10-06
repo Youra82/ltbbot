@@ -81,6 +81,22 @@ Portfolio-Simulation (29 Strategien, je 20.63 USDT Start, echter Simulator):
 > Bärenmärkten (2022, 2025/26). Der BTC-Filter ist der Kern: ohne ihn ruiniert die Kombination das Konto.
 > Auch **nur Long** hatte 2020–2023 (Mai-2021-Crash, Bärenmarkt 2022) über 70 % Drawdown.
 
+#### ⚙️ Aktuelle Einstellung (seit 2026-10-06): nur die aktuelle Phase zählt
+
+- **Rückblick 26 Wochen** für Pipeline, Portfolio-Optimizer und Scheduler; der Portfolio-Optimizer wählt auf den
+  vollen letzten 26 Wochen (keine 30-%-Reserve mehr).
+- **Positionsgröße 60 %, Hebel 2** (Shorts 30 %): größte Einstellung, bei der ein voller SL (3 Bänder, −25 %)
+  höchstens ~30 % des Kontos kostet.
+- Walk-Forward-Prüfung der Methode (Auswahl auf dem Vorhalbjahr, Test auf dem aktuellen Halbjahr 07.04.–06.10.2026,
+  20.63 USDT Start):
+
+| Größe / Hebel | Test-PnL | Max. DD | Verlust bei einem vollen SL |
+|---|---|---|---|
+| 30 % / 1 | +34.7 % | 5.2 % | ~7.5 % |
+| **60 % / 2 (aktiv)** | **+46.2 %** | **9.2 %** | **~30 %** |
+| 100 % / 2 | +59.1 % | 14.9 % | ~50 % |
+| 100 % / 3 | +92.1 % | 22.6 % | ~75 % |
+
 #### 🔁 Pipeline im RT-Modus
 
 ![Pipeline: Kandidaten, Optuna-Suche, OOS-Gate, Rückfall auf RT-Standard, Portfolio-Optimizer, Live](docs/rt_pipeline.png)

@@ -47,13 +47,13 @@
     },
     "risk": {
         "margin_mode": "isolated",
-        "leverage": 1,
+        "leverage": 2,
         "stop_loss_pct": 25.0,
         "sizing": "fraction",
-        "position_size_pct": 30.0,
+        "position_size_pct": 60.0,
         "min_notional_bump": true,
         "short_stop_loss_pct": 30.0,
-        "short_position_size_pct": 15.0
+        "short_position_size_pct": 30.0
     },
     "behavior": {
         "use_longs": true,
