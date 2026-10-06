@@ -16,6 +16,7 @@ import io
 import os
 import sys
 import json
+import pandas as pd
 import argparse
 from datetime import date, timedelta
 from tqdm import tqdm
@@ -219,7 +220,65 @@ def _send_telegram_doc(fpath, caption=''):
         pass
 
 
-def generate_trades_excel(final, strategies_data, capital, start_date, end_date):
+def _equity_series(final):
+    eq_df = final.get('equity_curve')
+    if eq_df is None or (hasattr(eq_df, 'empty') and eq_df.empty):
+        return None
+    if 'timestamp' in getattr(eq_df, 'columns', []):
+        eq_df = eq_df.set_index('timestamp')
+    return eq_df['equity'].astype(float)
+
+
+def phase_stats(final, oos_start):
+    """PnL/DD/Trades getrennt fuer Training (bis oos_start) und OOS (ab oos_start)."""
+    eq = _equity_series(final)
+    if eq is None or not oos_start:
+        return None
+    ts = pd.Timestamp(oos_start, tz='UTC')
+    out = {}
+    trades = final.get('trades_df')
+    for name, part in (('train', eq[eq.index < ts]), ('oos', eq[eq.index >= ts])):
+        if len(part) < 2:
+            out[name] = None
+            continue
+        dd = float(((part.cummax() - part) / part.cummax()).max() * 100)
+        n = 0
+        if trades is not None and len(trades):
+            ex = pd.to_datetime(trades['exit_time'], utc=True)
+            n = int((ex < ts).sum() if name == 'train' else (ex >= ts).sum())
+        out[name] = {'start': float(part.iloc[0]), 'end': float(part.iloc[-1]),
+                     'pnl_pct': (float(part.iloc[-1]) / float(part.iloc[0]) - 1) * 100 if part.iloc[0] > 0 else 0.0,
+                     'dd_pct': dd, 'trades': n}
+    return out
+
+
+def _simulate_until_today(config_files, capital, start_date):
+    """Gewaehltes Portfolio bis HEUTE simulieren (Bericht), unabhaengig vom Auswahl-Fenster."""
+    today = date.today().strftime('%Y-%m-%d')
+    sd = _build_strategies_data(config_files, start_date, today)
+    if not sd:
+        return None, sd, today
+    from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        res = run_portfolio_simulation(capital, sd, start_date, today, multi_band_entries=True)
+    return res, sd, today
+
+
+def _phase_text(stats, oos_start):
+    if not stats:
+        return ''
+    lines = []
+    if stats.get('train'):
+        t = stats['train']
+        lines.append(f"Training (Auswahl): bis {oos_start} | PnL {t['pnl_pct']:+.1f}% | MaxDD {t['dd_pct']:.1f}% | {t['trades']} Trades")
+    if stats.get('oos'):
+        o = stats['oos']
+        lines.append(f"OOS (nicht fuer Auswahl genutzt): ab {oos_start} | {o['start']:.2f} -> {o['end']:.2f} USDT | "
+                     f"PnL {o['pnl_pct']:+.1f}% | MaxDD {o['dd_pct']:.1f}% | {o['trades']} Trades")
+    return '\n'.join(lines)
+
+
+def generate_trades_excel(final, strategies_data, capital, start_date, end_date, oos_start=None):
     try:
         import openpyxl
         from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
@@ -255,8 +314,10 @@ def generate_trades_excel(final, strategies_data, capital, start_date, end_date)
         # backtester.py/portfolio_simulator.py/trade_manager.py.
         margin = round(calculate_position_margin(coins, entry_p, leverage), 4)
         equity += pnl
+        _exit = str(t.get('exit_time', t.get('entry_time', '')))
         rows.append({
             'Nr':            i,
+            'Phase':         ('OOS' if oos_start and pd.Timestamp(_exit[:19]) >= pd.Timestamp(oos_start) else 'Training'),
             'Datum':         str(t.get('exit_time', t.get('entry_time', '')))[:16].replace('T', ' '),
             'Coin':          symbol.split('/')[0] if '/' in symbol else symbol,
             'Symbol':        symbol,
@@ -280,7 +341,7 @@ def generate_trades_excel(final, strategies_data, capital, start_date, end_date)
     alt  = PatternFill('solid', fgColor='F2F2F2')
     brd  = Border(left=Side(style='thin', color='CCCCCC'), right=Side(style='thin', color='CCCCCC'),
                   top=Side(style='thin', color='CCCCCC'), bottom=Side(style='thin', color='CCCCCC'))
-    cw   = {'Nr': 6, 'Datum': 18, 'Coin': 10, 'Symbol': 22, 'Timeframe': 12, 'Richtung': 10,
+    cw   = {'Nr': 6, 'Phase': 10, 'Datum': 18, 'Coin': 10, 'Symbol': 22, 'Timeframe': 12, 'Richtung': 10,
              'Ergebnis': 14, 'Band': 8, 'Entry-Preis': 14, 'Exit-Preis': 14, 'Margin (USDT)': 14,
              'PnL (USDT)': 14, 'Gesamtkapital': 16}
     hdrs = list(rows[0].keys())
@@ -312,9 +373,18 @@ def generate_trades_excel(final, strategies_data, capital, start_date, end_date)
     eq  = final.get('end_capital', equity)
     n   = final.get('trade_count', len(trades))
     sr  = len(rows) + 3
-    for label, val in [('Zeitraum', f'{start_date} -> {end_date}'), ('Trades', n),
-                        ('Win-Rate', f'{wr:.1f}%'), ('PnL', f'{pnl:+.1f}%'),
-                        ('Endkapital', f'{eq:.2f} USDT'), ('Max Drawdown', f'{dd:.1f}%')]:
+    _summary_rows = [('Zeitraum', f'{start_date} -> {end_date}'), ('Trades', n),
+                     ('Win-Rate', f'{wr:.1f}%'), ('PnL', f'{pnl:+.1f}%'),
+                     ('Endkapital', f'{eq:.2f} USDT'), ('Max Drawdown', f'{dd:.1f}%')]
+    _ps = phase_stats(final, oos_start)
+    if _ps:
+        if _ps.get('train'):
+            _summary_rows.append(('Training (Auswahl)', f"bis {oos_start}: PnL {_ps['train']['pnl_pct']:+.1f}% | "
+                                  f"MaxDD {_ps['train']['dd_pct']:.1f}% | {_ps['train']['trades']} Trades"))
+        if _ps.get('oos'):
+            _summary_rows.append(('OOS (ungesehen)', f"ab {oos_start}: PnL {_ps['oos']['pnl_pct']:+.1f}% | "
+                                  f"MaxDD {_ps['oos']['dd_pct']:.1f}% | {_ps['oos']['trades']} Trades"))
+    for label, val in _summary_rows:
         ws.cell(row=sr, column=1, value=label).font = Font(bold=True)
         ws.cell(row=sr, column=2, value=val)
         sr += 1
@@ -332,7 +402,7 @@ PAIR_COLORS = [
 ]
 
 
-def generate_equity_html(final, capital, start_date, end_date, labels):
+def generate_equity_html(final, capital, start_date, end_date, labels, oos_start=None):
     try:
         import plotly.graph_objects as go
         from plotly.subplots import make_subplots
@@ -433,6 +503,15 @@ def generate_equity_html(final, capital, start_date, end_date, labels):
                   secondary_y=True)
     fig.add_hline(y=capital, line=dict(color='rgba(100,100,100,0.4)', width=1, dash='dash'),
                   annotation_text=f'Start {capital:.0f} USDT', annotation_position='top left')
+    if oos_start:
+        # OOS-Bereich: diese Daten hat der Portfolio-Optimizer bei der Auswahl NICHT gesehen
+        fig.add_vrect(x0=str(oos_start), x1=str(end_date), fillcolor='rgba(34,197,94,0.10)', line_width=0,
+                      annotation_text='OOS — nicht zur Auswahl genutzt', annotation_position='top left')
+        _ps = phase_stats(final, oos_start)
+        if _ps and _ps.get('oos'):
+            title += (f"<br>Training bis {oos_start}: {_ps['train']['pnl_pct']:+.1f}% / DD {_ps['train']['dd_pct']:.1f}%"
+                      f"  |  OOS: {_ps['oos']['pnl_pct']:+.1f}% / DD {_ps['oos']['dd_pct']:.1f}%"
+                      if _ps.get('train') else '')
     fig.update_layout(title=dict(text=title, font=dict(size=12), x=0.5, xanchor='center'),
                       height=700, template='plotly_white', hovermode='x unified',
                       dragmode='zoom',
@@ -446,7 +525,7 @@ def generate_equity_html(final, capital, start_date, end_date, labels):
     return outfile
 
 
-def _do_replot(settings: dict, capital: float, start_date: str, end_date: str) -> int:
+def _do_replot(settings: dict, capital: float, start_date: str, end_date: str, oos_start=None) -> int:
     print(f"\n{'─'*72}")
     print(f"{B}  ltbbot — Replot (aktives Portfolio){NC}")
     print(f"  Kapital: {capital:.0f} USDT | Zeitraum: {start_date} -> {end_date}")
@@ -506,11 +585,14 @@ def _do_replot(settings: dict, capital: float, start_date: str, end_date: str) -
                f"{len(matching)} Strategien | {n} Trades | WR: {wr:.1f}%\n"
                f"PnL: {pnl:+.1f}% | MaxDD: {dd:.1f}% | Equity: {eq:.2f} USDT\n"
                f"Zeitraum: {start_date} -> {end_date}")
+    _pt = _phase_text(phase_stats(final, oos_start), oos_start)
+    if _pt:
+        summary += "\n\n" + _pt
     _send_telegram(summary)
-    xlsx = generate_trades_excel(final, strategies_data, capital, start_date, end_date)
+    xlsx = generate_trades_excel(final, strategies_data, capital, start_date, end_date, oos_start=oos_start)
     if xlsx:
         _send_telegram_doc(xlsx, caption=f'{BOT_NAME} Trades | {n} Trades | WR: {wr:.1f}% | Equity: {eq:.2f} USDT')
-    html = generate_equity_html(final, capital, start_date, end_date, labels)
+    html = generate_equity_html(final, capital, start_date, end_date, labels, oos_start=oos_start)
     if html:
         _send_telegram_doc(html, caption=f'{BOT_NAME} Portfolio-Equity | PnL: {pnl:+.1f}% | MaxDD: {dd:.1f}%')
     return 0
@@ -642,8 +724,12 @@ def main() -> int:
     else:
         end_date = args.end_date or date.today().strftime('%Y-%m-%d')
 
+    # Bericht/Replot immer BIS HEUTE; der OOS-Teil (nach end_date) wird nur markiert, nicht zur Auswahl genutzt
+    oos_start = None
+    if end_date < date.today().strftime('%Y-%m-%d'):
+        oos_start = (pd.Timestamp(end_date) + pd.Timedelta(days=1)).strftime('%Y-%m-%d')
     if args.replot:
-        return _do_replot(settings, capital, start_date, end_date)
+        return _do_replot(settings, capital, start_date, date.today().strftime('%Y-%m-%d'), oos_start=oos_start)
 
     print(f"\n{'─'*72}")
     print(f"{B}  ltbbot — Automatische Portfolio-Optimierung (Envelope){NC}")
@@ -747,8 +833,17 @@ def main() -> int:
             else:
                 print(f"{Y}  settings.json NICHT geaendert.{NC}\n")
 
-    # Reports + Telegram (nur im auto-write Modus)
+    # Reports + Telegram (nur im auto-write Modus) -- Bericht BIS HEUTE (2026-10-06): die Auswahl
+    # nutzt nur das Trainingsfenster (bis end_date), Excel/Chart/Telegram zeigen aber den ganzen
+    # Zeitraum inkl. OOS, damit sichtbar ist, wie das gewaehlte Portfolio danach gelaufen waere.
     if args.auto_write:
+        report_end = end_date
+        if oos_start:
+            _full, _sd_full, report_end = _simulate_until_today(portfolio_files, capital, start_date)
+            if _full:
+                final, strategies_data = _full, _sd_full
+            else:
+                report_end, oos_start = end_date, None
         labels = [
             f"{strategies_data.get(f, {}).get('symbol', '?')}/{strategies_data.get(f, {}).get('timeframe', '?')}"
             for f in portfolio_files
@@ -761,14 +856,17 @@ def main() -> int:
         summary = (f"{BOT_NAME} Auto-Optimizer\n"
                    f"{len(portfolio_files)} Strategien | {n} Trades | WR: {wr:.1f}%\n"
                    f"PnL: {pnl:+.1f}% | MaxDD: {dd:.1f}% | Equity: {eq:.2f} USDT\n"
-                   f"Zeitraum: {start_date} -> {end_date}")
+                   f"Zeitraum: {start_date} -> {report_end}")
+        _pt = _phase_text(phase_stats(final, oos_start), oos_start)
+        if _pt:
+            summary += "\n\n" + _pt
         if min_cap_exact > 0:
             summary += f"\n\nMindestkapital: {min_cap_exact:.2f} USDT (empfohlen mit Puffer: {min_cap_reco:.2f} USDT)"
         _send_telegram(summary)
-        xlsx = generate_trades_excel(final, strategies_data, capital, start_date, end_date)
+        xlsx = generate_trades_excel(final, strategies_data, capital, start_date, report_end, oos_start=oos_start)
         if xlsx:
             _send_telegram_doc(xlsx, caption=f'{BOT_NAME} Trades | {n} Trades | WR: {wr:.1f}% | Equity: {eq:.2f} USDT')
-        html = generate_equity_html(final, capital, start_date, end_date, labels)
+        html = generate_equity_html(final, capital, start_date, report_end, labels, oos_start=oos_start)
         if html:
             _send_telegram_doc(html, caption=f'{BOT_NAME} Portfolio-Equity | PnL: {pnl:+.1f}% | MaxDD: {dd:.1f}%')
 
