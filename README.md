@@ -1,768 +1,308 @@
-# 📊 LTBBot - Envelope Trading Strategy Bot
+# 📊 LTBBot – Envelope-Trading-Bot (RobotTraders-Modus, Long + Short)
 
 <div align="center">
 
-![LTBBot Logo](https://img.shields.io/badge/LTBBot-v1.0-blue?style=for-the-badge)
+![LTBBot](https://img.shields.io/badge/LTBBot-RT--Modus-blue?style=for-the-badge)
 [![Python](https://img.shields.io/badge/Python-3.8+-green?style=for-the-badge&logo=python)](https://www.python.org/)
 [![CCXT](https://img.shields.io/badge/CCXT-4.3.5-red?style=for-the-badge)](https://github.com/ccxt/ccxt)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+[![Bitget](https://img.shields.io/badge/Börse-Bitget%20USDT--M-00c4b4?style=for-the-badge)](https://www.bitget.com/)
 
-**Ein hochoptimierter Trading-Bot basierend auf der Envelope-Strategie mit Mean-Reversion und automatischer Parameteroptimierung**
+**Mean-Reversion an Moving-Average-Envelopes auf Bitget-Perpetuals – Long im BTC-Aufwärtstrend, Short im BTC-Abwärtstrend,
+35 Strategien auf 6h / 4h / 2h / 1h, höchstens 10 gleichzeitig offen.**
 
-[Features](#-features) • [Installation](#-installation) • [Konfiguration](#-konfiguration) • [Live-Trading](#-live-trading) • [Pipeline](#-interaktives-pipeline-script) • [Monitoring](#-monitoring--status) • [Wartung](#-wartung)
+[Strategie](#-die-strategie) • [Ergebnisse](#-ergebnisse) • [Pipeline](#-pipeline-und-zeitfenster) • [Installation](#-installation) • [Live-Trading](#-live-trading) • [Werkzeuge](#-werkzeuge) • [Wartung](#-wartung)
 
 </div>
 
 ---
 
-## 📊 Übersicht
+## 📌 Stand (2026-10-07)
 
-LTBBot ist ein spezialisierter Trading-Bot, der die Envelope-Strategie (Moving Average Envelopes) verwendet, um profitable Trading-Gelegenheiten durch Mean-Reversion zu identifizieren. Das System nutzt automatische Parameter-Optimierung und kann mehrere Handelspaare gleichzeitig verwalten.
+| Baustein | Einstellung |
+|---|---|
+| Modus | `strategy_mode: "rt"` – RobotTraders-Original-Envelope, ehrlich nachgetestet |
+| Seiten | **Long** wenn BTC-Tages-Close > SMA200, **Short** wenn BTC < SMA200 **und** < SMA50 |
+| Portfolio | **35 Strategien**: 6h 5 · 4h 10 · 2h 10 · 1h 10 (jedes Symbol nur einmal) |
+| Gleichzeitig offen | **max. 10 Strategien** mit Position (Live und Backtest identisch) |
+| Größe | Long **60 %**, Short **30 %** des Kontos je Position, **Hebel 2**, min. 5 USDT je Band |
+| Prüfzeitraum | **OOS = fest die letzten 26 Wochen**; trainiert und ausgewählt wird nur davor |
+| Backtest 01.05.–07.10.2026 | 20 → **85.63 USDT (+328 %)**, MaxDD **19.1 %**, 222 Trades, Trefferquote 79 %, Ø **+3.13 %/Trade** |
 
-### 🤖 Aktiver Modus: RobotTraders-Original (seit 2026-10-05)
+> ⚠️ Im Training (10/2024–04/2026, inkl. Crash vom 10.10.2025) hatte dasselbe Portfolio einen **MaxDD von 55.9 %**.
+> Die gute OOS-Phase ist kein Versprechen – siehe [Risiken](#️-risiken).
 
-`settings.json::optimization_settings.strategy_mode = "rt"` — Rückkehr zum Ursprung des ltbbot
-([RobotTraders Envelope](https://github.com/RobotTraders)), ehrlich nachgetestet:
+---
 
-![ltbbot RT-Modus: Mitte, drei Kauf-Bänder und die sechs Bausteine](docs/rt_strategy_overview.png)
+## 🤖 Die Strategie
 
-#### 🧩 So entsteht ein Trade
+![ltbbot RT-Modus: Long- und Short-Bänder an einer aktiven Config und die acht Bausteine](docs/rt_strategy_overview.png)
+
+Der Bot legt um eine gleitende **Mitte** drei Bänder darunter (Long) und drei darüber (Short). Fällt der Kurs ins
+untere Band, wird gekauft; der Gewinn wird an der **Mitte** mitgenommen. Short funktioniert spiegelbildlich, aber mit
+eigenen, festen Parametern (die gespiegelten Long-Werte verloren im Test).
+
+| Baustein | Long | Short | Config-Schalter |
+|---|---|---|---|
+| Mitte | vom Optimizer gesucht (SMA / EMA / Donchian …) | **EMA 20** | `average_type`, `average_period`, `strategy.short.*` |
+| Bänder | 3 Bänder, vom Optimizer gesucht (RT-Standard −7 / −11 / −15 %) | **+10 / +14 / +18 %** | `envelopes`, `strategy.short.envelopes` |
+| Einstieg | Trigger-Order **direkt am Band** (Docht genügt, kein Close nötig) | gleich | `strategy.entry_mode: "touch"` |
+| Not-SL | je Band, vom Optimizer gesucht, nativ an der Entry-Order | **30 %** | `risk.stop_loss_pct`, `risk.short_stop_loss_pct` |
+| Take-Profit | wandernde Mitte, jeden 15-Min-Zyklus neu gelegt | Short-Mitte | – |
+| BTC-Filter | BTC-Tages-Close > SMA200 | BTC < SMA200 **und** < SMA50 | `strategy.btc_trend_filter`, `strategy.short.btc_filter: "sma200_sma50"` |
+| Regime-Ausstieg | – | offene Shorts zu, sobald BTC wieder > SMA200 | `strategy.short.regime_exit: true` |
+| Nach SL | Seite gesperrt, bis eine Kerze wieder **über** der Mitte schließt | spiegelbildlich | `strategy.reentry_after_sl: "cross_average"` |
+| Größe | 60 % des Kontos, auf die Bänder verteilt | 30 % | `risk.position_size_pct`, `risk.short_position_size_pct` |
+| Hebel | 2 | 2 | `risk.leverage` |
+| Mindestorder | unter 5 USDT Notional wird auf die Bitget-Mindestorder angehoben und auf die Kontraktgröße aufgerundet | gleich | `risk.min_notional_bump`, `market.amount_step` |
+| Positions-Grenze | höchstens 10 Strategien gleichzeitig mit Position, sonst keine neuen Einstiege | gleich | `live_trading_settings.max_concurrent_positions` |
+| ADX / Trend-Sperren | keine | keine | `strategy.regime_filter: false` |
+
+Live, Backtest und Portfolio-Simulator nutzen **dieselben Funktionen** aus
+[`envelope_logic.py`](src/ltbbot/strategy/envelope_logic.py) (BTC-Filter, Sperre nach SL, Größe, Positions-Grenze,
+Regime-Ausstieg). Tests: [`tests/test_rt_mode.py`](tests/test_rt_mode.py).
+
+### 🧭 Welche Seite darf handeln?
+
+![BTC-Tageschart mit SMA200 und SMA50: grün Long erlaubt, rot Short erlaubt, sonst Pause](docs/rt_btc_regime.png)
+
+Grün = nur Long, rot = nur Short, dunkel = Pause (BTC unter SMA200, aber über SMA50 – typische Erholungsrallye, in der
+Shorts früher verloren). Gemessen wird an der **letzten abgeschlossenen** BTC-Tageskerze, live wie im Backtest.
+
+### 🧩 So entsteht ein Trade
 
 ![Entstehung eines Trades: Bänder, Kauf-Trigger, Fill im Docht, wandernder TP, Ausstieg an der Mitte](docs/rt_trade_lifecycle.png)
 
-*Echter Backtest-Trade (NEAR/USDT 4h, 22.08.2026, Out-of-Sample) mit der ausgelieferten Config:*
+*Echter Backtest-Trade im OOS mit der ausgelieferten Config:*
 
-1. **Kerze schließt** → Mitte (Donchian 5) und die drei Bänder (−7 / −11 / −15 %) werden aus den *abgeschlossenen* Kerzen neu berechnet — kein Blick in die laufende Kerze.
-2. **BTC-Filter prüfen**: Tages-Close von BTC > SMA200? Nur dann liegen Kauf-Trigger an allen drei Bändern; an jede Entry-Order ist ihr eigener Not-SL (−25 %) direkt angehängt (Bitget legt ihn beim Fill an).
-3. **Docht taucht ins Band** → Band 1, 2 und 3 werden nacheinander gefüllt (tiefer = günstiger).
+1. **Kerze schließt** → Mitte und Bänder werden aus den *abgeschlossenen* Kerzen neu berechnet – kein Blick in die laufende Kerze.
+2. **Filter prüfen**: BTC-Regime erlaubt die Seite, weniger als 10 Strategien haben eine Position, keine Sperre nach SL.
+   Dann liegen Trigger-Orders an allen drei Bändern; jede trägt ihren eigenen Not-SL (Bitget legt ihn beim Fill an).
+3. **Docht taucht ins Band** → Band 1, 2, 3 werden nacheinander gefüllt (tiefer = günstiger).
 4. **TP wandert**: jeden 15-Min-Zyklus wird ein gebündelter TP an die aktuelle Mitte gelegt.
-5. **Ausstieg an der Mitte** → alle Bänder schließen gemeinsam: Band 1 **+7.9 %**, Band 2 **+12.7 %**, Band 3 **+18.0 %**.
+5. **Ausstieg an der Mitte** → alle Bänder schließen gemeinsam. Die Prozentzahlen im Bild sind Kursbewegung; aufs
+   eingesetzte Kapital wirkt Hebel 2.
 
-Geht der Kurs stattdessen bis zum Not-SL, sperrt der Bot neue Long-Einstiege auf dem Coin, bis eine Kerze wieder **über** der Mitte schließt (RobotTraders-`ReentryGuard`).
-
-#### 📈 Ergebnisse (Out-of-Sample, 11.11.2025 – 04.10.2026)
-
-![Pipeline-Ergebnis je Coin im Out-of-Sample](docs/rt_oos_per_coin.png)
-
-![Out-of-Sample-Equity des nur mit IS-Daten gewählten Portfolios](docs/rt_oos_equity.png)
-
-| Prüfung (Startkapital 20.63 USDT, Hebel 1) | Ergebnis | Max. DD | Trades | Ø je Trade |
-|---|---|---|---|---|
-| Portfolio nur mit IS-Daten gewählt (29 Strategien), OOS simuliert | **+45.0 %** | **5.1 %** | 80 | **+2.10 %** |
-| Letzte 365 Tage inkl. Crash 10.10.2025 (19 Strategien) | +23.9 % | 31.4 % | 113 | +0.73 % |
-
-> ⚠️ **Wichtig:** Der BTC-Filter legt den Bot in Bärenphasen komplett still. Im OOS-Fenster gab es von
-> 11/2025 bis Ende 08/2026 **keinen einzigen Trade** (BTC unter SMA200) — die +45 % entstanden in den
-> ~6 Wochen danach. Das schützt das Kapital, bedeutet aber monatelange Pausen. Größtes Risiko sind
-> marktweite Crash-Tage im Aufwärtstrend (10.10.2025: −31 % an einem Tag bei 20 USDT Kapital, weil die
-> 5-USDT-Mindestorder dann ~25 % des Kontos je Band bindet).
-
-#### 🔻 Short-Seite (A + B + C, seit 2026-10-05)
-
-Im BTC-Abwärtstrend handelt der Bot spiegelbildlich **Short** — mit eigenen Parametern, denn die
-gespiegelten Long-Werte verloren: Mitte **EMA 20**, Short-Bänder **+10 / +14 / +18 %**, Not-SL **30 %**,
-TP an der Short-Mitte. Drei Schutzhebel:
-
-| Hebel | Regel | Config |
-|---|---|---|
-| **A** Regime-Ausstieg | offene Shorts werden geschlossen, sobald BTC wieder über der SMA200 schließt | `strategy.short.regime_exit: true` |
-| **B** strenger Bärenfilter | neue Shorts nur bei BTC-Tages-Close **< SMA200 und < SMA50** (keine Shorts in Erholungsrallyes) | `strategy.short.btc_filter: "sma200_sma50"` |
-| **C** kleinere Shorts | 15 % statt 30 % Kapitalanteil je Short-Position (wirkt ab ~50 USDT Konto) | `risk.short_position_size_pct: 15` |
-
-Portfolio-Simulation (29 Strategien, je 20.63 USDT Start, echter Simulator):
-
-| Mix | 2020 – 2023 (Binance) | 10/2023 – 11/2025 | OOS 11/2025 – 10/2026 |
-|---|---|---|---|
-| nur Long | +913 % / DD 71.3 % | +1028 % / DD 27.5 % | +45 % / DD 5.1 % |
-| **Long + Short A+B+C (aktiv)** | **+1184 % / DD 75.7 %** | **+863 % / DD 27.5 %** | **+97 % / DD 32.6 %** |
-| Long + Short ohne BTC-Filter | −80 % / DD 81 % | −80 % / DD 83 % | −23 % / DD 71 % |
-
-> Shorts verlieren in kurzen Einbrüchen während eines Bullenmarkts (2024/25), gewinnen in echten
-> Bärenmärkten (2022, 2025/26). Der BTC-Filter ist der Kern: ohne ihn ruiniert die Kombination das Konto.
-> Auch **nur Long** hatte 2020–2023 (Mai-2021-Crash, Bärenmarkt 2022) über 70 % Drawdown.
-
-#### ⚙️ Aktuelle Einstellung (seit 2026-10-06): nur die aktuelle Phase zählt
-
-- **Rückblick 26 Wochen** für Pipeline, Portfolio-Optimizer und Scheduler; der Portfolio-Optimizer wählt auf den
-  vollen letzten 26 Wochen (keine 30-%-Reserve mehr).
-- **Positionsgröße 60 %, Hebel 2** (Shorts 30 %): größte Einstellung, bei der ein voller SL (3 Bänder, −25 %)
-  höchstens ~30 % des Kontos kostet.
-- Walk-Forward-Prüfung der Methode (Auswahl auf dem Vorhalbjahr, Test auf dem aktuellen Halbjahr 07.04.–06.10.2026,
-  20.63 USDT Start):
-
-| Größe / Hebel | Test-PnL | Max. DD | Verlust bei einem vollen SL |
-|---|---|---|---|
-| 30 % / 1 | +34.7 % | 5.2 % | ~7.5 % |
-| **60 % / 2 (aktiv)** | **+46.2 %** | **9.2 %** | **~30 %** |
-| 100 % / 2 | +59.1 % | 14.9 % | ~50 % |
-| 100 % / 3 | +92.1 % | 22.6 % | ~75 % |
-
-#### 🗓️ Stand 2026-10-07: OOS 26 Wochen, 4 Timeframes, Quote, max. 10 Positionen
-
-- **OOS = fest die letzten 26 Wochen**, trainiert wird davor je Timeframe (6h/4h 1095, 2h 730, 1h 548 Tage) —
-  `oos_weeks`, `train_days_by_timeframe` in `settings.json`, zentral in `src/ltbbot/utils/oos_window.py`.
-- **102 Kandidaten × 6h/4h/2h/1h**; Portfolio-Optimizer mit **Quote je Timeframe** (`portfolio_quota`: 10–15, jedes Symbol einmal).
-- **Höchstens 10 Strategien gleichzeitig mit Position** (`live_trading_settings.max_concurrent_positions`, Live + Simulator).
-- Backtest 01.05.–07.10.2026, 20 USDT, 35 Strategien: **+340.5 %, MaxDD 19.1 %, 222 Trades, +3.13 %/Trade**
-  (Auswahl nur auf Training bis 08.04.2026). Im Training (10/2024–04/2026, inkl. Crash 10.10.2025) MaxDD 55.9 %.
-
-#### 🔁 Pipeline im RT-Modus
-
-![Pipeline: Kandidaten, Optuna-Suche, OOS-Gate, Rückfall auf RT-Standard, Portfolio-Optimizer, Live](docs/rt_pipeline.png)
-
-| Baustein | RT-Modus | Config-Schalter |
-|---|---|---|
-| Einstieg | Trigger-Limit-Orders **direkt an den Bändern** (keine Close-Bestätigung) | `strategy.entry_mode: "touch"` |
-| Mitte / Bänder | z. B. Donchian-Mitte 5, Bänder 7 / 11 / 15 % (Optimizer sucht Mitte, Bänder, SL) | `average_type`, `average_period`, `envelopes` |
-| Regime | keine ADX-/Trend-Sperren | `strategy.regime_filter: false` |
-| Richtung | nur Long, nur wenn BTC-Tages-Close > SMA200 | `strategy.btc_trend_filter: true`, `behavior.use_shorts: false` |
-| Stop-Loss | weiter Not-SL je Band (~25 %), nativ an der Entry-Order | `risk.stop_loss_pct` |
-| Take-Profit | wandernde Mitte (jeden Zyklus neu) | – |
-| Nach SL | Seite gesperrt, bis eine Kerze wieder über der Mitte schließt | `strategy.reentry_after_sl: "cross_average"` |
-| Größe | Kapitalanteil je Position (`position_size_pct`, auf die Bänder verteilt), Hebel 1; unter 5 USDT Notional wird auf die Bitget-Mindestorder angehoben und auf die Kontraktgröße (`market.amount_step`) aufgerundet | `risk.sizing: "fraction"` |
-
-Prüfung (Scratchpad-Forschung 2026-10-05, 846 Binance-Perps inkl. delisteter, 4h, OOS ab 2025-11-08):
-nur Long + BTC-Filter **+0.86 %/Trade (t = 6.5), 76 % der Coins positiv**; Survivorship-Effekt vernachlässigbar.
-Schwächen: im IS auf dem breiten Universum nur +0.05 %/Trade, Gewinn je Trade ohne Hebel unter 1 %,
-Positionen sind an Crash-Tagen stark korreliert. Alle Schalter sind optional — ohne sie läuft die
-klassische Logik unverändert (`strategy_mode: "classic"`). Live, Backtest und Portfolio-Simulator
-nutzen dieselben Funktionen aus `envelope_logic.py`; Tests: `tests/test_rt_mode.py`.
-
-### 🧭 Trading-Logik (Kurzfassung, klassischer Modus)
-- **Mean-Reversion via Envelopes**: Geht Long bei Rücklauf an die untere Hülle (Reversion zum Mittelwert), reduziert/flacht an der oberen Hülle
-- **Mittellinie als Bias-Filter**: Moving Average dient als Trend-Filter (Long nur wenn MA steigt)
-- **Volumen-Check**: Trades nur bei Mindestvolumen-Ratio zur Vermeidung illiquider Moves
-- **Risk Layer**: Fester Stop-Loss/Take-Profit + optionaler Trailing-Stop; Positionsgröße abhängig von Risiko je Trade
-- **Optimizer-Loop**: Automatische Suche nach optimalen Envelope-Bandbreiten, MA-Längen und SL/TP-Kombinationen
-- **Execution**: CCXT für Order-Platzierung mit realistischer Slippage-Simulation
-
-### 🔍 Strategie-Visualisierung
-```mermaid
-flowchart LR
-    A["OHLCV Marktdaten"]
-    B["Moving Average<br/>Trend-Filter"]
-    C["Envelope Bands<br/>Obere/Untere Hülle"]
-    D["Signal-Check<br/>Preis an Hülle?"]
-    E["Volume-Filter<br/>Liquidität OK?"]
-    F["Risk Engine<br/>SL/TP Setup"]
-    G["Order Router (CCXT)"]
-
-    A --> B
-    A --> C
-    B & C --> D --> E --> F --> G
-```
-
-### 📈 Trade-Beispiel (Entry/SL/TP)
-
-![ltbbot Beispiel-Trade: Entry an der unteren Envelope, Exit an der Mittellinie](docs/trade_example.png)
-
-*Echter Trade aus dem Backtest (ADA/USDT:USDT, 4h, 2026-01-19): Long-Entry beim Touch der unteren Hülle (Band 1), Exit beim Rücklauf zur EMA-Mittellinie (TP) — ohne Trailing-Erweiterung, siehe Varianten unten.*
-
-- **Setup**: Preis dippt an die untere Envelope; Volumen ok; MA-Slope leicht steigend (Uptrend-Filter)
-- **Entry**: Long an der unteren Hülle mit Telegram-Alert
-- **Initial SL**: Unter letztem Swing-Low oder unter der unteren Hülle - x% Puffer
-- **TP**: Rückkehr zur Mittellinie oder obere Hülle (konservativ/aggressiv wählbar)
-- **Trailing**: Nach Erreichen der Mittellinie Trail unter das letzte Higher Low nachziehen; lässt Ausdehnung bis zur oberen Hülle zu
+Geht der Kurs stattdessen bis zum Not-SL, sperrt der Bot diese Seite auf dem Coin, bis eine Kerze wieder über (Long)
+bzw. unter (Short) der Mitte schließt (RobotTraders-`ReentryGuard`).
 
 ---
 
-## 🚀 Features
+## 📈 Ergebnisse
 
-### Trading Features
-- ✅ Envelope-basierte Ein- und Ausstiegssignale
-- ✅ Unterstützt mehrere Kryptowährungspaare (BTC, ETH, SOL, DOGE, etc.)
-- ✅ Flexible Timeframe-Unterstützung (15m, 30m, 1h, 4h, 1d)
-- ✅ Automatische Positionsgröße basierend auf verfügbarem Kapital
-- ✅ Volumen-basierte Filter für höhere Signal-Qualität
-- ✅ Fester Stop-Loss und Take-Profit Management
-- ✅ Telegram-Benachrichtigungen bei neuen Signalen und Trades
+### Backtest 01.05.2026 – 07.10.2026 (20 USDT Gesamtkapital)
 
-### Technical Features
-- ✅ CCXT Integration für mehrere Börsen
-- ✅ Moving Average Envelope Indikatoren
-- ✅ Optuna Hyperparameter-Optimierung
-- ✅ Backtesting mit realistischer Slippage-Simulation (Live-Bot-Aligned)
-- ✅ Robust Error-Handling und Logging
-- ✅ Walk-Forward-Analyse für robuste Parameter
-- ✅ Portfolio-Optimierung (Greedy Calmar-Ratio + Einzelstrategie-Verifikation)
-- ✅ Regime-Filter (ADX-basiert: TREND, STRONG_TREND, NEUTRAL)
-- ✅ Konditionelles Config-Speichern (nur besser → überschreiben)
+![Equity, Drawdown und gleichzeitig offene Strategien des Live-Portfolios seit 01.05.2026](docs/rt_backtest_equity.png)
+
+| Kennzahl | Wert |
+|---|---|
+| Start → Ende | 20.00 → **85.63 USDT (+328.2 %)** |
+| Max. Drawdown | **19.1 %** |
+| Trades | 222 (Long 170, Short 52) |
+| Trefferquote | 79 % |
+| Ø je Trade | **+3.13 %** |
+| Stop-Loss-Ausstiege | 7 |
+| Gleichzeitig offen | max. 10 (Grenze wird erreicht, siehe unteres Feld) |
+
+Das Portfolio wurde **nur mit Daten bis 07.04.2026** ausgewählt; alles ab 08.04.2026 ist echtes Out-of-Sample.
+Bis Ende Mai gab es keinen Trade (BTC in der Pause-Zone), danach zuerst Shorts, ab August fast nur Longs.
+
+### Die 35 Strategien im Live-Portfolio
+
+![OOS-PnL jeder einzelnen Strategie des Live-Portfolios, gefärbt nach Timeframe](docs/rt_portfolio_strategies.png)
+
+Jede Strategie hat das OOS-Gate einzeln bestanden oder läuft mit den RT-Standard-Parametern (gelb umrandet: Training
+positiv, OOS nicht negativ). ETH, KNC und TRX (1h) hatten im OOS-Fenster kein einziges Signal und wurden allein wegen
+ihres Trainings-Beitrags gewählt.
+
+### Entscheidungen auf dem Weg hierher
+
+| Datum | Änderung | Grund |
+|---|---|---|
+| 2026-10-04 | Rückkehr zum Envelope-Stand `9a404ef` | Breakout-Variante verworfen |
+| 2026-10-05 | RT-Modus (Orders am Band, Not-SL, BTC-Filter, Sperre nach SL) | 846 Binance-Perps inkl. delisteter: nur Long + BTC-Filter **+0.86 %/Trade, t = 6.5** im OOS |
+| 2026-10-05 | Short-Seite mit Schutzhebeln A (Regime-Ausstieg), B (SMA200 + SMA50), C (kleinere Shorts) | ohne BTC-Filter ruinierte Long + Short das Konto (−80 %) |
+| 2026-10-06 | 60 % / Hebel 2 | größte Einstellung, bei der ein voller SL über 3 Bänder ~30 % des Kontos kostet |
+| 2026-10-06 | OOS fest 26 Wochen, Training davor je Timeframe | nur die aktuelle Marktphase soll entscheiden |
+| 2026-10-06 | 4 Timeframes mit Quote 10–15, max. 10 Positionen | mehr Signale, begrenzte Gleichzeitigkeit |
+| 2026-10-07 | Telegram „Kapital voll im Einsatz“ nur noch bei Zustandswechsel | vorher eine Meldung je Strategie und Zyklus |
 
 ---
 
-## 📋 Systemanforderungen
+## 🔁 Pipeline und Zeitfenster
 
-### Hardware
-- **CPU**: Multi-Core Prozessor (Intel i5 oder besser empfohlen)
-- **RAM**: Minimum 2GB, empfohlen 4GB+
-- **Speicher**: 1GB freier Speicherplatz
+![Pipeline: Kandidaten, Optuna-Suche nur im Training, OOS-Gate, Rückfall auf RT-Standard, Portfolio-Optimizer mit Quote, Live](docs/rt_pipeline.png)
 
-### Software
-- **OS**: Linux (Ubuntu 20.04+), macOS, Windows 10/11
-- **Python**: Version 3.8 oder höher
-- **Git**: Für Repository-Verwaltung
+![Zeitfenster: Training je Timeframe unterschiedlich lang, OOS fest die letzten 26 Wochen](docs/rt_oos_window.png)
+
+| Schritt | Was passiert | Einstellung |
+|---|---|---|
+| Kandidaten | 102 liquideste Bitget-Coins × 6h / 4h / 2h / 1h | `optimization_settings.candidate_strategies` |
+| Zeitfenster | OOS = letzte 26 Wochen bis gestern; Training davor: 6h/4h 1095, 2h 730, 1h 548 Tage | `oos_weeks`, `train_days_by_timeframe` ([`oos_window.py`](src/ltbbot/utils/oos_window.py)) |
+| Optuna-Suche | Mitte, Bänder und Long-SL **nur auf dem Training**, K-Fold-Minimum gegen Zufallstreffer | `run_pipeline.sh` → `optimizer.py` |
+| OOS-Gate | ≥ 5 OOS-Trades, Profit-Faktor ≥ 1.3, PnL > 0, DD ≤ 30 % → eigene Parameter | `min_oos_trades`, `min_oos_profit_factor` |
+| Rückfall | sonst RT-Standard-Parameter, wenn Training > 0 und OOS ≥ 0 | – |
+| Portfolio-Optimizer | wählt **nur auf dem Training**, Quote 10–15 je Timeframe, jedes Symbol einmal; Bericht läuft bis heute mit markiertem OOS-Teil | `portfolio_quota`, `run_portfolio_optimizer.py` |
+| Live | `master_runner.py` alle 15 Min, je Strategie ein Prozess | `live_trading_settings` |
+
+Junge Coins ohne Historie bis zum Trainingsbeginn (z. B. auf 4h/6h vor 2023) werden übersprungen.
 
 ---
 
 ## 💻 Installation
 
-### 1. Repository klonen
-
 ```bash
 git clone https://github.com/Youra82/ltbbot.git
 cd ltbbot
+chmod +x install.sh && ./install.sh      # legt .venv an und installiert requirements.txt
 ```
 
-### 2. Automatische Installation (empfohlen)
+Windows (nur Entwicklung/Backtests):
 
-```bash
-# Linux/macOS
-chmod +x install.sh
-./install.sh
-
-# Windows (PowerShell)
+```powershell
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Das Installations-Script führt folgende Schritte aus:
-- ✅ Erstellt eine virtuelle Python-Umgebung (`.venv`)
-- ✅ Installiert alle erforderlichen Abhängigkeiten
-- ✅ Erstellt notwendige Verzeichnisse (`data/`, `logs/`, `artifacts/`)
-- ✅ Initialisiert Konfigurationsdateien
-
-### 3. API-Credentials konfigurieren
-
-Erstelle eine `secret.json` Datei im Root-Verzeichnis:
+### API-Zugang (`secret.json` im Hauptordner)
 
 ```json
 {
   "ltbbot": [
     {
-      "name": "Binance Trading Account",
-      "exchange": "binance",
+      "name": "DeinAccountName",
       "apiKey": "DEIN_API_KEY",
-      "secret": "DEIN_SECRET_KEY",
-      "options": {
-        "defaultType": "future"
-      }
+      "secret": "DEIN_SECRET",
+      "password": "DEINE_API_PASSPHRASE"
     }
-  ]
-}
-```
-
-⚠️ **Wichtig**: 
-- Niemals `secret.json` committen oder teilen!
-- Verwende nur API-Keys mit eingeschränkten Rechten (Nur Trading, keine Withdrawals)
-- Aktiviere IP-Whitelist auf der Exchange
-
-### 4. Trading-Strategien konfigurieren
-
-Bearbeite `settings.json` für deine gewünschten Handelspaare:
-
-```json
-{
-  "live_trading_settings": {
-    "active_strategies": [
-      {
-        "symbol": "BTC/USDT:USDT",
-        "timeframe": "4h",
-        "use_envelope_bands": true,
-        "active": true
-      },
-      {
-        "symbol": "ETH/USDT:USDT",
-        "timeframe": "1h",
-        "use_envelope_bands": true,
-        "active": true
-      }
-    ]
+  ],
+  "telegram": {
+    "bot_token": "DEIN_BOT_TOKEN",
+    "chat_id": "DEINE_CHAT_ID"
   }
 }
 ```
 
-**Parameter-Erklärung**:
-- `symbol`: Handelspaar (Format: BASE/QUOTE:SETTLE)
-- `timeframe`: Zeitrahmen (15m, 30m, 1h, 4h, 1d)
-- `use_envelope_bands`: Envelope-Filter aktivieren (true/false)
-- `active`: Strategie aktiv (true/false)
+⚠️ `secret.json` nie committen oder teilen. API-Key nur mit Trading-Rechten (keine Auszahlungen), IP-Whitelist aktivieren.
 
 ---
 
-## 🔴 Live Trading
+## 🔴 Live-Trading
 
-### Start des Live-Trading
-
-```bash
-# Master Runner starten (verwaltet alle aktiven Strategien)
-cd /home/ubuntu/ltbbot && .venv/bin/python3 master_runner.py
-```
-
-### Manuell starten / Cronjob testen
-Ausführung sofort anstoßen (ohne auf den 15-Minuten-Cron zu warten):
-
-```bash
-cd /home/ubuntu/ltbbot && .venv/bin/python3 master_runner.py
-```
-
-Der Master Runner:
-- ✅ Lädt Konfigurationen aus `settings.json`
-- ✅ Startet separate Prozesse für jede aktive Strategie
-- ✅ Generiert Envelope-basierte Signale
-- ✅ Überwacht Kontostand und verfügbares Kapital
-- ✅ Managed Positionen und Risk-Limits
-- ✅ Loggt alle Trading-Aktivitäten
-- ✅ Sendet Telegram-Benachrichtigungen
-
-### Automatischer Start (Produktions-Setup)
-
-Richte den automatischen Prozess für den Live-Handel ein.
+### Cronjob (VPS)
 
 ```bash
 crontab -e
 ```
 
-Füge die folgende **eine Zeile** am Ende der Datei ein. Passe den Pfad an, falls dein Bot nicht unter `/home/ubuntu/ltbbot` liegt.
-
 ```
-# Starte den LTBBot Master-Runner alle 15 Minuten
 */15 * * * * /usr/bin/flock -n /home/ubuntu/ltbbot/ltbbot.lock /bin/sh -c "cd /home/ubuntu/ltbbot && .venv/bin/python3 master_runner.py >> /home/ubuntu/ltbbot/logs/cron.log 2>&1"
 ```
-
-*(Hinweis: `flock` ist eine gute Ergänzung, um Überlappungen zu verhindern, aber für den Start nicht zwingend notwendig.)*
-
-Logverzeichnis anlegen:
 
 ```bash
 mkdir -p /home/ubuntu/ltbbot/logs
 ```
 
-
-
----
-
-## 📊 Interaktives Pipeline-Script
-
-Das **`run_pipeline.sh`** Script automatisiert die Parameter-Optimierung für deine Handelsstrategien. Es führt einen Grid-Search über alle Envelope- und MA-Parameter durch und findet die optimalen Einstellungen für dein ausgewähltes Symbol und Timeframe.
-
-### Features des Pipeline-Scripts
-
-✅ **Interaktive Eingabe** - Einfache Menü-Navigation  
-✅ **Automatische Datumswahl** - Zeitrahmen-basierte Lookback-Berechnung  
-✅ **Optuna-Optimierung** - Bayessche Hyperparameter-Suche  
-✅ **Ladebalken** - Visueller Fortschritt  
-✅ **Batch-Optimierung** - Mehrere Symbol/Timeframe-Kombinationen  
-✅ **Automatisches Speichern** - Optimale Konfigurationen als JSON  
-✅ **Integrierte Backtests** - Sofort nach Optimierung testen  
-
-### Verwendung
-
-```bash
-# Pipeline starten
-chmod +x run_pipeline.sh
-./run_pipeline.sh
-```
-
-### Interaktive Eingaben
-
-Das Script fragt dich nach folgende Informationen:
-
-#### 1. Symbol eingeben
-```
-Welche(s) Symbol(e) möchtest du optimieren?
-(z.B. BTC oder: BTC ETH SOL)
-> BTC
-```
-
-#### 2. Timeframe eingeben
-```
-Welche(s) Timeframe(s)?
-(z.B. 1d oder: 1d 4h 1h)
-> 1d
-```
-
-#### 3. Startdatum eingeben
-```
-Startdatum (YYYY-MM-DD oder 'a' für automatisch)?
-Automatische Optionen pro Timeframe:
-  5m/15m    → 60 Tage Lookback
-  30m/1h    → 180 Tage Lookback
-  4h/2h     → 365 Tage Lookback
-  6h/1d     → 730 Tage Lookback
-> a
-```
-
-#### 4. Startkapital eingeben
-```
-Mit wieviel USD starten? (Standard: 100)
-> 100
-```
-
-### Optimierte Konfigurationen
-
-Nach erfolgreicher Optimierung werden die besten Parameter gespeichert unter:
-
-```
-src/ltbbot/strategy/configs/
-├── config_BTCUSDTUSDT_1d_envelope.json
-├── config_BTCUSDTUSDT_4h_envelope.json
-├── config_ETHUSDTUSDT_1h_envelope.json
-└── config_AAVEUSDTUSDT_2h_envelope.json
-```
-
-**Beispiel-Konfiguration** (`config_BTCUSDTUSDT_4h_envelope.json`):
-
-```json
-{
-  "market": {
-    "symbol": "BTC/USDT:USDT",
-    "timeframe": "4h"
-  },
-  "strategy": {
-    "ma_period": 20,
-    "envelope_pct": 2.5,
-    "sl_pct": 2.0,
-    "tp_pct": 4.0
-  },
-  "_meta": {
-    "pnl_pct": 124.5,
-    "max_drawdown_pct": 18.3,
-    "win_rate": 62.0,
-    "num_trades": 45
-  }
-}
-```
-
-### Integration mit Live-Trading
-
-Die optimierten Konfigurationen werden **automatisch geladen**:
-
-```bash
-./show_results.sh
-```
-
-**`show_results.sh` bietet 4 Analyse-Modi:**
-
-| Option | Beschreibung |
-|--------|-------------|
-| 1 | Einzelne Strategie backtesten (Backtester) |
-| 2 | Portfolio-Simulation mehrerer Strategien |
-| 3 | Portfolio-Optimierung (Greedy Calmar-Ratio) |
-| 4 | Walk-Forward-Analyse |
-
-Alle Modi nutzen denselben einheitlichen Backtesting-Engine:
-- ✅ Mehrere gleichzeitig offene Bänder pro Strategie (Live-Bot-Alignment — der Live-Bot öffnet jedes qualifizierende Band unabhängig, nicht nur Band 1)
-- ✅ Compounding: Positionsgröße = aktuelles (laufendes) Kapital × Risiko%, nicht das eingefrorene Startkapital
-- ✅ SL 1.5× breiter im TREND-Regime (ADX 25–30)
-- ✅ Trend-Bias: UPTREND = nur Longs, DOWNTREND = nur Shorts
-
----
-
-## 🔬 Strategie-Analysen (`run_analysis.sh`)
-
-Das **`run_analysis.sh`** Script bietet 10 tiefe Analysen zur Bewertung und Optimierung der Envelope-Strategie — ähnlich wie das Analyse-Script beim dnabot, aber passend für Mean-Reversion.
-
-### Starten
-
-```bash
-chmod +x run_analysis.sh
-./run_analysis.sh
-```
-
-Ein interaktives Menü erscheint:
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║         ltbbot — Envelope Strategie Analysen                ║
-╚══════════════════════════════════════════════════════════════╝
-
-  Walk-Forward / Robustheit
-  1  Walk-Forward Lookback-Analyse
-  2  Envelope Parameter Walk-Forward (SL / Period)
-  10 Reoptimierungs-Snapshot-Glaettung
-
-  Risiko / Kosten
-  3  Slippage & Fee Impact
-  4  Monte Carlo Simulation
-
-  Portfolio / Pair-Auswahl
-  5  Anti-Korrelations-Portfolio
-  6  Kelly Position Sizing
-
-  Strategie-Einblicke
-  7  Regime Performance Analyse
-  8  Tageszeit-Analyse
-  9  Drawdown Duration Analyse
-
-  0  Alle Analysen nacheinander (Batch)
-```
-
-Alle Analysen verwenden die `active_strategies` aus `settings.json` und senden Ergebnisse (Charts + Text) per Telegram.
-
-### Analyse-Übersicht
-
-| # | Analyse | Frage |
-|---|---------|-------|
-| 1 | **Walk-Forward Lookback** | Wie viele Wochen zurück soll der Auto-Optimizer schauen? Rolling WF für 1/2/4/8/12/26 Wochen — Calmar-Vergleich auf demselben OOS-Zeitraum. Bestes Calmar → direkt in `optimization_settings.backtest_lookback_weeks` übernehmbar. Achtung: Calmar-Werte sind nur bedingt vergleichbar, da die Anzahl der "Leerwochen" (keine gültige Strategie im IS-Fenster) mit kürzerem Lookback stark steigt — weniger aktive Wochen bedeutet mechanisch weniger Drawdown-Exposition. |
-| 2 | **Envelope Parameter Walk-Forward** | Ist der aktuelle Stop-Loss-Wert optimal? WF-Vergleich für SL ×0.5, ×0.75, ×1.0, ×1.5, ×2.0 — ohne Lookahead. |
-| 3 | **Slippage & Fee Impact** | Ist der Bot nach realen Gebühren noch profitabel? Gebühren-Sweep 0–0.20%/Seite + Slippage-Sweep bei SL-Execution. Break-Even-Gebühr wird berechnet (Bitget Taker = 0.06%). |
-| 4 | **Monte Carlo** | Wie riskant ist die Trade-Reihenfolge (Drawdown/Ruin)? 10.000 zufällige Permutationen der echten Trade-Sequenz mit Compounding-Positionsgröße je simuliertem Pfad. Liefert die Max-Drawdown- und Ruin-Wahrscheinlichkeits-Verteilung (<50% Kapital). Die End-Equity ist bei reinem Reihenfolge-Shuffle mathematisch immer identisch zum realen `end_capital` (Summe/Produkt ist ordnungsinvariant) — das ist kein Bug, sondern zeigt lediglich, dass die Trade-*Reihenfolge* die Gesamtrendite nicht beeinflusst, nur den Pfad dorthin. |
-| 5 | **Anti-Korrelations-Portfolio** | Welche Pairs verlieren und gewinnen selten gleichzeitig? Pearson-Korrelationsmatrix der wöchentlichen PnL je Pair. Stark positiv korrelierte Pairs (>0.7) bringen keinen Diversifikationsvorteil. |
-| 6 | **Kelly Position Sizing** | Wie viel sollte man pro Pair riskieren — mathematisch optimal? Kelly-Kriterium pro aktivem Pair. Half-Kelly (empfohlen) vs. aktueller SL-Prozentsatz. |
-| 7 | **Regime Performance** | In welchen Marktphasen funktioniert Envelope am besten? Win-Rate und PnL nach Regime (RANGE / TREND / UNCERTAIN / STRONG\_TREND) für alle aktiven Pairs. |
-| 8 | **Tageszeit-Analyse** | Performen Entries zu bestimmten Stunden besser? Win-Rate und PnL pro Einstiegs-Stunde (UTC) + Session-Auswertung (Asia / Europe / US). |
-| 9 | **Drawdown Duration** | Wie lange dauern Verlustphasen? Scatter (Tiefe vs. Erholungsdauer), Histogramm der Erholungsdauern, Equity-Kurve mit markierten DD-Zonen. |
-| 10 | **Reoptimierungs-Snapshot-Glaettung** | Wird die wöchentliche Star-Spieler-Auswahl treffsicherer, wenn man mehrere Snapshots statt nur einem Stichtag mittelt? Vergleicht die aktuelle Einzel-Stichtag-Auswahl gegen eine über mehrere Tage geglättete Rangfolge (Methode wie in zerobot validiert). |
-
-### Direkt aufrufen (ohne Menü)
-
-```bash
-# Beispiel: Monte Carlo mit 50 USDT Kapital, 365 Tage Lookback
-.venv/bin/python3 src/ltbbot/analysis/analysis_runner.py \
-    --mode 4 --capital 50 --lookback 365 --simulations 10000
-
-# Walk-Forward Lookback ohne Telegram
-.venv/bin/python3 src/ltbbot/analysis/analysis_runner.py \
-    --mode 1 --capital 50 --no-telegram
-
-# Alle Modi: 1–9
-```
-
-### Voraussetzungen
-
-Die Analysen benötigen mindestens eine aktive Strategie mit existierenden Backtest-Daten:
-
-```bash
-# Zuerst Optimizer laufen lassen (erzeugt Configs)
-./run_pipeline.sh
-
-# Dann Analysen starten
-./run_analysis.sh
-```
-
----
-
-## 📊 Monitoring & Status
-
-### Status-Dashboard
-
-```bash
-# Zeigt alle wichtigen Informationen
-./show_status.sh
-```
-
-**Angezeigt**:
-- 📊 Aktuelle Konfiguration
-- 🔐 API-Status
-- 📈 Offene Positionen
-- 💰 Kontostand
-- 📝 Letzte Logs
-
-### Log-Files
-
-```bash
-# Live-Trading Logs
-tail -f logs/cron.log
-
-# Fehler-Logs
-tail -f logs/error.log
-
-# Strategie-Logs
-tail -n 100 logs/ltbbot_BTCUSDTUSDT_4h.log
-```
-
-### Performance-Metriken
-
-```bash
-# Trade-Analyse
-python analyze_real_trades_detailed.py
-
-# Vergleich Backtest vs. Live
-python compare_real_vs_backtest.py
-```
-
----
-
-## 🛠️ Wartung & Pflege
-
-### Tägliche Verwaltung
-
-#### Logs ansehen
-
-```bash
-# Logs live mitverfolgen
-tail -f logs/cron.log
-
-# Letzten 500 Zeilen anzeigen
-tail -n 500 logs/*.log
-
-# Nach Fehlern durchsuchen
-grep -i "ERROR" logs/cron.log
-```
-
-#### Cronjob manuell testen
+Manuell einen Zyklus auslösen:
 
 ```bash
 cd /home/ubuntu/ltbbot && .venv/bin/python3 master_runner.py
 ```
 
-### 🔧 Config-Management
+Der Master Runner liest `settings.json::live_trading_settings.active_strategies`, startet je Strategie einen Prozess
+und stößt zusätzlich die Scheduler an (täglicher Live-vs-Backtest-Check, tägliche Parameter-Suche für ein Paar,
+wöchentliche Portfolio-Wahl).
 
-#### Konfigurationsdateien löschen
+### Telegram-Meldungen
 
-Bei Bedarf können alle generierten Konfigurationen gelöscht werden:
+- Neue Position mit Chart, TP/SL-Ausstiege, Regime-Ausstieg von Shorts
+- **💤 Kapital voll im Einsatz** – einmal fürs ganze Konto, wenn das freie Guthaben ≤ 1 USDT fällt
+  (das Kapital steckt dann als Margin in offenen Positionen, neue Einstiege pausieren automatisch)
+- **✅ Wieder freies Kapital** – einmal, sobald wieder > 3 USDT frei sind
+- Ergebnisse von Portfolio-Optimizer und Analysen
+
+---
+
+## 🧰 Werkzeuge
+
+| Script | Zweck |
+|---|---|
+| `./run_pipeline.sh` | Optuna-Suche für Symbol(e)/Timeframe(s), leer = alle Kandidaten; speichert `config_*_envelope.json` |
+| `./show_results.sh` | 1 Einzel-Backtests · 2 manuelle Portfolio-Simulation · 3 automatische Portfolio-Optimierung · 4 interaktive Charts |
+| `python run_portfolio_optimizer.py --capital 20 --auto-write` | Portfolio wählen (Quote, MaxDD) und in `settings.json` schreiben; Equity-Chart + Excel bis heute |
+| `./run_analysis.sh` | 10 Analysen (Walk-Forward, Slippage/Gebühren, Monte Carlo, Kelly, Korrelation, Tageszeit, Drawdown-Dauer …), Ergebnis per Telegram |
+| `./show_status.sh` | Konfiguration, offene Positionen, Kontostand, letzte Logs |
+| `python screen_volatility.py` | schneller Vorfilter neuer Coins (Kerzen-Kennzahlen, Historien-Check) |
+| `python screen_candidates.py` | reduzierter Optuna-Screen, isoliert von der Produktion |
+| `./push_configs.sh` | Configs + `settings.json` committen und pushen |
+
+### Analysen (`run_analysis.sh`)
+
+| # | Analyse | Frage |
+|---|---|---|
+| 1 | Walk-Forward Lookback | Wie viele Wochen Rückblick sind am robustesten? |
+| 2 | Parameter Walk-Forward | Ist der SL-Wert optimal (×0.5 … ×2.0)? |
+| 3 | Slippage & Gebühren | Bleibt der Bot nach realen Kosten profitabel? Break-Even-Gebühr |
+| 4 | Monte Carlo | Drawdown- und Ruin-Verteilung über 10 000 Trade-Reihenfolgen |
+| 5 | Anti-Korrelation | Welche Paare verlieren selten gleichzeitig? |
+| 6 | Kelly | mathematisch optimale Größe je Paar |
+| 7 | Regime | in welchen Marktphasen verdient die Strategie? |
+| 8 | Tageszeit | bessere Einstiegs-Stunden/Sessions? |
+| 9 | Drawdown-Dauer | wie lange dauern Verlustphasen? |
+| 10 | Snapshot-Glättung | wird die wöchentliche Auswahl mit mehreren Stichtagen stabiler? |
 
 ```bash
-rm -f src/ltbbot/strategy/configs/config_*.json
-```
-
-#### Löschung verifizieren
-
-```bash
-ls -la src/ltbbot/strategy/configs/config_*.json 2>&1 || echo "✅ Alle Konfigurationsdateien wurden gelöscht"
-```
-
-### Bot aktualisieren
-
-```bash
-chmod +x update.sh
-bash ./update.sh
-```
-
-
-
-### Tests ausführen
-
-```bash
-# Alle Tests
-./run_tests.sh
-
-# Spezifische Tests
-pytest tests/test_strategy.py
-pytest tests/test_envelope.py -v
-
-# Mit Coverage
-pytest --cov=src tests/
+.venv/bin/python3 src/ltbbot/analysis/analysis_runner.py --mode 4 --capital 20 --lookback 365 --simulations 10000
 ```
 
 ---
 
-## 🔄 Auto-Optimizer Verwaltung
+## 🛠️ Wartung
 
-Der Bot verfügt über einen automatischen Optimizer, der wöchentlich die besten Parameter für alle aktiven Strategien sucht (Envelope-Strategie). Die folgenden Befehle helfen beim manuellen Triggern, Debugging und Monitoring des Optimizers.
-
-### Optimizer manuell triggern
-
-Um eine sofortige Optimierung zu starten (ignoriert das Zeitintervall):
+### Bot aktualisieren (VPS)
 
 ```bash
-# Letzten Optimierungszeitpunkt löschen (erzwingt Neustart)
-rm ~/ltbbot/data/cache/.last_optimization_run
-
-# Master Runner starten (prüft ob Optimierung fällig ist)
-cd ~/ltbbot && .venv/bin/python3 master_runner.py
+cd ~/ltbbot && ./update.sh
 ```
 
-Oder direkt per `--force`:
+`update.sh` sichert `secret.json`, die VPS-eigenen Configs und `settings.json`-Werte, holt den neuesten Stand und
+stellt die Sicherung wieder her. **Ausnahme:** enthält `deploy/release.json` eine neue `release_id`, werden Configs,
+aktives Portfolio und Einstellungen **einmalig aus dem Repo übernommen** (vermerkt in `.applied_release`). So landen
+neue Portfolios zuverlässig auf dem VPS, ohne dass spätere Updates die wöchentliche VPS-Auswahl überschreiben.
+
+### Auto-Optimizer
 
 ```bash
+# Portfolio-Wahl sofort erzwingen
 cd ~/ltbbot && .venv/bin/python3 auto_optimizer_scheduler.py --force
-```
 
-### Optimizer-Logs überwachen
-
-```bash
-# Optimizer-Log live mitverfolgen
+# Logs
 tail -f ~/ltbbot/logs/auto_optimizer_trigger.log
+tail -f ~/ltbbot/logs/auto_parameter_optimizer_trigger.log
 
-# Letzte 50 Zeilen des Optimizer-Logs anzeigen
-tail -50 ~/ltbbot/logs/auto_optimizer_trigger.log
-```
-
-### Optimierungsergebnisse ansehen
-
-```bash
-# Beste gefundene Parameter anzeigen (erste 50 Zeilen)
-cat ~/ltbbot/artifacts/results/last_optimizer_run.json | head -50
-```
-
-### Optimizer-Prozess überwachen
-
-```bash
-# Prüfen ob Optimizer gerade läuft (aktualisiert jede Sekunde)
-watch -n 1 "ps aux | grep optimizer"
-```
-
-### Optimizer stoppen
-
-```bash
-# Alle Optimizer-Prozesse auf einmal stoppen
+# alle Optimizer stoppen und Marker aufräumen
 pkill -f "auto_optimizer_scheduler" ; pkill -f "run_pipeline_automated" ; pkill -f "optimizer.py"
-
-# Prüfen ob alles gestoppt ist
-pgrep -fa "optimizer" && echo "Noch aktiv!" || echo "Alle gestoppt."
-
-# In-Progress-Marker aufräumen (sauberer Neustart danach)
 rm -f ~/ltbbot/data/cache/.optimization_in_progress
 ```
 
----
+Zeitplan: `optimization_settings.schedule` (Standard Samstag 15:00, alle 7 Tage).
 
-## 🆕 Aktuelle Verbesserungen
+### Logs
 
-### Backtester & Live-Bot Alignment (2026-08)
-- **Multi-Band-Entries**: Der Live-Bot öffnet jedes qualifizierende Envelope-Band unabhängig (nicht nur Band 1) — Backtester und Portfolio-Simulator wurden auf dasselbe Verhalten umgestellt (`multi_band_entries=True` als Default in `run_envelope_backtest()` und `run_portfolio_simulation()`), da vorher band 2/3 wegen der schwächeren Trigger-Bedingung von Band 1 praktisch nie ausgelöst wurden
-- **Compounding**: Positionsgröße = `aktuelles Kapital × risk_per_entry_pct`, nicht das eingefrorene Startkapital — gilt jetzt konsistent für Live-Bot (`trade_manager.py`, Basis: echter Bitget-Kontostand) und Backtest
-- **Regime-Filter**: STRONG_TREND (ADX > 30) → keine neuen Entries; TREND (ADX 25–30) → SL 1.5× breiter
-- **Trend-Bias**: UPTREND (EMA up) = nur Longs; DOWNTREND = nur Shorts
-
-```mermaid
-flowchart TB
-    MA["Moving Average<br/>(Mittellinie)"]
-    B1["Band 1 (eng)"]
-    B2["Band 2 (mittel)"]
-    B3["Band 3 (weit)"]
-    P1["Position @ Band 1"]
-    P2["Position @ Band 2"]
-    P3["Position @ Band 3"]
-    EQ["Gemeinsames Portfolio-Kapital<br/>(Compounding je Fill)"]
-
-    MA --> B1 --> P1
-    MA --> B2 --> P2
-    MA --> B3 --> P3
-    P1 --> EQ
-    P2 --> EQ
-    P3 --> EQ
-```
-*Alle drei Bänder können gleichzeitig offene Positionen haben (Multi-Band); jede Position bemisst sich am dann aktuellen Portfolio-Kapital (Compounding).*
-
-### Portfolio-Optimizer: Einzelstrategie-Prüfung
-Der greedy Portfolio-Optimizer prüft nach der Portfolio-Zusammenstellung, ob eine einzelne Strategie das Portfolio in Bezug auf **rohen PnL%** schlägt (`run_envelope_backtest()`-Verifikation mit `sim_start_date` — vergleicht auf demselben Zeitfenster wie die Portfolio-Simulation, nicht auf der längeren Warmup-Historie). Falls eine Einzelstrategie besser ist und das DD-Constraint erfüllt → wird diese gewählt. Der Portfolio-Optimizer schlägt am Ende zusätzlich das laut allen Regeln (Mindest-Notional, Risiko%, SL-Distanz je Band) benötigte **Mindestkapital** für das gefundene Portfolio vor.
-
-```mermaid
-flowchart LR
-    A["Alle Configs laden"] --> B["Einzel-Performance<br/>je Strategie (geglättet)"]
-    B --> C["Greedy Team-Suche<br/>(Symbol-exklusiv, DD-Constraint)"]
-    C --> D["Einzelstrategie-Verifikation<br/>(echter Backtester, gleiches Fenster)"]
-    D -->|Einzelstrategie besser| E["Einzelstrategie waehlen"]
-    D -->|Portfolio besser| F["Portfolio-Team waehlen"]
-    E --> G["Mindestkapital-Empfehlung"]
-    F --> G
-    G --> H["Chart + Excel<br/>(dnabot-Optik)"]
+```bash
+tail -f logs/cron.log
+tail -n 100 logs/ltbbot_ETHUSDTUSDT_1h.log
+grep -i "ERROR" logs/cron.log
 ```
 
-### Reports: Chart & Excel
-Equity-Chart (`run_portfolio_optimizer.py`) und Trade-Excel sind optisch an die dnabot-Reports angeglichen: Einzelstrategie-Equity-Linien auf einer Sekundärachse, Entry-/Exit-Marker (▲ Entry, ● Exit TP, ✗ Exit SL), horizontale Legende; die Excel-Tabelle zeigt zusätzlich Coin sowie Entry-/Exit-Preis je Trade.
+### Tests
 
-### Exchange-Log-Vereinfachung
-Daten-Downloads loggen jetzt nur noch eine einzige Zusammenfassungszeile:
-```
-Daten geladen: BTC/USDT:USDT (4h) | 2024-01-01 → 2025-01-01 | 2200 Kerzen
+```bash
+# sicher (ohne Live-Orders)
+python -m pytest tests/ --ignore=tests/test_workflow.py -q
 ```
 
-### Konditionelles Config-Speichern
-Der Optimizer überschreibt bestehende Konfigurationen nur, wenn der neue `pnl_pct` die gespeicherte Performance übertrifft.
+⚠️ `tests/test_workflow.py` bzw. `./run_tests.sh` platziert **echte Orders** auf Bitget – nur bewusst ausführen.
 
 ---
 
@@ -770,223 +310,58 @@ Der Optimizer überschreibt bestehende Konfigurationen nur, wenn der neue `pnl_p
 
 ```
 ltbbot/
-├── src/
-│   └── ltbbot/
-│       ├── strategy/              # Trading-Logik
-│       │   ├── run.py
-│       │   ├── envelope_logic.py
-│       │   └── configs/           # Optimierte Konfigurationen (JSON)
-│       ├── analysis/              # Analyse & Optimierung
-│       │   ├── backtester.py          # Einzel-Strategie Backtest
-│       │   ├── optimizer.py           # Optuna Parameter-Suche
-│       │   ├── portfolio_optimizer.py # Greedy Portfolio-Optimierung
-│       │   ├── portfolio_simulator.py # Multi-Strategie Simulation
-│       │   ├── analysis_runner.py     # 9 Strategie-Analysen (run_analysis.sh)
-│       │   ├── show_results.py        # Interaktive Ergebnisanzeige
-│       │   └── interactive_status.py  # Live-Status Dashboard
-│       └── utils/                 # Hilfsfunktionen
-│           ├── exchange.py
-│           ├── telegram.py
-│           └── trade_manager.py
-├── tests/                         # Unit-Tests
-├── data/                          # Marktdaten & Cache
-├── logs/                          # Log-Files
-├── artifacts/                     # Ergebnisse & DB
-├── master_runner.py               # Haupt-Entry-Point
-├── run_pipeline.sh                # Optuna Parameter-Suche (interaktiv)
-├── run_analysis.sh                # 9 Strategie-Analysen (interaktiv)
-├── run_portfolio_optimizer.py     # Portfolio-Selektion (Greedy)
-├── auto_portfolio_scheduler.py    # Automatischer Portfolio-Optimizer
-├── auto_optimizer_scheduler.py    # Automatischer Optuna-Scheduler (manuell)
-├── show_chart.py                  # Envelope-Chart per Telegram senden
-├── show_results.sh                # Backtest & Portfolio-Analyse
-├── push_configs.sh                # Configs & Settings auf Repo pushen
-├── settings.json                  # Konfiguration
-├── secret.json                    # API-Credentials (nicht committen!)
-└── requirements.txt               # Dependencies
+├── src/ltbbot/
+│   ├── strategy/
+│   │   ├── run.py                    # ein Zyklus für eine Strategie
+│   │   ├── envelope_logic.py         # geteilte Logik Live + Backtest (Bänder, Filter, Größe, Grenzen)
+│   │   └── configs/                  # config_<COIN>USDTUSDT_<TF>_envelope.json
+│   ├── analysis/
+│   │   ├── optimizer.py              # Optuna-Suche + OOS-Gate
+│   │   ├── backtester.py             # Einzel-Backtest
+│   │   ├── portfolio_simulator.py    # Multi-Strategie-Simulation (gemeinsames Kapital)
+│   │   ├── portfolio_optimizer.py    # Auswahl mit Quote und DD-Grenze
+│   │   ├── analysis_runner.py        # run_analysis.sh
+│   │   └── show_results.py           # show_results.sh
+│   └── utils/
+│       ├── trade_manager.py          # Live: Orders, SL/TP, Sperren, Telegram
+│       ├── exchange.py               # Bitget via CCXT
+│       ├── oos_window.py             # Training-/OOS-Fenster je Timeframe
+│       └── telegram.py
+├── docs/                             # README-Grafiken
+├── deploy/release.json               # Release-Kennung für update.sh
+├── tests/
+├── master_runner.py                  # Einstieg für Cron
+├── run_pipeline.sh / run_portfolio_optimizer.py / show_results.sh / run_analysis.sh
+├── auto_optimizer_scheduler.py       # wöchentliche Portfolio-Wahl
+├── auto_parameter_optimizer_scheduler.py  # tägliche Parameter-Suche (1 Paar)
+├── daily_live_vs_backtest_check.py   # täglicher Abgleich Live vs. Backtest
+├── settings.json
+└── secret.json                       # nicht committen!
 ```
 
 ---
 
-## ⚠️ Wichtige Hinweise
+## ⚠️ Risiken
 
-### Risiko-Disclaimer
+- **Hohe Drawdowns möglich.** Im Training lag der MaxDD des aktuellen Portfolios bei 55.9 % (Crash 10.10.2025).
+  An marktweiten Crash-Tagen fallen viele Coins gleichzeitig in ihre Bänder – die Positions-Grenze von 10 begrenzt das,
+  verhindert es aber nicht.
+- **Kleines Konto:** Bei ~20 USDT hebt die Bitget-Mindestorder (5 USDT Notional) einzelne Bänder über die geplante Größe.
+- **Lange Pausen:** Liegt BTC zwischen SMA50 und SMA200, handelt der Bot gar nicht.
+- **Hebel 2:** Ein voller Stop über drei Bänder kostet bis zu ~30 % des Kontos.
+- **OOS ist kurz:** 26 Wochen sind eine einzige Marktphase. Vergangene Ergebnisse garantieren nichts.
 
-⚠️ **Trading mit Kryptowährungen birgt erhebliche Risiken!**
-
-- Nur Kapital einsetzen, dessen Verlust Sie verkraften können
-- Keine Garantie für Gewinne
-- Vergangene Performance ist kein Indikator für zukünftige Ergebnisse
-- Testen Sie ausgiebig mit Demo-Accounts
-- Starten Sie mit kleinen Beträgen
-
-### Security Best Practices
-
-- 🔐 Niemals API-Keys mit Withdrawal-Rechten verwenden
-- 🔐 IP-Whitelist auf Exchange aktivieren
-- 🔐 2FA für Exchange-Account aktivieren
-- 🔐 `secret.json` niemals committen (in `.gitignore`)
-- 🔐 Regelmäßige Security-Updates durchführen
-
-### Performance-Tipps
-
-- 💡 Starten Sie mit 1-2 Strategien
-- 💡 Verwenden Sie längere Timeframes (4h+)
-- 💡 Monitoren Sie regelmäßig die Performance
-- 💡 Parameter regelmäßig überprüfen
-- 💡 Position-Sizing angemessen konfigurieren
-
----
-
-## 🤝 Support & Community
-
-### Probleme melden
-
-Bei Problemen:
-
-1. Prüfen Sie die Logs
-2. Führen Sie Tests aus: `./run_tests.sh`
-3. Öffnen Sie ein Issue mit Log-Auszügen
-
-### Updates erhalten
-
-```bash
-git fetch origin
-git status
-./update.sh
-```
-
-### Optimierte Konfigurationen hochladen
-
-```bash
-./push_configs.sh
-```
-
-Das Script staged automatisch alle `config_*_envelope.json` + `settings.json`, erstellt einen Commit mit Timestamp und pushed auf `origin/main` — inkl. automatischem Rebase-Fallback bei Remote-Konflikten.
-
----
-
-## 🔎 Coin-Screening (bevor die Pipeline läuft)
-
-Bitget listet 700+ USDT-Perpetuals — jeden davon einzeln mit voller Optuna-Suche (`run_pipeline.sh`, 500 Trials) zu testen, dauert pro Kombination mehrere Minuten bis Stunden. Zwei Screening-Scripts filtern vorab, welche Symbol/Timeframe-Kombinationen überhaupt vielversprechend sind, bevor man Zeit in die teure volle Pipeline investiert.
-
-### 1. `screen_volatility.py` — schnelle Vorfilterung (empfohlen als erster Schritt)
-
-Berechnet reine Kerzen-Kennzahlen (ADX-Regime-Verteilung, ATR-Volatilität, Envelope-Berührungshäufigkeit) für alle aktiven Bitget-USDT-Perpetuals und vergleicht sie mit dem Profil der aktuell **aktiven, bestätigten** Strategien aus `settings.json`. **Kein Backtest, kein Optuna** — nur Pandas/TA-Berechnungen auf Kerzendaten, daher extrem schnell (~1.2s pro Symbol/Timeframe-Kombination inkl. Historien-Check, parallelisiert).
-
-Prüft zusätzlich, ob genug Kerzen-Historie für den vollen `run_pipeline.sh`-Lookback existiert (2h=730 Tage, 4h/6h=1095 Tage, siehe `PIPELINE_LOOKBACK_DAYS`) — frisch gelistete Coins tauchen sonst als vielversprechend auf, scheitern aber in der vollen Pipeline mit "Keine historischen OHLCV-Daten gefunden". Solche Kandidaten werden aus der Top-30-Ausgabe ausgeblendet (bleiben aber, klar markiert, in der vollen CSV).
-
-```bash
-# Alle aktiven USDT-Perpetuals screenen (Standard-Timeframes 30m/1h/2h/4h/6h)
-python screen_volatility.py
-
-# Nur die Top 100 nach 24h-Volumen, andere Timeframes, mehr/weniger parallele Worker
-python screen_volatility.py --top-n 100 --timeframes "1h 4h 6h" --workers 10
-
-# Längerer Vergleichszeitraum (Standard: 16 Wochen)
-python screen_volatility.py --lookback-weeks 26
-```
-
-Ergebnis: eine nach Ähnlichkeit sortierte Rangliste (`artifacts/results/screen_volatility.csv`) — Symbole mit der kleinsten `fit_distance` zum Profil der bestätigten Strategien sind die vielversprechendsten Kandidaten für den nächsten Schritt.
-
-### 2. `screen_candidates.py` — echter, aber reduzierter Optuna-Screen (optional, gründlicher)
-
-Ruft den **echten** `optimizer.py`-Code auf (identische Such-/Bewertungslogik wie die volle Pipeline), aber mit stark reduzierten Trials und kürzerem Zeitraum — schneller, aber nicht so belastbar wie ein voller Pipeline-Lauf. Läuft komplett isoliert von der Produktion (eigener `_screen`-Config-Suffix, eigene Ergebnisdatei — landet nie in `settings.json`/`active_strategies` oder im Live-Trading-Fallback).
-
-```bash
-# Top 100 nach Volumen, 30 Trials, 12 Wochen Lookback (Vorsicht: mehrstündige Laufzeit)
-python screen_candidates.py --top-n 100 --trials 30 --lookback-weeks 12
-
-# Abgebrochenen Lauf fortsetzen (überspringt bereits gescreente Symbole)
-python screen_candidates.py --resume
-```
-
-### Empfohlener Workflow
-
-1. `screen_volatility.py` laufen lassen → Kandidatenliste sichten (CSV oder Konsolen-Ausgabe).
-2. Die vielversprechendsten ~5–15 Kandidaten (kleinste `fit_distance`) auswählen.
-3. Nur für diese gezielt `run_pipeline.sh` (volle 500-Trial-Optimierung) laufen lassen — Symbol/Timeframe direkt bei den interaktiven Prompts eingeben.
-4. Ergebnisse mit `show_results.sh` (siehe [Integration mit Live-Trading](#integration-mit-live-trading)) backtesten und sichten, bevor eine neu bestätigte Config in `active_strategies` übernommen wird.
-
-## Coin & Timeframe Empfehlungen
-
-> **Hinweis:** Die folgende Tabelle ist eine ältere, manuell kuratierte Einschätzung. Sie wird inzwischen von den Screening-Scripts oben (datenbasiert, auf echten Kennzahlen) teilweise widerlegt — z.B. läuft DOGE/6h aktuell erfolgreich als bestätigte Live-Strategie, obwohl unten als "Schlecht" eingestuft. Für eine aktuelle Einschätzung lieber `screen_volatility.py` laufen lassen statt sich auf diese Tabelle zu verlassen.
-
-LTBBot ist eine **Mean-Reversion-Strategie** — er wartet, dass der Preis von einer Envelope-Band zur gleitenden Mitte zurückfindet. Das Gegenteil von Trendfolge: gefragt sind Coins, die schwingen statt dauerhaft zu trenden. STRONG_TREND (ADX > 30) blockiert alle Einträge komplett.
-
-### Effektive Zeitspannen je Timeframe
-
-| TF | MA(8) — Mittelachse | ADX(14) — Regime | ATR(10) — SuperTrend | Geeignet |
-|---|---|---|---|---|
-| 15m | 2h | 3.5h | 2.5h | ❌ |
-| 30m | 4h | 7h | 5h | ⚠️ |
-| 1h | 8h | 14h | 10h | ✅ |
-| 2h | 16h | 28h | 20h | ✅ |
-| **4h** | **32h** | **56h** | **40h** | **✅✅** |
-| **6h** | **48h** | **84h** | **60h** | **✅✅** |
-| 1d | 8d | 14d | 10d | ✅ |
-
-Auf 15m/30m ist die ADX-Regime-Erkennung nur wenige Stunden alt — zu schnelle Wechsel. Ab 4h umspannt ADX fast 2.5 Tage und trennt echtes Ranging von echtem Trend zuverlässig.
-
-### Coin-Eignung
-
-| Coin | Mean-Reversion | Envelope-Verhalten | Bewertung |
-|---|---|---|---|
-| **AAVE** | Stark — oscilliert regelmäßig um MA | Trifft alle 3 Bänder bei Vola-Phasen | ✅✅ Beste Wahl |
-| **ETH** | Gut — ausreichend Rückkehr zur Mitte | Klare Envelope-Touchdowns | ✅✅ Sehr gut |
-| **BNB** | Gut — stabile niedrige Volatilität | Enge Bänder funktionieren gut | ✅ Gut |
-| **XRP** | Gut — lange Seitwärtsphasen mit Schwingung | Moderate Bänder, häufige Berührungen | ✅ Gut |
-| **ADA** | Gut — rangelastig, oscilliert | Passt gut zu Envelope-Logik | ✅ Gut |
-| **LTC** | Gut — BTC-korreliert, moderates Verhalten | Gut auf 4h/6h | ✅ Gut |
-| **AVAX** | Mittel — trendet oft, aber mit Rücksetzern | Funktioniert in Konsolidierungsphasen | ⚠️ Mittel |
-| **SOL** | Mittel — trendet zu stark für Reversion | Bänder werden übersprungen | ⚠️ Mittel |
-| **BTC** | Mittel — klare Trends, Reversion auf 1d | 1d-Timeframe empfohlen | ⚠️ Mittel |
-| **DOT** | Mittel — sehr lange Seitwärtsphasen | Wenige klare Signale | ⚠️ Mittel |
-| **LINK** | Schwach in Bull — trendet explosiv | Bänder werden überrannt | ⚠️ Schwach |
-| **DOGE** | Schlecht — sentiment-getrieben | Zufällige Band-Berührungen | ❌ Schlecht |
-| **SHIB/PEPE** | Nicht vorhanden — reine Pumps | Keine strukturierten Bänder | ❌❌ Nicht geeignet |
-
-### Empfohlene Kombinationen (Ranking)
-
-| Rang | Kombination | Begründung |
-|---|---|---|
-| 🥇 1 | **AAVE 4h / 6h** | Stärkste Mean-Reversion, alle 3 Bänder regelmäßig berührt |
-| 🥇 1 | **ETH 4h / 6h** | Klare Rückkehr zur Mitte, Regime gut klassifizierbar |
-| 🥈 2 | **BNB 4h** | Stabil, niedrige Volatilität, häufiges RANGE-Regime |
-| 🥈 2 | **XRP 4h / 6h** | Lange Seitwärtsphasen — ideal für Mean-Reversion |
-| 🥉 3 | **ADA 4h** | Gut in Bear/Seitwärts, schwächer in Bull |
-| 4 | **LTC 4h** | BTC-korreliert, moderate Reversion-Bewegungen |
-| 4 | **BTC 1d** | Auf Tagesbasis gute Reversion-Phasen vorhanden |
-| 4 | **SOL 2h** | Kürzeres TF um Trend-Blocks zu reduzieren |
-| ❌ | **Alles auf 15m** | ADX-Regime zu kurzfristig, zu viele Fehlsignale |
-| ❌ | **DOGE / SHIB** | Kein strukturiertes Mean-Reversion-Verhalten |
-
-> **Hinweis:** In starken Bullmärkten blockiert STRONG_TREND viele Einträge — das ist gewollt. LTBBot performt am besten in Seitwärts- und moderaten Trendmärkten.
-
----
-
-## 📜 Lizenz
-
-Dieses Projekt ist lizenziert unter der MIT License.
+Nur Kapital einsetzen, dessen Verlust verkraftbar ist.
 
 ---
 
 ## 🙏 Credits
 
-Entwickelt mit:
-- [CCXT](https://github.com/ccxt/ccxt)
-- [Optuna](https://optuna.org/)
-- [Pandas](https://pandas.pydata.org/)
-- [TA-Lib](https://github.com/mrjbq7/ta-lib)
-
----
+Strategie-Grundlage: [RobotTraders](https://github.com/RobotTraders) Envelope · gebaut mit
+[CCXT](https://github.com/ccxt/ccxt), [Optuna](https://optuna.org/), [Pandas](https://pandas.pydata.org/), [Matplotlib](https://matplotlib.org/).
 
 <div align="center">
 
-**Made with ❤️ by the LTBBot Team**
-
-⭐ Star uns auf GitHub wenn dir dieses Projekt gefällt!
-
-[🔝 Nach oben](#-ltbbot---envelope-trading-strategy-bot)
+[🔝 Nach oben](#-ltbbot--envelope-trading-bot-robottraders-modus-long--short)
 
 </div>
