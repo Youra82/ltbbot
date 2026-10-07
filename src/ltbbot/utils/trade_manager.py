@@ -305,6 +305,39 @@ def calculate_atr_adjusted_stop_loss(exchange: Exchange, symbol: str, base_sl_pc
         logger.error(f"Fehler bei ATR-Berechnung: {e}. Verwende Basis-SL.")
         return base_sl_pct
 
+# --- Kontoweiter Hinweis "freies Guthaben aufgebraucht" ---
+
+LOW_BALANCE_MARKER = os.path.join(TRACKER_DIR, '_low_balance.flag')
+
+
+def low_balance_transition(balance, threshold=1.0, recover_above=3.0, marker_path=None):
+    """Kontoweiter Zustandswechsel fuer niedriges freies Guthaben (statt Telegram je Symbol und Zyklus).
+    'entered' genau einmal beim Eintritt (Marker atomar per O_EXCL angelegt -> parallele
+    Strategie-Prozesse senden nicht doppelt), 'recovered' genau einmal, sobald wieder > recover_above
+    (Hysterese gegen Hin-und-her-Meldungen um die Schwelle), sonst None."""
+    marker_path = marker_path or LOW_BALANCE_MARKER
+    if balance <= threshold:
+        try:
+            os.makedirs(os.path.dirname(marker_path), exist_ok=True)
+            fd = os.open(marker_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            return None
+        except OSError:
+            return None
+        with os.fdopen(fd, 'w') as f:
+            f.write(datetime.now().isoformat())
+        return 'entered'
+    if balance <= recover_above:
+        return None
+    try:
+        os.remove(marker_path)
+        return 'recovered'
+    except FileNotFoundError:
+        return None
+    except OSError:
+        return None
+
+
 # --- Tracker File Handling ---
 
 def get_tracker_file_path(symbol, timeframe):
@@ -2164,10 +2197,17 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
                       logger.info(f"{_n_open} Positionen offen (Grenze {_limit}) -- keine neuen Einstiege fuer {symbol}.")
                       return
               current_balance = exchange.fetch_balance_usdt()
+              _state = low_balance_transition(current_balance)
+              if _state == 'entered':
+                  send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'),
+                               f"💤 *Kapital voll im Einsatz* ({account_name}): freies Guthaben "
+                               f"{current_balance:.2f} USDT. Neue Einstiege pausieren, bis Positionen schliessen.")
+              elif _state == 'recovered':
+                  send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'),
+                               f"✅ *Wieder freies Kapital* ({account_name}): {current_balance:.2f} USDT -- "
+                               f"neue Einstiege laufen wieder.")
               if current_balance <= 1:
-                  logger.error(f"Guthaben ({current_balance:.2f} USDT) zu gering zum Platzieren von Entry-Orders.")
-                  message = f"📉 *Guthaben zu gering* bei {account_name} ({symbol}): {current_balance:.2f} USDT."
-                  send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), message)
+                  logger.info(f"Freies Guthaben {current_balance:.2f} USDT -- keine neuen Entry-Orders fuer {symbol}.")
                   return
 
               try:

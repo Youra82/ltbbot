@@ -336,3 +336,17 @@ def test_portfolio_sim_respects_max_open_strategies():
     finally:
         ps.load_btc_trend = orig
     assert two['trade_count'] == 2 and none['trade_count'] == 3
+
+
+def test_low_balance_notice_only_on_state_change(tmp_path):
+    """Telegram-Hinweis 'Guthaben gering' nur einmal kontoweit beim Eintritt/Verlassen, nicht je Symbol/Zyklus."""
+    from ltbbot.utils.trade_manager import low_balance_transition
+    m = str(tmp_path / '_low_balance.flag')
+    assert low_balance_transition(5.0, marker_path=m) is None
+    assert low_balance_transition(0.01, marker_path=m) == 'entered'
+    for _ in range(20):  # weitere Symbole / Zyklen: still
+        assert low_balance_transition(0.01, marker_path=m) is None
+    assert low_balance_transition(2.0, marker_path=m) is None  # Hysterese
+    assert low_balance_transition(8.0, marker_path=m) == 'recovered'
+    assert low_balance_transition(8.0, marker_path=m) is None
+    assert low_balance_transition(0.5, marker_path=m) == 'entered'
