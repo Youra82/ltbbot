@@ -1,17 +1,18 @@
 {
     "_meta": {
-        "pnl_pct": 20.99,
-        "oos_pnl_pct": 1.62,
-        "oos_trades": 5,
-        "oos_profit_factor": 999.0,
-        "oos_win_rate": 100.0,
+        "pnl_pct": 32.8,
+        "oos_pnl_pct": 7.37,
+        "oos_trades": 8,
+        "oos_profit_factor": 10.37,
+        "oos_win_rate": 87.5,
         "oos_max_drawdown_pct": 0.0,
-        "is_oos_split_date": "2025-11-11",
+        "is_oos_split_date": "2026-04-07",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
         "optimized_at": "2026-10-05T14:08:52",
-        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite."
+        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite.",
+        "rechecked_at": "2026-10-06T21:17:01"
     },
     "market": {
         "symbol": "CRV/USDT:USDT",

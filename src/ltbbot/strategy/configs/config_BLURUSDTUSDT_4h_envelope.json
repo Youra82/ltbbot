@@ -1,19 +1,18 @@
 {
     "_meta": {
-        "pnl_pct": 3.03,
-        "oos_pnl_pct": 1.32,
-        "oos_trades": 5,
-        "oos_profit_factor": 3.5,
-        "oos_win_rate": 80.0,
-        "oos_max_drawdown_pct": 0.52,
-        "is_oos_split_date": "2025-11-11",
+        "pnl_pct": -0.76,
+        "oos_pnl_pct": -12.8,
+        "oos_trades": 8,
+        "oos_profit_factor": 0.32,
+        "oos_win_rate": 50.0,
+        "oos_max_drawdown_pct": 17.11,
+        "is_oos_split_date": "2026-04-07",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": true,
-        "confirmed_by": "oos_gate",
+        "confirmed": false,
+        "confirmed_by": null,
         "rt_default": true,
-        "optimized_at": "2026-10-05T14:15:23",
-        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite."
+        "optimized_at": "2026-10-06T21:14:13"
     },
     "market": {
         "symbol": "BLUR/USDT:USDT",

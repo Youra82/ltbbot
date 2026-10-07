@@ -1,19 +1,18 @@
 {
     "_meta": {
-        "pnl_pct": 6.29,
-        "oos_pnl_pct": 0.0,
-        "oos_trades": 0,
-        "oos_profit_factor": 0.0,
-        "oos_win_rate": 0,
+        "pnl_pct": 32.13,
+        "oos_pnl_pct": 1.28,
+        "oos_trades": 1,
+        "oos_profit_factor": 999.0,
+        "oos_win_rate": 100.0,
         "oos_max_drawdown_pct": 0.0,
-        "is_oos_split_date": "2025-11-11",
+        "is_oos_split_date": "2026-04-07",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
         "confirmed_by": "rt_default_universe_oos",
         "rt_default": true,
-        "optimized_at": "2026-10-05T14:01:24",
-        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite."
+        "optimized_at": "2026-10-06T21:14:31"
     },
     "market": {
         "symbol": "BNB/USDT:USDT",

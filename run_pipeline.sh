@@ -90,8 +90,28 @@ echo -e "${BLUE}--- Empfehlung: Rückblick-Zeitraum je Timeframe (Standard bei '
 # fest eingebaute 548-1095 Tage je Timeframe, dadurch waren manuell und automatisch
 # optimierte Configs nicht vergleichbar.
 LOOKBACK_WEEKS=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('backtest_lookback_weeks',26))" 2>/dev/null || echo "26")
-echo "  Automatik: letzte $LOOKBACK_WEEKS Wochen fuer alle Timeframes (settings.json: backtest_lookback_weeks)"
-echo "  (IS/OOS-Aufteilung dieser Historie erfolgt weiter unten separat per --is_fraction)"
+OOS_WEEKS=$("$PYTHON" -c "import json; s=json.load(open('settings.json')); print(s.get('optimization_settings',{}).get('oos_weeks','') or '')" 2>/dev/null || echo "")
+if [ -n "$OOS_WEEKS" ]; then
+    echo "  OOS = fest die letzten $OOS_WEEKS Wochen bis heute; trainiert wird DAVOR (settings.json: oos_weeks):"
+    printf "  | Zeitfenster      | Training  |
+"
+    printf "  |------------------|-----------|
+"
+    printf "  | 5m, 15m          |  90 Tage  |
+"
+    printf "  | 30m, 1h          | 548 Tage  |
+"
+    printf "  | 2h               | 730 Tage  |
+"
+    printf "  | 4h, 6h           |1095 Tage  |
+"
+    printf "  | 1d               |1825 Tage  |
+"
+    echo "  (aenderbar in settings.json: train_days_by_timeframe; Startdatum/IS-Anteil unten werden dann ignoriert)"
+else
+    echo "  Automatik: letzte $LOOKBACK_WEEKS Wochen fuer alle Timeframes (settings.json: backtest_lookback_weeks)"
+    echo "  (IS/OOS-Aufteilung dieser Historie erfolgt weiter unten separat per --is_fraction)"
+fi
 echo ""
 read -p "Startdatum (JJJJ-MM-TT) oder 'a' für Automatik [Standard: a]: " START_DATE_INPUT
 START_DATE_INPUT=${START_DATE_INPUT:-a}

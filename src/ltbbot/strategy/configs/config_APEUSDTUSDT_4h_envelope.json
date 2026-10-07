@@ -1,19 +1,16 @@
 {
     "_meta": {
-        "pnl_pct": -6.81,
-        "oos_pnl_pct": 0.66,
-        "oos_trades": 3,
-        "oos_profit_factor": 4.54,
-        "oos_win_rate": 66.67,
-        "oos_max_drawdown_pct": 0.18,
-        "is_oos_split_date": "2025-11-11",
+        "pnl_pct": 40.58,
+        "oos_pnl_pct": 8.19,
+        "oos_trades": 10,
+        "oos_profit_factor": 17.29,
+        "oos_win_rate": 90.0,
+        "oos_max_drawdown_pct": 0.46,
+        "is_oos_split_date": "2026-04-07",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": false,
-        "confirmed_by": null,
-        "rt_default": true,
-        "optimized_at": "2026-10-05T14:09:28",
-        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite."
+        "confirmed": true,
+        "optimized_at": "2026-10-06T21:07:25"
     },
     "market": {
         "symbol": "APE/USDT:USDT",
@@ -22,11 +19,11 @@
     },
     "strategy": {
         "average_type": "DCM",
-        "average_period": 5,
+        "average_period": 14,
         "envelopes": [
-            0.07,
-            0.11,
-            0.15
+            0.04939,
+            0.12915,
+            0.15621
         ],
         "trigger_price_delta_pct": 0.1,
         "entry_mode": "touch",
@@ -48,7 +45,7 @@
     "risk": {
         "margin_mode": "isolated",
         "leverage": 2,
-        "stop_loss_pct": 25.0,
+        "stop_loss_pct": 20.62,
         "sizing": "fraction",
         "position_size_pct": 60.0,
         "min_notional_bump": true,

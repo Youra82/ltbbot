@@ -97,6 +97,15 @@ Portfolio-Simulation (29 Strategien, je 20.63 USDT Start, echter Simulator):
 | 100 % / 2 | +59.1 % | 14.9 % | ~50 % |
 | 100 % / 3 | +92.1 % | 22.6 % | ~75 % |
 
+#### 🗓️ Stand 2026-10-07: OOS 26 Wochen, 4 Timeframes, Quote, max. 10 Positionen
+
+- **OOS = fest die letzten 26 Wochen**, trainiert wird davor je Timeframe (6h/4h 1095, 2h 730, 1h 548 Tage) —
+  `oos_weeks`, `train_days_by_timeframe` in `settings.json`, zentral in `src/ltbbot/utils/oos_window.py`.
+- **102 Kandidaten × 6h/4h/2h/1h**; Portfolio-Optimizer mit **Quote je Timeframe** (`portfolio_quota`: 10–15, jedes Symbol einmal).
+- **Höchstens 10 Strategien gleichzeitig mit Position** (`live_trading_settings.max_concurrent_positions`, Live + Simulator).
+- Backtest 01.05.–07.10.2026, 20 USDT, 35 Strategien: **+340.5 %, MaxDD 19.1 %, 222 Trades, +3.13 %/Trade**
+  (Auswahl nur auf Training bis 08.04.2026). Im Training (10/2024–04/2026, inkl. Crash 10.10.2025) MaxDD 55.9 %.
+
 #### 🔁 Pipeline im RT-Modus
 
 ![Pipeline: Kandidaten, Optuna-Suche, OOS-Gate, Rückfall auf RT-Standard, Portfolio-Optimizer, Live](docs/rt_pipeline.png)

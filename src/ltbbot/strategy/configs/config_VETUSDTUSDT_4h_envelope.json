@@ -1,19 +1,20 @@
 {
     "_meta": {
-        "pnl_pct": 5.61,
-        "oos_pnl_pct": 2.82,
+        "pnl_pct": 23.96,
+        "oos_pnl_pct": 11.63,
         "oos_trades": 7,
-        "oos_profit_factor": 28.18,
+        "oos_profit_factor": 27.57,
         "oos_win_rate": 85.71,
-        "oos_max_drawdown_pct": 0.1,
-        "is_oos_split_date": "2025-11-11",
+        "oos_max_drawdown_pct": 0.41,
+        "is_oos_split_date": "2026-04-07",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
         "confirmed_by": "oos_gate",
         "rt_default": true,
         "optimized_at": "2026-10-05T14:12:44",
-        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite."
+        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite.",
+        "rechecked_at": "2026-10-06T21:48:53"
     },
     "market": {
         "symbol": "VET/USDT:USDT",

@@ -64,9 +64,55 @@ def _smoothed_score(strategy_id, strat_data, start_capital, start_date, end_date
 
 
 # --- Portfolio Optimizer Logic (Greedy Approach) ---
+def _quota_select(ranked, strategies_data, start_capital, start_date, end_date, max_dd, quota):
+    """Team mit Quote je Timeframe (User-Vorgabe 2026-10-06: je 10-15 Strategien auf 6h/4h/2h/1h).
+
+    1. Rangfolge der Einzelstrategien (sort_score, bereits nach Einzel-DD <= Limit gefiltert).
+    2. Absteigend auffuellen: je Timeframe bis quota['max'], jedes Symbol nur EINMAL (es landet
+       beim Timeframe, auf dem es am besten rangiert).
+    3. Team gemeinsam simulieren; solange MaxDD > Limit: schwaechstes Mitglied entfernen, dessen
+       Timeframe danach noch >= quota['min'] hat. Schneller als der volle Greedy (der bei ~200
+       Kandidaten jede Runde alle durchsimuliert).
+    """
+    tfs = quota.get('timeframes') or sorted({strategies_data[r['strategy_id']]['timeframe'] for r in ranked})
+    q_min, q_max = int(quota.get('min', 10)), int(quota.get('max', 15))
+    chosen, used_symbols, count = [], set(), {tf: 0 for tf in tfs}
+    for r in ranked:
+        tf = strategies_data[r['strategy_id']]['timeframe']
+        if tf not in count or count[tf] >= q_max or r['symbol'] in used_symbols:
+            continue
+        chosen.append(r)
+        used_symbols.add(r['symbol'])
+        count[tf] += 1
+    logger.info(f"Quote je Timeframe: {count} (Ziel {q_min}-{q_max})")
+
+    def _sim(members):
+        return run_portfolio_simulation(start_capital, {m['strategy_id']: strategies_data[m['strategy_id']] for m in members},
+                                        start_date, end_date, multi_band_entries=True)
+
+    result = _sim(chosen) if chosen else None
+    while result and result.get('max_drawdown_pct', 100.0) > max_dd * 100:
+        removable = [m for m in chosen if count[strategies_data[m['strategy_id']]['timeframe']] > q_min]
+        if not removable:
+            logger.warning(f"Quote-Minimum erreicht, MaxDD {result.get('max_drawdown_pct', 0):.1f}% bleibt ueber dem Limit.")
+            break
+        weakest = min(removable, key=lambda m: m['sort_score'])
+        chosen.remove(weakest)
+        count[strategies_data[weakest['strategy_id']]['timeframe']] -= 1
+        logger.info(f"-> Entferne {weakest['strategy_id']} (DD {result.get('max_drawdown_pct', 0):.1f}% > Limit)")
+        result = _sim(chosen)
+    for tf in tfs:
+        if count[tf] < q_min:
+            logger.warning(f"Timeframe {tf}: nur {count[tf]} geeignete Strategien (Ziel mind. {q_min}).")
+    ids = [m['strategy_id'] for m in chosen]
+    logger.info(f"Quote-Auswahl: {len(ids)} Strategien {count} | PnL {result.get('total_pnl_pct', 0):.1f}% "
+                f"| MaxDD {result.get('max_drawdown_pct', 0):.1f}%" if result else "Quote-Auswahl leer")
+    return {"optimal_portfolio": ids, "final_result": result or {}, "quota_counts": count}
+
+
 def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date,
                             max_portfolio_dd_constraint=0.3,
-                            smoothing_step_days=2, smoothing_samples=7): # NEU: max_portfolio_dd_constraint hinzugefügt
+                            smoothing_step_days=2, smoothing_samples=7, quota=None): # NEU: max_portfolio_dd_constraint hinzugefügt
     """
     Findet eine gute Kombination von Envelope-Strategien mithilfe eines Greedy-Algorithmus.
     Optimierungsziel: Maximierung einer risikoadjustierten Metrik (vereinfachte Calmar Ratio).
@@ -139,8 +185,14 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
         logger.error(f"Keine einzige Strategie war profitabel, überlebensfähig und unter dem Portfolio DD Limit ({max_portfolio_dd_constraint*100:.1f}%). Portfolio-Optimierung nicht möglich.")
         return None
 
-    # --- 2. Greedy-Algorithmus: Bestes Team aufbauen ---
     single_strategy_results.sort(key=lambda x: x['sort_score'], reverse=True)
+
+    # --- 2a. Quote je Timeframe (settings optimization_settings.portfolio_quota, 2026-10-06) ---
+    if quota:
+        return _quota_select(single_strategy_results, strategies_data, start_capital, start_date, end_date,
+                             max_portfolio_dd_constraint, quota)
+
+    # --- 2. Greedy-Algorithmus: Bestes Team aufbauen ---
 
     best_portfolio_ids = [single_strategy_results[0]['strategy_id']]
     best_portfolio_symbols = {single_strategy_results[0]['symbol']} # Set mit Symbolen

@@ -1,19 +1,16 @@
 {
     "_meta": {
-        "pnl_pct": -16.44,
-        "oos_pnl_pct": 0.9,
-        "oos_trades": 3,
-        "oos_profit_factor": 13.57,
-        "oos_win_rate": 66.67,
-        "oos_max_drawdown_pct": 0.07,
-        "is_oos_split_date": "2025-11-11",
+        "pnl_pct": 115.59,
+        "oos_pnl_pct": 6.45,
+        "oos_trades": 5,
+        "oos_profit_factor": 999.0,
+        "oos_win_rate": 100.0,
+        "oos_max_drawdown_pct": 0.0,
+        "is_oos_split_date": "2026-04-07",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": false,
-        "confirmed_by": null,
-        "rt_default": true,
-        "optimized_at": "2026-10-05T14:14:50",
-        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite."
+        "confirmed": true,
+        "optimized_at": "2026-10-06T21:33:32"
     },
     "market": {
         "symbol": "MASK/USDT:USDT",
@@ -21,12 +18,12 @@
         "amount_step": 0.1
     },
     "strategy": {
-        "average_type": "DCM",
-        "average_period": 5,
+        "average_type": "SMA",
+        "average_period": 29,
         "envelopes": [
-            0.07,
-            0.11,
-            0.15
+            0.04449,
+            0.10423,
+            0.13032
         ],
         "trigger_price_delta_pct": 0.1,
         "entry_mode": "touch",
@@ -48,7 +45,7 @@
     "risk": {
         "margin_mode": "isolated",
         "leverage": 2,
-        "stop_loss_pct": 25.0,
+        "stop_loss_pct": 10.81,
         "sizing": "fraction",
         "position_size_pct": 60.0,
         "min_notional_bump": true,

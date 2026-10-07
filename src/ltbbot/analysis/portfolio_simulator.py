@@ -18,7 +18,8 @@ from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, ca
                                             stop_fill_price, is_touch_mode, btc_filter_enabled,
                                             btc_trend_up_at, btc_side_allowed, reentry_blocks_until_cross,
                                             reentry_block_cleared, fraction_band_amount, uses_fraction_sizing,
-                                            average_col, btc_below50_at, short_regime_exit)
+                                            average_col, btc_below50_at, short_regime_exit,
+                                            max_concurrent_positions, concurrency_allows_new)
 from ltbbot.analysis.backtester import _resolve_ambiguous_exit, _get_fine_slice, load_btc_trend
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
@@ -27,7 +28,8 @@ SLIPPAGE_PCT_ENTRY = 0.0012  # 0.12% Slippage auf Entry (Trigger-Limit, wie back
 # --- ENDE KONSTANTEN ---
 
 
-def run_portfolio_simulation(start_capital, strategies_data, start_date, end_date, multi_band_entries=True):
+def run_portfolio_simulation(start_capital, strategies_data, start_date, end_date, multi_band_entries=True,
+                             max_open_strategies='settings'):
     """
     Führt eine chronologische Portfolio-Simulation mit mehreren Envelope-Strategien durch.
     EINHEITLICHE LOGIK mit backtester.py (2026-08-27 nachgezogen, siehe dortiger
@@ -109,6 +111,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
     if any(btc_filter_enabled(si['params']) for si in strategies_data.values()) and sorted_timestamps:
         btc_trend = load_btc_trend(sorted_timestamps[0], sorted_timestamps[-1])
     sl_block = {sid: {'long': None, 'short': None} for sid in strategy_dfs.keys()}
+    # Hoechstzahl gleichzeitig offener Strategien (wie live, envelope_logic.max_concurrent_positions)
+    max_open = max_concurrent_positions() if max_open_strategies == 'settings' else max_open_strategies
 
     if not simulation_timestamps:
         logger.error("Keine gültigen Zeitstempel im Simulationszeitraum gefunden.")
@@ -299,8 +303,11 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
         # Wie Live Bot: bei offener Position nur weitere, noch nicht offene Baender
         # auf DERSELBEN Seite (Bitget One-Way-Modus, identisch zu backtester.py)
         stopped_margin = 0.0
+        n_open_strats = sum(1 for _l in open_portfolio_positions.values() if _l)
         if equity > 0:
             for strategy_id, strat_df in strategy_dfs.items():
+                if not open_portfolio_positions[strategy_id] and not concurrency_allows_new(n_open_strats, max_open):
+                    continue  # schon max_open Strategien mit Position (live: keine neuen Einstiege)
                 if ts not in strat_df.index:
                     continue
                 df_idx = strat_df.index.get_loc(ts)
@@ -462,6 +469,8 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                                 sl_block[strategy_id][side] = df_idx
                             continue
                         used_margin += margin_required
+                        if not open_portfolio_positions[strategy_id]:
+                            n_open_strats += 1
                         open_portfolio_positions[strategy_id].append(layer)
 
         used_margin = max(0.0, used_margin - stopped_margin)

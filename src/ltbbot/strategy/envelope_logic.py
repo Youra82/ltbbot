@@ -180,6 +180,27 @@ def uses_fraction_sizing(params):
 # Bullenmarkt (10/2023-11/2025: -0.39 %). Konfig: strategy.short = {average_type, average_period,
 # envelopes}, risk.short_stop_loss_pct. Ohne strategy.short gelten die Long-Werte fuer beide Seiten.
 
+def max_concurrent_positions(settings=None):
+    """Hoechstzahl gleichzeitig offener Positionen (Strategien) ueber das ganze Konto
+    (settings.json::live_trading_settings.max_concurrent_positions, 2026-10-06 User: 10).
+    None = unbegrenzt. Geteilt von Live (trade_manager) und portfolio_simulator."""
+    if settings is None:
+        try:
+            import json as _json, os as _os
+            _root = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), '..', '..', '..'))
+            with open(_os.path.join(_root, 'settings.json')) as _f:
+                settings = _json.load(_f)
+        except Exception:
+            return None
+    v = (settings.get('live_trading_settings') or {}).get('max_concurrent_positions')
+    return int(v) if v else None
+
+
+def concurrency_allows_new(open_count, limit):
+    """Neue Position (auf einem Symbol ohne Position) nur, solange weniger als `limit` offen sind."""
+    return limit is None or open_count < limit
+
+
 def short_params(params):
     """Eigener Short-Block (oder None -> Short nutzt Mitte/Baender der Long-Seite)."""
     return params.get('strategy', {}).get('short') or None

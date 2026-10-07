@@ -4,77 +4,67 @@
         "_active_strategies_note": "Release 2026-10-05 (RT-Modus): 29 Strategien, vom Portfolio-Optimizer NUR mit IS-Daten (bis 2025-11-10) gewaehlt (20.63 USDT, MaxDD<=30 %); OOS 11.11.2025-04.10.2026 simuliert: +45.0 %, MaxDD 5.1 %, 80 Trades. Danach waehlt der woechentliche Auto-Optimizer auf dem VPS selbst (update.sh schuetzt den VPS-Stand ausser bei neuem Release).",
         "active_strategies": [
             {
-                "symbol": "SOL/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "FET/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "AR/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "NEAR/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "ORDI/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
                 "symbol": "HBAR/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "CRV/USDT:USDT",
+                "symbol": "XVG/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "BAT/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "ANKR/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "MASK/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "LPT/USDT:USDT",
+                "symbol": "KNC/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "XRP/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "VET/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "BCH/USDT:USDT",
+                "timeframe": "2h",
                 "active": true
             },
             {
-                "symbol": "GRAM/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "QNT/USDT:USDT",
+                "timeframe": "2h",
                 "active": true
             },
             {
-                "symbol": "ICP/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "ETH/USDT:USDT",
+                "timeframe": "1h",
                 "active": true
             },
             {
-                "symbol": "ENS/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "MEME/USDT:USDT",
+                "timeframe": "1h",
                 "active": true
             },
             {
-                "symbol": "ADA/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "TRX/USDT:USDT",
+                "timeframe": "1h",
                 "active": true
             },
             {
-                "symbol": "LINK/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "GALA/USDT:USDT",
+                "symbol": "MANA/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
@@ -84,31 +74,113 @@
                 "active": true
             },
             {
+                "symbol": "ALGO/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "ONE/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "AR/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "FLOKI/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "CRV/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "LTC/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "NEO/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "ASTR/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "JASMY/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "ENS/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "CELO/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "SOL/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "APE/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "ACH/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "LQTY/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
                 "symbol": "BNB/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "FLOKI/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "SAND/USDT:USDT",
+                "timeframe": "6h",
                 "active": true
             },
             {
-                "symbol": "ATOM/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "GRAM/USDT:USDT",
+                "timeframe": "6h",
                 "active": true
             },
             {
-                "symbol": "APT/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "SHIB/USDT:USDT",
-                "timeframe": "4h",
+                "symbol": "GRT/USDT:USDT",
+                "timeframe": "6h",
                 "active": true
             }
-        ]
+        ],
+        "max_concurrent_positions": 10,
+        "_max_concurrent_note": "2026-10-06 User: maximal 10 Strategien gleichzeitig mit offener Position (Live + Portfolio-Simulator, envelope_logic.max_concurrent_positions)."
     },
     "optimization_settings": {
         "enabled": true,
@@ -158,188 +230,1663 @@
         "_strategy_mode_note": "2026-10-05: 'rt' = RobotTraders-Original-Envelope (Orders direkt am Band, keine ADX-/Trend-Sperren, Not-SL ~25 %, TP an der wandernden Mitte, nur Long bei BTC-Tagesclose > SMA200, Sperre nach SL bis Close ueber Mitte, Kapitalanteil-Groesse). Ehrlich getestet auf 846 Binance-Perps inkl. delisteter: OOS +0.86 %/Trade, t=6.5. 'classic' = bisherige Optuna-Envelope-Logik.",
         "candidate_strategies": [
             {
-                "symbol": "PEPE/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "LINK/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "BNB/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "AVAX/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "HBAR/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "BCH/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "LTC/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "XLM/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "SHIB/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "NEAR/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "FET/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "DOT/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "ARB/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "APT/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "ETC/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "FLOKI/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "PEOPLE/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "ORDI/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "INJ/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "GRAM/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "ENS/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "GALA/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "CRV/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "APE/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "TRX/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "CFX/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "STX/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "SAND/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "ICP/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "ALGO/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "AR/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "DYDX/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "JASMY/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "VET/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "RUNE/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "ATOM/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "API3/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "MASK/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "LPT/USDT:USDT",
-                "timeframe": "4h"
-            },
-            {
-                "symbol": "BLUR/USDT:USDT",
-                "timeframe": "4h"
+                "symbol": "ETH/USDT:USDT",
+                "timeframe": "6h"
             },
             {
                 "symbol": "ETH/USDT:USDT",
                 "timeframe": "4h"
             },
             {
-                "symbol": "SOL/USDT:USDT",
-                "timeframe": "4h"
+                "symbol": "ETH/USDT:USDT",
+                "timeframe": "2h"
             },
             {
-                "symbol": "DOGE/USDT:USDT",
-                "timeframe": "4h"
+                "symbol": "ETH/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "XRP/USDT:USDT",
+                "timeframe": "6h"
             },
             {
                 "symbol": "XRP/USDT:USDT",
                 "timeframe": "4h"
             },
             {
+                "symbol": "XRP/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "XRP/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "PEPE/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "PEPE/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "PEPE/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "PEPE/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "BNB/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "BNB/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "BNB/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "BNB/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
                 "symbol": "ADA/USDT:USDT",
                 "timeframe": "4h"
+            },
+            {
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "LINK/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "LINK/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "LINK/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "LINK/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "NEAR/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "NEAR/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "NEAR/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "NEAR/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "LTC/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "LTC/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "LTC/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "LTC/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "AVAX/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "AVAX/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "AVAX/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "AVAX/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "BCH/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "BCH/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "BCH/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "BCH/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "XLM/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "XLM/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "XLM/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "XLM/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "HBAR/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "HBAR/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "HBAR/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "HBAR/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "DOT/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "DOT/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "DOT/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "DOT/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "FET/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "FET/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "FET/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "FET/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ARB/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ARB/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ARB/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ARB/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "APT/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "APT/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "APT/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "APT/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ICP/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ICP/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ICP/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ICP/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "SHIB/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "SHIB/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "SHIB/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "SHIB/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "GRAM/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "GRAM/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "GRAM/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "GRAM/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "INJ/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "INJ/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "INJ/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "INJ/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "CRV/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "CRV/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "CRV/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "CRV/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ORDI/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ORDI/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ORDI/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ORDI/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "AXS/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "AXS/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "AXS/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "AXS/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "TRX/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "TRX/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "TRX/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "TRX/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ETC/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ETC/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ETC/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ETC/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "QNT/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "QNT/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "QNT/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "QNT/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "GALA/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "GALA/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "GALA/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "GALA/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "DYDX/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "DYDX/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "DYDX/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "DYDX/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "SNX/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "SNX/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "SNX/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "SNX/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "SAND/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "SAND/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "SAND/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "SAND/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ALGO/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ALGO/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ALGO/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ALGO/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "FLOKI/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "FLOKI/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "FLOKI/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "FLOKI/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "AR/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "AR/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "AR/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "AR/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ATOM/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ATOM/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ATOM/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ATOM/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "CELO/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "CELO/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "CELO/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "CELO/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "LUNC/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "LUNC/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "LUNC/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "LUNC/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "APE/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "APE/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "APE/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "APE/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "COTI/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "COTI/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "COTI/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "COTI/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "CHZ/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "CHZ/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "CHZ/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "CHZ/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "CFX/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "CFX/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "CFX/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "CFX/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ENJ/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ENJ/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ENJ/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ENJ/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "XVG/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "XVG/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "XVG/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "XVG/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ONT/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ONT/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ONT/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ONT/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "MINA/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "MINA/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "MINA/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "MINA/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "JASMY/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "JASMY/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "JASMY/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "JASMY/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "API3/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "API3/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "API3/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "API3/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "AGLD/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "AGLD/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "AGLD/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "AGLD/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ID/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ID/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ID/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ID/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "STX/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "STX/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "STX/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "STX/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "PEOPLE/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "PEOPLE/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "PEOPLE/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "PEOPLE/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "VET/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "VET/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "VET/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "VET/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "YGG/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "YGG/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "YGG/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "YGG/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "MANA/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "MANA/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "MANA/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "MANA/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ACH/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ACH/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ACH/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ACH/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ONE/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ONE/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ONE/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ONE/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ROSE/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ROSE/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ROSE/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ROSE/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "BAT/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "BAT/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "BAT/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "BAT/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ZIL/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ZIL/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ZIL/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ZIL/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "TLM/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "TLM/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "TLM/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "TLM/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "GMT/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "GMT/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "GMT/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "GMT/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "IOST/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "IOST/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "IOST/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "IOST/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "BLUR/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "BLUR/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "BLUR/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "BLUR/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ARKM/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ARKM/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ARKM/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ARKM/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "SUSHI/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "SUSHI/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "SUSHI/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "SUSHI/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "LPT/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "LPT/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "LPT/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "LPT/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "COMP/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "COMP/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "COMP/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "COMP/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "KAIA/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "KAIA/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "KAIA/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "KAIA/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "1INCH/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "1INCH/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "1INCH/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "1INCH/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "MAGIC/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "MAGIC/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "MAGIC/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "MAGIC/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "IMX/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "IMX/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "IMX/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "IMX/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "MAV/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "MAV/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "MAV/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "MAV/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "C98/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "C98/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "C98/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "C98/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ARPA/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ARPA/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ARPA/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ARPA/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "CYBER/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "CYBER/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "CYBER/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "CYBER/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "THETA/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "THETA/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "THETA/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "THETA/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "RUNE/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "RUNE/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "RUNE/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "RUNE/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "EGLD/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "EGLD/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "EGLD/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "EGLD/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "GRT/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "GRT/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "GRT/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "GRT/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "IOTA/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "IOTA/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "IOTA/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "IOTA/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "SKL/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "SKL/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "SKL/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "SKL/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "RSR/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "RSR/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "RSR/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "RSR/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "LQTY/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "LQTY/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "LQTY/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "LQTY/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "MEME/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "MEME/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "MEME/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "MEME/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "POLYX/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "POLYX/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "POLYX/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "POLYX/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "SSV/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "SSV/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "SSV/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "SSV/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "XTZ/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "XTZ/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "XTZ/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "XTZ/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "KSM/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "KSM/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "KSM/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "KSM/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ASTR/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ASTR/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ASTR/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ASTR/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "QTUM/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "QTUM/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "QTUM/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "QTUM/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "1000XEC/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "1000XEC/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "1000XEC/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "1000XEC/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "RVN/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "RVN/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "RVN/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "RVN/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "NEO/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "NEO/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "NEO/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "NEO/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "KAVA/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "KAVA/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "KAVA/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "KAVA/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "BSV/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "BSV/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "BSV/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "BSV/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ZRX/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ZRX/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ZRX/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ZRX/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "KNC/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "KNC/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "KNC/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "KNC/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "OGN/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "OGN/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "OGN/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "OGN/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ANKR/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ANKR/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ANKR/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ANKR/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "MASK/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "MASK/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "MASK/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "MASK/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "SOL/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "SOL/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "SOL/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "SOL/USDT:USDT",
+                "timeframe": "1h"
+            },
+            {
+                "symbol": "ENS/USDT:USDT",
+                "timeframe": "6h"
+            },
+            {
+                "symbol": "ENS/USDT:USDT",
+                "timeframe": "4h"
+            },
+            {
+                "symbol": "ENS/USDT:USDT",
+                "timeframe": "2h"
+            },
+            {
+                "symbol": "ENS/USDT:USDT",
+                "timeframe": "1h"
             }
         ],
-        "_candidate_note": "RT-Kandidaten: 40 liquideste Bitget-Coins mit >=3 Jahren Historie (IS-Volumen) + ETH/SOL/DOGE/XRP/ADA, 4h (getesteter Timeframe).",
-        "_min_oos_trades_note": "2026-10-05 RT-Modus: 5 statt 10 -- mit BTC-Filter liefert ein einzelner Coin im OOS-Fenster (Baerenphase seit 11/2025) nur 5-8 Trades; die Kante ist erst ueber viele Coins statistisch belastbar (Portfolio-Ebene)."
+        "_candidate_note": "2026-10-06: 100 liquideste Bitget-Coins (Quote-Volumen letztes Jahr, Historie ab spaetestens 10/2024) x 6h/4h/2h/1h.",
+        "_min_oos_trades_note": "2026-10-05 RT-Modus: 5 statt 10 -- mit BTC-Filter liefert ein einzelner Coin im OOS-Fenster (Baerenphase seit 11/2025) nur 5-8 Trades; die Kante ist erst ueber viele Coins statistisch belastbar (Portfolio-Ebene).",
+        "oos_weeks": 26,
+        "train_days_by_timeframe": {
+            "5m": 90,
+            "15m": 90,
+            "30m": 548,
+            "1h": 548,
+            "2h": 730,
+            "4h": 1095,
+            "6h": 1095,
+            "1d": 1825
+        },
+        "_oos_weeks_note": "2026-10-06 User: OOS = fest die letzten 26 Wochen bis heute; trainiert wird DAVOR, Laenge je Timeframe wie in der frueheren run_pipeline.sh-Tabelle (train_days_by_timeframe). Gilt fuer Pipeline/optimizer.py, Parameter-Scheduler und Portfolio-Optimizer (Auswahl nur auf Training, Bericht bis heute mit OOS markiert). is_fraction/backtest_lookback_weeks werden in diesem Modus nicht fuer die Aufteilung genutzt.",
+        "portfolio_quota": {
+            "timeframes": [
+                "6h",
+                "4h",
+                "2h",
+                "1h"
+            ],
+            "min": 10,
+            "max": 15
+        },
+        "_portfolio_quota_note": "2026-10-06 User: je 10-15 Strategien auf 6h/4h/2h/1h; jedes Symbol nur einmal; Team-MaxDD <= max_drawdown (schwaechste raus, solange >= min je TF)."
     },
     "parameter_search_settings": {
         "_info": "Schritt 1 (Envelope-Parameter-Suche pro Symbol/Timeframe, optimizer.py) -- getrennt von optimization_settings oben, das nur Schritt 2 (woechentliche Portfolio-AUSWAHL aus bestehenden Configs, portfolio_optimizer.py) steuert. Ohne diesen Block liefe Schritt 1 nie automatisch und die Configs wuerden wieder einfrieren (siehe project_ltbbot_daily_live_vs_backtest_telegram, 2026-09-25).",

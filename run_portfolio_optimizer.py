@@ -728,6 +728,23 @@ def main() -> int:
     oos_start = None
     if end_date < date.today().strftime('%Y-%m-%d'):
         oos_start = (pd.Timestamp(end_date) + pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+    # Feste OOS-Wochen (settings oos_weeks, 2026-10-06): Auswahl NUR auf dem Training davor, Laenge je
+    # Timeframe (laengster Timeframe der Configs bestimmt das Fenster); Bericht bis heute mit OOS markiert.
+    from ltbbot.utils.oos_window import oos_weeks as _oos_weeks, windows as _oos_windows
+    if _oos_weeks(opt) and not args.end_date:
+        _tfs = set()
+        for _p in _scan_configs():
+            try:
+                with open(_p) as _f:
+                    _tfs.add(json.load(_f).get('market', {}).get('timeframe', '4h'))
+            except Exception:
+                pass
+        _today = date.today().strftime('%Y-%m-%d')
+        _wins = [_oos_windows(_tf, _today, opt) for _tf in (_tfs or {'4h'})]
+        start_date = max(w[0] for w in _wins)  # gemeinsames Fenster = kuerzestes Training (1h: 548 Tage)
+        oos_start = _wins[0][1]
+        end_date = (pd.Timestamp(oos_start) - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+        print(f"  Feste OOS-Wochen: Training {start_date} -> {end_date} | OOS {oos_start} -> {_today}")
     if args.replot:
         return _do_replot(settings, capital, start_date, date.today().strftime('%Y-%m-%d'), oos_start=oos_start)
 
@@ -759,7 +776,8 @@ def main() -> int:
     result = run_portfolio_optimizer(capital, strategies_data, start_date, end_date,
                                       max_portfolio_dd_constraint=max_dd / 100.0,
                                       smoothing_step_days=smoothing_step_days,
-                                      smoothing_samples=smoothing_samples)
+                                      smoothing_samples=smoothing_samples,
+                                      quota=opt.get('portfolio_quota'))
 
     if not result or not result.get('optimal_portfolio'):
         print(f"{R}  Kein Portfolio erfuellt die Bedingungen (MaxDD <= {max_dd:.0f}%).{NC}\n")

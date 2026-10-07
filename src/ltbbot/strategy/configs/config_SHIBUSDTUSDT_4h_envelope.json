@@ -1,19 +1,18 @@
 {
     "_meta": {
-        "pnl_pct": 11.93,
-        "oos_pnl_pct": 0.89,
+        "pnl_pct": 21.0,
+        "oos_pnl_pct": 3.57,
         "oos_trades": 3,
-        "oos_profit_factor": 30.94,
+        "oos_profit_factor": 30.21,
         "oos_win_rate": 66.67,
-        "oos_max_drawdown_pct": 0.03,
-        "is_oos_split_date": "2025-11-11",
+        "oos_max_drawdown_pct": 0.12,
+        "is_oos_split_date": "2026-04-07",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": true,
-        "confirmed_by": "rt_default_universe_oos",
+        "confirmed": false,
+        "confirmed_by": null,
         "rt_default": true,
-        "optimized_at": "2026-10-05T14:04:12",
-        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite."
+        "optimized_at": "2026-10-06T21:41:14"
     },
     "market": {
         "symbol": "SHIB/USDT:USDT",

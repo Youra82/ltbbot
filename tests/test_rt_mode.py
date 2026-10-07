@@ -310,3 +310,29 @@ def test_short_position_size_C():
     p['risk']['short_position_size_pct'] = 15.0
     assert fraction_band_amount(1000.0, p, 10.0, 3, side='short') * 10.0 == pytest.approx(50.0)
     assert fraction_band_amount(1000.0, p, 10.0, 3, side='long') * 10.0 == pytest.approx(100.0)
+
+
+def test_concurrency_limit_helpers():
+    from ltbbot.strategy.envelope_logic import max_concurrent_positions, concurrency_allows_new
+    assert max_concurrent_positions({'live_trading_settings': {'max_concurrent_positions': 10}}) == 10
+    assert max_concurrent_positions({'live_trading_settings': {}}) is None
+    assert concurrency_allows_new(9, 10) and not concurrency_allows_new(10, 10) and concurrency_allows_new(50, None)
+
+
+def test_portfolio_sim_respects_max_open_strategies():
+    from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
+    sd = {}
+    for k in range(3):
+        df = _dip_series()
+        sd[f's{k}'] = {'symbol': f'C{k}/USDT:USDT', 'timeframe': '4h', 'params': rt_params(), 'data': df}
+    import ltbbot.analysis.backtester as bt
+    orig = bt.load_btc_trend
+    import ltbbot.analysis.portfolio_simulator as ps
+    ps.load_btc_trend = lambda *a, **k: BTC_UP
+    try:
+        start, end = str(_dip_series().index[0].date()), str(_dip_series().index[-1].date())
+        two = run_portfolio_simulation(1000, sd, start, end, max_open_strategies=2)
+        none = run_portfolio_simulation(1000, sd, start, end, max_open_strategies=None)
+    finally:
+        ps.load_btc_trend = orig
+    assert two['trade_count'] == 2 and none['trade_count'] == 3

@@ -1,23 +1,23 @@
 {
     "_meta": {
-        "pnl_pct": 0.09,
-        "oos_pnl_pct": 1.61,
+        "pnl_pct": -26.11,
+        "oos_pnl_pct": 6.5,
         "oos_trades": 5,
-        "oos_profit_factor": 8.4,
+        "oos_profit_factor": 8.19,
         "oos_win_rate": 80.0,
-        "oos_max_drawdown_pct": 0.21,
-        "is_oos_split_date": "2025-11-11",
+        "oos_max_drawdown_pct": 0.86,
+        "is_oos_split_date": "2026-04-07",
         "is_fraction": 0.7,
         "k_folds": 3,
-        "confirmed": true,
-        "confirmed_by": "oos_gate",
+        "confirmed": false,
+        "confirmed_by": null,
         "rt_default": true,
-        "optimized_at": "2026-10-05T14:06:38",
-        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite."
+        "optimized_at": "2026-10-06T21:20:42"
     },
     "market": {
         "symbol": "FLOKI/USDT:USDT",
-        "timeframe": "4h"
+        "timeframe": "4h",
+        "amount_step": 1.0
     },
     "strategy": {
         "average_type": "DCM",

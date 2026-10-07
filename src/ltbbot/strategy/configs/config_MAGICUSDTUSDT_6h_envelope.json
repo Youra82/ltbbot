@@ -1,0 +1,61 @@
+{
+    "_meta": {
+        "pnl_pct": -42.64,
+        "oos_pnl_pct": 5.61,
+        "oos_trades": 6,
+        "oos_profit_factor": 3.0,
+        "oos_win_rate": 83.33,
+        "oos_max_drawdown_pct": 2.63,
+        "is_oos_split_date": "2026-04-07",
+        "is_fraction": 0.7,
+        "k_folds": 3,
+        "confirmed": false,
+        "confirmed_by": null,
+        "rt_default": true,
+        "optimized_at": "2026-10-06T20:57:20"
+    },
+    "market": {
+        "symbol": "MAGIC/USDT:USDT",
+        "timeframe": "6h",
+        "amount_step": 0.1
+    },
+    "strategy": {
+        "average_type": "DCM",
+        "average_period": 5,
+        "envelopes": [
+            0.07,
+            0.11,
+            0.15
+        ],
+        "trigger_price_delta_pct": 0.1,
+        "entry_mode": "touch",
+        "regime_filter": false,
+        "btc_trend_filter": true,
+        "reentry_after_sl": "cross_average",
+        "short": {
+            "average_type": "EMA",
+            "average_period": 20,
+            "envelopes": [
+                0.1,
+                0.14,
+                0.18
+            ],
+            "btc_filter": "sma200_sma50",
+            "regime_exit": true
+        }
+    },
+    "risk": {
+        "margin_mode": "isolated",
+        "leverage": 2,
+        "stop_loss_pct": 25.0,
+        "sizing": "fraction",
+        "position_size_pct": 60.0,
+        "min_notional_bump": true,
+        "short_stop_loss_pct": 30.0,
+        "short_position_size_pct": 30.0
+    },
+    "behavior": {
+        "use_longs": true,
+        "use_shorts": true
+    }
+}

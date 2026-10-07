@@ -22,7 +22,8 @@ from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, ca
                                             btc_filter_enabled, btc_trend_series, btc_trend_up_at, btc_side_allowed,
                                             reentry_blocks_until_cross, reentry_block_cleared,
                                             fraction_band_amount, uses_fraction_sizing, average_col,
-                                            btc_below50_at, short_regime_exit)
+                                            btc_below50_at, short_regime_exit,
+                                            max_concurrent_positions, concurrency_allows_new)
 from ltbbot.utils.exchange import Exchange, drop_incomplete_last_candle # Import hinzugefügt, falls Type Hinting verwendet wird (optional)
 
 
@@ -2149,6 +2150,19 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
 
         else:
               logger.info(f"Keine offene Position für {symbol}.")
+              # Hoechstzahl gleichzeitig offener Positionen (wie portfolio_simulator): bei erreichter Grenze
+              # keine neuen Einstiege. Abfrage STRIKT -- Fehler = keine Einstiege (fail-closed).
+              _limit = max_concurrent_positions()
+              if _limit:
+                  try:
+                      _raw = exchange.exchange.fetch_positions(params={'productType': 'USDT-FUTURES', 'marginCoin': 'USDT'})
+                      _n_open = len({p.get('symbol') for p in _raw if abs(float(p.get('contracts') or 0)) > 1e-9})
+                  except Exception as _e:
+                      logger.warning(f"Positionsabfrage fuer Positions-Grenze fehlgeschlagen ({_e}) -- keine neuen Einstiege.")
+                      return
+                  if not concurrency_allows_new(_n_open, _limit):
+                      logger.info(f"{_n_open} Positionen offen (Grenze {_limit}) -- keine neuen Einstiege fuer {symbol}.")
+                      return
               current_balance = exchange.fetch_balance_usdt()
               if current_balance <= 1:
                   logger.error(f"Guthaben ({current_balance:.2f} USDT) zu gering zum Platzieren von Entry-Orders.")

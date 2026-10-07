@@ -4,6 +4,7 @@ import sys
 import json
 import optuna
 import numpy as np
+import pandas as pd
 import argparse
 import logging
 import warnings
@@ -29,6 +30,7 @@ RESULTS_FILE = os.path.join(PROJECT_ROOT, 'artifacts', 'results', 'last_optimize
 from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP, LazyFineData
 from ltbbot.analysis.evaluator import evaluate_dataset
 from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction, band_structure_ok
+from ltbbot.utils.oos_window import oos_weeks as _oos_weeks, windows as _oos_windows
 
 # Globale Variablen für die Objective-Funktion
 HISTORICAL_DATA = None
@@ -469,7 +471,13 @@ def main():
 
         # --- Daten laden ---
         try:
-            HISTORICAL_DATA = load_data(symbol, timeframe, args.start_date, args.end_date)
+            # Feste OOS-Wochen (settings oos_weeks): Training davor je Timeframe, Start wird hier bestimmt
+            _oos_start = None
+            _load_start = args.start_date
+            if _oos_weeks(_settings_all.get('optimization_settings', {})):
+                _load_start, _oos_start = _oos_windows(timeframe, args.end_date, _settings_all.get('optimization_settings', {}))
+                logger.info(f"Feste OOS-Wochen: Training {_load_start} .. {_oos_start} | OOS {_oos_start} .. {args.end_date}")
+            HISTORICAL_DATA = load_data(symbol, timeframe, _load_start, args.end_date)
             if HISTORICAL_DATA is None or HISTORICAL_DATA.empty:
                 logger.warning(f"Keine Daten für {symbol} ({timeframe}) geladen. Überspringe.")
                 run_results['failed'].append({'symbol': symbol, 'timeframe': timeframe, 'reason': 'no_data'})
@@ -482,7 +490,14 @@ def main():
         # Chronologischer IS/OOS-Split (Port von stbot/analysis/optimizer.py): die ersten
         # IS_FRACTION der Kerzen sieht Optuna (Zielfunktion), der Rest dient ausschliesslich
         # der spaeteren Bestaetigung des besten Trials -- fliesst nie in die Suche ein.
-        split_idx = int(len(HISTORICAL_DATA) * IS_FRACTION)
+        if _oos_start:
+            split_idx = int(HISTORICAL_DATA.index.searchsorted(pd.Timestamp(_oos_start, tz='UTC')))
+            if split_idx < 50 or split_idx >= len(HISTORICAL_DATA):
+                logger.warning(f"Zu wenig Trainings-/OOS-Daten fuer {symbol} ({timeframe}). Ueberspringe.")
+                run_results['failed'].append({'symbol': symbol, 'timeframe': timeframe, 'reason': 'no_data'})
+                continue
+        else:
+            split_idx = int(len(HISTORICAL_DATA) * IS_FRACTION)
         split_ts  = HISTORICAL_DATA.index[split_idx]
         IS_DATA   = HISTORICAL_DATA.iloc[:split_idx]
         OOS_DATA  = HISTORICAL_DATA.iloc[split_idx:]

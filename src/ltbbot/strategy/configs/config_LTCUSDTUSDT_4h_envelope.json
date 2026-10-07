@@ -1,17 +1,18 @@
 {
     "_meta": {
-        "pnl_pct": 5.33,
-        "oos_pnl_pct": 0.34,
+        "pnl_pct": 1.37,
+        "oos_pnl_pct": 1.38,
         "oos_trades": 5,
-        "oos_profit_factor": 3.0,
+        "oos_profit_factor": 2.97,
         "oos_win_rate": 60.0,
-        "oos_max_drawdown_pct": 0.15,
-        "is_oos_split_date": "2025-11-11",
+        "oos_max_drawdown_pct": 0.6,
+        "is_oos_split_date": "2026-04-07",
         "is_fraction": 0.7,
         "k_folds": 3,
         "confirmed": true,
         "optimized_at": "2026-10-05T14:02:40",
-        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite."
+        "short_side": "2026-10-05 A+B+C: Short EMA20, Baender 10/14/18 %, SL 30 %, nur bei BTC < SMA200 UND < SMA50, Regime-Ausstieg bei BTC > SMA200, Short-Groesse 15 %. Gepoolt geprueft -- confirmed bezieht sich auf die Long-Seite.",
+        "rechecked_at": "2026-10-06T21:27:47"
     },
     "market": {
         "symbol": "LTC/USDT:USDT",
