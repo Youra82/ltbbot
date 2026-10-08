@@ -152,6 +152,8 @@ def main():
     parser = argparse.ArgumentParser(description="ltbbot Envelope Trading-Skript")
     parser.add_argument('--symbol', required=True, type=str, help="Handelspaar (z.B. BTC/USDT:USDT)")
     parser.add_argument('--timeframe', required=True, type=str, help="Zeitrahmen (z.B. 1h)")
+    parser.add_argument('--manage-only', action='store_true',
+                        help="Verwaiste Position (nicht in active_strategies): nur TP/SL verwalten, keine Einstiege")
     # Kein --use_macd mehr
     args = parser.parse_args()
 
@@ -164,7 +166,9 @@ def main():
     try:
         # Lade die passende Konfiguration
         params = load_config(symbol, timeframe)
-        logger.info(f"Konfiguration geladen für {symbol} ({timeframe}).")
+        if args.manage_only:
+            params['_manage_only'] = True
+        logger.info(f"Konfiguration geladen für {symbol} ({timeframe}){' [nur verwalten]' if args.manage_only else ''}.")
 
         # Lade Secrets (API Keys und Telegram Info)
         with open(os.path.join(PROJECT_ROOT, 'secret.json'), "r") as f:

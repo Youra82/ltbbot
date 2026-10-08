@@ -520,4 +520,6 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
         "trades_per_strategy": trades_per_strategy_df,
         "equity_curve":       equity_df,
         "trades_df":          trades_df,
+        # am Ende noch offene Baender (fuer Live-vs-Backtest-Abgleich laufender Positionen)
+        "open_positions":     [{**l, 'strategy_id': sid} for sid, ls in open_portfolio_positions.items() for l in ls],
     }

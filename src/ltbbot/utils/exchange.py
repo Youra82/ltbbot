@@ -463,6 +463,25 @@ class Exchange:
         return cancelled_count
 
 
+    def cancel_stale_entry_orders(self, keep_symbols):
+        """Kontoweit: Entry-Trigger (normal_plan, tradeSide 'open') auf Symbolen stornieren, die NICHT
+        in keep_symbols (active_strategies) stehen. Nach einem Portfolio-/Release-Wechsel laeuft fuer
+        diese Symbole kein Prozess mehr, der ihre Kauf-Orders je Zyklus storniert -- sie blieben liegen
+        und wurden spaeter gefuellt (API3/VET/XLM 2026-10-07/08). TP/SL (tradeSide 'close') bleiben.
+        Rueckgabe: Liste (symbol, orderId) der stornierten Orders."""
+        if not self.markets: return []
+        by_id = {m.get('id'): s for s, m in self.markets.items() if m.get('swap')}
+        resp = self.exchange.privateMixGetV2MixOrderOrdersPlanPending(
+            {'productType': 'USDT-FUTURES', 'planType': 'normal_plan'})
+        cancelled = []
+        for o in (resp.get('data') or {}).get('entrustedList') or []:
+            sym = by_id.get(o.get('symbol'))
+            if o.get('tradeSide') != 'open' or not sym or sym in keep_symbols:
+                continue
+            self.cancel_trigger_order(o['orderId'], sym)
+            cancelled.append((sym, o['orderId']))
+        return cancelled
+
     def fetch_all_open_positions(self):
         """
         Kontoweiter Positions-Fetch OHNE Symbol-Filter -- fuer die Housekeeper-

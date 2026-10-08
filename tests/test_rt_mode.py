@@ -375,3 +375,22 @@ def test_close_position_market_closes_long_with_sell(tmp_path, no_telegram):
     t = tm.read_tracker_file(tracker)
     assert t['committed_bands'] == {'long': [], 'short': []} and t['take_profit_ids'] == []
     assert len(no_telegram) == 1
+
+
+def test_cancel_stale_entry_orders_only_inactive_open_orders():
+    """Nach Release-Wechsel: Kauf-Orders alter Symbole stornieren, TP/SL und aktive Symbole unberuehrt."""
+    from ltbbot.utils.exchange import Exchange
+    ex = Exchange.__new__(Exchange)
+    ex.markets = {'XLM/USDT:USDT': {'id': 'XLMUSDT', 'swap': True}, 'ADA/USDT:USDT': {'id': 'ADAUSDT', 'swap': True},
+                  'VET/USDT:USDT': {'id': 'VETUSDT', 'swap': True}}
+    class Raw:
+        def privateMixGetV2MixOrderOrdersPlanPending(self, p):
+            return {'data': {'entrustedList': [
+                {'symbol': 'XLMUSDT', 'tradeSide': 'open', 'orderId': '1'},    # alt, Kauf -> stornieren
+                {'symbol': 'VETUSDT', 'tradeSide': 'close', 'orderId': '2'},   # alt, aber TP -> bleibt
+                {'symbol': 'ADAUSDT', 'tradeSide': 'open', 'orderId': '3'}]}}  # aktiv -> bleibt
+    ex.exchange = Raw()
+    done = []
+    ex.cancel_trigger_order = lambda oid, sym: done.append((sym, oid))
+    assert ex.cancel_stale_entry_orders({'ADA/USDT:USDT'}) == [('XLM/USDT:USDT', '1')]
+    assert done == [('XLM/USDT:USDT', '1')]

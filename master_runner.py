@@ -135,6 +135,14 @@ def main():
                 for p in exch.fetch_all_open_positions():
                     if p.get('symbol'):
                         position_symbols.add(p['symbol'])
+                # Kauf-Orders von Symbolen ausserhalb active_strategies (z.B. nach Release-/Portfolio-
+                # Wechsel liegengeblieben) stornieren -- sonst werden sie spaeter ungesteuert gefuellt.
+                try:
+                    for _sym, _oid in exch.cancel_stale_entry_orders(active_symbols):
+                        logging.warning(f"Housekeeper: liegengebliebene Kauf-Order {_oid} auf {_sym} "
+                                        f"(nicht in active_strategies) storniert.")
+                except Exception as _ce:
+                    logging.error(f"Housekeeper: Stornieren alter Kauf-Orders fehlgeschlagen: {_ce}")
             orphaned_symbols = position_symbols - active_symbols
 
             if orphaned_symbols:
@@ -158,7 +166,8 @@ def main():
                         f"Verwaiste Position gefunden: {orph_symbol} ({orph_timeframe}) — "
                         f"nicht mehr in active_strategies, wird trotzdem weiter verwaltet."
                     )
-                    strategy_list.append({'symbol': orph_symbol, 'timeframe': orph_timeframe, 'active': True})
+                    strategy_list.append({'symbol': orph_symbol, 'timeframe': orph_timeframe, 'active': True,
+                                          'manage_only': True})
         except Exception as _e:
             logging.error(f"Housekeeper-Check für verwaiste Positionen fehlgeschlagen: {_e}", exc_info=True)
 
@@ -203,6 +212,8 @@ def main():
                 "--symbol", symbol,
                 "--timeframe", timeframe,
             ]
+            if strategy_info.get('manage_only'):
+                command.append("--manage-only")
 
             try:
                 # Starte den Prozess und lass ihn im Hintergrund laufen

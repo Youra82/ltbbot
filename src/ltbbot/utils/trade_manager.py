@@ -2197,6 +2197,9 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
             # bekommt seine eigene feste SL, der gebuendelte TP wird im naechsten
             # Zyklus von manage_existing_position() automatisch auf die dann
             # groessere Positionsgroesse angepasst).
+            if params.get('_manage_only'):
+                logger.info(f"{symbol}: verwaiste Position (nicht mehr in active_strategies) -- nur TP/SL, keine weiteren Baender.")
+                return
             current_balance = exchange.fetch_balance_usdt()
             place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger,
                                df=data_with_indicators, restrict_side=position['side'],
@@ -2205,6 +2208,9 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
 
         else:
               logger.info(f"Keine offene Position für {symbol}.")
+              if params.get('_manage_only'):
+                  logger.info(f"{symbol}: nicht mehr in active_strategies und keine Position -- keine neuen Einstiege.")
+                  return
               # Hoechstzahl gleichzeitig offener Positionen (wie portfolio_simulator): bei erreichter Grenze
               # keine neuen Einstiege. Abfrage STRIKT -- Fehler = keine Einstiege (fail-closed).
               _limit = max_concurrent_positions()
