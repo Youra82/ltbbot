@@ -350,3 +350,28 @@ def test_low_balance_notice_only_on_state_change(tmp_path):
     assert low_balance_transition(8.0, marker_path=m) == 'recovered'
     assert low_balance_transition(8.0, marker_path=m) is None
     assert low_balance_transition(0.5, marker_path=m) == 'entered'
+
+
+def test_tp_already_reached_matches_backtest_gap():
+    """LPT 4h 2026-10-08: Mitte (TP) fiel unter den Kurs -> live muss schliessen (Backtest: Ausstieg zum Open)."""
+    from ltbbot.strategy.envelope_logic import tp_already_reached
+    assert tp_already_reached('long', 1.688, 1.673)          # Kurs ueber Long-Mitte -> TP erreicht
+    assert not tp_already_reached('long', 1.660, 1.673)
+    assert tp_already_reached('short', 0.95, 1.00)            # Kurs unter Short-Mitte
+    assert not tp_already_reached('short', 1.05, 1.00)
+    assert not tp_already_reached('long', None, 1.0) and not tp_already_reached('long', 1.0, float('nan'))
+
+
+def test_close_position_market_closes_long_with_sell(tmp_path, no_telegram):
+    class Ex:
+        def __init__(self): self.calls = []
+        def cancel_all_orders_for_symbol(self, s): self.calls.append(('cancel', s))
+        def fetch_open_positions(self, s): return [{'side': 'long', 'contracts': '2.8'}]
+        def place_market_order(self, s, side, amount, reduce=False): self.calls.append(('market', side, amount, reduce))
+    ex = Ex(); tracker = str(tmp_path / 't.json')
+    tm.update_tracker_file(tracker, {'committed_bands': {'long': [1], 'short': []}, 'take_profit_ids': ['x']})
+    assert tm._close_position_market(ex, 'LPT/USDT:USDT', tracker, {}, log, 'TP-Ausstieg', 'msg')
+    assert ex.calls == [('cancel', 'LPT/USDT:USDT'), ('market', 'sell', 2.8, True)]
+    t = tm.read_tracker_file(tracker)
+    assert t['committed_bands'] == {'long': [], 'short': []} and t['take_profit_ids'] == []
+    assert len(no_telegram) == 1

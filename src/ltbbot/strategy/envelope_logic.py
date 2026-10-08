@@ -130,6 +130,18 @@ def short_regime_exit(params):
     return bool((short_params(params) or {}).get('regime_exit')) and btc_filter_enabled(params)
 
 
+def tp_already_reached(side, price, tp_price):
+    """Kurs steht schon auf/jenseits des TP (Mitte der Positionsseite).
+
+    Backtester: oeffnet eine Kerze jenseits des TP -> Ausstieg zum Open ('TP', tp_gap).
+    Live muss dann sofort per Market schliessen: ein Trigger-TP auf der falschen Seite
+    des Kurses deutet Bitget als Stop ('Mark <= TP' bei Long) -- die Position bliebe
+    offen (LPT 4h, 2026-10-08: Mitte fiel unter den Kurs, TP wurde zum Stop)."""
+    if price is None or tp_price is None or not tp_price > 0 or not price > 0:
+        return False
+    return price >= tp_price if side == 'long' else price <= tp_price
+
+
 def reentry_block_cleared(side, close_price, average_price):
     """Sperre nach SL aufheben: Close wieder jenseits der Mitte (Long: darueber)."""
     if close_price is None or average_price is None or pd.isna(close_price) or pd.isna(average_price):

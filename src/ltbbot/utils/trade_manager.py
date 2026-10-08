@@ -23,7 +23,8 @@ from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, ca
                                             reentry_blocks_until_cross, reentry_block_cleared,
                                             fraction_band_amount, uses_fraction_sizing, average_col,
                                             btc_below50_at, short_regime_exit,
-                                            max_concurrent_positions, concurrency_allows_new)
+                                            max_concurrent_positions, concurrency_allows_new,
+                                            tp_already_reached)
 from ltbbot.utils.exchange import Exchange, drop_incomplete_last_candle # Import hinzugefügt, falls Type Hinting verwendet wird (optional)
 
 
@@ -1346,21 +1347,22 @@ def fetch_btc_trend_up(exchange: Exchange, logger: logging.Logger):
         return None, None
 
 
-def _close_short_on_regime(exchange: Exchange, symbol: str, tracker_file_path: str,
-                           telegram_config: dict, logger: logging.Logger):
-    """Regime-Ausstieg: alle Orders stornieren, Short per reduceOnly-Market schliessen, Tracker
-    zuruecksetzen (gleicher Ablauf wie _emergency_force_close, aber regulaerer Ausstieg)."""
+def _close_position_market(exchange: Exchange, symbol: str, tracker_file_path: str, telegram_config: dict,
+                           logger: logging.Logger, reason: str, message: str) -> bool:
+    """Regulaerer Ausstieg per Market: alle Orders stornieren, Position reduceOnly schliessen,
+    Tracker zuruecksetzen (gleicher Ablauf wie _emergency_force_close). True = geschlossen."""
     try:
         exchange.cancel_all_orders_for_symbol(symbol)
     except Exception as e:
-        logger.error(f"Regime-Ausstieg {symbol}: Stornieren fehlgeschlagen: {e}")
+        logger.error(f"{reason} {symbol}: Stornieren fehlgeschlagen: {e}")
     try:
         pl = exchange.fetch_open_positions(symbol)
         if pl and float(pl[0].get('contracts', 0)) > 0:
-            exchange.place_market_order(symbol, 'buy', float(pl[0]['contracts']), reduce=True)
+            close_side = 'sell' if pl[0].get('side') == 'long' else 'buy'
+            exchange.place_market_order(symbol, close_side, float(pl[0]['contracts']), reduce=True)
     except Exception as e:
-        logger.error(f"Regime-Ausstieg {symbol}: Schliessen fehlgeschlagen: {e}", exc_info=True)
-        return
+        logger.error(f"{reason} {symbol}: Schliessen fehlgeschlagen: {e}", exc_info=True)
+        return False
     tracker_info = read_tracker_file(tracker_file_path)
     tracker_info.update({"committed_bands": {"long": [], "short": []},
                          "pending_band_orders": {"long": {}, "short": {}},
@@ -1369,8 +1371,15 @@ def _close_short_on_regime(exchange: Exchange, symbol: str, tracker_file_path: s
     tracker_info.pop('last_notified_entry_price', None)
     tracker_info.pop('last_notified_side', None)
     update_tracker_file(tracker_file_path, tracker_info)
-    send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'),
-                 f"🔄 REGIME-AUSSTIEG {symbol}\nBTC schliesst wieder ueber SMA200 -- Short-Position geschlossen.")
+    send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), message)
+    return True
+
+
+def _close_short_on_regime(exchange: Exchange, symbol: str, tracker_file_path: str,
+                           telegram_config: dict, logger: logging.Logger):
+    """Regime-Ausstieg: offenen Short per Market schliessen (BTC wieder ueber SMA200)."""
+    return _close_position_market(exchange, symbol, tracker_file_path, telegram_config, logger, 'Regime-Ausstieg',
+                                  f"🔄 REGIME-AUSSTIEG {symbol}\nBTC schliesst wieder ueber SMA200 -- Short-Position geschlossen.")
 
 
 def update_sl_reentry_block(tracker_file_path: str, committed_before: dict, sl_prices_before: dict,
@@ -2166,6 +2175,19 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
         sl_fired_candle_ts = tracker_info.get("sl_fired_candle_ts") or {"long": {}, "short": {}}
 
         if position:
+            # TP schon erreicht (Mitte liegt auf/hinter dem Kurs)? -> sofort schliessen wie backtester.py
+            # (tp_gap: Ausstieg zum Open). Ein Trigger-TP dort waere fuer Bitget ein Stop.
+            _tp = band_prices.get(average_col(position['side']), band_prices.get('average'))
+            try:
+                _px = float(exchange.fetch_ticker(symbol).get('last'))
+            except Exception:
+                _px = None
+            if tp_already_reached(position['side'], _px, _tp):
+                logger.info(f"TP erreicht {symbol}: Kurs {_px} jenseits der Mitte {_tp:.6g} -- schliesse per Market.")
+                _close_position_market(exchange, symbol, tracker_file_path, telegram_config, logger, 'TP-Ausstieg',
+                                       f"✅ TP erreicht {symbol} ({position['side']})\nKurs {_px} steht jenseits der Mitte "
+                                       f"{_tp:.6g} -- Position per Market geschlossen (Entry {position.get('entryPrice')}).")
+                return
             manage_existing_position(exchange, position, band_prices, params, tracker_file_path, logger)
             logger.info(f"Position für {symbol} ist offen ({position['side']} {position['contracts']}). TP aktualisiert.")
             check_and_notify_new_position(exchange, position, params, tracker_file_path, telegram_config, logger)
