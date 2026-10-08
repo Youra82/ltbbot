@@ -139,8 +139,9 @@ fi
 
 # 5. Lösche den Python-Cache, um alte Code-Versionen zu entfernen
 echo "5. Lösche alten Python-Cache für einen sauberen Neustart..."
-find . -type f -name "*.pyc" -delete
-find . -type d -name "__pycache__" -delete
+# .venv auslassen; rm -rf statt -delete und || true: laeuft parallel ein Cron-Zyklus, legt Python
+# neue .pyc an ("Directory not empty") -- das darf wegen set -e das Update nicht abbrechen.
+find . -path ./.venv -prune -o -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 
 # 6. Setze die Ausführungsrechte für alle Skripte
 echo "6. Setze Ausführungsrechte für alle .sh-Skripte..."
