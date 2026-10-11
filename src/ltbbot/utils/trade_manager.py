@@ -1347,6 +1347,12 @@ def fetch_btc_trend_up(exchange: Exchange, logger: logging.Logger):
         return None, None
 
 
+def is_adopted_position(committed_bands, side) -> bool:
+    """Offene Position, fuer die DIESE Strategie kein Band als gefuellt gefuehrt hat -> uebernommen
+    (anderer Timeframe/alte Strategie desselben Coins). Dann keine eigenen Nachkaeufe."""
+    return not ((committed_bands or {}).get(side) or [])
+
+
 def _close_position_market(exchange: Exchange, symbol: str, tracker_file_path: str, telegram_config: dict,
                            logger: logging.Logger, reason: str, message: str) -> bool:
     """Regulaerer Ausstieg per Market: alle Orders stornieren, Position reduceOnly schliessen,
@@ -2199,6 +2205,19 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
             # groessere Positionsgroesse angepasst).
             if params.get('_manage_only'):
                 logger.info(f"{symbol}: verwaiste Position (nicht mehr in active_strategies) -- nur TP/SL, keine weiteren Baender.")
+                return
+            if is_adopted_position(committed_bands, position['side']):
+                # Position stammt nicht von dieser Strategie (kein eigenes Band gefuellt), z.B. nach
+                # Portfolio-Wechsel auf einen anderen Timeframe desselben Coins (SAND 6h -> 4h, HBAR 4h -> 6h,
+                # 2026-10-11). Nur TP/SL verwalten, keine eigenen Baender obendrauf -- im Backtest startet
+                # die neue Strategie flach. Pending-Eintraege leeren: die gerade stornierten Kauf-Orders
+                # wuerde sync_band_fills() sonst im naechsten Zyklus als "gefuellt" werten.
+                _ti = read_tracker_file(tracker_file_path)
+                _pend = _ti.get("pending_band_orders") or {"long": {}, "short": {}}
+                _pend[position['side']] = {}
+                _ti["pending_band_orders"] = _pend
+                update_tracker_file(tracker_file_path, _ti)
+                logger.info(f"{symbol}: uebernommene Position ohne eigene Baender -- nur TP/SL bis zum Ausstieg, keine Nachkaeufe.")
                 return
             current_balance = exchange.fetch_balance_usdt()
             place_entry_orders(exchange, band_prices, params, current_balance, tracker_file_path, telegram_config, logger,

@@ -406,3 +406,11 @@ def test_quota_path_saves_results_file(tmp_path, monkeypatch):
     d = _json.load(open(tmp_path / 'artifacts' / 'results' / 'portfolio_optimization_results.json'))
     assert d['optimal_portfolio'] == ['config_ETHUSDTUSDT_1h_envelope.json']
     assert d['final_summary']['total_pnl_pct'] == 12.5
+
+
+def test_adopted_position_detection():
+    """SAND 6h-Position, jetzt SAND 4h aktiv: ohne eigenes gefuelltes Band keine Nachkaeufe."""
+    assert tm.is_adopted_position({'long': [], 'short': []}, 'long')
+    assert tm.is_adopted_position(None, 'long')
+    assert not tm.is_adopted_position({'long': [1], 'short': []}, 'long')
+    assert tm.is_adopted_position({'long': [1], 'short': []}, 'short')
