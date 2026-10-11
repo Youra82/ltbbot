@@ -1875,7 +1875,7 @@
             "6h": 1095,
             "1d": 1825
         },
-        "_oos_weeks_note": "2026-10-06 User: OOS = fest die letzten 26 Wochen bis heute; trainiert wird DAVOR, Laenge je Timeframe wie in der frueheren run_pipeline.sh-Tabelle (train_days_by_timeframe). Gilt fuer Pipeline/optimizer.py, Parameter-Scheduler und Portfolio-Optimizer (Auswahl nur auf Training, Bericht bis heute mit OOS markiert). is_fraction/backtest_lookback_weeks werden in diesem Modus nicht fuer die Aufteilung genutzt.",
+        "_oos_weeks_note": "2026-10-06 User: OOS = fest die letzten 26 Wochen bis heute; trainiert wird DAVOR, Laenge je Timeframe wie in der frueheren run_pipeline.sh-Tabelle (train_days_by_timeframe). Gilt fuer Pipeline/optimizer.py und Parameter-Scheduler. Der Portfolio-Optimizer waehlt (2026-10-11 User, wie stbot) auf den letzten backtest_lookback_weeks Wochen bis heute. is_fraction/backtest_lookback_weeks werden in diesem Modus nicht fuer die Aufteilung genutzt.",
         "portfolio_quota": {
             "timeframes": [
                 "6h",

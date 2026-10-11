@@ -141,7 +141,7 @@ ihres Trainings-Beitrags gewählt.
 | Optuna-Suche | Mitte, Bänder und Long-SL **nur auf dem Training**, K-Fold-Minimum gegen Zufallstreffer | `run_pipeline.sh` → `optimizer.py` |
 | OOS-Gate | ≥ 5 OOS-Trades, Profit-Faktor ≥ 1.3, PnL > 0, DD ≤ 30 % → eigene Parameter | `min_oos_trades`, `min_oos_profit_factor` |
 | Rückfall | sonst RT-Standard-Parameter, wenn Training > 0 und OOS ≥ 0 | – |
-| Portfolio-Optimizer | wählt **nur auf dem Training**, Quote 10–15 je Timeframe, jedes Symbol einmal; Bericht läuft bis heute mit markiertem OOS-Teil | `portfolio_quota`, `run_portfolio_optimizer.py` |
+| Portfolio-Optimizer | wählt wöchentlich das beste Team auf den **letzten 26 Wochen bis heute** (wie stbot), Quote 10–15 je Timeframe, jedes Symbol einmal, schreibt es in `settings.json` | `backtest_lookback_weeks`, `portfolio_quota`, `auto_optimizer_scheduler.py` |
 | Live | `master_runner.py` alle 15 Min, je Strategie ein Prozess | `live_trading_settings` |
 
 Junge Coins ohne Historie bis zum Trainingsbeginn (z. B. auf 4h/6h vor 2023) werden übersprungen.
