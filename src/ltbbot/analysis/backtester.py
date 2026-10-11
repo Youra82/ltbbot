@@ -22,6 +22,10 @@ from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, ca
                                             average_col, btc_below50_at, short_regime_exit)
 
 secrets_cache = None
+# EINE gemeinsame Exchange-Instanz fuer alle LazyFineData (je Instanz ~57 MB durch load_markets):
+# vorher eigene je Strategie -> Auto-Portfolio-Optimizer mit 276 Configs auf dem VPS per OOM
+# beendet (2 GB RSS, 2026-10-10).
+_fine_exchange = None
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
 SLIPPAGE_PCT_EXIT  = 0.0005  # 0.05% Slippage auf Exit (Market Order TP/SL)
@@ -65,12 +69,11 @@ class LazyFineData:
         self.symbol = symbol
         self.fine_tf = fine_tf
         self._days = {}
-        self._exchange = None
 
     def _get_exchange(self):
-        global secrets_cache
-        if self._exchange is not None:
-            return self._exchange
+        global secrets_cache, _fine_exchange
+        if _fine_exchange is not None:
+            return _fine_exchange
         try:
             if secrets_cache is None:
                 with open(os.path.join(PROJECT_ROOT, 'secret.json'), "r") as f:
@@ -79,10 +82,10 @@ class LazyFineData:
             if 'ltbbot' in secrets_cache and isinstance(secrets_cache['ltbbot'], list) and secrets_cache['ltbbot']:
                 api_setup = secrets_cache['ltbbot'][0]
             if api_setup:
-                self._exchange = Exchange(api_setup)
+                _fine_exchange = Exchange(api_setup)
         except Exception:
-            self._exchange = None
-        return self._exchange
+            _fine_exchange = None
+        return _fine_exchange
 
     def _ensure_day(self, day):
         if day in self._days:
