@@ -107,7 +107,53 @@ def _quota_select(ranked, strategies_data, start_capital, start_date, end_date, 
     ids = [m['strategy_id'] for m in chosen]
     logger.info(f"Quote-Auswahl: {len(ids)} Strategien {count} | PnL {result.get('total_pnl_pct', 0):.1f}% "
                 f"| MaxDD {result.get('max_drawdown_pct', 0):.1f}%" if result else "Quote-Auswahl leer")
+    _save_results(ids, result or {})
     return {"optimal_portfolio": ids, "final_result": result or {}, "quota_counts": count}
+
+
+def _save_results(best_portfolio_ids, best_portfolio_result):
+    """Ergebnis nach artifacts/results/portfolio_optimization_results.json schreiben -- liest u.a. die
+    Telegram-Abschlussmeldung von auto_optimizer_scheduler.py. Muss fuer JEDEN Auswahlweg laufen
+    (Quote und Greedy), sonst zeigt die Meldung eine veraltete Datei (2026-10-11: altes Portfolio
+    AAVE 2h/SOL 30m/DOGE 30m/BTC 1d, +32488 %, obwohl die Quote-Auswahl ein anderes Team schrieb)."""
+    if not best_portfolio_result:
+        best_portfolio_result = {}
+    results_dir = os.path.join(PROJECT_ROOT, 'artifacts', 'results')
+    os.makedirs(results_dir, exist_ok=True)
+    results_file_path = os.path.join(results_dir, 'portfolio_optimization_results.json')
+    try:
+        # Erstelle eine serialisierbare Kopie des Ergebnisses
+        final_result_serializable = best_portfolio_result.copy()
+
+        # Serialisiere DataFrames und Timestamps
+        if 'equity_curve' in final_result_serializable and isinstance(final_result_serializable['equity_curve'], pd.DataFrame):
+             # Wandle Index (Timestamp) in eine Spalte um, bevor es in Dict umgewandelt wird
+             ec_df = final_result_serializable['equity_curve'].reset_index()
+             ec_df['timestamp'] = ec_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S%z') # ISO Format mit TZ
+             final_result_serializable['equity_curve_list'] = ec_df.to_dict('records')
+             del final_result_serializable['equity_curve']
+
+        # Serialisiere pnl_per_strategy, trades_per_strategy und trades_df DataFrames
+        for key in ['pnl_per_strategy', 'trades_per_strategy', 'trades_df']:
+            if key in final_result_serializable and isinstance(final_result_serializable[key], pd.DataFrame):
+                final_result_serializable[key] = final_result_serializable[key].to_dict('records')
+
+        # Serialisiere einzelne Timestamps
+        for key in ['max_drawdown_date', 'liquidation_date']:
+            if final_result_serializable.get(key) and isinstance(final_result_serializable[key], pd.Timestamp):
+                 final_result_serializable[key] = final_result_serializable[key].strftime('%Y-%m-%d %H:%M:%S%z')
+
+
+        save_data = {
+            "optimal_portfolio": best_portfolio_ids,
+            "final_summary": final_result_serializable # Verwende die serialisierte Version
+        }
+        with open(results_file_path, 'w') as f:
+            json.dump(save_data, f, indent=4, default=str) # default=str als Fallback
+        logger.info(f"Optimierungsergebnisse gespeichert in: {results_file_path}")
+
+    except Exception as e:
+        logger.error(f"Fehler beim Speichern der Optimierungsergebnisse als JSON: {e}", exc_info=True)
 
 
 def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date,
@@ -340,44 +386,7 @@ def run_portfolio_optimizer(start_capital, strategies_data, start_date, end_date
     # --- Endergebnis zurückgeben ---
     logger.info(f"Optimierung abgeschlossen. Bestes Portfolio hat {len(best_portfolio_ids)} Strategien mit Score {best_portfolio_score:.2f}.")
 
-    # Speichere das Ergebnis optional als JSON
-    results_dir = os.path.join(PROJECT_ROOT, 'artifacts', 'results')
-    os.makedirs(results_dir, exist_ok=True)
-    results_file_path = os.path.join(results_dir, 'portfolio_optimization_results.json')
-    try:
-        # Erstelle eine serialisierbare Kopie des Ergebnisses
-        final_result_serializable = best_portfolio_result.copy()
-
-        # Serialisiere DataFrames und Timestamps
-        if 'equity_curve' in final_result_serializable and isinstance(final_result_serializable['equity_curve'], pd.DataFrame):
-             # Wandle Index (Timestamp) in eine Spalte um, bevor es in Dict umgewandelt wird
-             ec_df = final_result_serializable['equity_curve'].reset_index()
-             ec_df['timestamp'] = ec_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S%z') # ISO Format mit TZ
-             final_result_serializable['equity_curve_list'] = ec_df.to_dict('records')
-             del final_result_serializable['equity_curve']
-
-        # Serialisiere pnl_per_strategy, trades_per_strategy und trades_df DataFrames
-        for key in ['pnl_per_strategy', 'trades_per_strategy', 'trades_df']:
-            if key in final_result_serializable and isinstance(final_result_serializable[key], pd.DataFrame):
-                final_result_serializable[key] = final_result_serializable[key].to_dict('records')
-
-        # Serialisiere einzelne Timestamps
-        for key in ['max_drawdown_date', 'liquidation_date']:
-            if final_result_serializable.get(key) and isinstance(final_result_serializable[key], pd.Timestamp):
-                 final_result_serializable[key] = final_result_serializable[key].strftime('%Y-%m-%d %H:%M:%S%z')
-
-
-        save_data = {
-            "optimal_portfolio": best_portfolio_ids,
-            "final_summary": final_result_serializable # Verwende die serialisierte Version
-        }
-        with open(results_file_path, 'w') as f:
-            json.dump(save_data, f, indent=4, default=str) # default=str als Fallback
-        logger.info(f"Optimierungsergebnisse gespeichert in: {results_file_path}")
-
-    except Exception as e:
-        logger.error(f"Fehler beim Speichern der Optimierungsergebnisse als JSON: {e}", exc_info=True)
-
+    _save_results(best_portfolio_ids, best_portfolio_result)
 
     # Gib das Original-Ergebnis mit DataFrame zurück für show_results.py
     return {"optimal_portfolio": best_portfolio_ids, "final_result": best_portfolio_result}

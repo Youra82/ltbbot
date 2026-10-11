@@ -394,3 +394,15 @@ def test_cancel_stale_entry_orders_only_inactive_open_orders():
     ex.cancel_trigger_order = lambda oid, sym: done.append((sym, oid))
     assert ex.cancel_stale_entry_orders({'ADA/USDT:USDT'}) == [('XLM/USDT:USDT', '1')]
     assert done == [('XLM/USDT:USDT', '1')]
+
+
+def test_quota_path_saves_results_file(tmp_path, monkeypatch):
+    """Telegram-Abschlussmeldung liest portfolio_optimization_results.json -- auch der Quote-Weg muss sie schreiben."""
+    import json as _json
+    from ltbbot.analysis import portfolio_optimizer as po
+    monkeypatch.setattr(po, 'PROJECT_ROOT', str(tmp_path))
+    po._save_results(['config_ETHUSDTUSDT_1h_envelope.json'], {'total_pnl_pct': 12.5, 'max_drawdown_pct': 3.0,
+                                                               'open_positions': [{'entry_time': pd.Timestamp('2026-10-01')}]})
+    d = _json.load(open(tmp_path / 'artifacts' / 'results' / 'portfolio_optimization_results.json'))
+    assert d['optimal_portfolio'] == ['config_ETHUSDTUSDT_1h_envelope.json']
+    assert d['final_summary']['total_pnl_pct'] == 12.5
