@@ -326,7 +326,7 @@ def _log_lines(key):
     return lines if os.path.exists(base) else None
 
 
-def explain_from_log(key, decision_time):
+def explain_from_log(key, decision_time, side=None):
     """Ursache aus dem Bot-Log waehrend der Fuellkerze (Log-Zeit = Ortszeit des Rechners)."""
     lines = _log_lines(key)
     if lines is None:
@@ -340,7 +340,13 @@ def explain_from_log(key, decision_time):
         except (ValueError, TypeError):
             continue
         if t0 <= ts <= t1:
-            window.append(line[26:].strip())
+            text = line[26:].strip()
+            low = text.lower()
+            # Zeilen nur ueber die andere Richtung (z. B. "short-Einstiege gesperrt" bei einem
+            # Long) erklaeren nichts
+            if side and {'long': 'short', 'short': 'long'}.get(side, '') in low and side not in low:
+                continue
+            window.append(text)
     if not window:
         return 'Bot lief in dem Zeitraum nicht (kein Log-Eintrag)'
     for needle, reason in LOG_REASONS:
@@ -454,21 +460,23 @@ def build_items(rows, extra, missing, live, end):
     for st in missing:
         items.append(dict(status='fehlt', key=st['key'], name=_short(st['key']), side=st['side'], live=None,
                           sim=st_d(st), exit_dev_pct=None, exit_note='',
-                          reason=explain_from_log(st['key'], st['signal_time'])))
+                          reason=explain_from_log(st['key'], st['signal_time'], st['side'])))
     for lt, in_team in extra:
         key = in_team[0] if in_team else None
         prev = [t for t in live if t['symbol'] == lt['symbol'] and t['exit_time'] is not None
                 and t['exit_time'] <= lt['entry_time'] and t['entry_time'] < lt['entry_time']]
         # Simulator-Exitzeit = Beginn der Kerze, in der der Exit lag
-        sim_open = [st for _, st in rows if st['symbol'] == lt['symbol'] and st['exit_time'] is not None
-                    and st['signal_time'] < lt['entry_time'] < st['exit_time'] + _tf_dur(st['key'])]
+        sim_open = [st for _, st in rows if st['symbol'] == lt['symbol'] and st['signal_time'] < lt['entry_time']
+                    and (st['exit_time'] is None or lt['entry_time'] < st['exit_time'] + _tf_dur(st['key']))]
         if not in_team:
             reason = 'Strategie war zu dem Zeitpunkt nicht im Team'
         elif prev and sim_open:
+            sim_exit = (f"Exit in Kerze ab {_fmt_t(sim_open[-1]['exit_time'])}" if sim_open[-1]['exit_time']
+                        else "dort noch offen")
             reason = (f"Wiedereinstieg: live schon {_fmt_t(prev[-1]['exit_time'])} ausgestiegen, Simulator war "
-                      f"noch in der Position (Exit in Kerze ab {_fmt_t(sim_open[-1]['exit_time'])})")
+                      f"noch in der Position ({sim_exit})")
         else:
-            reason = explain_from_log(key, lt['entry_time'] - pd.Timedelta(minutes=1))
+            reason = explain_from_log(key, lt['entry_time'] - pd.Timedelta(minutes=1), lt['side'])
         items.append(dict(status='nur_live', key=key, name=_short(key) if key else lt['symbol'][:-4],
                           side=lt['side'], live=lt_d(lt), sim=None, exit_dev_pct=None, exit_note='',
                           reason=reason))

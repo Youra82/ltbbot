@@ -94,3 +94,29 @@ def test_entry_triggers_are_not_orphans():
     flags = mod.check_orders([], plans)
     assert any('Verwaiste' in f for f in flags) and any('2x gleiche' in f for f in flags)
     assert mod.check_orders([{'symbol': 'ADAUSDT'}], plans[:1]) == []
+
+
+def test_reason_respects_side(tmp_path, monkeypatch):
+    """VPS 23.10.: fehlender BAT-Long wurde mit 'short-Einstiege gesperrt' erklaert."""
+    monkeypatch.setattr(mod, 'LOG_DIR', str(tmp_path))
+    _write_log(tmp_path, 'BATUSDTUSDT_2h', [
+        (0.5, 'INFO', 'short-Einstiege fuer BAT/USDT:USDT gesperrt (BTC-Trend oder Sperre nach SL).'),
+        (0.6, 'INFO', 'Prüfe Long Entry Bands: [0.1, 0.09]'),
+        (0.7, 'INFO', 'Long Layer 1: Kein Close-Confirmation (Close 0.12 > Band 0.1). Überspringe.'),
+    ])
+    assert mod.explain_from_log('BATUSDTUSDT_2h', CANDLE, 'long').startswith('keine Close-Bestätigung')
+    assert mod.explain_from_log('BATUSDTUSDT_2h', CANDLE, 'short').startswith('Einstiege gesperrt (BTC-Trend')
+
+
+def test_reentry_while_sim_position_still_open():
+    """VPS 23.10.: ARB live geschlossen und neu eroeffnet, Simulator-Position noch offen."""
+    lt_first = dict(symbol='ARBUSDT', side='long', entry_time=T('2026-10-22 05:31'), exit_time=T('2026-10-23 10:00'),
+                    entry=0.30, exit=0.31, pnl=0.2)
+    st = dict(key='ARBUSDTUSDT_6h', symbol='ARBUSDT', side='long', signal_time=T('2026-10-22 00:00'),
+              exit_time=None, entry=0.30, exit=None, pnl=None, bands=2)
+    lt_new = dict(symbol='ARBUSDT', side='long', entry_time=T('2026-10-23 14:17'), exit_time=None,
+                  entry=0.31, exit=None, pnl=0.0)
+    items = mod.build_items([(lt_first, st)], [(lt_new, ['ARBUSDTUSDT_6h'])], [], [lt_first, lt_new],
+                            T('2026-10-23 20:00'))
+    extra = [d for d in items if d['status'] == 'nur_live'][0]
+    assert extra['reason'].startswith('Wiedereinstieg') and 'dort noch offen' in extra['reason']
