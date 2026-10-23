@@ -10,6 +10,7 @@ import logging
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = SCRIPT_DIR
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
+from ltbbot.utils.team_history import record_team, strategy_key
 
 # Importiere Exchange nur noch, wenn Balance Check wieder rein soll
 # from ltbbot.utils.exchange import Exchange
@@ -184,6 +185,7 @@ def main():
         # Wir starten einfach alle als aktiv markierten Prozesse.
         # Der Guardian im run.py verhindert den Start, falls etwas schiefgeht.
 
+        started_keys = []
         for i, strategy_info in enumerate(strategy_list):
             if not isinstance(strategy_info, dict):
                 logging.warning(f"Ungültiger Eintrag in active_strategies (kein Dictionary): {strategy_info}")
@@ -214,6 +216,8 @@ def main():
             ]
             if strategy_info.get('manage_only'):
                 command.append("--manage-only")
+            else:
+                started_keys.append(strategy_key(symbol, timeframe))
 
             try:
                 # Starte den Prozess und lass ihn im Hintergrund laufen
@@ -223,6 +227,14 @@ def main():
                 time.sleep(2) # Kurze Pause zwischen Starts
             except Exception as e:
                 logging.error(f"Fehler beim Starten des Prozesses für {symbol}_{timeframe}: {e}")
+
+        # Teamhistorie: welches Portfolio ab wann live lief (fuer Live-vs-Backtest-Abgleich);
+        # manage_only-Positionen (nicht mehr im Team) zaehlen nicht dazu
+        try:
+            if record_team(started_keys, source='master_runner'):
+                logging.info(f"Teamhistorie: neues Team aufgezeichnet ({len(started_keys)} Strategien).")
+        except Exception as e:
+            logging.warning(f"Teamhistorie nicht geschrieben: {e}")
 
         # === SCHLEIFE ENTFERNT ===
         # Das Skript beendet sich hier, der Cronjob startet es neu.

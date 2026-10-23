@@ -29,8 +29,15 @@ SLIPPAGE_PCT_ENTRY = 0.0012  # 0.12% Slippage auf Entry (Trigger-Limit, wie back
 
 
 def run_portfolio_simulation(start_capital, strategies_data, start_date, end_date, multi_band_entries=True,
-                             max_open_strategies='settings'):
+                             max_open_strategies='settings', symbol_blocks=None):
     """
+    Optional fuer den Live-Abgleich (daily_live_vs_backtest_check.py):
+      strategies_data[id]['active_periods'] = [(von, bis), ...] -- Einstiege (auch weitere Baender)
+        nur, wenn die Kerze im Team-Zeitraum der Strategie beginnt (bis=None: offen); danach nur
+        noch TP/SL wie live (master_runner: "nur TP/SL, keine weiteren Baender")
+      symbol_blocks = [(symbol, von, bis), ...] -- Symbol hat eine aeltere Live-Position, die der
+        Simulator nicht kennt; bis=None: noch offen
+
     Führt eine chronologische Portfolio-Simulation mit mehreren Envelope-Strategien durch.
     EINHEITLICHE LOGIK mit backtester.py (2026-08-27 nachgezogen, siehe dortiger
     multi_band_entries-Docstring): Standard (multi_band_entries=False) bleibt wie
@@ -309,6 +316,12 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 if not open_portfolio_positions[strategy_id] and not concurrency_allows_new(n_open_strats, max_open):
                     continue  # schon max_open Strategien mit Position (live: keine neuen Einstiege)
                 if ts not in strat_df.index:
+                    continue
+                _periods = strategies_data[strategy_id].get('active_periods')
+                if _periods is not None and not any(a <= ts and (b is None or ts < b) for a, b in _periods):
+                    continue
+                if symbol_blocks and any(sym == strategies_data[strategy_id]['symbol'] and a <= ts
+                                         and (b is None or ts < b) for sym, a, b in symbol_blocks):
                     continue
                 df_idx = strat_df.index.get_loc(ts)
                 if df_idx < 1:

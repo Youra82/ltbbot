@@ -137,6 +137,28 @@ def _build_strategies_data(config_files: list, start_date: str, end_date: str) -
     return strategies_data
 
 
+def _active_keys() -> list:
+    from ltbbot.utils.team_history import strategy_key
+    try:
+        with open(SETTINGS_PATH) as f:
+            active = json.load(f).get('live_trading_settings', {}).get('active_strategies', [])
+        return sorted(strategy_key(s['symbol'], s['timeframe']) for s in active
+                      if s.get('active') and not s.get('manage_only'))
+    except Exception:
+        return []
+
+
+def _record_selection(team_before: list) -> None:
+    """Teamhistorie: Ergebnis der Wochenauswahl festhalten, auch wenn das Team gleich bleibt."""
+    try:
+        from ltbbot.utils.team_history import record_team
+        after = _active_keys()
+        record_team(after, source='wochenauswahl: neu' if after != team_before else 'wochenauswahl: beibehalten',
+                    force=True)
+    except Exception as e:
+        print(f"  Warnung: Teamhistorie nicht geschrieben: {e}")
+
+
 def _write_to_settings(portfolio_files: list, strategies_data: dict) -> None:
     with open(SETTINGS_PATH) as f:
         settings = json.load(f)
@@ -805,12 +827,14 @@ def main() -> int:
               f"| MaxDD: {final.get('max_drawdown_pct', 0):.2f}%\n")
 
     if args.auto_write:
+        team_before = _active_keys()
         if cur_result and new_cap <= cur_cap:
             print(f"{Y}  Neues Portfolio ({new_cap:.2f} USDT) nicht besser als aktuelles "
                   f"({cur_cap:.2f} USDT) — keine Aenderung.{NC}\n")
         else:
             _write_to_settings(portfolio_files, strategies_data)
             print(f"{G}  settings.json aktualisiert — {len(portfolio_files)} Strategie(n).{NC}\n")
+        _record_selection(team_before)
     else:
         current_set = {
             (s.get('symbol'), s.get('timeframe'))
