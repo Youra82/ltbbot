@@ -120,3 +120,18 @@ def test_reentry_while_sim_position_still_open():
                             T('2026-10-23 20:00'))
     extra = [d for d in items if d['status'] == 'nur_live'][0]
     assert extra['reason'].startswith('Wiedereinstieg') and 'dort noch offen' in extra['reason']
+
+
+def test_position_without_stop_loss_is_reported():
+    pos = [{'symbol': 'XRPUSDT', 'holdSide': 'short', 'markPrice': '1.2781'},
+           {'symbol': 'ARBUSDT', 'holdSide': 'long', 'markPrice': '0.168'}]
+    plans = [  # XRP: nur Trailing (unter dem Kurs, kein SL); ARB: SL an der Einstiegs-Order
+        {'symbol': 'XRPUSDT', 'planType': 'track_plan', 'tradeSide': 'close', 'posSide': 'short', 'triggerPrice': '1.22'},
+        {'symbol': 'ARBUSDT', 'planType': 'profit_loss', 'tradeSide': 'close', 'posSide': 'long',
+         'triggerPrice': '0.108', 'stopLossTriggerPrice': '0.108'},
+    ]
+    flags = mod.positions_without_sl(pos, plans)
+    assert len(flags) == 1 and 'XRP short OHNE Stop-Loss' in flags[0]
+    plans.append({'symbol': 'XRPUSDT', 'planType': 'normal_plan', 'tradeSide': 'close', 'posSide': 'short',
+                  'triggerPrice': '1.41'})
+    assert mod.positions_without_sl(pos, plans) == []
