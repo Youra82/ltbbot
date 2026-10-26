@@ -128,6 +128,47 @@ ihres Trainings-Beitrags gewählt.
 
 ---
 
+## 🧭 Marktphasen: wann der Bot verdient
+
+Backtest des aktuellen Teams aus `settings.json` (35 Strategien, gemeinsames Kapital wie live), 2507 Trades vom 03.01.2024 bis 26.10.2026. Jeder Tag ist der BTC-Marktphase am Vortag zugeordnet,
+gemessen an der BTC-Bewegung der letzten 30 Tage.
+
+![BTC-Tageskerzen mit Marktphasen und Bot-Ergebnis](docs/img/marktphasen_btc.png)
+
+**So liest man das Bild:**
+
+- **Kerzen:** BTC-Tageskerzen, ein Jahr pro Zeile. Blau = Tag im Plus, rot = Tag im Minus. Gestrichelt: SMA200.
+- **Hintergrund:** BTC-Marktphase, eingefärbt nach dem Ergebnis dieses Bots.
+  - **Hellblau = günstig:** BTC in 30 Tagen −10 bis −3 % oder über +10 %. Im Schnitt **+38,4 % pro 30 Tage**.
+  - **Beige = ungünstig:** alle übrigen Phasen. Im Schnitt **−1,2 % pro 30 Tage**.
+- **Farbstreifen unter jedem Jahr:** Rendite des Bots über die letzten 30 Tage (mit Zinseszins). Kräftiges Blau = gut verdient, Rot = Verlust.
+
+**Ergebnis nach BTC-Bewegung der letzten 30 Tage:**
+
+| BTC in 30 Tagen | Rendite pro 30 Tage | Trades | Ø Trade (vom Konto) | Trefferquote |
+|---|---|---|---|---|
+| unter −10 % (Crash oder starke Korrektur) | −4,7 % | 154 | +0,38 % | 81 % |
+| −10 bis −3 % | +15,7 % | 413 | +0,14 % | 68 % |
+| ±3 % (seitwärts) | +6,5 % | 410 | +0,05 % | 69 % |
+| +3 bis +10 % | −7,1 % | 514 | +0,04 % | 72 % |
+| über +10 % (Rally) | +56,2 % | 1016 | +0,31 % | 76 % |
+
+**Was man sieht:**
+
+- Der Bot verdient vor allem in **starken Rallys** (über +10 % in 30 Tagen): etwa +56 % pro 30 Tage. Auch bei leicht fallendem BTC ist er gut (+16 %).
+- Schwach ist er in Crashs (−5 %) und bei moderatem Anstieg (−7 %).
+- Die Trefferquote ist in allen Phasen hoch (68–81 %). Die Verluste kommen aus wenigen großen Stop-Loss-Treffern.
+- Die besten Zeiträume: März 2024 (+169 % in 30 Tagen), November–Dezember 2024 (+124 %) sowie September–Oktober 2026.
+- Der schwächste Zeitraum: Oktober–November 2025 (−41 %), als BTC vom Hoch bei 113k auf 102k fiel.
+- Aktuell (26.10.2026) liegt BTC in der Phase **−10 bis −3 %**. Für diesen Bot ist das eine günstige Phase. Im Backtest lagen die letzten 30 Tage bei +15,7 %.
+
+**Einschränkung:** Das ist ein Backtest. Die Configs wurden auf Teilen dieses Zeitraums optimiert, deshalb sind die
+absoluten Zahlen zu optimistisch. Aussagekräftig ist vor allem der Vergleich der Phasen untereinander. Die Phasen
+wurden im Nachhinein bestimmt. Ein Filter „nur in günstigen Phasen handeln“ müsste erst vorab festgelegt auf
+ungesehenen Daten bestehen, bevor er eingebaut wird.
+
+---
+
 ## 🔁 Pipeline und Zeitfenster
 
 ![Pipeline: Kandidaten, Optuna-Suche nur im Training, OOS-Gate, Rückfall auf RT-Standard, Portfolio-Optimizer mit Quote, Live](docs/rt_pipeline.png)
