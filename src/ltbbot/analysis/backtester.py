@@ -64,6 +64,29 @@ def _resolve_ambiguous_exit(fine_slice, sl_price, tp_price, side):
     return None
 
 
+def _shared_exchange():
+    """EINE gemeinsame Exchange-Instanz fuer load_data() und LazyFineData (je Instanz ~57 MB und mehrere
+    Requests durch load_markets). Vorher je Download bzw. je Strategie eine eigene: Portfolio-Optimizer
+    per OOM beendet (2026-10-10), Tagesbericht mit 54 Strategien hing minutenlang (2026-10-26)."""
+    global secrets_cache, _fine_exchange
+    if _fine_exchange is not None:
+        return _fine_exchange
+    try:
+        if secrets_cache is None:
+            with open(os.path.join(PROJECT_ROOT, 'secret.json'), "r") as f:
+                secrets_cache = json.load(f)
+        api_setup = None
+        if 'ltbbot' in secrets_cache and isinstance(secrets_cache['ltbbot'], list) and secrets_cache['ltbbot']:
+            api_setup = secrets_cache['ltbbot'][0]
+        if api_setup:
+            _fine_exchange = Exchange(api_setup)
+            if not _fine_exchange.markets:
+                _fine_exchange = None  # beim naechsten Aufruf erneut versuchen
+    except Exception:
+        _fine_exchange = None
+    return _fine_exchange
+
+
 class LazyFineData:
     def __init__(self, symbol, fine_tf):
         self.symbol = symbol
@@ -71,21 +94,7 @@ class LazyFineData:
         self._days = {}
 
     def _get_exchange(self):
-        global secrets_cache, _fine_exchange
-        if _fine_exchange is not None:
-            return _fine_exchange
-        try:
-            if secrets_cache is None:
-                with open(os.path.join(PROJECT_ROOT, 'secret.json'), "r") as f:
-                    secrets_cache = json.load(f)
-            api_setup = None
-            if 'ltbbot' in secrets_cache and isinstance(secrets_cache['ltbbot'], list) and secrets_cache['ltbbot']:
-                api_setup = secrets_cache['ltbbot'][0]
-            if api_setup:
-                _fine_exchange = Exchange(api_setup)
-        except Exception:
-            _fine_exchange = None
-        return _fine_exchange
+        return _shared_exchange()
 
     def _ensure_day(self, day):
         if day in self._days:
@@ -202,14 +211,9 @@ def load_data(symbol, timeframe, start_date_str, end_date_str):
     if data.empty:
         logger.info(f"Starte Download für {symbol} ({timeframe}) von der Börse [{start_date_str} bis {end_date_str}]...")
         try:
-            secret_path = os.path.join(PROJECT_ROOT, 'secret.json')
-            with open(secret_path, "r") as f:
-                secrets = json.load(f)
-            # Prüfe, ob 'ltbbot' Key existiert und eine Liste ist
-            if 'ltbbot' not in secrets or not isinstance(secrets['ltbbot'], list) or not secrets['ltbbot']:
-                 raise ValueError("Kein gültiger 'ltbbot'-Eintrag in secret.json gefunden.")
-            api_setup = secrets['ltbbot'][0]
-            exchange = Exchange(api_setup)
+            exchange = _shared_exchange()
+            if exchange is None:
+                raise ValueError("Keine Boersenverbindung (secret.json 'ltbbot' oder load_markets fehlgeschlagen).")
 
             full_data = exchange.fetch_historical_ohlcv(symbol, timeframe, start_date_str, end_date_str)
 
