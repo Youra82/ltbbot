@@ -124,6 +124,25 @@ def _paginate(call, base, list_key):
     return rows
 
 
+def _is_cash_flow(business_type):
+    """Ein-/Auszahlung bzw. Umbuchung von/zu anderen Konten (Bitget-Bill-Typen trans_*), kein Trade."""
+    bt = (business_type or '').lower()
+    return bt.startswith('trans_') or 'deposit' in bt or 'withdraw' in bt
+
+
+def last_cash_flow(acc, start, end):
+    """Zeitpunkt der letzten Ein-/Auszahlung im Fenster (oder None). Das Startkapital des Backtests wird
+    rueckwaerts aus dem heutigen Kontostand berechnet -- eine Ueberweisung im Fenster saehe sonst so aus,
+    als laege das Geld schon zu Fensterbeginn auf dem Konto (2026-10-26: +13.73 USDT vom oraclebot)."""
+    ex = ccxt.bitget({'apiKey': acc.get('apiKey'), 'secret': acc.get('secret'), 'password': acc.get('password'),
+                      'options': {'defaultType': 'swap'}, 'enableRateLimit': True})
+    bills = _paginate(ex.privateMixGetV2MixAccountBill,
+                      {'productType': PRODUCT, 'startTime': str(int(start.timestamp() * 1000)),
+                       'endTime': str(int(end.timestamp() * 1000)), 'limit': '100'}, 'bills')
+    ts = [pd.Timestamp(int(b['cTime']), unit='ms', tz='UTC') for b in bills if _is_cash_flow(b.get('businessType'))]
+    return max(ts) if ts else None
+
+
 def fetch_live(acc, since):
     ex = ccxt.bitget({'apiKey': acc.get('apiKey'), 'secret': acc.get('secret'), 'password': acc.get('password'),
                       'options': {'defaultType': 'swap'}, 'enableRateLimit': True})
@@ -570,6 +589,17 @@ def run_check(days, send, history_path):
     acc, tg = _secrets()
     end = pd.Timestamp.now(tz='UTC').floor('min')
     start = end - pd.Timedelta(days=days)
+    # Ein-/Auszahlung im Fenster -> Vergleich erst ab danach (sonst falsches Startkapital, Scheinfehler)
+    flow_note = ''
+    try:
+        flow = last_cash_flow(acc, start, end)
+    except Exception as e:
+        flow = None
+        _log(f"WARNUNG Kontobewegungen nicht lesbar: {e}")
+    if flow is not None and flow > start:
+        start = flow + pd.Timedelta(minutes=1)
+        flow_note = (f"ℹ️ Ein-/Auszahlung am {flow:%d.%m. %H:%M} UTC -- Vergleich erst ab danach "
+                     f"({(end - start).total_seconds() / 86400:.1f} statt {days} Tage).\n")
     live, carry, open_pos, plans, equity = fetch_live(acc, start)
 
     hist = team_history.load_history(history_path)
@@ -584,7 +614,7 @@ def run_check(days, send, history_path):
     items = build_items(rows, extra, missing, live_eval, end)
     order_flags = positions_without_sl(open_pos, plans) + data_flags + check_orders(open_pos, plans)
     team_lines = portfolio_lines(hist, start, end)
-    msg = build_message(items, unknown, order_flags, live_eval, equity, days, team_lines)
+    msg = flow_note + build_message(items, unknown, order_flags, live_eval, equity, days, team_lines)
     print(msg)
 
     keys = sorted({k for e in hist for k in e['team'] if pd.Timestamp(e['valid_from']) <= end})

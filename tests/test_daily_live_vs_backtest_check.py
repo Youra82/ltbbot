@@ -135,3 +135,13 @@ def test_position_without_stop_loss_is_reported():
     plans.append({'symbol': 'XRPUSDT', 'planType': 'normal_plan', 'tradeSide': 'close', 'posSide': 'short',
                   'triggerPrice': '1.41'})
     assert mod.positions_without_sl(pos, plans) == []
+
+
+def test_cash_flow_types_detected():
+    """Ueberweisungen (trans_*) verschieben den Fensterbeginn, Trades/Funding nicht."""
+    import daily_live_vs_backtest_check as d
+    assert d._is_cash_flow('trans_from_contract')
+    assert d._is_cash_flow('trans_to_exchange')
+    assert not d._is_cash_flow('close_long')
+    assert not d._is_cash_flow('contract_settle_fee')
+    assert not d._is_cash_flow(None)
