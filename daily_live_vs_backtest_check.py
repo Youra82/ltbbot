@@ -585,6 +585,26 @@ def build_message(items, unknown, order_flags, live, equity, days, team_lines=()
     return "\n".join(lines)
 
 
+def write_latest(items, order_flags, summary, days, page, out_dir=REPORT_DIR):
+    """Kurzfassung fuer das Bot-Cockpit (reports/latest.json): gleiche Ampel-Regel wie build_message.
+    Rot = Einstiege fehlen live oder gibt es nur live, Gelb = Exit-Abweichung oder Hinweise, sonst Gruen."""
+    same = [d for d in items if d['status'] == 'gleich']
+    missing = [d for d in items if d['status'] == 'fehlt']
+    extra = [d for d in items if d['status'] == 'nur_live']
+    exit_dev = [d for d in same if d['exit_dev_pct'] or d['exit_note']]
+    status = 'red' if (missing or extra) else 'yellow' if (exit_dev or order_flags) else 'green'
+    data = dict(ts=time.time(), days=days, status=status, same=len(same), sim_n=len(same) + len(missing),
+                missing=len(missing), extra=len(extra), exit_dev=len(exit_dev), flags=[str(x) for x in order_flags][:20],
+                live_n=summary.get('live_n'), live_pnl=round(summary.get('live_pnl') or 0, 2),
+                sim_pnl=round(summary.get('sim_pnl') or 0, 2), html=os.path.basename(page) if page else None)
+    os.makedirs(out_dir, exist_ok=True)
+    tmp = os.path.join(out_dir, 'latest.json.tmp')
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False)
+    os.replace(tmp, os.path.join(out_dir, 'latest.json'))
+    return data
+
+
 def run_check(days, send, history_path):
     acc, tg = _secrets()
     end = pd.Timestamp.now(tz='UTC').floor('min')
@@ -629,6 +649,7 @@ def run_check(days, send, history_path):
     png, page = write_report(items, team_periods, team_lines, order_flags, summary, start, end, REPORT_DIR,
                              carry_named)
     print(f"Uebersicht: {png} | {page}")
+    write_latest(items, order_flags, summary, days, page)
     if send:
         send_message(tg.get('bot_token'), tg.get('chat_id'), msg)
         send_photo(tg.get('bot_token'), tg.get('chat_id'), png, caption='ltbbot Live vs. Backtest – Übersicht')
