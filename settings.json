@@ -4,67 +4,52 @@
         "_active_strategies_note": "Release 2026-10-05 (RT-Modus): 29 Strategien, vom Portfolio-Optimizer NUR mit IS-Daten (bis 2025-11-10) gewaehlt (20.63 USDT, MaxDD<=30 %); OOS 11.11.2025-04.10.2026 simuliert: +45.0 %, MaxDD 5.1 %, 80 Trades. Danach waehlt der woechentliche Auto-Optimizer auf dem VPS selbst (update.sh schuetzt den VPS-Stand ausser bei neuem Release).",
         "active_strategies": [
             {
-                "symbol": "HBAR/USDT:USDT",
+                "symbol": "SOL/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "XVG/USDT:USDT",
-                "timeframe": "2h",
+                "symbol": "QTUM/USDT:USDT",
+                "timeframe": "1h",
                 "active": true
             },
             {
-                "symbol": "BAT/USDT:USDT",
+                "symbol": "FET/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "BNB/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             },
             {
-                "symbol": "ANKR/USDT:USDT",
+                "symbol": "NEO/USDT:USDT",
                 "timeframe": "1h",
                 "active": true
             },
             {
-                "symbol": "MASK/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "KNC/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "XRP/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "BCH/USDT:USDT",
+                "symbol": "ONE/USDT:USDT",
                 "timeframe": "2h",
                 "active": true
             },
             {
-                "symbol": "QNT/USDT:USDT",
-                "timeframe": "2h",
+                "symbol": "ICP/USDT:USDT",
+                "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "ETH/USDT:USDT",
-                "timeframe": "1h",
+                "symbol": "ENJ/USDT:USDT",
+                "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "MEME/USDT:USDT",
-                "timeframe": "1h",
+                "symbol": "LINK/USDT:USDT",
+                "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "TRX/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "MANA/USDT:USDT",
+                "symbol": "VET/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
@@ -74,82 +59,27 @@
                 "active": true
             },
             {
-                "symbol": "ALGO/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "ONE/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "AR/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "FLOKI/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "ADA/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "CRV/USDT:USDT",
-                "timeframe": "4h",
-                "active": true
-            },
-            {
-                "symbol": "LTC/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "NEO/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "ASTR/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "JASMY/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "ENS/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "DOGE/USDT:USDT",
-                "timeframe": "1h",
-                "active": true
-            },
-            {
-                "symbol": "CELO/USDT:USDT",
-                "timeframe": "2h",
-                "active": true
-            },
-            {
-                "symbol": "SOL/USDT:USDT",
+                "symbol": "ETC/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             },
             {
-                "symbol": "APE/USDT:USDT",
+                "symbol": "ACH/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "EGLD/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "ACH/USDT:USDT",
+                "symbol": "AR/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "LPT/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
@@ -159,13 +89,58 @@
                 "active": true
             },
             {
-                "symbol": "BNB/USDT:USDT",
+                "symbol": "ENS/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "LUNC/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "GALA/USDT:USDT",
                 "timeframe": "4h",
                 "active": true
             },
             {
-                "symbol": "SAND/USDT:USDT",
+                "symbol": "JASMY/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "ADA/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "AVAX/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "MEME/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "CYBER/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "GRT/USDT:USDT",
                 "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "FLOKI/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "KNC/USDT:USDT",
+                "timeframe": "2h",
                 "active": true
             },
             {
@@ -174,7 +149,127 @@
                 "active": true
             },
             {
-                "symbol": "GRT/USDT:USDT",
+                "symbol": "SNX/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "IMX/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "AXS/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "BAT/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "ANKR/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "ALGO/USDT:USDT",
+                "timeframe": "4h",
+                "active": true
+            },
+            {
+                "symbol": "XRP/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "KAVA/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "KSM/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "DOGE/USDT:USDT",
+                "timeframe": "1h",
+                "active": true
+            },
+            {
+                "symbol": "MANA/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "CELO/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "BCH/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "HBAR/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "DOT/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "CRV/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "NEAR/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "QNT/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "ASTR/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "ARB/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "XVG/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "INJ/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "ETH/USDT:USDT",
+                "timeframe": "2h",
+                "active": true
+            },
+            {
+                "symbol": "TRX/USDT:USDT",
+                "timeframe": "6h",
+                "active": true
+            },
+            {
+                "symbol": "SAND/USDT:USDT",
                 "timeframe": "6h",
                 "active": true
             }
