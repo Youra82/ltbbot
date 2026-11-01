@@ -1,15 +1,24 @@
 # ===============================================
 # ltbbot Spezifische Ausschlüsse (Angepasst)
 # ===============================================
-artifacts/ # Ergebnisse, DBs, Tracker etc.
-data/ # Insbesondere der Cache
-logs/ # Log-Dateien
-secret.json # SEHR WICHTIG!
-secret.json.bak # Backup der Secrets
-/.venv/ # Virtuelle Umgebung (war schon korrekt)
-*.csv # Generierte Ergebnis-CSVs ignorieren
-*.png # Generierte Chart-Bilder ignorieren
-*.db # Optuna Datenbank ignorieren (alternativ zu artifacts/)
+# Ergebnisse, DBs, Tracker etc.
+artifacts/
+# Insbesondere der Cache
+data/
+# Log-Dateien
+logs/
+# SEHR WICHTIG!
+secret.json
+# Backup der Secrets
+secret.json.bak
+# Virtuelle Umgebung (war schon korrekt)
+/.venv/
+# Generierte Ergebnis-CSVs ignorieren
+*.csv
+# Generierte Chart-Bilder ignorieren
+*.png
+# Optuna Datenbank ignorieren (alternativ zu artifacts/)
+*.db
 
 # ===============================================
 # Allgemeine Python-Vorlage (Diese ist gut)
@@ -41,3 +50,7 @@ cython_debug/
 #*.csv # Wird oben schon ignoriert
 artifacts/db/*.db
 .venv_new/
+
+# Lokale Auswertungen/Exporte (nicht ins oeffentliche Repo)
+manual_portfolio_trades.xlsx
+ltbbot_portfolio_equity.html
