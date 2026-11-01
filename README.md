@@ -8,25 +8,27 @@
 [![Bitget](https://img.shields.io/badge/Börse-Bitget%20USDT--M-00c4b4?style=for-the-badge)](https://www.bitget.com/)
 
 **Mean-Reversion an Moving-Average-Envelopes auf Bitget-Perpetuals – Long im BTC-Aufwärtstrend, Short im BTC-Abwärtstrend,
-35 Strategien auf 6h / 4h / 2h / 1h, höchstens 10 gleichzeitig offen.**
+wöchentlich neu gewähltes Team (aktuell 54 Strategien) auf 6h / 4h / 2h / 1h, höchstens 10 gleichzeitig offen,
+Einsatz je Tag über das Phasen-Tor.**
 
-[Strategie](#-die-strategie) • [Ergebnisse](#-ergebnisse) • [Pipeline](#-pipeline-und-zeitfenster) • [Installation](#-installation) • [Live-Trading](#-live-trading) • [Werkzeuge](#-werkzeuge) • [Wartung](#-wartung)
+[Strategie](#-die-strategie) • [Ergebnisse](#-ergebnisse) • [Phasen-Tor](#-phasen-tor-einsatz-je-tag-seit-2026-11-01) • [Pipeline](#-pipeline-und-zeitfenster) • [Installation](#-installation) • [Live-Trading](#-live-trading) • [Werkzeuge](#-werkzeuge) • [Wartung](#-wartung)
 
 </div>
 
 ---
 
-## 📌 Stand (2026-10-07)
+## 📌 Stand (2026-11-01)
 
 | Baustein | Einstellung |
 |---|---|
 | Modus | `strategy_mode: "rt"` – RobotTraders-Original-Envelope, ehrlich nachgetestet |
 | Seiten | **Long** wenn BTC-Tages-Close > SMA200, **Short** wenn BTC < SMA200 **und** < SMA50 |
-| Portfolio | **35 Strategien**: 6h 5 · 4h 10 · 2h 10 · 1h 10 (jedes Symbol nur einmal) |
+| Portfolio | **wöchentlich neu** aus 137 bestätigten Configs, Quote 10–15 je Timeframe, jedes Symbol einmal – aktuell **54 Strategien** |
+| Phasen-Tor | Einsatz je Tag **×0 bis ×2** nach der Vortags-Trefferquote aller Configs, nur soweit bewiesen (sonst ×1) – live und in allen Backtests |
 | Gleichzeitig offen | **max. 10 Strategien** mit Position (Live und Backtest identisch) |
 | Größe | Long **60 %**, Short **30 %** des Kontos je Position, **Hebel 2**, min. 5 USDT je Band |
 | Prüfzeitraum | **OOS = fest die letzten 26 Wochen**; trainiert und ausgewählt wird nur davor |
-| Backtest 01.05.–07.10.2026 | 20 → **85.63 USDT (+328 %)**, MaxDD **19.1 %**, 222 Trades, Trefferquote 79 %, Ø **+3.13 %/Trade** |
+| Wochen-Replay 25.05.–31.10.2026 | 23 Wochenteams wie live nachgestellt: **mit Tor +745 %, MaxDD 12,6 %** · ohne Tor +718 %, MaxDD 19,0 % · 478 Trades, Trefferquote 78 % |
 
 > ⚠️ Im Training (10/2024–04/2026, inkl. Crash vom 10.10.2025) hatte dasselbe Portfolio einen **MaxDD von 55.9 %**.
 > Die gute OOS-Phase ist kein Versprechen – siehe [Risiken](#️-risiken).
@@ -89,7 +91,29 @@ bzw. unter (Short) der Mitte schließt (RobotTraders-`ReentryGuard`).
 
 ## 📈 Ergebnisse
 
-### Backtest 01.05.2026 – 07.10.2026 (20 USDT Gesamtkapital)
+### Wochen-Replay 25.05.2026 – 31.10.2026: wöchentliches Team, mit und ohne Phasen-Tor
+
+So ehrlich wie möglich nachgestellt: An jedem Montag wählt der Portfolio-Optimierer das Team **nur mit Daten bis zu
+diesem Montag** (26 Wochen Rückblick, Quote 10–15 je Timeframe). Mit diesem Team wird bis zum nächsten Montag gehandelt.
+Fällt eine Strategie aus dem Team, macht sie keine neuen Einstiege mehr; offene Positionen laufen bis TP/SL aus, wie live.
+
+![Wochen-Replay: Konto, Drawdown und Tagesfaktor des Phasen-Tors, mit und ohne Tor](docs/rt_weekly_replay_phase_gate.png)
+
+| 1.000 USDT Start | Ohne Tor (bisher) | Mit Phasen-Tor |
+|---|---|---|
+| Endkapital | 8.185 USDT (+718 %) | **8.451 USDT (+745 %)** |
+| Max. Drawdown | 19,0 % | **12,6 %** |
+| Trades / Trefferquote | 478 / 77,8 % | 478 / 77,8 % |
+
+- 23 Wochenteams mit 52–55 Strategien, zusammen 112 verschiedene Strategien und 263 Wechsel.
+- Das Tor ändert nur die Größe, nicht die Trades. Den Unterschied machen vor allem die Tage nach schlechten Tagen
+  (September/Oktober): Dort setzt das Tor weniger ein, der tiefste Rückgang wird um ein Drittel kleiner.
+- **Vorsicht:** Ohne Feindaten gerechnet, und alle Strategien laufen mit ihren heutigen Parametern. Die absoluten
+  Zahlen sind deshalb zu optimistisch; aussagekräftig ist der Vergleich (gleiche Teams, gleiche Daten).
+- Der Optimierer auf dem VPS meldet für sein aktuelles Team noch viel höhere Werte (z. B. +2.131 %). Das ist ein
+  Rückblick: Das Team wird auf genau dem Zeitraum ausgesucht, auf dem es gemessen wird – keine Prognose.
+
+### Backtest 01.05.2026 – 07.10.2026 (Team vom 07.10., 20 USDT Gesamtkapital)
 
 ![Equity, Drawdown und gleichzeitig offene Strategien des Live-Portfolios seit 01.05.2026](docs/rt_backtest_equity.png)
 
@@ -106,7 +130,7 @@ bzw. unter (Short) der Mitte schließt (RobotTraders-`ReentryGuard`).
 Das Portfolio wurde **nur mit Daten bis 07.04.2026** ausgewählt; alles ab 08.04.2026 ist echtes Out-of-Sample.
 Bis Ende Mai gab es keinen Trade (BTC in der Pause-Zone), danach zuerst Shorts, ab August fast nur Longs.
 
-### Die 35 Strategien im Live-Portfolio
+### Die 35 Strategien im Live-Portfolio (Stand 07.10.2026)
 
 ![OOS-PnL jeder einzelnen Strategie des Live-Portfolios, gefärbt nach Timeframe](docs/rt_portfolio_strategies.png)
 
@@ -125,6 +149,7 @@ ihres Trainings-Beitrags gewählt.
 | 2026-10-06 | OOS fest 26 Wochen, Training davor je Timeframe | nur die aktuelle Marktphase soll entscheiden |
 | 2026-10-06 | 4 Timeframes mit Quote 10–15, max. 10 Positionen | mehr Signale, begrenzte Gleichzeitigkeit |
 | 2026-10-07 | Telegram „Kapital voll im Einsatz“ nur noch bei Zustandswechsel | vorher eine Meldung je Strategie und Zyklus |
+| 2026-11-01 | Phasen-Tor: Einsatz je Tag nach Vortags-Trefferquote, live + alle Backtests + Wochen-Optimierer | ltbbot-Configs gewinnen/verlieren gebündelt und die Phase hält an; Wochen-Replay MaxDD 19,0 → 12,6 % |
 
 ---
 
@@ -174,6 +199,12 @@ ungesehenen Daten bestehen, bevor er eingebaut wird.
 Gewinnen oder verlieren viele Configs am selben Tag, hält diese Phase oft noch einen Tag an. Das Phasen-Tor nutzt das
 für die **Einsatzgröße**. Welche Trades der Bot macht, bleibt gleich.
 
+![Phasen-Tor: Tages-Trefferquote, Beweis-Anteil und Einsatz-Faktor seit 10/2024](docs/rt_phase_gate_mechanism.png)
+
+Oben die Tages-Trefferquote aller bestätigten Configs. In der Mitte, wie weit das Tor seine Regel schon bewiesen hat:
+anfangs 0 (Einsatz immer ×1), ab Frühjahr 2025 fast 1. Unten der Faktor, mit dem der Bot an jedem Tag seine Größe
+multipliziert. Lücken = Tage mit weniger als 3 geschlossenen Trades (z. B. BTC-Pause-Zone).
+
 - **Signal:** Trefferquote der gestern geschlossenen Trades aller bestätigten Configs, verglichen mit dem Durchschnitt.
 - **Beweis statt Annahme:** Das Tor wirkt nur so stark, wie es seinen Nutzen bisher bewiesen hat. Dafür zählt ein
   Beweis-Konto einmal pro Tag (nicht pro Trade). Ohne Beweis bleibt der Einsatz ×1.
@@ -185,15 +216,8 @@ für die **Einsatzgröße**. Welche Trades der Bot macht, bleibt gleich.
   `artifacts/phase_gate_state.json`. Der Erststand liegt in `deploy/phase_gate_seed.json`.
 - **Ein/aus:** `settings.json` → `live_trading_settings.phase_gate_since` (Datum oder `null`).
 
-**Wochen-Replay 25.05.–31.10.2026** (23 Wochenteams nachgestellt, ohne Feindaten, 1000 USDT Start):
-
-| | Endkapital | MaxDD | Trades |
-|---|---|---|---|
-| ohne Tor | 8.185 USDT | 19,0 % | 478 |
-| mit Tor | 8.451 USDT | 12,6 % | 478 |
-
-Die absoluten Zahlen sind zu optimistisch (Backtest). Aussagekräftig ist der Vergleich: gleiche Trades, kleinerer
-Rückgang. Herkunft und Tests: `gewinn-forschung` (Labor 16, Übertragung, Wochen-Replay).
+Ergebnis im Wochen-Replay: siehe [Ergebnisse](#-ergebnisse) (MaxDD 19,0 → 12,6 %, gleiche 478 Trades).
+Herkunft und Tests: `gewinn-forschung` (Labor 16, Übertragung, Wochen-Replay); Tests in `tests/test_phase_gate.py`.
 
 ---
 
@@ -383,6 +407,7 @@ ltbbot/
 │   ├── strategy/
 │   │   ├── run.py                    # ein Zyklus für eine Strategie
 │   │   ├── envelope_logic.py         # geteilte Logik Live + Backtest (Bänder, Filter, Größe, Grenzen)
+│   │   ├── phase_gate.py             # Phasen-Tor: Einsatz-Faktor je Tag (Live + alle Backtests)
 │   │   └── configs/                  # config_<COIN>USDTUSDT_<TF>_envelope.json
 │   ├── analysis/
 │   │   ├── optimizer.py              # Optuna-Suche + OOS-Gate
@@ -398,12 +423,14 @@ ltbbot/
 │       └── telegram.py
 ├── docs/                             # README-Grafiken
 ├── deploy/release.json               # Release-Kennung für update.sh
+├── deploy/phase_gate_seed.json       # Phasen-Tor: Erststand der Tagesreihe
 ├── tests/
 ├── master_runner.py                  # Einstieg für Cron
 ├── run_pipeline.sh / run_portfolio_optimizer.py / show_results.sh / run_analysis.sh
 ├── auto_optimizer_scheduler.py       # wöchentliche Portfolio-Wahl
 ├── auto_parameter_optimizer_scheduler.py  # tägliche Parameter-Suche (1 Paar)
 ├── daily_live_vs_backtest_check.py   # täglicher Abgleich Live vs. Backtest
+├── phase_gate_update.py              # Phasen-Tor: tägliche Tagesreihe → artifacts/phase_gate_state.json
 ├── settings.json
 └── secret.json                       # nicht committen!
 ```
@@ -419,6 +446,8 @@ ltbbot/
 - **Lange Pausen:** Liegt BTC zwischen SMA50 und SMA200, handelt der Bot gar nicht.
 - **Hebel 2:** Ein voller Stop über drei Bänder kostet bis zu ~30 % des Kontos.
 - **OOS ist kurz:** 26 Wochen sind eine einzige Marktphase. Vergangene Ergebnisse garantieren nichts.
+- **Phasen-Tor:** Nach guten Tagen setzt der Bot bis zu ×1,5–2 ein. Kippt die Phase über Nacht, ist der Verlust an
+  diesem Tag größer als ohne Tor. Ausschalten: `phase_gate_since: null`.
 
 Nur Kapital einsetzen, dessen Verlust verkraftbar ist.
 
