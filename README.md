@@ -169,6 +169,34 @@ ungesehenen Daten bestehen, bevor er eingebaut wird.
 
 ---
 
+## 🚦 Phasen-Tor: Einsatz je Tag (seit 2026-11-01)
+
+Gewinnen oder verlieren viele Configs am selben Tag, hält diese Phase oft noch einen Tag an. Das Phasen-Tor nutzt das
+für die **Einsatzgröße**. Welche Trades der Bot macht, bleibt gleich.
+
+- **Signal:** Trefferquote der gestern geschlossenen Trades aller bestätigten Configs, verglichen mit dem Durchschnitt.
+- **Beweis statt Annahme:** Das Tor wirkt nur so stark, wie es seinen Nutzen bisher bewiesen hat. Dafür zählt ein
+  Beweis-Konto einmal pro Tag (nicht pro Trade). Ohne Beweis bleibt der Einsatz ×1.
+- **Einsatz:** ×0 bis ×2 (meist nahe 1). Fehlt der Vortag oder ist es aus, gilt ×1.
+- **Wo es wirkt:** Live-Bot (`trade_manager`), Einzel-Backtest, Portfolio-Simulator, wöchentliche Portfolio-Optimierung,
+  `show_results` und der tägliche Live-vs-Backtest-Bericht. Überall läuft dieselbe Funktion
+  (`src/ltbbot/strategy/phase_gate.py`).
+- **Tagesreihe:** `phase_gate_update.py` (startet täglich mit dem `master_runner`) schreibt
+  `artifacts/phase_gate_state.json`. Der Erststand liegt in `deploy/phase_gate_seed.json`.
+- **Ein/aus:** `settings.json` → `live_trading_settings.phase_gate_since` (Datum oder `null`).
+
+**Wochen-Replay 25.05.–31.10.2026** (23 Wochenteams nachgestellt, ohne Feindaten, 1000 USDT Start):
+
+| | Endkapital | MaxDD | Trades |
+|---|---|---|---|
+| ohne Tor | 8.185 USDT | 19,0 % | 478 |
+| mit Tor | 8.451 USDT | 12,6 % | 478 |
+
+Die absoluten Zahlen sind zu optimistisch (Backtest). Aussagekräftig ist der Vergleich: gleiche Trades, kleinerer
+Rückgang. Herkunft und Tests: `gewinn-forschung` (Labor 16, Übertragung, Wochen-Replay).
+
+---
+
 ## 🔁 Pipeline und Zeitfenster
 
 ![Pipeline: Kandidaten, Optuna-Suche nur im Training, OOS-Gate, Rückfall auf RT-Standard, Portfolio-Optimizer mit Quote, Live](docs/rt_pipeline.png)

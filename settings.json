@@ -275,7 +275,9 @@
             }
         ],
         "max_concurrent_positions": 10,
-        "_max_concurrent_note": "2026-10-06 User: maximal 10 Strategien gleichzeitig mit offener Position (Live + Portfolio-Simulator, envelope_logic.max_concurrent_positions)."
+        "_max_concurrent_note": "2026-10-06 User: maximal 10 Strategien gleichzeitig mit offener Position (Live + Portfolio-Simulator, envelope_logic.max_concurrent_positions).",
+        "phase_gate_since": "2026-11-01",
+        "_phase_gate_note": "2026-10-31: Phasen-Tor (strategy/phase_gate.py) -- Einsatz je UTC-Tag x0..2 nach Vortags-Trefferquote aller bestaetigten Configs, nur bei laufendem Beweis (sonst x1). gewinn-forschung: Live-Team OOS x5.95/DD 22.2 % vs x5.64/20.2 %, 20 Mischungen max +0.015. null = aus."
     },
     "optimization_settings": {
         "enabled": true,

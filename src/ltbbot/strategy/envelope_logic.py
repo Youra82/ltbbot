@@ -149,7 +149,7 @@ def reentry_block_cleared(side, close_price, average_price):
     return close_price > average_price if side == 'long' else close_price < average_price
 
 
-def fraction_band_amount(free_capital, params, band_price, num_bands, amount_step=None, side='long'):
+def fraction_band_amount(free_capital, params, band_price, num_bands, amount_step=None, side='long', size_mult=1.0):
     """Positionsgroesse im Kapitalanteil-Modus (risk.sizing == 'fraction').
 
     Marge je Band = freies Kapital * position_size_pct / Anzahl Baender, Notional =
@@ -160,7 +160,9 @@ def fraction_band_amount(free_capital, params, band_price, num_bands, amount_ste
 
     amount_step: Mengen-Schrittweite des Kontrakts (Bitget, z.B. LINK 1 Coin). Die Menge wird
     darauf AUFGERUNDET -- abgerundet laege sie unter dem Mindest-Notional bzw. bei 0 (LINK:
-    5 USDT = 0.36 Coins -> 0). Live: Markt-Praezision, Backtest: params['market']['amount_step']."""
+    5 USDT = 0.36 Coins -> 0). Live: Markt-Praezision, Backtest: params['market']['amount_step'].
+
+    size_mult: Einsatz-Multiplikator des Phasen-Tors (strategy/phase_gate.py), Standard 1 = unveraendert."""
     risk = params.get('risk', {})
     if band_price is None or band_price <= 0 or num_bands <= 0 or free_capital <= 0:
         return None
@@ -168,7 +170,7 @@ def fraction_band_amount(free_capital, params, band_price, num_bands, amount_ste
     pct = risk.get('position_size_pct', 30.0)
     if side == 'short' and risk.get('short_position_size_pct') is not None:
         pct = risk['short_position_size_pct']  # eigene (kleinere) Short-Groesse
-    margin = free_capital * pct / 100.0 / num_bands
+    margin = free_capital * pct / 100.0 / num_bands * size_mult
     notional = margin * lev
     if notional < MIN_NOTIONAL_USDT:
         if not risk.get('min_notional_bump', True):

@@ -21,6 +21,7 @@ from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, ca
                                             average_col, btc_below50_at, short_regime_exit,
                                             max_concurrent_positions, concurrency_allows_new)
 from ltbbot.analysis.backtester import _resolve_ambiguous_exit, _get_fine_slice, load_btc_trend
+from ltbbot.strategy.phase_gate import day_index, resolve as _resolve_size_multiplier
 
 # --- KONSTANTEN FÜR REALISTISCHERE SIMULATION ---
 SLIPPAGE_PCT_EXIT  = 0.0005  # 0.05% Slippage auf Exit (Market Order TP/SL)
@@ -29,8 +30,11 @@ SLIPPAGE_PCT_ENTRY = 0.0012  # 0.12% Slippage auf Entry (Trigger-Limit, wie back
 
 
 def run_portfolio_simulation(start_capital, strategies_data, start_date, end_date, multi_band_entries=True,
-                             max_open_strategies='settings', symbol_blocks=None):
+                             max_open_strategies='settings', symbol_blocks=None, size_multiplier='auto'):
     """
+    size_multiplier: optional {UTC-Tag: (m, s, a)} aus strategy/phase_gate.multipliers_by_day() -- Einsatz je
+      Einstieg x m (Phasen-Tor). 'auto' (Standard) = phase_gate.backtest_multipliers() (aus, solange das Tor in
+      settings.json aus ist), None = ohne Tor.
     Optional fuer den Live-Abgleich (daily_live_vs_backtest_check.py):
       strategies_data[id]['active_periods'] = [(von, bis), ...] -- Einstiege (auch weitere Baender)
         nur, wenn die Kerze im Team-Zeitraum der Strategie beginnt (bis=None: offen); danach nur
@@ -152,8 +156,11 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
 
     fee_pct = 0.0006
 
+    size_multiplier = _resolve_size_multiplier(size_multiplier)
+
     # --- Simulations-Loop ---
     for ts in tqdm(simulation_timestamps, desc="Simuliere Portfolio"):
+        _size_mult = size_multiplier.get(day_index(ts), (1.0,))[0] if size_multiplier else 1.0
         if liquidation_date:
             break
 
@@ -433,11 +440,11 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                             continue
                         if fraction_sizing:
                             amount_coins = fraction_band_amount(available_capital, params, band_price, num_envelopes,
-                                                                side=side)
+                                                                side=side, size_mult=_size_mult)
                             if amount_coins is None:
                                 continue
                         else:
-                            amount_coins = risk_amount_usd / sl_dist
+                            amount_coins = risk_amount_usd / sl_dist * _size_mult
                         if amount_coins * band_price < MIN_NOTIONAL_USDT:
                             continue
                         candidates[side].append((fill_price, sl_price, amount_coins,

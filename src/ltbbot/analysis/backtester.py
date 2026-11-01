@@ -14,6 +14,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange # Für load_data
+from ltbbot.strategy.phase_gate import day_index, resolve as _resolve_size_multiplier
 from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
                                             classify_regime, compute_band_sl_price, simulate_entry_fill,
                                             stop_fill_price, is_touch_mode, btc_filter_enabled, btc_trend_series,
@@ -275,7 +276,7 @@ def load_btc_trend(start_ts, end_ts):
 
 # --- NEUER BACKTESTER FÜR ENVELOPE (MIT KORREKTUREN) ---
 def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, sim_start_date=None, fine_data=None, multi_band_entries=True,
-                          mark_data=None, mark_fine_data=None, btc_trend=None):
+                          mark_data=None, mark_fine_data=None, btc_trend=None, size_multiplier='auto'):
     """
     Führt einen Backtest für die Envelope-Strategie durch.
     KORRIGIERT: Verwendet Startkapital für Positionsgrößen, simuliert Slippage und Max Position Size.
@@ -388,6 +389,8 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
 
     # sim_start_date: Warmup-Kerzen werden für Indikatoren genutzt, Trades erst ab hier
     sim_start_ts = pd.to_datetime(sim_start_date, utc=True) if sim_start_date else None
+    # Phasen-Tor (strategy/phase_gate.py): 'auto' = wie im Portfolio-Simulator, None = ohne Tor
+    size_multiplier = _resolve_size_multiplier(size_multiplier)
 
     # Progress Bar Setup
     total_candles = len(df)
@@ -578,6 +581,7 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 # mitwachsen/-schrumpfen statt an einem fixen Startwert zu kleben).
                 # Risikobasis = freies Kapital (live: fetch_balance_usdt() = Bitgets 'free')
                 risk_amount_usd = max(0.0, capital - used_margin) * (risk_per_entry_pct / 100.0)
+                _size_mult = size_multiplier.get(day_index(timestamp), (1.0,))[0] if size_multiplier else 1.0
                 atr_value = _atr_sl_pre.iloc[i - 1] if use_atr_sl else None
 
                 # Wie Live Bot: Long- UND Short-Trigger unabhängig prüfen.
@@ -628,11 +632,12 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                         # Groesse wie live: aus Band-Preis und SL-Abstand (bzw. Kapitalanteil)
                         if fraction_sizing:
                             amount_coins = fraction_band_amount(max(0.0, capital - used_margin), params,
-                                                                band_price, num_envelopes, side=side)
+                                                                band_price, num_envelopes, side=side,
+                                                                size_mult=_size_mult)
                             if amount_coins is None:
                                 continue
                         else:
-                            amount_coins = risk_amount_usd / sl_dist
+                            amount_coins = risk_amount_usd / sl_dist * _size_mult
                         if amount_coins * band_price < MIN_NOTIONAL_USDT:
                             continue
                         candidates[side].append((fill_price, sl_price, amount_coins,

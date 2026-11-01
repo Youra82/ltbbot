@@ -47,6 +47,7 @@ import pandas as pd
 
 from ltbbot.analysis.backtester import load_data, FINE_TF_MAP, LazyFineData
 from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
+from ltbbot.strategy import phase_gate
 from ltbbot.utils import team_history
 from ltbbot.utils.telegram import send_document, send_message, send_photo
 from ltbbot.analysis.live_vs_backtest_report import write_report
@@ -320,8 +321,13 @@ def simulate(history, start, end, capital, carry):
     if not sd:
         return [], data_flags
     blocks = [(f"{c['symbol'][:-4]}/USDT:USDT", c['entry_time'], c['exit_time']) for c in carry]
+    try:   # Phasen-Tor wie live (gleiche Funktion); aus/ohne Daten -> None = Einsatz x1
+        mult = phase_gate.multipliers_from_state(phase_gate.load_state(), phase_gate.day_index(end) + 1,
+                                                 phase_gate.enabled_since()) or None
+    except Exception:
+        mult = None
     res = run_portfolio_simulation(capital, sd, start.strftime('%Y-%m-%d'), end_s, multi_band_entries=True,
-                                   symbol_blocks=blocks) or {}
+                                   symbol_blocks=blocks, size_multiplier=mult) or {}
 
     def as_utc(x):
         x = pd.Timestamp(x)

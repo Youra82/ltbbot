@@ -17,6 +17,7 @@ TRACKER_DIR = os.path.join(PROJECT_ROOT, 'artifacts', 'tracker')
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.telegram import send_message, send_photo
+from ltbbot.strategy import phase_gate
 from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
                                             compute_band_sl_price, entry_blocked_by_sl, is_touch_mode,
                                             btc_filter_enabled, btc_trend_series, btc_trend_up_at, btc_side_allowed,
@@ -1721,6 +1722,14 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
     # gegen den verbleibenden Race zwischen parallel laufenden Symbol-Prozessen.
     used_margin_this_cycle = 0.0
 
+    # Phasen-Tor (strategy/phase_gate.py, gleiche Funktion wie Portfolio-Simulator): Einsatz-Multiplikator
+    # des heutigen UTC-Tags; 1.0 wenn aus, ohne Beweis oder ohne Daten.
+    try:
+        size_mult, pg_info = phase_gate.current_multiplier()
+    except Exception as e:
+        size_mult, pg_info = 1.0, f'Fehler: {e}'
+    logger.info(f"Phasen-Tor: Einsatz x{size_mult:.2f} ({pg_info})")
+
     # --- Long Orders ---
     if behavior_params.get('use_longs', True) and restrict_side in (None, 'long'):
         side = 'buy'
@@ -1779,11 +1788,11 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # 3. Positionsgröße (amount_coins) berechnen (geteilte Funktion mit Backtest im Kapitalanteil-Modus)
                 if fraction_sizing:
                     amount_coins = fraction_band_amount(balance, params, entry_price_for_calc, num_envelopes,
-                                                        amount_step=_amount_step, side='long')
+                                                        amount_step=_amount_step, side='long', size_mult=size_mult)
                     if amount_coins is None:
                         continue
                 else:
-                    amount_coins = risk_amount_usd / sl_distance_price
+                    amount_coins = risk_amount_usd / sl_distance_price * size_mult
 
                 # 4. Mindestmenge prüfen
                 if amount_coins < min_amount_tradable:
@@ -1925,11 +1934,11 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # 3. Positionsgröße (amount_coins) berechnen (geteilte Funktion mit Backtest im Kapitalanteil-Modus)
                 if fraction_sizing:
                     amount_coins = fraction_band_amount(balance, params, entry_price_for_calc, num_envelopes,
-                                                        amount_step=_amount_step, side='short')
+                                                        amount_step=_amount_step, side='short', size_mult=size_mult)
                     if amount_coins is None:
                         continue
                 else:
-                    amount_coins = risk_amount_usd / sl_distance_price
+                    amount_coins = risk_amount_usd / sl_distance_price * size_mult
 
                 # 4. Mindestmenge prüfen
                 if amount_coins < min_amount_tradable:

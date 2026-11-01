@@ -264,6 +264,18 @@ def main():
                 stderr=subprocess.STDOUT,
             )
 
+        # --- Phasen-Tor: Tagesreihe des Signal-Pools fortschreiben (strategy/phase_gate.py) ---
+        # Prueft selbst, ob eingeschaltet (phase_gate_since) und ob ein Tag fehlt; Sperre gegen Doppelstart.
+        phase_gate_script = os.path.join(SCRIPT_DIR, 'phase_gate_update.py')
+        if os.path.exists(phase_gate_script):
+            logs_dir = os.path.join(SCRIPT_DIR, 'logs')
+            os.makedirs(logs_dir, exist_ok=True)
+            subprocess.Popen(
+                [python_executable, phase_gate_script],
+                stdout=open(os.path.join(logs_dir, 'phase_gate_trigger.log'), 'a'),
+                stderr=subprocess.STDOUT,
+            )
+
         # --- Parameter-Suche (Schritt 1, optimizer.py) im Hintergrund starten ---
         # Getrennt von auto_optimizer_scheduler.py oben (das ist nur Schritt 2,
         # die woechentliche Portfolio-AUSWAHL aus bestehenden Configs). Ohne
