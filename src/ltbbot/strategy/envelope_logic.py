@@ -152,8 +152,8 @@ def reentry_block_cleared(side, close_price, average_price):
 def leverage_for_sl(stop_loss_pct, max_leverage=8, min_leverage=2, liq_buffer=0.8):
     """Hebel je Config aus dem SL-Abstand (2026-11-07, User-Wahl F2): so hoch, dass die isolierte
     Liquidation (~1/Hebel Abstand) mit Puffer hinter dem SL liegt: Hebel <= liq_buffer / SL.
-    Getestet (portfolio_live_sim, Release-Team 07.10., 100 USDT): 15 % Groesse + Hebel bis 8 ->
-    08.04.-07.10. +157 %/DD 17.8 %, ungesehen 08.10.-07.11. +3.6 %/DD 26.5 %."""
+    Getestet (portfolio_live_sim, Release-Team 07.10., 100 USDT, Hebel bis 8): 15 % ohne Tor 08.04.-07.10.
+    +157 %/DD 17.8, ungesehen 08.10.-07.11. +3.6 %/DD 26.5; gewaehlt 25 % mit Phasen-Tor +188 %/DD 28.2, +4.0 %/DD 26.7."""
     if not stop_loss_pct or stop_loss_pct <= 0:
         return int(min_leverage)
     return int(max(min_leverage, min(max_leverage, liq_buffer / (stop_loss_pct / 100.0))))

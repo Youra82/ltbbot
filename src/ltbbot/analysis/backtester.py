@@ -788,9 +788,13 @@ def _mark_cache_file(symbol, timeframe):
                         f"{symbol.replace('/', '-').replace(':', '-')}_{timeframe}_mark.{ext}")
 
 
-def _trim_1m(df):
-    """Nur die letzten MARK_1M_KEEP_DAYS Tage behalten (kein alter Ballast im Cache)."""
+def _trim_1m(df, keep_from=None):
+    """Nur die letzten MARK_1M_KEEP_DAYS Tage behalten (kein alter Ballast im Cache). Wird NUR von
+    prune_mark_cache (Ende des woechentlichen Optimizer-Laufs) benutzt -- beim Speichern gekuerzt, schnitt ein
+    Lauf ueber ein spaeteres Fenster einem frueheren die Daten weg (2026-11-07: April-Daten je Coin neu geladen)."""
     cut = pd.Timestamp.now(tz='UTC') - pd.Timedelta(days=MARK_1M_KEEP_DAYS)
+    if keep_from is not None:
+        cut = min(cut, pd.Timestamp(keep_from))
     return df[df.index >= cut]
 
 
@@ -893,7 +897,7 @@ def prefetch_mark_1m(symbols, start_date_str, end_date_str, threads=3, log=None)
         for a, b in gaps:
             parts.append(fetch(ex, sym, a, b))
         d = pd.concat(([cached] if cached is not None else []) + parts)
-        d = _trim_1m(d[~d.index.duplicated(keep='last')].sort_index())
+        d = d[~d.index.duplicated(keep='last')].sort_index()   # gekuerzt wird nur in prune_mark_cache
         _atomic_csv(d, path)
         return sym, f'{len(d)} Kerzen'
 
@@ -979,8 +983,6 @@ def load_mark_data(symbol, timeframe, start_date_str, end_date_str):
         if cached is not None:
             d = pd.concat([cached, d])
         d = d[~d.index.duplicated(keep='last')].sort_index()
-        if timeframe == '1m':
-            d = _trim_1m(d)
         _atomic_csv(d, cache_file)
         return d.loc[req_start:req_end].copy()
     except Exception as e:

@@ -385,6 +385,20 @@ def simulate_team(start_capital, strategies_data, start_date, end_date, size_mul
         d = d[~d.index.duplicated()].sort_index()
         sd[sid] = dict(info, data=d[d.index + tf <= end_ts])   # nur abgeschlossene Kerzen
     marks = _marks_for([v['symbol'] for v in sd.values()], start_ts, end_ts, log=log)
+    missing = sorted({v['symbol'] for v in sd.values()
+                      if v['symbol'] not in marks or marks[v['symbol']].empty
+                      or marks[v['symbol']].index.min() > start_ts + pd.Timedelta(days=1)})
+    if missing:
+        # Ohne vollstaendige 1m-Mark-Kerzen fehlte die Strategie stillschweigend im Team -> falscher DD.
+        # Dann lieber das ganze Team mit dem Kerzen-Simulator (vollstaendig, nur ungenauer).
+        msg = f"WARNUNG Team-Simulation: 1m-Mark-Kerzen fehlen/unvollstaendig fuer {missing} -- Kerzen-Simulator"
+        (log or logger.warning)(msg)
+        from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
+        res = run_portfolio_simulation(start_capital, strategies_data, start_date, end_date, multi_band_entries=True,
+                                       size_multiplier=size_multiplier, max_open_strategies=max_open_strategies)
+        if res:
+            res['simulator'] = 'candle (Mark-Kerzen fehlten)'
+        return res
     needs_btc = any(btc_filter_enabled(v['params']) for v in sd.values())
     res = run_portfolio_live_sim(start_capital, sd, marks, start_ts, end_ts, size_multiplier=size_multiplier,
                                  max_open_strategies=max_open_strategies,

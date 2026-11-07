@@ -79,3 +79,31 @@ def test_simulate_team_matches_old_result_format(monkeypatch):
     assert (tdf['entry_time'] >= pd.Timestamp('2026-09-20', tz='UTC')).all()
     assert res['equity_curve'].index.name == 'timestamp' and 'equity' in res['equity_curve'].columns
     assert res['total_pnl_pct'] == pytest.approx((res['end_capital'] / 100.0 - 1) * 100)
+
+
+def test_trim_keeps_requested_start():
+    """Speichern kuerzt auf MARK_1M_KEEP_DAYS, aber nie den angefragten Zeitraum (aelteres Backtest-Fenster)."""
+    now = pd.Timestamp.now(tz='UTC').floor('min')
+    idx = pd.date_range(now - pd.Timedelta(days=bt.MARK_1M_KEEP_DAYS + 30), now, freq='1D', tz=None)
+    d = pd.DataFrame({'close': 1.0}, index=pd.DatetimeIndex(idx).tz_convert('UTC') if idx.tz else idx.tz_localize('UTC'))
+    assert d.index.min() < bt._trim_1m(d).index.min()                                  # ohne Anfrage: gekuerzt
+    start = now - pd.Timedelta(days=bt.MARK_1M_KEEP_DAYS + 20)
+    assert bt._trim_1m(d, keep_from=start).index.min() <= start + pd.Timedelta(days=1)  # Anfrage bleibt erhalten
+
+
+def test_simulate_team_falls_back_without_marks(monkeypatch):
+    """Fehlen Mark-Kerzen eines Team-Mitglieds, rechnet das ganze Team mit dem Kerzen-Simulator statt die
+    Strategie stillschweigend wegzulassen."""
+    m, h = _synthetic('2026-09-01', 40)
+    p = copy.deepcopy(rt_params())
+    p['strategy']['btc_trend_filter'] = False
+    p['market'] = {'symbol': 'NOMARK/USDT:USDT', 'timeframe': '1h'}
+    monkeypatch.setattr(bt, 'prefetch_mark_1m', lambda *a, **k: {})
+    monkeypatch.setattr(bt, 'load_mark_data', lambda *a, **k: pd.DataFrame())
+    called = {}
+    import ltbbot.analysis.portfolio_simulator as ps
+    monkeypatch.setattr(ps, 'run_portfolio_simulation', lambda *a, **k: called.setdefault('r', {'end_capital': 1.0}))
+    team = {'NM_1h': {'symbol': 'NOMARK/USDT:USDT', 'timeframe': '1h', 'data': h, 'params': p}}
+    logs = []
+    res = pls.simulate_team(100.0, team, '2026-09-20', '2026-10-09', log=logs.append)
+    assert called and res['simulator'].startswith('candle') and 'NOMARK/USDT:USDT' in logs[0]

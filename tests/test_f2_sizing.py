@@ -113,6 +113,6 @@ def test_apply_rt_sizing_migrates_old_configs():
     old = json.loads(subprocess.run(['git', 'show', f'dbf8bee:{f}'], cwd=root, capture_output=True, text=True).stdout)
     assert old['risk']['position_size_pct'] == 60.0 and old['risk']['leverage'] == 2
     new = target_risk(old['risk'], rt)
-    assert new == {**old['risk'], 'position_size_pct': 15.0, 'short_position_size_pct': 7.5,
+    assert new == {**old['risk'], 'position_size_pct': rt['position_size_pct'], 'short_position_size_pct': rt['short']['position_size_pct'],
                    'leverage': 6, 'short_leverage': 2}
     assert target_risk(new, rt) == new                                  # wiederholbar
