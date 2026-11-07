@@ -47,6 +47,8 @@ import pandas as pd
 
 from ltbbot.analysis.backtester import load_data, FINE_TF_MAP, LazyFineData
 from ltbbot.analysis.portfolio_simulator import run_portfolio_simulation
+from ltbbot.analysis.portfolio_live_sim import run_portfolio_live_sim
+from ltbbot.analysis.backtester import load_mark_data, load_btc_trend, prefetch_mark_1m
 from ltbbot.strategy import phase_gate
 from ltbbot.utils import team_history
 from ltbbot.utils.telegram import send_document, send_message, send_photo
@@ -348,6 +350,77 @@ def simulate(history, start, end, capital, carry):
     return [t for t in trades if t['signal_time'] >= start], data_flags
 
 
+def simulate_live(history, start, end, capital, carry):
+    """Wie simulate(), aber mit dem Live-Takt-Simulator (portfolio_live_sim.py): 1m-Mark-Kerzen,
+    15-Min-Zyklen, Margin-Pruefung beim Ausloesen. Ergebnis je Position (Baender zusammengefasst)."""
+    end_s = (end + timedelta(days=1)).strftime('%Y-%m-%d')
+    keys = sorted({k for e in history for k in e['team'] if pd.Timestamp(e['valid_from']) <= end})
+    sd, marks, data_flags = {}, {}, []
+    try:   # 1m-Mark-Kerzen aller Team-Coins vorab parallel laden (sonst ~15 s je Coin nacheinander)
+        syms = set()
+        for key in keys:
+            path = os.path.join(CONFIGS_DIR, f'config_{key}{team_history.CONFIG_SUFFIX}.json')
+            if os.path.exists(path):
+                with open(path) as f:
+                    syms.add(json.load(f)['market']['symbol'])
+        prefetch_mark_1m(syms, start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d'))
+    except Exception as e:
+        _log(f"WARNUNG Mark-Vorabladen: {e}")
+    for key in keys:
+        periods = [(a, b) for a, b in active_periods(history, key) if b is None or b > start]
+        if not periods:
+            continue
+        path = os.path.join(CONFIGS_DIR, f'config_{key}{team_history.CONFIG_SUFFIX}.json')
+        if not os.path.exists(path):
+            data_flags.append(f"Config {_short(key)} fehlt – Strategie nicht simuliert")
+            continue
+        with open(path) as f:
+            cfg = json.load(f)
+        sym, tf = cfg['market']['symbol'], cfg['market']['timeframe']
+        data = load_data(sym, tf, _warmup_start(start, tf), end_s)
+        if data is None or data.empty:
+            data_flags.append(f"Backtest-Daten {_short(key)} ({tf}) leer – nicht simuliert")
+            continue
+        data = data[~data.index.duplicated()].sort_index()
+        data = data[data.index + pd.Timedelta(minutes=TF_MIN[tf]) <= end]
+        if sym not in marks:
+            mk = load_mark_data(sym, '1m', start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d'))
+            if mk is None or mk.empty or mk.index.max() < end - pd.Timedelta(minutes=30):
+                data_flags.append(f"1m-Mark-Kerzen {sym} unvollständig – {_short(key)} ungültig")
+            marks[sym] = mk
+        sd[key] = {'symbol': sym, 'timeframe': tf, 'data': data, 'params': cfg, 'active_periods': periods}
+    if not sd:
+        return [], data_flags
+    blocks = [(f"{c['symbol'][:-4]}/USDT:USDT", c['entry_time'], c['exit_time']) for c in carry]
+    try:
+        mult = phase_gate.multipliers_from_state(phase_gate.load_state(), phase_gate.day_index(end) + 1,
+                                                 phase_gate.enabled_since()) or None
+    except Exception:
+        mult = None
+    try:   # Reihenfolge je Zyklus wie live (Team-Liste in settings.json)
+        with open(SETTINGS_FILE, encoding='utf-8') as f:
+            act = json.load(f)['live_trading_settings']['active_strategies']
+        order = [team_history.strategy_key(a['symbol'], a['timeframe']) for a in act]
+        order += [k for k in sd if k not in order]
+    except Exception:
+        order = None
+    res = run_portfolio_live_sim(capital, sd, marks, start, end, symbol_blocks=blocks, size_multiplier=mult,
+                                 btc_trend=load_btc_trend(start, end), order=order)
+    layers = {}
+    tdf = res.get('trades_df')
+    if tdf is not None and not tdf.empty:
+        for t in tdf.to_dict('records'):
+            layers.setdefault(t['strategy_id'], []).append(dict(
+                side=t['side'], entry_time=pd.Timestamp(t['entry_time']), exit_time=pd.Timestamp(t['exit_time']),
+                entry=t['entry_price'], exit=t['exit_price'], amount=t['amount_coins'], pnl=t['pnl_usd']))
+    for l in res.get('open_positions', []):
+        layers.setdefault(l['strategy_id'], []).append(dict(
+            side=l['side'], entry_time=pd.Timestamp(l['entry_time']), exit_time=None,
+            entry=l['entry_price'], exit=None, amount=l['amount_coins'], pnl=None))
+    trades = [p for key, ls in layers.items() for p in group_positions(ls, key, end)]
+    return [t for t in trades if t['signal_time'] >= start], data_flags
+
+
 # --- Ursachen aus den Bot-Logs ------------------------------------------------
 
 # (Suchtext im Log, Ursache) -- Reihenfolge = Prioritaet, Texte aus trade_manager.py
@@ -418,6 +491,10 @@ def explain_from_log(key, decision_time, side=None):
 def explain_exit(st, lt):
     """Exit-Abweichung: frueherer/spaeterer Exit; der Simulator prueft TP/SL je Kerze und Band."""
     tf = st['key'].rsplit('_', 1)[1]
+    if abs(lt['exit_time'] - st['exit_time']) <= pd.Timedelta(minutes=2):
+        # Live-Takt-Simulator: gleiche Minute, nur der Preis weicht ab
+        return (f"gleicher Zeitpunkt ({_fmt_t(lt['exit_time'])}), anderer Preis: live Fill zum Handelspreis, "
+                f"Simulator Mark-Preis-Ausloesung ± Schlupf")
     when = 'früher' if lt['exit_time'] < st['exit_time'] else 'später'
     return (f"live {when} raus ({_fmt_t(lt['exit_time'])}, Simulator in Kerze ab {_fmt_t(st['exit_time'])}); "
             f"Simulator: {st.get('bands', 1)} Band/Bänder, TP/SL auf {tf}-Kerzen, "
@@ -426,7 +503,7 @@ def explain_exit(st, lt):
 
 # --- Abgleich -----------------------------------------------------------------
 
-def compare(live, sim, history_path):
+def compare(live, sim, history_path, early=timedelta(0)):
     team_at = lambda ts: team_history.team_at(ts, path=history_path)
     used, rows, extra, unknown = set(), [], [], []
     for lt in live:
@@ -436,7 +513,7 @@ def compare(live, sim, history_path):
             continue
         cand = [i for i, st in enumerate(sim) if i not in used and st['symbol'] == lt['symbol']
                 and st['side'] == lt['side']
-                and timedelta(0) <= lt['entry_time'] - st['signal_time'] <= _tf_dur(st['key']) + MATCH_MAX_DELAY]
+                and -early <= lt['entry_time'] - st['signal_time'] <= _tf_dur(st['key']) + MATCH_MAX_DELAY]
         if cand:
             used.add(cand[0])
             rows.append((lt, sim[cand[0]]))
@@ -611,7 +688,7 @@ def write_latest(items, order_flags, summary, days, page, out_dir=REPORT_DIR):
     return data
 
 
-def run_check(days, send, history_path):
+def run_check(days, send, history_path, engine='live'):
     acc, tg = _secrets()
     end = pd.Timestamp.now(tz='UTC').floor('min')
     start = end - pd.Timedelta(days=days)
@@ -632,8 +709,12 @@ def run_check(days, send, history_path):
     # Kontostand zu Fensterbeginn: heutiges Equity ohne offene uPnL und ohne Ergebnis der Trades im Fenster
     realized_now = (equity or 25.0) - sum(float(p['unrealizedPL']) for p in open_pos)
     start_capital = realized_now - sum(t['pnl'] for t in live if t['exit_time'] is not None)
-    sim, data_flags = simulate(hist, start, end, start_capital, carry)
-    rows, extra, missing, unknown = compare(live, sim, history_path)
+    if engine == 'live':   # Live-Takt-Simulator: Fill-Minute statt Kerzenbeginn, Abweichung in beide Richtungen
+        sim, data_flags = simulate_live(hist, start, end, start_capital, carry)
+        rows, extra, missing, unknown = compare(live, sim, history_path, early=pd.Timedelta(minutes=5))
+    else:
+        sim, data_flags = simulate(hist, start, end, start_capital, carry)
+        rows, extra, missing, unknown = compare(live, sim, history_path)
     # Kopfzeile/Uebersicht nur ueber bewertete Trades (gleiches Team bekannt) -- sonst stuende
     # Live mit Trades vor Beginn der Teamhistorie gegen einen Backtest ohne diese Trades
     live_eval = [t for t in live if not any(t is u for u in unknown)]
@@ -669,6 +750,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--force', action='store_true')
     ap.add_argument('--send', action='store_true')
+    ap.add_argument('--engine', choices=('candle', 'live'), default='live',
+                    help='candle = portfolio_simulator (Kerzen), live = portfolio_live_sim (1m-Mark, 15-Min-Zyklen)')
     ap.add_argument('--history', default=os.environ.get('LTBBOT_TEAM_HISTORY', team_history.HISTORY_FILE))
     args = ap.parse_args()
     logging.disable(logging.WARNING)
@@ -679,7 +762,8 @@ def main():
             return 0
         _set_last_run()
     try:
-        run_check(cfg['rolling_window_days'], send=args.send or not args.force, history_path=args.history)
+        run_check(cfg['rolling_window_days'], send=args.send or not args.force, history_path=args.history,
+                  engine=args.engine)
     except Exception as e:
         _log(f"FEHLER {type(e).__name__}: {e}")
         if not args.force:

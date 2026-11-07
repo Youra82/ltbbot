@@ -25,7 +25,7 @@ from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, ca
                                             fraction_band_amount, uses_fraction_sizing, average_col,
                                             btc_below50_at, short_regime_exit,
                                             max_concurrent_positions, concurrency_allows_new,
-                                            tp_already_reached)
+                                            tp_already_reached, side_leverage)
 from ltbbot.utils.exchange import Exchange, drop_incomplete_last_candle # Import hinzugefügt, falls Type Hinting verwendet wird (optional)
 
 
@@ -1811,7 +1811,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                 # (= wie eine Ablehnung durch die Boerse), statt blind zu oeffnen.
                 # Geteilte Funktion mit backtester.py/portfolio_simulator.py (siehe
                 # envelope_logic.py) -- Live und Backtest muessen identisch rechnen.
-                margin_required = calculate_position_margin(amount_coins, entry_price_for_calc, leverage)
+                margin_required = calculate_position_margin(amount_coins, entry_price_for_calc, side_leverage(params, 'long'))
                 if not margin_fits(used_margin_this_cycle, margin_required, balance):
                     logger.warning(
                         f"⚠️ Long Layer {i+1}: Margin {margin_required:.2f} USDT wuerde freies "
@@ -1954,7 +1954,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
 
                 # 5. Benötigte Margin berechnen und gegen das TATSAECHLICH freie
                 # Guthaben pruefen (siehe Long-Block-Kommentar weiter oben).
-                margin_required = calculate_position_margin(amount_coins, entry_price_for_calc, leverage)
+                margin_required = calculate_position_margin(amount_coins, entry_price_for_calc, side_leverage(params, 'short'))
                 if not margin_fits(used_margin_this_cycle, margin_required, balance):
                     logger.warning(
                         f"⚠️ Short Layer {i+1}: Margin {margin_required:.2f} USDT wuerde freies "
@@ -1993,7 +1993,7 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
                         f"Entry: {entry_limit_price:.6g} USDT (Band {i+1})\n"
                         f"SL: {sl_price:.6g} USDT (+{sl_pct_msg:.2f}%, fest für dieses Band)\n"
                         f"TP: folgt gebündelt via MA sobald gefüllt\n"
-                        f"Hebel: {leverage}x\n"
+                        f"Hebel: {side_leverage(params, 'short')}x\n"
                         f"Regime: {regime_msg} | Trend: {trend_msg}"
                     )
                     send_message(telegram_config.get('bot_token'), telegram_config.get('chat_id'), msg)
@@ -2270,7 +2270,8 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
                   risk_params = params['risk']
                   exchange.set_margin_mode(symbol, margin_mode=risk_params['margin_mode'])
                   time.sleep(0.5)
-                  exchange.set_leverage(symbol, margin_mode=risk_params['margin_mode'], leverage=risk_params['leverage'])
+                  exchange.set_leverage(symbol, margin_mode=risk_params['margin_mode'], leverage=risk_params['leverage'],
+                                        short_leverage=risk_params.get('short_leverage'))
                   time.sleep(0.5)
               except Exception as e:
                   logger.warning(f"Konnte Margin Mode/Leverage nicht setzen (evtl. schon korrekt?): {e}")

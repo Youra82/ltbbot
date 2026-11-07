@@ -63,6 +63,28 @@ def _smoothed_score(strategy_id, strat_data, start_capital, start_date, end_date
     return float(np.mean(scores)) if scores else None
 
 
+def team_simulator_mode(settings=None):
+    """settings.json::optimization_settings.team_simulator: 'live' = Team-Schritte (DD-Grenze, Vergleich mit dem
+    aktuellen Team) mit dem Live-Takt-Simulator (2026-11-07). Die Einzel-Rangfolge bleibt beim Kerzen-Simulator --
+    einzeln liegen beide nah beieinander (137 Configs 08.10.-07.11.: +78.9 vs +71.6 USDT), im Team unterschaetzte der
+    Kerzen-Simulator den DD mit F2-Groesse um die Haelfte (13.0 vs 26.5 %)."""
+    if settings is None:
+        try:
+            with open(os.path.join(PROJECT_ROOT, 'settings.json'), encoding='utf-8') as f:
+                settings = json.load(f)
+        except Exception:
+            return 'candle'
+    return (settings.get('optimization_settings') or {}).get('team_simulator', 'candle')
+
+
+def team_simulation(start_capital, team_data, start_date, end_date):
+    """Team-Simulation mit dem eingestellten Simulator (gleiches Ergebnis-Format)."""
+    if team_simulator_mode() == 'live':
+        from ltbbot.analysis.portfolio_live_sim import simulate_team
+        return simulate_team(start_capital, team_data, start_date, end_date, log=logger.info)
+    return run_portfolio_simulation(start_capital, team_data, start_date, end_date, multi_band_entries=True)
+
+
 # --- Portfolio Optimizer Logic (Greedy Approach) ---
 def _quota_select(ranked, strategies_data, start_capital, start_date, end_date, max_dd, quota):
     """Team mit Quote je Timeframe (User-Vorgabe 2026-10-06: je 10-15 Strategien auf 6h/4h/2h/1h).
@@ -87,8 +109,8 @@ def _quota_select(ranked, strategies_data, start_capital, start_date, end_date, 
     logger.info(f"Quote je Timeframe: {count} (Ziel {q_min}-{q_max})")
 
     def _sim(members):
-        return run_portfolio_simulation(start_capital, {m['strategy_id']: strategies_data[m['strategy_id']] for m in members},
-                                        start_date, end_date, multi_band_entries=True)
+        return team_simulation(start_capital, {m['strategy_id']: strategies_data[m['strategy_id']] for m in members},
+                               start_date, end_date)
 
     result = _sim(chosen) if chosen else None
     while result and result.get('max_drawdown_pct', 100.0) > max_dd * 100:

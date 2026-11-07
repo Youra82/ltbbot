@@ -13,7 +13,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 # Import necessary functions
-from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
+from ltbbot.strategy.envelope_logic import (side_leverage, calculate_indicators_and_signals, calculate_position_margin, margin_fits,
                                             classify_regime, compute_band_sl_price, simulate_entry_fill,
                                             stop_fill_price, is_touch_mode, btc_filter_enabled,
                                             btc_trend_up_at, btc_side_allowed, reentry_blocks_until_cross,
@@ -467,7 +467,7 @@ def run_portfolio_simulation(start_capital, strategies_data, start_date, end_dat
                 # wird die Order uebersprungen (= live InsufficientFunds).
                 for side in ('long', 'short'):
                     for ep, sl, amt, _, band_k, stopped in candidates[side]:
-                        margin_required = calculate_position_margin(amt, ep, leverage)
+                        margin_required = calculate_position_margin(amt, ep, side_leverage(params, side))
                         if not margin_fits(used_margin, margin_required, equity):
                             continue
                         layer = {

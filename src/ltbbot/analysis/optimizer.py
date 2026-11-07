@@ -29,7 +29,7 @@ RESULTS_FILE = os.path.join(PROJECT_ROOT, 'artifacts', 'results', 'last_optimize
 # Verwende den Backtester für Envelope
 from ltbbot.analysis.backtester import load_data, run_envelope_backtest, FINE_TF_MAP, LazyFineData
 from ltbbot.analysis.evaluator import evaluate_dataset
-from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction, band_structure_ok
+from ltbbot.strategy.envelope_logic import median_atr_pct, sl_atr_fraction, band_structure_ok, leverage_for_sl
 from ltbbot.utils.oos_window import oos_weeks as _oos_weeks, windows as _oos_windows
 
 # Globale Variablen für die Objective-Funktion
@@ -92,7 +92,9 @@ def build_rt_params(average_type, average_period, envelopes, stop_loss_pct, rt=N
             'reentry_after_sl': 'cross_average',
         },
         'risk': {
-            'margin_mode': 'isolated', 'leverage': int(rt.get('leverage', 1)),
+            'margin_mode': 'isolated',
+            'leverage': (leverage_for_sl(stop_loss_pct, rt.get('max_leverage', 8), rt.get('leverage', 2))
+                         if rt.get('leverage_mode') == 'per_sl' else int(rt.get('leverage', 1))),
             'stop_loss_pct': round(float(stop_loss_pct), 2),
             'sizing': 'fraction', 'position_size_pct': float(rt.get('position_size_pct', 30.0)),
             'min_notional_bump': True,
@@ -108,6 +110,9 @@ def build_rt_params(average_type, average_period, envelopes, stop_loss_pct, rt=N
                                     'btc_filter': short.get('btc_filter', 'sma200_sma50'),
                                     'regime_exit': bool(short.get('regime_exit', True))}
         out['risk']['short_stop_loss_pct'] = float(short.get('stop_loss_pct', 30.0))
+        if rt.get('leverage_mode') == 'per_sl':   # eigener Short-Hebel (Liquidation hinter dem Short-SL)
+            out['risk']['short_leverage'] = leverage_for_sl(float(short.get('stop_loss_pct', 30.0)),
+                                                            rt.get('max_leverage', 8), 1)
         if short.get('position_size_pct') is not None:
             out['risk']['short_position_size_pct'] = float(short['position_size_pct'])
     return out

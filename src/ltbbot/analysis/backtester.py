@@ -15,7 +15,7 @@ sys.path.append(os.path.join(PROJECT_ROOT, 'src'))
 
 from ltbbot.utils.exchange import Exchange # Für load_data
 from ltbbot.strategy.phase_gate import day_index, resolve as _resolve_size_multiplier
-from ltbbot.strategy.envelope_logic import (calculate_indicators_and_signals, calculate_position_margin, margin_fits,
+from ltbbot.strategy.envelope_logic import (side_leverage, calculate_indicators_and_signals, calculate_position_margin, margin_fits,
                                             classify_regime, compute_band_sl_price, simulate_entry_fill,
                                             stop_fill_price, is_touch_mode, btc_filter_enabled, btc_trend_series,
                                             btc_trend_up_at, btc_side_allowed, reentry_blocks_until_cross,
@@ -662,7 +662,7 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
                 stopped_margin = 0.0
                 for side in ('long', 'short'):
                     for entry_price, sl_price, amount_coins, _, band_k, stopped in candidates[side]:
-                        margin_required = calculate_position_margin(amount_coins, entry_price, leverage)
+                        margin_required = calculate_position_margin(amount_coins, entry_price, side_leverage(params, side))
                         if not margin_fits(used_margin, margin_required, capital):
                             continue
                         pos = {
@@ -778,27 +778,185 @@ def run_envelope_backtest(data, params, start_capital=1000, show_progress=True, 
     return results
 
 
+MARK_1M_KEEP_DAYS = 200   # 26 Wochen Rueckblick + Puffer; aelter wird beim Speichern abgeschnitten
+
+
+def _mark_cache_file(symbol, timeframe):
+    """1m-Mark-Kerzen komprimiert (.csv.gz, ~1/4 der Groesse), andere Timeframes wie bisher."""
+    ext = 'csv.gz' if timeframe == '1m' else 'csv'
+    return os.path.join(PROJECT_ROOT, 'data', 'cache',
+                        f"{symbol.replace('/', '-').replace(':', '-')}_{timeframe}_mark.{ext}")
+
+
+def _trim_1m(df):
+    """Nur die letzten MARK_1M_KEEP_DAYS Tage behalten (kein alter Ballast im Cache)."""
+    cut = pd.Timestamp.now(tz='UTC') - pd.Timedelta(days=MARK_1M_KEEP_DAYS)
+    return df[df.index >= cut]
+
+
+def _t_now():
+    import time as _time
+    return _time.time()
+
+
+def prune_mark_cache(keep_symbols, log=None):
+    """Mark-Cache aufraeumen: 1m-Dateien von Coins ausserhalb keep_symbols loeschen, behaltene auf
+    MARK_1M_KEEP_DAYS kuerzen, alte unkomprimierte 1m-Dateien (*_1m_mark.csv) und Temp-Reste loeschen."""
+    import glob as _glob
+    keep = {_mark_cache_file(s, '1m') for s in keep_symbols}
+    removed = trimmed = 0
+    cache_dir = os.path.join(PROJECT_ROOT, 'data', 'cache')
+    for path in _glob.glob(os.path.join(cache_dir, '*_1m_mark.csv*')):
+        if path.endswith('.tmp'):   # Temp-Rest eines abgebrochenen Laufs (laufende Schreiber: < 1 h alt)
+            if _t_now() - os.path.getmtime(path) > 3600:
+                try:
+                    os.remove(path); removed += 1
+                except OSError:
+                    pass
+            continue
+        if path.endswith('_1m_mark.csv') or path not in keep:
+            try:
+                os.remove(path); removed += 1
+            except OSError:
+                pass
+            continue
+        try:
+            d = _read_mark_csv(path)
+            d.index = d.index.tz_localize('UTC') if d.index.tz is None else d.index.tz_convert('UTC')
+            t = _trim_1m(d)
+            if len(t) < len(d):
+                _atomic_csv(t, path); trimmed += 1
+        except Exception:
+            pass
+    if log:
+        log(f"Mark-Cache: {removed} Dateien geloescht, {trimmed} gekuerzt, {len(keep)} Coins behalten")
+    return removed, trimmed
+
+
+def prefetch_mark_1m(symbols, start_date_str, end_date_str, threads=3, log=None):
+    """1m-Mark-Kerzen mehrerer Coins PARALLEL in den Cache von load_mark_data (2026-11-07).
+    Sequentiell dauert ein Coin ueber 26 Wochen ~7 Min (1300 Abrufe a 200 Kerzen). Laedt je Coin nur
+    die fehlenden Enden (Anfang/Ende), oeffentliche Endpunkte ohne Schluessel. Bitget drosselt bei
+    zu vielen gleichzeitigen Abrufen (429) -> 3 Threads, Pause und Wiederholung."""
+    import time as _t
+    from concurrent.futures import ThreadPoolExecutor
+    import ccxt as _ccxt
+    os.makedirs(os.path.join(PROJECT_ROOT, 'data', 'cache'), exist_ok=True)
+    req_start = pd.to_datetime(start_date_str, utc=True)
+    req_end = min(pd.to_datetime(end_date_str + 'T23:59:59Z', utc=True), pd.Timestamp.now(tz='UTC') - pd.Timedelta(minutes=1))
+
+    def fetch(ex, sym, a, b):
+        rows, since, err = [], int(a.timestamp() * 1000), 0
+        end_ms = int(b.timestamp() * 1000)
+        while since < end_ms:
+            try:
+                page = ex.fetch_mark_ohlcv(sym, '1m', since, 200)
+            except Exception as e:
+                err += 1
+                if err > 300:
+                    raise
+                _t.sleep(10 if '429' in str(e) else 3)
+                continue
+            if not page:
+                since += 200 * 60000
+                continue
+            rows += page
+            nxt = page[-1][0] + 60000
+            if nxt <= since:
+                break
+            since = nxt
+        d = pd.DataFrame(rows, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        d['timestamp'] = pd.to_datetime(d['timestamp'], unit='ms', utc=True)
+        return d.set_index('timestamp')
+
+    def one(sym):
+        path = _mark_cache_file(sym, '1m')
+        cached = None
+        if os.path.exists(path):
+            try:
+                cached = _read_mark_csv(path)
+                cached.index = cached.index.tz_localize('UTC') if cached.index.tz is None else cached.index.tz_convert('UTC')
+            except Exception:
+                cached = None
+        parts = []
+        if cached is None or cached.empty:
+            gaps = [(req_start, req_end)]
+        else:
+            gaps = []
+            if cached.index.min() > req_start + pd.Timedelta(minutes=1):
+                gaps.append((req_start, cached.index.min()))
+            if cached.index.max() < req_end - pd.Timedelta(minutes=1):
+                gaps.append((cached.index.max(), req_end))
+        if not gaps:
+            return sym, 'vorhanden'
+        ex = _ccxt.bitget({'enableRateLimit': True, 'options': {'defaultType': 'swap'}})
+        for a, b in gaps:
+            parts.append(fetch(ex, sym, a, b))
+        d = pd.concat(([cached] if cached is not None else []) + parts)
+        d = _trim_1m(d[~d.index.duplicated(keep='last')].sort_index())
+        _atomic_csv(d, path)
+        return sym, f'{len(d)} Kerzen'
+
+    out = {}
+    with ThreadPoolExecutor(max(1, int(threads))) as pool:
+        for sym, res in pool.map(lambda s: _safe(one, s), sorted(set(symbols))):
+            out[sym] = res
+            if log:
+                log(f"Mark 1m {sym}: {res}")
+    return out
+
+
+def _read_mark_csv(path):
+    """Mark-Cache lesen, Zeitstempel als ISO8601 (schnell; ohne Formatangabe parst pandas jede Zeile einzeln)."""
+    d = pd.read_csv(path)
+    d['timestamp'] = pd.to_datetime(d['timestamp'], utc=True, format='ISO8601')
+    return d.set_index('timestamp')
+
+
+def _atomic_csv(df, path):
+    """Erst Temp-Datei, dann umbenennen: ein paralleler Leser (Tagesbericht / Optimierer) sieht nie eine halbe Datei."""
+    tmp = f"{path}.{os.getpid()}.tmp"
+    df.to_csv(tmp, compression='gzip' if path.endswith('.gz') else None)
+    os.replace(tmp, path)
+
+
+def _safe(fn, arg):
+    try:
+        return fn(arg)
+    except Exception as e:
+        return arg, f'FEHLER {e}'
+
+
 def load_mark_data(symbol, timeframe, start_date_str, end_date_str):
     """Mark-Preis-Kerzen (Bitget), gecacht unter data/cache/<symbol>_<tf>_mark.csv.
     Live loesen Entry-Trigger, Band-SL und TP auf den Mark-Preis aus (2026-10-04)."""
     cache_dir = os.path.join(PROJECT_ROOT, 'data', 'cache')
     os.makedirs(cache_dir, exist_ok=True)
-    cache_file = os.path.join(cache_dir, f"{symbol.replace('/', '-').replace(':', '-')}_{timeframe}_mark.csv")
+    cache_file = _mark_cache_file(symbol, timeframe)
     req_start = pd.to_datetime(start_date_str, utc=True)
     req_end = pd.to_datetime(end_date_str + 'T23:59:59Z', utc=True)
     tf_len = pd.Timedelta(timeframe.replace('m', 'min')) if timeframe.endswith('m') else pd.Timedelta(timeframe)
+    # Bis heute angefragt: nur bis zur letzten abgeschlossenen Kerze moeglich (vorher lud jeder Aufruf
+    # mit Ende = heute alles neu, weil der Cache nie bis Mitternacht reichen kann)
+    avail_end = min(req_end, pd.Timestamp.now(tz='UTC') - tf_len)
+    cached = None
     if os.path.exists(cache_file):
         try:
-            c = pd.read_csv(cache_file, index_col='timestamp', parse_dates=True)
+            c = _read_mark_csv(cache_file)
             c.index = c.index.tz_localize('UTC') if c.index.tz is None else c.index.tz_convert('UTC')
-            if c.index.min() <= req_start + tf_len and c.index.max() + tf_len > req_end:
-                return c.loc[req_start:req_end].copy()
+            if c.index.min() <= req_start + tf_len:
+                if c.index.max() + tf_len > avail_end:
+                    return c.loc[req_start:req_end].copy()
+                cached = c   # Anfang passt -> nur das fehlende Ende nachladen
         except Exception:
             pass
     try:
-        with open(os.path.join(PROJECT_ROOT, 'secret.json')) as f:
-            ex = Exchange(json.load(f)['ltbbot'][0]).exchange
-        since, end_ms, rows = int(req_start.timestamp() * 1000), int(req_end.timestamp() * 1000), []
+        shared = _shared_exchange()   # eine Verbindung statt load_markets je Coin (~5 s pro Aufruf)
+        if shared is None:
+            raise ValueError("Keine Boersenverbindung (secret.json 'ltbbot' oder load_markets fehlgeschlagen).")
+        ex = shared.exchange
+        first = req_start if cached is None else cached.index.max()
+        since, end_ms, rows = int(first.timestamp() * 1000), int(req_end.timestamp() * 1000), []
         while since < end_ms:
             try:
                 page = ex.fetch_mark_ohlcv(symbol, timeframe, since, 200)
@@ -814,11 +972,16 @@ def load_mark_data(symbol, timeframe, start_date_str, end_date_str):
                 break
             since = nxt
         if not rows:
-            return pd.DataFrame()
+            return pd.DataFrame() if cached is None else cached.loc[req_start:req_end].copy()
         d = pd.DataFrame(rows, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         d['timestamp'] = pd.to_datetime(d['timestamp'], unit='ms', utc=True)
-        d = d.drop_duplicates('timestamp').set_index('timestamp').sort_index()
-        d.to_csv(cache_file)
+        d = d.set_index('timestamp')
+        if cached is not None:
+            d = pd.concat([cached, d])
+        d = d[~d.index.duplicated(keep='last')].sort_index()
+        if timeframe == '1m':
+            d = _trim_1m(d)
+        _atomic_csv(d, cache_file)
         return d.loc[req_start:req_end].copy()
     except Exception as e:
         logger.error(f"Mark-Kerzen fuer {symbol} ({timeframe}) nicht ladbar: {e}")

@@ -149,6 +149,26 @@ def reentry_block_cleared(side, close_price, average_price):
     return close_price > average_price if side == 'long' else close_price < average_price
 
 
+def leverage_for_sl(stop_loss_pct, max_leverage=8, min_leverage=2, liq_buffer=0.8):
+    """Hebel je Config aus dem SL-Abstand (2026-11-07, User-Wahl F2): so hoch, dass die isolierte
+    Liquidation (~1/Hebel Abstand) mit Puffer hinter dem SL liegt: Hebel <= liq_buffer / SL.
+    Getestet (portfolio_live_sim, Release-Team 07.10., 100 USDT): 15 % Groesse + Hebel bis 8 ->
+    08.04.-07.10. +157 %/DD 17.8 %, ungesehen 08.10.-07.11. +3.6 %/DD 26.5 %."""
+    if not stop_loss_pct or stop_loss_pct <= 0:
+        return int(min_leverage)
+    return int(max(min_leverage, min(max_leverage, liq_buffer / (stop_loss_pct / 100.0))))
+
+
+def side_leverage(params, side):
+    """Hebel der Seite: risk.short_leverage fuer Shorts (falls gesetzt), sonst risk.leverage (2026-11-07).
+    Bitget erlaubt im isolierten Modus je Seite einen eigenen Hebel -- Shorts mit 30 % SL brauchen
+    einen niedrigeren Hebel als Longs mit engem SL, sonst liquidiert die Position vor dem SL."""
+    risk = params.get('risk', {})
+    if side == 'short' and risk.get('short_leverage'):
+        return risk['short_leverage']
+    return risk.get('leverage', 1) or 1
+
+
 def fraction_band_amount(free_capital, params, band_price, num_bands, amount_step=None, side='long', size_mult=1.0):
     """Positionsgroesse im Kapitalanteil-Modus (risk.sizing == 'fraction').
 
@@ -166,7 +186,7 @@ def fraction_band_amount(free_capital, params, band_price, num_bands, amount_ste
     risk = params.get('risk', {})
     if band_price is None or band_price <= 0 or num_bands <= 0 or free_capital <= 0:
         return None
-    lev = risk.get('leverage', 1) or 1
+    lev = side_leverage(params, side)
     pct = risk.get('position_size_pct', 30.0)
     if side == 'short' and risk.get('short_position_size_pct') is not None:
         pct = risk['short_position_size_pct']  # eigene (kleinere) Short-Groesse

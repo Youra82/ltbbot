@@ -200,9 +200,9 @@ def _simulate_current_portfolio(settings: dict, strategies_data: dict,
                 break
     if not sim_data:
         return None
+    from ltbbot.analysis.portfolio_optimizer import team_simulation
     with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-        return run_portfolio_simulation(start_capital, sim_data, start_date, end_date,
-                                         multi_band_entries=True)
+        return team_simulation(start_capital, sim_data, start_date, end_date)
 
 
 def _get_telegram_creds():
@@ -857,6 +857,20 @@ def main() -> int:
                 print(f"{G}  settings.json aktualisiert.{NC}\n")
             else:
                 print(f"{Y}  settings.json NICHT geaendert.{NC}\n")
+
+    # Mark-Cache aufraeumen (2026-11-07): nur Coins behalten, die dieser Lauf gebraucht hat (Team-Kandidaten,
+    # altes und neues Team -- der Tagesbericht braucht das aktive Team), alles andere und Aelteres loeschen.
+    try:
+        from ltbbot.analysis.portfolio_optimizer import team_simulator_mode
+        if team_simulator_mode(settings) == 'live':
+            from ltbbot.analysis.portfolio_live_sim import _MARK_MEM
+            from ltbbot.analysis.backtester import prune_mark_cache
+            with open(SETTINGS_PATH, encoding="utf-8") as _f:
+                _active = json.load(_f).get('live_trading_settings', {}).get('active_strategies', [])
+            keep = set(_MARK_MEM) | {s.get('symbol') for s in _active if s.get('symbol')}
+            prune_mark_cache(keep, log=print)
+    except Exception as e:
+        print(f"{Y}  Mark-Cache-Aufraeumen fehlgeschlagen: {e}{NC}")
 
     # Reports + Telegram (nur im auto-write Modus) -- Bericht BIS HEUTE (2026-10-06): die Auswahl
     # nutzt nur das Trainingsfenster (bis end_date), Excel/Chart/Telegram zeigen aber den ganzen

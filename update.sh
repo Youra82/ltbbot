@@ -177,4 +177,9 @@ else
     echo "   ✅ venv ist gesund."
 fi
 
+# 8. Groesse/Hebel aller Configs aus settings.json::rt_settings (2026-11-07, F2) -- die oben
+# wiederhergestellten VPS-Configs behalten ihre Signal-Parameter, bekommen aber die aktuelle Groesse.
+echo "8. Setze Groesse/Hebel der Configs aus rt_settings..."
+.venv/bin/python3 apply_rt_sizing.py || echo "   ⚠️ apply_rt_sizing.py fehlgeschlagen -- Configs unveraendert."
+
 echo "✅ Update erfolgreich abgeschlossen. Dein Bot ist jetzt auf dem neuesten Stand."

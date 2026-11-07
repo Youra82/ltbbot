@@ -572,10 +572,12 @@ class Exchange:
         except Exception as e:
             logger.error(f"Unerwarteter Fehler beim Setzen des Margin-Modus für {symbol}: {e}")
 
-    def set_leverage(self, symbol, leverage, margin_mode='isolated'):
+    def set_leverage(self, symbol, leverage, margin_mode='isolated', short_leverage=None):
+        """short_leverage (2026-11-07): eigener Hebel der Short-Seite (nur isoliert), sonst = leverage."""
         if not self.markets: return
         try:
             leverage = int(leverage)
+            short_lev = int(short_leverage) if short_leverage else leverage
             params = {'productType': 'USDT-FUTURES', 'marginCoin': 'USDT'}
 
             if margin_mode.lower() == 'isolated':
@@ -584,8 +586,8 @@ class Exchange:
                 logger.debug(f"Isolated Leverage für {symbol} (Long) auf {leverage}x gesetzt.")
                 time.sleep(0.2)
                 params_short = {**params, 'holdSide': 'short'}
-                self.exchange.set_leverage(leverage, symbol, params=params_short)
-                logger.debug(f"Isolated Leverage für {symbol} (Short) auf {leverage}x gesetzt.")
+                self.exchange.set_leverage(short_lev, symbol, params=params_short)
+                logger.debug(f"Isolated Leverage für {symbol} (Short) auf {short_lev}x gesetzt.")
             else: 
                 self.exchange.set_leverage(leverage, symbol, params=params)
                 logger.debug(f"Cross Leverage für {symbol} auf {leverage}x gesetzt.")
