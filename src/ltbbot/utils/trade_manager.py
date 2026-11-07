@@ -2058,6 +2058,22 @@ def place_entry_orders(exchange: Exchange, band_prices: dict, params: dict, bala
 
 # --- Haupt-Zyklus ---
 
+def cycle_leverage(params: dict, blocked_sides: set, logger: logging.Logger = None, symbol: str = '') -> int:
+    """Hebel, der in diesem Zyklus fuer das Symbol gesetzt wird (2026-11-07). Bitget kennt nur EINEN Hebel je Symbol
+    (set-leverage setzt Long und Short gemeinsam). Mit BTC-Filter sind die Seiten exklusiv (Long nur BTC > SMA200,
+    Short nur darunter) -> Hebel der erlaubten Seite, passend zu side_leverage() in Margin-Pruefung und Simulator.
+    Duerfen beide Seiten (ohne BTC-Filter) und die Hebel unterscheiden sich: der kleinere (Liquidation hinter beiden SL)."""
+    long_lev, short_lev = side_leverage(params, 'long'), side_leverage(params, 'short')
+    blocked = blocked_sides or set()
+    if 'long' in blocked and 'short' not in blocked:
+        return int(short_lev)
+    if 'short' in blocked and 'long' not in blocked:
+        return int(long_lev)
+    if long_lev != short_lev and logger:
+        logger.warning(f"{symbol}: Long- und Short-Einstiege moeglich, Hebel {long_lev}/{short_lev} -> beide {min(long_lev, short_lev)}")
+    return int(min(long_lev, short_lev))
+
+
 def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, logger: logging.Logger):
     """Der Haupt-Handelszyklus für eine einzelne Envelope-Strategie."""
     symbol = params['market']['symbol']
@@ -2270,8 +2286,8 @@ def full_trade_cycle(exchange: Exchange, params: dict, telegram_config: dict, lo
                   risk_params = params['risk']
                   exchange.set_margin_mode(symbol, margin_mode=risk_params['margin_mode'])
                   time.sleep(0.5)
-                  exchange.set_leverage(symbol, margin_mode=risk_params['margin_mode'], leverage=risk_params['leverage'],
-                                        short_leverage=risk_params.get('short_leverage'))
+                  exchange.set_leverage(symbol, margin_mode=risk_params['margin_mode'],
+                                        leverage=cycle_leverage(params, blocked_sides, logger, symbol))
                   time.sleep(0.5)
               except Exception as e:
                   logger.warning(f"Konnte Margin Mode/Leverage nicht setzen (evtl. schon korrekt?): {e}")

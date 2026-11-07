@@ -572,12 +572,14 @@ class Exchange:
         except Exception as e:
             logger.error(f"Unerwarteter Fehler beim Setzen des Margin-Modus für {symbol}: {e}")
 
-    def set_leverage(self, symbol, leverage, margin_mode='isolated', short_leverage=None):
-        """short_leverage (2026-11-07): eigener Hebel der Short-Seite (nur isoliert), sonst = leverage."""
+    def set_leverage(self, symbol, leverage, margin_mode='isolated'):
+        """Hebel fuer BEIDE Seiten. Bitget setzt bei jedem set-leverage-Aufruf Long UND Short auf denselben Wert,
+        holdSide wird ignoriert (live geprueft 2026-11-07: 'long' 7 -> Antwort long 7/short 7, danach 'short' 2 ->
+        2/2). Einen eigenen Short-Hebel waehlt deshalb der Aufrufer je Zyklus (trade_manager.cycle_leverage)."""
         if not self.markets: return
         try:
             leverage = int(leverage)
-            short_lev = int(short_leverage) if short_leverage else leverage
+            short_lev = leverage
             params = {'productType': 'USDT-FUTURES', 'marginCoin': 'USDT'}
 
             if margin_mode.lower() == 'isolated':

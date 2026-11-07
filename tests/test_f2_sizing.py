@@ -91,15 +91,24 @@ class _FakeCcxt:
         self.calls.append((leverage, params.get('holdSide')))
 
 
-def test_exchange_sets_separate_short_leverage():
+def test_exchange_sets_one_leverage_for_both_sides():
+    """Bitget setzt je Aufruf Long UND Short (holdSide wird ignoriert, live 2026-11-07) -> beide Aufrufe mit
+    demselben Wert, sonst ueberschreibt der zweite den ersten."""
     ex = Exchange.__new__(Exchange)
     ex.markets = {'X/USDT:USDT': {}}
     ex.exchange = _FakeCcxt()
-    ex.set_leverage('X/USDT:USDT', 6, margin_mode='isolated', short_leverage=2)
-    assert ex.exchange.calls == [(6, 'long'), (2, 'short')]
-    ex.exchange.calls.clear()
-    ex.set_leverage('X/USDT:USDT', 3, margin_mode='isolated')
-    assert ex.exchange.calls == [(3, 'long'), (3, 'short')]
+    ex.set_leverage('X/USDT:USDT', 6, margin_mode='isolated')
+    assert ex.exchange.calls == [(6, 'long'), (6, 'short')]
+
+
+def test_cycle_leverage_follows_allowed_side():
+    p = f2_params()                                   # Long 6, Short 2
+    assert tm.cycle_leverage(p, {'short'}) == 6       # BTC ueber SMA200: nur Long -> Long-Hebel
+    assert tm.cycle_leverage(p, {'long'}) == 2        # BTC darunter: nur Short -> Short-Hebel
+    assert tm.cycle_leverage(p, set()) == 2           # beide moeglich -> kleinerer (Liquidation hinter beiden SL)
+    assert tm.cycle_leverage(p, {'long', 'short'}) == 2
+    del p['risk']['short_leverage']
+    assert tm.cycle_leverage(p, set()) == 6           # ohne eigenen Short-Hebel wie bisher
 
 
 def test_apply_rt_sizing_migrates_old_configs():
