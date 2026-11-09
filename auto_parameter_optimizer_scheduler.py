@@ -45,6 +45,10 @@ CONFIGS_DIR      = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'strategy', 'conf
 OPTIMIZER_SCRIPT = os.path.join(PROJECT_ROOT, 'src', 'ltbbot', 'analysis', 'optimizer.py')
 LAST_RUN_FILE    = os.path.join(CACHE_DIR, '.last_parameter_search_run')
 IN_PROGRESS_FILE = os.path.join(CACHE_DIR, '.parameter_search_in_progress')
+# Zuletzt GEPRUEFT je Config-Datei (unabhaengig vom Ergebnis). Ohne diese Datei blieb ein nicht
+# bestaetigtes Paar fuer immer das "aelteste" (optimized_at aendert sich nur bei Bestaetigung) und
+# wurde jeden Tag erneut gewaehlt (Fix 2026-11-09, Telegram zeigte taeglich nur LTC 4h).
+CHECKED_FILE     = os.path.join(CACHE_DIR, '.parameter_search_checked.json')
 TRIGGER_LOG      = os.path.join(LOG_DIR, 'auto_parameter_optimizer_trigger.log')
 
 
@@ -112,11 +116,31 @@ def _send_telegram(message: str):
         _log(f"TELEGRAM ERROR {e}")
 
 
+def _load_checked() -> dict:
+    try:
+        with open(CHECKED_FILE, encoding='utf-8') as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def _mark_checked(path: str, when: datetime):
+    checked = _load_checked()
+    checked[os.path.basename(path)] = when.isoformat()
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    tmp = CHECKED_FILE + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(checked, f, indent=1, sort_keys=True)
+    os.replace(tmp, CHECKED_FILE)
+
+
 def _pick_stalest_pair(config_suffix: str):
-    """Findet unter allen vorhandenen Config-Dateien diejenige mit dem
-    aeltesten (oder fehlenden) _meta.optimized_at -- das Symbol/Timeframe-
-    Paar, das am dringendsten eine Neupruefung braucht."""
+    """Findet unter allen vorhandenen Config-Dateien diejenige, die am laengsten
+    nicht mehr geprueft wurde: spaeterer Zeitpunkt aus _meta.optimized_at
+    (letzte Bestaetigung) und letzter Pruefung laut CHECKED_FILE (auch ohne
+    Bestaetigung). Rueckgabe-Zeitpunkt = dieser effektive Pruefzeitpunkt."""
     pattern = os.path.join(CONFIGS_DIR, f'config_*{config_suffix}.json')
+    checked = _load_checked()
     candidates = []
     for path in sorted(glob.glob(pattern)):
         try:
@@ -133,7 +157,11 @@ def _pick_stalest_pair(config_suffix: str):
             optimized_at = datetime.fromisoformat(optimized_at_str) if optimized_at_str else datetime.min
         except ValueError:
             optimized_at = datetime.min
-        candidates.append((optimized_at, symbol, timeframe, path))
+        try:
+            last_checked = datetime.fromisoformat(checked[os.path.basename(path)])
+        except (KeyError, ValueError, TypeError):
+            last_checked = datetime.min
+        candidates.append((max(optimized_at, last_checked), symbol, timeframe, path))
     if not candidates:
         return None
     candidates.sort(key=lambda c: c[0])
@@ -154,12 +182,12 @@ def run_parameter_search(opt_settings: dict, search_settings: dict):
     recheck_after_days = int(search_settings.get('recheck_after_days', 30))
     age_days = (datetime.now() - optimized_at).days if optimized_at != datetime.min else 999999
     if age_days < recheck_after_days:
-        _log(f"SKIP {base_symbol} ({timeframe}) erst vor {age_days}d optimiert (Sperre: {recheck_after_days}d) -- "
+        _log(f"SKIP {base_symbol} ({timeframe}) erst vor {age_days}d geprueft (Sperre: {recheck_after_days}d) -- "
              f"gesamter Pool bereits aktuell, nichts faellig")
         return
 
     start_time = datetime.now()
-    _log(f"START {base_symbol} ({timeframe}) zuletzt optimiert: {optimized_at if optimized_at != datetime.min else 'nie'}")
+    _log(f"START {base_symbol} ({timeframe}) zuletzt geprueft: {optimized_at if optimized_at != datetime.min else 'nie'}")
 
     with open(IN_PROGRESS_FILE, 'w') as f:
         f.write(f"{base_symbol} {timeframe} {start_time.isoformat()}")
@@ -167,7 +195,7 @@ def run_parameter_search(opt_settings: dict, search_settings: dict):
     send_tg = search_settings.get('send_telegram_on_completion', True)
     if send_tg:
         _send_telegram(f"\U0001f9ea ltbbot Parameter-Suche gestartet: {base_symbol} ({timeframe})\n"
-                        f"(zuletzt optimiert: {optimized_at.date() if optimized_at != datetime.min else 'nie'})")
+                        f"(zuletzt geprueft: {optimized_at.date() if optimized_at != datetime.min else 'nie'})")
 
     lookback_weeks = int(opt_settings.get('backtest_lookback_weeks', 26))
     end_date = start_time.strftime('%Y-%m-%d')
@@ -207,6 +235,9 @@ def run_parameter_search(opt_settings: dict, search_settings: dict):
     finally:
         if os.path.exists(IN_PROGRESS_FILE):
             os.remove(IN_PROGRESS_FILE)
+        # Immer als geprueft vermerken (auch "nicht bestaetigt" oder Fehler), damit
+        # die Rotation weiterlaeuft statt dasselbe Paar taeglich zu wiederholen.
+        _mark_checked(path, start_time)
 
     elapsed_min = (datetime.now() - start_time).total_seconds() / 60
 
